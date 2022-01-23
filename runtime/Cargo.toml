@@ -41,7 +41,7 @@ pallet-transaction-payment-rpc-runtime-api = { default-features = false, git = "
 
 pallet-assets = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate" }
 pallet-treasury = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate" }
-#pallet-vesting = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate" }
+pallet-vesting = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate" }
 
 pallet-base-fee = { version = "1.0.0-dev", default-features = false, git = "https://github.com/paritytech/frontier" }
 
@@ -99,6 +99,7 @@ std = [
 	"pallet-transaction-payment-rpc-runtime-api/std",
 	"pallet-transaction-payment/std",
 	"pallet-base-fee/std",
+	"pallet-vesting/std",
 
 	"sp-api/std",
 	"sp-block-builder/std",
@@ -123,4 +124,5 @@ runtime-benchmarks = [
 	"frame-system/runtime-benchmarks",
 	"pallet-ethereum/runtime-benchmarks",
 	"pallet-evm/runtime-benchmarks",
+	"pallet-vesting/runtime-benchmarks",
 ]
