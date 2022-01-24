@@ -1,0 +1,51 @@
+name: Rust
+
+on:
+  push:
+    # branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v1
+
+    - name: Install Rust stable
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+
+    - name: Install Rust nightly
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: nightly
+        default: true
+
+    - name: Install wasm32
+      uses: actions-rs/toolchain@v1
+      with:
+        target: wasm32-unknown-unknown
+        toolchain: nightly
+
+    - uses: actions/cache@v2
+      with:
+        path: target/
+        key: ${{ runner.os }}-rust-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-rust-
+
+    - name: Run tests
+      run: cargo test --locked --all
+
+    - name: Build binary
+      run: cargo build --release
+
+    - name: Save binary
+      uses: actions/upload-artifact@v2
+      with:
+        name: ice-node
+        path: target/release/ice-node
