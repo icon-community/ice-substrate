@@ -18,11 +18,11 @@ fi
 if [[ $(cargo --version) ]]; then
     echo "Found cargo"
 else
-    curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain nightly-2021-11-01
+    curl https://sh.rustup.rs -sSf | sh -s -- -y
     source $HOME/.cargo/env
     export PATH=$HOME/.cargo/bin:$PATH
 fi
 
-rustup update stable
-rustup update nightly
-rustup target add wasm32-unknown-unknown --toolchain nightly-2021-11-01
+rustup toolchain add $WASM_BUILD_TOOLCHAIN
+rustup default $WASM_BUILD_TOOLCHAIN
+rustup target add wasm32-unknown-unknown --toolchain $WASM_BUILD_TOOLCHAIN

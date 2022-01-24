@@ -1,4 +1,7 @@
-name: Rust
+name: Build
+
+env:
+  RUST_VERSION: 'nightly-2021-11-01'
 
 on:
   push:
@@ -7,45 +10,35 @@ on:
     branches: [ master ]
 
 jobs:
-  build:
-    name: Build
-    runs-on: ubuntu-latest
+  native: 
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macOS-latest]
     steps:
-    - name: Checkout
-      uses: actions/checkout@v1
-
-    - name: Install Rust stable
-      uses: actions-rs/toolchain@v1
+    - uses: hecrj/setup-rust-action@v1
       with:
-        toolchain: stable
+        rust-version: ${{ env.RUST_VERSION }}
+        targets: 'wasm32-unknown-unknown'
 
-    - name: Install Rust nightly
-      uses: actions-rs/toolchain@v1
+    - name: Checkout the source code
+      uses: actions/checkout@master
       with:
-        toolchain: nightly
-        default: true
+        submodules: true
 
-    - name: Install wasm32
-      uses: actions-rs/toolchain@v1
+    - name: Check targets are installed correctly
+      run: rustup target list --installed
+
+    - name: Run all tests
+      run: cargo test --all
+
+    - name: Cleanup after tests
+      run: cargo clean
+
+    - name: Build optimized binary
+      run: cargo build --release --verbose
+
+    - uses: actions/upload-artifact@master
       with:
-        target: wasm32-unknown-unknown
-        toolchain: nightly
-
-    - uses: actions/cache@v2
-      with:
-        path: target/
-        key: ${{ runner.os }}-rust-${{ hashFiles('**/Cargo.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-rust-
-
-    - name: Run tests
-      run: cargo test --locked --all
-
-    - name: Build binary
-      run: cargo build --release
-
-    - name: Save binary
-      uses: actions/upload-artifact@v2
-      with:
-        name: ice-node
+        name: frontier-${{ matrix.os }}-x86_64
         path: target/release/ice-node
