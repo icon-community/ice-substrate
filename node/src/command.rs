@@ -52,7 +52,7 @@ impl SubstrateCli for Cli {
 	fn load_spec(&self, id: &str) -> Result<Box<dyn sc_service::ChainSpec>, String> {
 		Ok(match id {
 			"dev" => Box::new(snow::development_config()?),
-			"ice" => Box::new(snow::ice_testnet_config()?),
+			"test" => Box::new(snow::testnet_config()?),
 			"" | "local" => Box::new(snow::local_testnet_config()?),
 			path => Box::new(snow::ChainSpec::from_json_file(
 				std::path::PathBuf::from(path),
