@@ -1,6 +1,6 @@
 use ice_runtime::{
 	AccountId, AuraConfig, BalancesConfig, EVMConfig, EthereumConfig, GenesisConfig, GrandpaConfig,
-	Signature, SudoConfig, SystemConfig, WASM_BINARY,
+	Signature, SudoConfig, SystemConfig, WASM_BINARY, currency::ICY
 };
 use sc_service::ChainType;
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
@@ -18,7 +18,7 @@ const ICE_PROPERTIES: &str = r#"
         {
             "ss58Format": 42,
             "tokenDecimals": 18,
-            "tokenSymbol": "ICY"
+            "tokenSymbol": "ICZ"
         }"#;
 
 /// Specialized `ChainSpec`. This is a specialization of the general Substrate ChainSpec type.
@@ -208,7 +208,7 @@ fn testnet_genesis(
 			balances: endowed_accounts
 				.iter()
 				.cloned()
-				.map(|k| (k, 1_000_000_000_000_000_000_000_00))
+				.map(|k| (k, ICY * 300_000_000))
 				.collect(),
 		},
 		aura: AuraConfig {

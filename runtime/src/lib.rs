@@ -99,8 +99,8 @@ pub mod opaque {
 }
 
 pub const VERSION: RuntimeVersion = RuntimeVersion {
-	spec_name: create_runtime_str!("ice-node"),
-	impl_name: create_runtime_str!("ice-node"),
+	spec_name: create_runtime_str!("frost-testnet"),
+	impl_name: create_runtime_str!("frost-testnet"),
 	authoring_version: 1,
 	spec_version: 1,
 	impl_version: 1,
@@ -116,6 +116,18 @@ pub const SLOT_DURATION: u64 = MILLISECS_PER_BLOCK;
 pub const MINUTES: BlockNumber = 60_000 / (MILLISECS_PER_BLOCK as BlockNumber);
 pub const HOURS: BlockNumber = MINUTES * 60;
 pub const DAYS: BlockNumber = HOURS * 24;
+
+pub mod currency {
+	use crate::Balance;
+
+	/// Constant values for the base number of indivisible units for balances
+	pub const MILLIICY: Balance = 1_000_000_000_000_000;
+	pub const ICY: Balance = 1_000 * MILLIICY;
+
+	pub const fn deposit(items: u32, bytes: u32) -> Balance {
+		(items as Balance + bytes as Balance) * MILLIICY / 1_000_000
+	}
+}
 
 /// The version information used to identify this runtime when compiled natively.
 #[cfg(feature = "std")]
