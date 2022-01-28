@@ -54,7 +54,7 @@ pub fn testnet_config() -> Result<ChainSpec, String> {
 		"Testnet",
 		// ID
 		"testnet",
-		sc_service::ChainType::Custom("snow".to_string()),
+		ChainType::Custom(String::from("snow")),
 		move || {
 			testnet_genesis(
 				wasm_binary,
