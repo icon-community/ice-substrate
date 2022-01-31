@@ -1,0 +1,75 @@
+name: Build & Release
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-project: 
+    name: Build project
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install rust dependencies
+      run: |
+        scripts/init.sh
+        cargo --version
+        rustc --version
+        cargo +$WASM_BUILD_TOOLCHAIN --version
+        rustc +$WASM_BUILD_TOOLCHAIN --version
+      env:
+        WASM_BUILD_TOOLCHAIN: nightly-2022-01-16
+    - name: Checkout the source code
+      uses: actions/checkout@master
+      with:
+        submodules: true
+    - name: Check targets are installed correctly
+      run: rustup target list --installed
+    - name: Run all tests
+      run: cargo test --all
+    - name: Cleanup after tests
+      run: cargo clean
+    - name: Build optimized binary
+      run: cargo build --release
+    - uses: actions/upload-artifact@v2
+      with:
+        name: ice-node
+        path: target/release/ice-node
+
+  release-project:
+    name: Release project
+    runs-on: ubuntu-latest
+    needs: build-project
+    steps:
+      - uses: actions/checkout@v2
+      - name: Retrieve tag version
+        run: scripts/autotag.sh --minor
+        id: version
+      - name: Download project content
+        uses: actions/download-artifact@v2
+        with: 
+          name: ice-node
+      - name: Archive project content
+        uses: thedoctor0/zip-release@master
+        with:
+          type: 'zip'
+          filename: 'ice-node.zip'
+      - name: Create Github release
+        id: create-new-release
+        uses: actions/create-release@v1
+        env: 
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with: 
+          tag_name: ${{ steps.version.outputs.tag_name }}
+          release_name: Frost Testnet Release ${{ steps.version.outputs.tag_name }}
+      - name: Upload asset to Github release
+        uses: actions/upload-release-asset@v1
+        env: 
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create-new-release.outputs.upload_url }}
+          asset_path: ./ice-node.zip
+          asset_name: ice-node-${{ steps.version.outputs.tag_name }}.zip
+          asset_content_type: application/zip
