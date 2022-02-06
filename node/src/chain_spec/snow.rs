@@ -4,16 +4,14 @@ use ice_runtime::{
 };
 use sc_service::ChainType;
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
-use sp_core::{sr25519, Pair, Public};
+use sp_core::{crypto::UncheckedInto, sr25519, Pair, Public, H160, U256};
 use sp_finality_grandpa::AuthorityId as GrandpaId;
 use sp_runtime::traits::{IdentifyAccount, Verify};
-use std::{collections::BTreeMap};
+use std::{collections::BTreeMap, str::FromStr};
 use hex_literal::hex;
-use sp_core::crypto::UncheckedInto;
 
 // The URL for the telemetry server.
-//const STAGING_TELEMETRY_URL: &str = "wss://telemetry.polkadot.io/submit/";
-
+// const STAGING_TELEMETRY_URL: &str = "wss://telemetry.polkadot.io/submit/";
 const ICE_PROPERTIES: &str = r#"
         {
             "ss58Format": 42,
@@ -64,7 +62,7 @@ pub fn testnet_config() -> Result<ChainSpec, String> {
 						// AuraId
 						hex!["62687296bffd79f12178c4278b9439d5eeb8ed7cc0b1f2ae29307e806a019659"].unchecked_into(),
 						// GrandpaId
-						hex!["27c6da25d03bb6b3c751da3e8c5265b0bb357c15240602443cc286c0658b47f9"].unchecked_into()
+						hex!["27c6da25d03bb6b3c751da3e8c5265b0bb357c15240602443cc286c0658b47f9"].unchecked_into(),
 					),
 					(
 						hex!["d893ef775b5689473b2e9fa32c1f15c72a7c4c86f05f03ee32b8aca6ce61b92c"].unchecked_into(),
@@ -95,7 +93,6 @@ pub fn testnet_config() -> Result<ChainSpec, String> {
 	))
 }
 
-
 pub fn development_config() -> Result<ChainSpec, String> {
 	let wasm_binary = WASM_BINARY.ok_or_else(|| "Development wasm not available".to_string())?;
 
@@ -116,12 +113,8 @@ pub fn development_config() -> Result<ChainSpec, String> {
 				vec![
 					get_account_id_from_seed::<sr25519::Public>("Alice"),
 					get_account_id_from_seed::<sr25519::Public>("Bob"),
-					get_account_id_from_seed::<sr25519::Public>("Charlie"),
-					get_account_id_from_seed::<sr25519::Public>("Dave"),
 					get_account_id_from_seed::<sr25519::Public>("Alice//stash"),
 					get_account_id_from_seed::<sr25519::Public>("Bob//stash"),
-					get_account_id_from_seed::<sr25519::Public>("Charlie//stash"),
-					get_account_id_from_seed::<sr25519::Public>("Dave//stash"),
 				],
 				true,
 			)
@@ -204,12 +197,11 @@ fn testnet_genesis(
 			changes_trie_config: Default::default(),
 		},
 		balances: BalancesConfig {
-			// Configure endowed accounts with initial balance of 1 << 60.
 			balances: endowed_accounts
 				.iter()
 				.cloned()
 				.map(|k| (k, ICY * 300_000_000))
-				.collect(),
+				.collect()
 		},
 		aura: AuraConfig {
 			authorities: initial_authorities.iter().map(|x| (x.0.clone())).collect(),
@@ -226,11 +218,12 @@ fn testnet_genesis(
 		},
 		evm: EVMConfig {
 			accounts: {
-				let map = BTreeMap::new();				
+				let map = BTreeMap::new();
 				map
 			},
 		},
 		ethereum: EthereumConfig {},
 		dynamic_fee: Default::default(),
+		base_fee: Default::default(),
 	}
 }
