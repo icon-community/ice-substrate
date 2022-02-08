@@ -1,16 +1,16 @@
 #!/bin/bash
 
 CURTAG=`git describe --abbrev=0 --tags`;
-CURTAG= "${CURTAG/v/}"
 
 if [ -z "$CURTAG" ]
 then
-    CURTAG="0.0.0"
+    CURTAG="v0.0.0"
     echo "\$CURTAG is empty"
 else
     echo "\$CURTAG is NOT empty"
 fi
 
+CURTAG="${CURTAG/v/}"
 IFS='.' read -a vers <<< "$CURTAG"
 
 MAJ=${vers[0]}
