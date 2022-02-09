@@ -17,6 +17,11 @@ targets = ["x86_64-unknown-linux-gnu"]
 codec = { package = "parity-scale-codec", version = "2.3.1", default-features = false, features = ["derive"] }
 serde = { version = "1.0.101", optional = true, features = ["derive"] }
 
+# Custom pallets
+pallet-airdrop = { path = "../pallets/airdrop", default-features = false }
+
+# Frame packages
+
 frame-executive = { default-features = false, git = "https://github.com/paritytech/substrate" }
 frame-support = { default-features = false, git = "https://github.com/paritytech/substrate" }
 frame-system = { default-features = false, package = "frame-system", git = "https://github.com/paritytech/substrate" }
@@ -78,6 +83,8 @@ std = [
 	"codec/std",
 	"serde",
 
+	"pallet-airdrop/std",
+
 	"frame-executive/std",
 	"frame-support/std",
 	"frame-system-rpc-runtime-api/std",
@@ -125,4 +132,5 @@ runtime-benchmarks = [
 	"pallet-ethereum/runtime-benchmarks",
 	"pallet-evm/runtime-benchmarks",
 	"pallet-vesting/runtime-benchmarks",
+	"pallet-airdrop/runtime-benchmarks",
 ]

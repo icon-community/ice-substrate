@@ -22,8 +22,8 @@ use sp_core::{
 use sp_runtime::{
 	create_runtime_str, generic, impl_opaque_keys,
 	traits::{
-		AccountIdLookup, BlakeTwo256, Block as BlockT, Dispatchable, IdentifyAccount, NumberFor,
-		PostDispatchInfoOf, Verify, ConvertInto 
+		AccountIdLookup, BlakeTwo256, Block as BlockT, ConvertInto, Dispatchable, IdentifyAccount,
+		NumberFor, PostDispatchInfoOf, Verify,
 	},
 	transaction_validity::{TransactionSource, TransactionValidity, TransactionValidityError},
 	ApplyExtrinsicResult, MultiSignature,
@@ -55,6 +55,9 @@ pub use sp_runtime::{Perbill, Permill};
 
 mod precompiles;
 use precompiles::FrontierPrecompiles;
+
+/// import the airdrop pallet
+pub use pallet_airdrop;
 
 /// Type of block number.
 pub type BlockNumber = u32;
@@ -212,6 +215,11 @@ impl frame_system::Config for Runtime {
 	type OnSetCode = ();
 }
 
+/// Configure the pallet-template in pallets/template.
+impl pallet_airdrop::Config for Runtime {
+	type Event = Event;
+}
+
 parameter_types! {
 	pub const MaxAuthorities: u32 = 100;
 }
@@ -340,7 +348,6 @@ impl pallet_ethereum::Config for Runtime {
 	type StateRoot = pallet_ethereum::IntermediateStateRoot;
 }
 
-
 pub const MILLICENTS: Balance = 1_000_000_000;
 pub const CENTS: Balance = 1_000 * MILLICENTS; // assume this is worth about a cent.
 pub const DOLLARS: Balance = 100 * CENTS;
@@ -415,6 +422,7 @@ construct_runtime!(
 		DynamicFee: pallet_dynamic_fee::{Pallet, Call, Storage, Config, Inherent},
 		BaseFee: pallet_base_fee::{Pallet, Call, Storage, Config<T>, Event},
 		Vesting: pallet_vesting::{Pallet, Call, Storage, Config<T>, Event<T>} = 32,
+		Airdrop: pallet_airdrop::{Pallet, Call, Storage, Event<T>},
 	}
 );
 
