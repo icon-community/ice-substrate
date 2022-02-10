@@ -31,8 +31,10 @@ pub enum SignatureValidationError {
 	ECRecoverExecution,
 }
 
-#[derive(Encode, Decode, Clone, RuntimeDebug, TypeInfo)]
+#[derive(Encode, Decode, Clone, TypeInfo)]
 #[scale_info(skip_type_params(T))]
+#[cfg_attr(feature = "std", derive(Debug))]
+#[cfg_attr(not(feature = "std"), derive(RuntimeDebug))]
 pub struct SnapshotInfo<T: Config> {
 	/// Icon address of this snapshot
 	pub icon_address: Vec<u8>,
@@ -76,6 +78,8 @@ impl<T: Config> Default for SnapshotInfo<T> {
 }
 
 /// Possible values of error that can occur when doing claim request from offchain worker
+#[cfg_attr(feature = "std", derive(Debug))]
+#[cfg_attr(not(feature = "std"), derive(RuntimeDebug))]
 pub enum ClaimError {
 	/// When there is no icon address in mapping corresponding
 	/// to the ice_address stored in queue
