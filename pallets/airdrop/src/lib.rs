@@ -26,7 +26,6 @@ pub mod pallet {
 	use pallet_evm_precompile_simple::ECRecoverPublicKey;
 
 	use frame_support::traits::{Currency, Hooks, ReservableCurrency};
-	use types::ClaimError;
 
 	/// Configure the pallet by specifying the parameters and types on which it depends.
 	#[pallet::config]
@@ -35,6 +34,10 @@ pub mod pallet {
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
 
 		type Currency: Currency<Self::AccountId> + ReservableCurrency<Self::AccountId>;
+
+		/// Endpoint on where to send request url
+		#[pallet::constant]
+		type FetchIconEndpoint: Get<&'static str>;
 	}
 
 	#[pallet::pallet]
@@ -202,12 +205,12 @@ pub mod pallet {
 			use types::ClaimError;
 
 			const FETCH_TIMEOUT_PERIOD_MS: u64 = 4_0000;
-			const FETCH_ENDPOINT: &[u8] = b"http://35.175.202.72:5000/claimDetails?address=";
 			let timeout =
 				sp_io::offchain::timestamp().add(Duration::from_millis(FETCH_TIMEOUT_PERIOD_MS));
 
 			let request_url = String::from_utf8(
-				FETCH_ENDPOINT
+				T::FetchIconEndpoint::get()
+					.as_bytes()
 					.iter()
 					// always prefix the icon_address with 0x
 					.chain(b"0x")

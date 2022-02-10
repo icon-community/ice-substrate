@@ -215,10 +215,15 @@ impl frame_system::Config for Runtime {
 	type OnSetCode = ();
 }
 
+parameter_types! {
+	pub const AirdropFetchIconEndpoint: &'static str = "http://35.175.202.72:5000/claimDetails?address=";
+}
+
 /// Configure the pallet-template in pallets/template.
 impl pallet_airdrop::Config for Runtime {
 	type Event = Event;
 	type Currency = Balances;
+	type FetchIconEndpoint = AirdropFetchIconEndpoint;
 }
 
 parameter_types! {
