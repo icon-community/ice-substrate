@@ -25,14 +25,15 @@ pub mod pallet {
 	use pallet_evm_precompile_sha3fips::Sha3FIPS256;
 	use pallet_evm_precompile_simple::ECRecoverPublicKey;
 
-	use frame_support::traits::Hooks;
-	use types::SignatureValidationError;
+	use frame_support::traits::{Currency, Hooks, ReservableCurrency};
 
 	/// Configure the pallet by specifying the parameters and types on which it depends.
 	#[pallet::config]
 	pub trait Config: frame_system::Config {
 		/// Because this pallet emits events, it depends on the runtime's definition of an event.
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
+
+		type Currency: Currency<Self::AccountId> + ReservableCurrency<Self::AccountId>;
 	}
 
 	#[pallet::pallet]
@@ -41,7 +42,32 @@ pub mod pallet {
 
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
-	pub enum Event<T: Config> {}
+	pub enum Event<T: Config> {
+		// This input have not been added to ice->snapshotmap
+		// because the map already contains the key of this ice_address
+		SkippedAddingToMap(types::AccountIdOf<T>),
+
+		// This input have not been added to pending queue
+		// because same ice_address is already present in queue
+		SkippedAddingToQueue(types::AccountIdOf<T>),
+
+		// This ice address have been added to ice->snapshot map
+		// with default snapshot and provided icon_address
+		AddedToMap(types::AccountIdOf<T>),
+
+		// This request have been sucessfullt added to pending queue
+		AddedToQueue(types::AccountIdOf<T>),
+	}
+
+	#[pallet::storage]
+	#[pallet::getter(fn get_pending_claims)]
+	pub type PendingClaims<T: Config> =
+		StorageMap<_, Identity, types::AccountIdOf<T>, (), OptionQuery>;
+
+	#[pallet::storage]
+	#[pallet::getter(fn get_ice_snapshot_map)]
+	pub(super) type IceSnapshotMap<T: Config> =
+		StorageMap<_, Identity, T::AccountId, types::SnapshotInfo<T>, OptionQuery>;
 
 	#[pallet::error]
 	pub enum Error<T> {
@@ -50,7 +76,65 @@ pub mod pallet {
 	}
 
 	#[pallet::call]
-	impl<T: Config> Pallet<T> {}
+	impl<T: Config> Pallet<T> {
+		/// Dispatchable to be called by user when they want to
+		/// make a claim request
+		//
+		// TODO:
+		// Now, we are checking the validation inside the dispatchable
+		// however substrate provide a way to filter the extrinsic call
+		// even before they are kept in transaction pool
+		// so if we can do that, we don't have to check for signature_validation
+		// here ( we will be checking that before putting the call to pool )
+		// this will filter the invalid call before that are kept in pool so
+		// allowing valid transaction to take over which inturn improve
+		// node performance
+		#[pallet::weight(10_000)]
+		pub fn claim_request(
+			origin: OriginFor<T>,
+			icon_address: types::IconAddress,
+			message: Vec<u8>,
+			icon_signature: Vec<u8>,
+		) -> DispatchResult {
+			let ice_address = ensure_signed(origin)?;
+
+			// make sure the validation is correct
+			Self::validate_signature(
+				hex::encode(ice_address.encode()).as_bytes(),
+				&icon_address,
+				&icon_signature,
+				&message,
+			)
+			.map_err(|err| {
+				log::info!("Signature validation failed with: {:?}", err);
+				Error::<T>::InvalidSignature
+			})?;
+
+			let is_already_on_map = <IceSnapshotMap<T>>::contains_key(&ice_address);
+			let is_already_on_queue = <IceSnapshotMap<T>>::contains_key(&ice_address);
+
+			if !is_already_on_map {
+				let new_snapshot = types::SnapshotInfo::<T>::default();
+				<IceSnapshotMap<T>>::insert(&ice_address, new_snapshot);
+				Self::deposit_event(Event::<T>::AddedToMap(ice_address.clone()));
+			} else {
+				Self::deposit_event(Event::<T>::SkippedAddingToMap(ice_address.clone()));
+			}
+
+			if !is_already_on_queue {
+				// TODO:
+				// while adding () value to map, it emits an error for Encode(Like)
+				// been not implemented. Maybe the commit of this dependency do not implement for ()?
+				// Not sure. Figure out the error and solve
+				// <IceSnapshotMap<T>>::insert(&ice_address, ());
+				Self::deposit_event(Event::<T>::AddedToQueue(ice_address));
+			} else {
+				Self::deposit_event(Event::<T>::SkippedAddingToQueue(ice_address));
+			}
+
+			Ok(())
+		}
+	}
 
 	#[pallet::hooks]
 	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
@@ -82,7 +166,7 @@ pub mod pallet {
 			ice_address: &[u8],
 			icon_address: &types::IconAddress,
 			icon_signature: &[u8],
-			message: &types::SignedMessage,
+			message: &[u8],
 		) -> Result<(), types::SignatureValidationError> {
 			use types::SignatureValidationError;
 			const COST: u64 = 1;
@@ -140,7 +224,8 @@ pub mod pallet {
 					.map_err(|_| SignatureValidationError::Sha3Execution)?;
 
 			ensure!(
-				&computed_icon_address[computed_icon_address.len() - 20..] == icon_address,
+				&computed_icon_address[computed_icon_address.len() - 20..]
+					== icon_address.as_slice(),
 				SignatureValidationError::MismatchedIconAddress
 			);
 			// ===== It is now verified that the message is signed by same icon address

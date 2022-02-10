@@ -218,6 +218,7 @@ impl frame_system::Config for Runtime {
 /// Configure the pallet-template in pallets/template.
 impl pallet_airdrop::Config for Runtime {
 	type Event = Event;
+	type Currency = Balances;
 }
 
 parameter_types! {
