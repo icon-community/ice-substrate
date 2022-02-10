@@ -9,8 +9,8 @@ pub type IconAddress = sp_std::vec::Vec<u8>;
 /// type that represnt the signed message
 pub type SignedMessage = sp_std::vec::Vec<u8>;
 
-#[cfg_attr(test, derive(Debug))]
-// type that represnt the error that can occur while validation the signature
+#[cfg_attr(test, derive(Debug, Eq, PartialEq))]
+/// type that represnt the error that can occur while validation the signature
 pub enum SignatureValidationError {
 	InvalidLength,
 	InvalidFormat,
