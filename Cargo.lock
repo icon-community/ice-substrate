@@ -4125,14 +4125,20 @@ dependencies = [
 name = "pallet-airdrop"
 version = "4.0.0-dev"
 dependencies = [
+ "fp-evm",
  "frame-benchmarking",
  "frame-support",
  "frame-system",
+ "hex",
+ "log",
+ "pallet-evm-precompile-sha3fips",
+ "pallet-evm-precompile-simple",
  "parity-scale-codec",
  "scale-info",
  "sp-core",
  "sp-io",
  "sp-runtime",
+ "sp-std",
 ]
 
 [[package]]

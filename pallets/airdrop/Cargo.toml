@@ -12,12 +12,16 @@ repository = "https://github.com/ibriz/ice-substrate.git"
 targets = ["x86_64-unknown-linux-gnu"]
 
 [dependencies]
+log = "0.4.14"
+hex = { version = "0.4.3", default-features = false, features = ["alloc"] }
 codec = { package = "parity-scale-codec", version = "2.0.0", default-features = false, features = [
 	"derive",
 ] }
 scale-info = { version = "1.0", default-features = false, features = [
 	"derive",
 ] }
+
+# substrate packages
 
 [dependencies.frame-support]
 default-features = false
@@ -31,8 +35,36 @@ git = "https://github.com/paritytech/substrate.git"
 default-features = false
 git = "https://github.com/paritytech/substrate.git"
 
+[dependencies.sp-runtime]
+default-features = false
+git = 'https://github.com/paritytech/substrate.git'
+
+[dependencies.sp-io]
+default-features = false
+git = 'https://github.com/paritytech/substrate.git'
+
+[dependencies.sp-std]
+default-features = false
+git = 'https://github.com/paritytech/substrate.git'
+
+
+# frontier packages
+
+[dependencies.pallet-evm-precompile-sha3fips]
+default-features = false
+git = 'https://github.com/paritytech/frontier.git'
+
+[dependencies.pallet-evm-precompile-simple]
+default-features = false
+git = 'https://github.com/paritytech/frontier.git'
+
+[dependencies.fp-evm]
+default-features = false
+git = 'https://github.com/paritytech/frontier.git'
+
+# development dependencies
 [dev-dependencies]
-sp-core = { default-features = false, git = "https://github.com/paritytech/substrate.git"}
+sp-core = { default-features = false, git = "https://github.com/paritytech/substrate.git" }
 sp-io = { default-features = false, git = "https://github.com/paritytech/substrate.git" }
 sp-runtime = { default-features = false, git = "https://github.com/paritytech/substrate.git" }
 
@@ -44,6 +76,10 @@ std = [
 	"frame-support/std",
 	"frame-system/std",
 	"frame-benchmarking/std",
+	"sp-io/std",
+	"log/std",
+	"sp-runtime/std",
+	"sp-std/std",
 ]
 
 runtime-benchmarks = []
