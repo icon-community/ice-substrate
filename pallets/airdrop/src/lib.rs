@@ -138,11 +138,82 @@ pub mod pallet {
 
 	#[pallet::hooks]
 	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
-		fn offchain_worker(_block_number: T::BlockNumber) {}
+		fn offchain_worker(block_number: T::BlockNumber) {
+			// If this is not the block to start offchain worker
+			// print a log and early return
+			if !Self::should_run_on_this_block(&block_number) {
+				log::info!("Offchain worker skipped for block: {:?}", block_number);
+				return;
+			}
+
+			const CLAIMS_PER_OCW: usize = 100;
+
+			// Get the first CLAIMS_PER_OCW number of claim request from request queue
+			// As queue only contains ice_address, we also need to collect
+			//
+			// Destructing the process:
+			// 1) get all the key-value pair of PendingClaims Storage ( in Lexicographic order )
+			// 2) filter out the key (ice_address) if that ice_addess claim_status is true in snapshot map
+			// 3) From the key value pair only collect key (ice_address) ignoring value (nill ())
+			let claims_to_process: Vec<types::AccountIdOf<T>> = <PendingClaims<T>>::iter()
+				.filter_map(|(ice_address, _nill)| {
+					let snapshot = Self::get_ice_snapshot_map(&ice_address);
+					match snapshot {
+						Some(snapshot) if !snapshot.claim_status => Some(ice_address),
+						_ => None,
+					}
+				})
+				.take(CLAIMS_PER_OCW)
+				.collect();
+
+			// for each claims taken, call the process_claim function where actual claiming is done
+			// and display weather the process been succeed
+			for claimer in claims_to_process {
+				Self::process_claim_request(claimer);
+			}
+		}
 	}
 
 	// implement all the helper function that are called from pallet dispatchable
-	impl<T: Config> Pallet<T> {}
+	impl<T: Config> Pallet<T> {
+		// Function to proceed single claim request
+		pub fn process_claim_request(
+			ice_address: types::AccountIdOf<T>,
+		) -> Result<(), types::ClaimError> {
+			use types::ClaimError;
+
+			// Get the icon address corresponding to this ice_address
+			let icon_address = Self::get_ice_snapshot_map(&ice_address)
+				.ok_or(ClaimError::NoIconAddress)?
+				.icon_address;
+
+			let server_response = Self::fetch_from_server(icon_address);
+
+			Ok(())
+		}
+
+		/// This function fetch the data from server and return it in required struct
+		pub fn fetch_from_server(icon_address: types::IconAddress) -> ! {
+			todo!();
+		}
+
+		// Return an indicater (bool) on weather the offchain worker
+		// should be run on this block number or not
+		pub fn should_run_on_this_block(block_number: &T::BlockNumber) -> bool {
+			// This is the number of ocw-run block to skip after running offchain worker
+			// Eg: if block is ran on block_number=3 then
+			// run offchain worker in 3+ENABLE_IN_EVERY block
+			const ENABLE_IN_EVERY: u32 = 3;
+
+			*block_number % ENABLE_IN_EVERY.into() == 0_u32.into()
+		}
+
+		// Helper function to remove anything from pending queue
+		// if same ice address has already recived a claim
+		// This ensures that we do not double credit the same address
+		// because the queue is onchain we have to keep checking for such condition
+		pub fn remove_complete_from_claim() {}
+	}
 
 	// implement all the helper function that are called from pallet hooks like offchain_worker
 	impl<T: Config> Pallet<T> {
