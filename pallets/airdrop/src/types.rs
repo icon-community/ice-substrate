@@ -33,12 +33,12 @@ pub enum SignatureValidationError {
 #[derive(Encode, Decode, Clone, RuntimeDebug, TypeInfo)]
 #[scale_info(skip_type_params(T))]
 pub struct SnapshotInfo<T: Config> {
-	icon_address: Vec<u8>,
-	ice_address: T::AccountId,
-	amount: BalanceOf<T>,
-	defi_user: bool,
-	vesting_percentage: u32,
-	claim_status: bool,
+	pub icon_address: Vec<u8>,
+	pub ice_address: T::AccountId,
+	pub amount: BalanceOf<T>,
+	pub defi_user: bool,
+	pub vesting_percentage: u32,
+	pub claim_status: bool,
 }
 
 impl<T: Config> SnapshotInfo<T> {
@@ -64,4 +64,17 @@ impl<T: Config> Default for SnapshotInfo<T> {
 			claim_status: false,
 		}
 	}
+}
+
+/// Possible values of error that can occur when doing claim request from offchain worker
+pub enum ClaimError {
+	/// When there is no icon address in mapping corresponding
+	/// to the ice_address stored in queue
+	NoIconAddress,
+
+	/// When icon_address do not exists in server database
+	NoData,
+
+	/// some error while doing an http request
+	HttpError,
 }
