@@ -284,10 +284,11 @@ pub mod pallet {
 	impl<T: Config> Pallet<T> {
 		/// Function to make sure that icon_address, ice_address and message are in sync
 		/// On a high level, it does so by checking for these two verification
-		/// 1) Make sure that the ice_address encoded in the message and passed
+		/// * Make sure that icon_signature is equal to or greater than 65
+		/// * Make sure that the ice_address encoded in the message and passed
 		///    in this function (i.e dispatchable from where this function is called)
 		///    are same
-		/// 2) Make sure that this message is signed by the same icon_address
+		/// * Make sure that this message is signed by the same icon_address
 		///    that is being passed to this function (i.e caller for this function)
 		///
 		/// @return:
@@ -307,6 +308,14 @@ pub mod pallet {
 			use types::SignatureValidationError;
 			const COST: u64 = 1;
 			const PADDING_FOR_V: [u8; 31] = [0; 31];
+			/* =======================================
+					Validate the icon_signature length
+			*/
+			ensure!(
+				icon_signature.len() >= 65,
+				SignatureValidationError::InvalidIconSignature
+			);
+			// === verified the length of icon_signature
 
 			/* ======================================================
 				Verify that the message constains the same ice_address
@@ -323,7 +332,7 @@ pub mod pallet {
 
 			ensure!(
 				&ice_address == &extracted_ice_address,
-				SignatureValidationError::MismatchedIceAddress
+				SignatureValidationError::InvalidIceAddress
 			);
 			// ==== Verfiied that ice_address in encoded message
 			// and recived in function parameterare same
@@ -362,7 +371,7 @@ pub mod pallet {
 			ensure!(
 				&computed_icon_address[computed_icon_address.len() - 20..]
 					== icon_address.as_slice(),
-				SignatureValidationError::MismatchedIconAddress
+				SignatureValidationError::InvalidIconAddress
 			);
 			// ===== It is now verified that the message is signed by same icon address
 			// as passed in this function

@@ -57,27 +57,38 @@ fn siganture_validation_invalid() {
 		.as_bytes()
 		.to_vec();
 
-	let should_be_mismatched_ice_address = mock::AirdropModule::validate_signature(
+	let should_be_invalid_ice_address = mock::AirdropModule::validate_signature(
 		&origin_address,
 		&icon_wallet,
 		&icon_signature,
 		&invalid_signed_data,
 	);
 
-	let should_be_mismatched_icon_address = mock::AirdropModule::validate_signature(
+	let should_be_invalid_icon_address = mock::AirdropModule::validate_signature(
 		&origin_address,
 		&invalid_icon_wallet,
 		&icon_signature,
 		&signed_data,
 	);
 
+	let should_be_invalid_icon_signature = mock::AirdropModule::validate_signature(
+		&origin_address,
+		&icon_wallet,
+		&icon_signature[10..],
+		&signed_data,
+	);
+
 	assert_eq!(
-		should_be_mismatched_ice_address.unwrap_err(),
-		types::SignatureValidationError::MismatchedIceAddress
+		should_be_invalid_ice_address.unwrap_err(),
+		types::SignatureValidationError::InvalidIceAddress
 	);
 	assert_eq!(
-		should_be_mismatched_icon_address.unwrap_err(),
-		types::SignatureValidationError::MismatchedIconAddress
+		should_be_invalid_icon_address.unwrap_err(),
+		types::SignatureValidationError::InvalidIconAddress
+	);
+	assert_eq!(
+		should_be_invalid_icon_signature.unwrap_err(),
+		types::SignatureValidationError::InvalidIconSignature
 	);
 }
 
