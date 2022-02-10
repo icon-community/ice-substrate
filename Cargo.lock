@@ -4131,6 +4131,7 @@ dependencies = [
  "frame-system",
  "hex",
  "log",
+ "pallet-balances",
  "pallet-evm-precompile-sha3fips",
  "pallet-evm-precompile-simple",
  "parity-scale-codec",

@@ -1,5 +1,22 @@
-use crate::{mock::*, types, Error};
-use frame_support::{assert_noop, assert_ok};
+use crate::{mock, types, Error};
+use frame_support::{assert_err, assert_noop, assert_ok};
+
+/// Sample icon address when sent to server retrurning defined response
+const PREDEFINED_REQUEST_RESPONSE: (&str, &str) = (
+	"0x000000000000000000000000000000",
+	r#"{"omm":0,"balanced":300,"stake":464764,"defi_user":true}"#,
+);
+
+/// A helper macro that will return the required variable to start testing offchain logic
+macro_rules! new_offchain_test_ext {
+	() => {{
+		let (offchain, state) = sp_core::offchain::testing::TestOffchainExt::new();
+		let mut test_ext = sp_io::TestExternalities::default();
+		test_ext.register_extension(sp_core::offchain::OffchainWorkerExt::new(offchain));
+
+		(test_ext, state)
+	}};
+}
 
 #[test]
 fn siganture_validation_valid() {
@@ -11,7 +28,7 @@ fn siganture_validation_valid() {
 		.as_bytes()
 		.to_vec();
 
-	assert_ok!(AirdropModule::validate_signature(
+	assert_ok!(mock::AirdropModule::validate_signature(
 		&origin_address,
 		&icon_wallet,
 		&icon_signature,
@@ -40,14 +57,14 @@ fn siganture_validation_invalid() {
 		.as_bytes()
 		.to_vec();
 
-	let should_be_mismatched_ice_address = AirdropModule::validate_signature(
+	let should_be_mismatched_ice_address = mock::AirdropModule::validate_signature(
 		&origin_address,
 		&icon_wallet,
 		&icon_signature,
 		&invalid_signed_data,
 	);
 
-	let should_be_mismatched_icon_address = AirdropModule::validate_signature(
+	let should_be_mismatched_icon_address = mock::AirdropModule::validate_signature(
 		&origin_address,
 		&invalid_icon_wallet,
 		&icon_signature,
@@ -62,4 +79,38 @@ fn siganture_validation_invalid() {
 		should_be_mismatched_icon_address.unwrap_err(),
 		types::SignatureValidationError::MismatchedIconAddress
 	);
+}
+
+#[test]
+fn making_http_request() {
+	let (mut test_ext, state) = new_offchain_test_ext! {};
+	put_response(&mut state.write());
+
+	test_ext.execute_with(|| {
+		let icon_address = sp_core::bytes::from_hex(PREDEFINED_REQUEST_RESPONSE.0).unwrap();
+		let fetch_res = mock::AirdropModule::fetch_from_server(icon_address);
+		assert_ok!(fetch_res);
+	});
+}
+
+use sp_core::offchain::testing;
+/// Helper function to initialise PendingResult struct as per passed by (icon_address & response)
+fn put_response(state: &mut testing::OffchainState) {
+	let uri = mock::FetchIconEndpoint::get()
+		.as_bytes()
+		.iter()
+		.chain(PREDEFINED_REQUEST_RESPONSE.0.as_bytes())
+		.cloned()
+		.collect::<Vec<u8>>();
+	let uri = String::from_utf8(uri).unwrap();
+	let method = "GET".to_string();
+	let response = Some(PREDEFINED_REQUEST_RESPONSE.1.as_bytes().to_vec());
+
+	state.expect_request(testing::PendingRequest {
+		method,
+		uri,
+		response,
+		sent: true,
+		..Default::default()
+	});
 }

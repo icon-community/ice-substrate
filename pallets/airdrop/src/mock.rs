@@ -1,6 +1,7 @@
 use crate as pallet_airdrop;
 use frame_support::parameter_types;
 use frame_system as system;
+use pallet_balances;
 use sp_core::H256;
 use sp_runtime::{
 	testing::Header,
@@ -9,8 +10,8 @@ use sp_runtime::{
 
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Test>;
 type Block = frame_system::mocking::MockBlock<Test>;
+type Balance = u128;
 
-// Configure a mock runtime to test the pallet.
 frame_support::construct_runtime!(
 	pub enum Test where
 		Block = Block,
@@ -19,6 +20,7 @@ frame_support::construct_runtime!(
 	{
 		System: frame_system::{Pallet, Call, Config, Storage, Event<T>},
 		AirdropModule: pallet_airdrop::{Pallet, Call, Storage, Event<T>},
+		Balances: pallet_balances::{Pallet, Call, Storage, Config<T>, Event<T>},
 	}
 );
 
@@ -45,7 +47,7 @@ impl system::Config for Test {
 	type BlockHashCount = BlockHashCount;
 	type Version = ();
 	type PalletInfo = PalletInfo;
-	type AccountData = ();
+	type AccountData = pallet_balances::AccountData<Balance>;
 	type OnNewAccount = ();
 	type OnKilledAccount = ();
 	type SystemWeightInfo = ();
@@ -53,8 +55,30 @@ impl system::Config for Test {
 	type OnSetCode = ();
 }
 
+parameter_types! {
+	pub const ExistentialDeposit: u128 = 500;
+	pub const MaxLocks: u32 = 50;
+	// TODO:
+	// might be good to have a in-machine server for testing?
+	pub const FetchIconEndpoint: &'static str = "http://35.175.202.72:5000/claimDetails?address=";
+}
+
 impl pallet_airdrop::Config for Test {
 	type Event = Event;
+	type Currency = Balances;
+	type FetchIconEndpoint = FetchIconEndpoint;
+}
+
+impl pallet_balances::Config for Test {
+	type MaxLocks = MaxLocks;
+	type MaxReserves = ();
+	type ReserveIdentifier = [u8; 8];
+	type Balance = Balance;
+	type Event = Event;
+	type DustRemoval = ();
+	type ExistentialDeposit = ExistentialDeposit;
+	type AccountStore = System;
+	type WeightInfo = ();
 }
 
 // Build genesis storage according to the mock runtime.
