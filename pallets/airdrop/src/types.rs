@@ -22,9 +22,6 @@ pub type IconAddress = sp_std::vec::Vec<u8>;
 #[cfg_attr(feature = "std", derive(Debug))]
 #[cfg_attr(not(feature = "std"), derive(RuntimeDebug))]
 pub enum SignatureValidationError {
-	InvalidLength,
-	InvalidFormat,
-	InvalidMessage,
 	MismatchedIconAddress,
 	MismatchedIceAddress,
 	Sha3Execution,
