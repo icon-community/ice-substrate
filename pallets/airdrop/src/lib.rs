@@ -26,6 +26,7 @@ pub mod pallet {
 	use pallet_evm_precompile_simple::ECRecoverPublicKey;
 
 	use frame_support::traits::{Currency, Hooks, ReservableCurrency};
+	use types::ClaimError;
 
 	/// Configure the pallet by specifying the parameters and types on which it depends.
 	#[pallet::config]
@@ -193,12 +194,73 @@ pub mod pallet {
 		}
 
 		/// This function fetch the data from server and return it in required struct
-		pub fn fetch_from_server(icon_address: types::IconAddress) -> ! {
-			todo!();
+		pub fn fetch_from_server(
+			icon_address: types::IconAddress,
+		) -> Result<types::ServerResponse, types::ClaimError> {
+			use codec::alloc::string::String;
+			use sp_runtime::offchain::{http, Duration};
+			use types::ClaimError;
+
+			const FETCH_TIMEOUT_PERIOD_MS: u64 = 4_0000;
+			const FETCH_ENDPOINT: &[u8] = b"http://35.175.202.72:5000/claimDetails?address=";
+			let timeout =
+				sp_io::offchain::timestamp().add(Duration::from_millis(FETCH_TIMEOUT_PERIOD_MS));
+
+			let request_url = String::from_utf8(
+				FETCH_ENDPOINT
+					.iter()
+					// always prefix the icon_address with 0x
+					.chain(b"0x")
+					// we have to first bring icon_address in hex format
+					.chain(hex::encode(icon_address).as_bytes())
+					.cloned()
+					.collect(),
+			)
+			// we can expect as only possibility to have error will be non-utf8 bytes in icon_address
+			// which should not be possible
+			.expect("Error while creating dynamic url in pallet_airdrop::fetch_from_server()");
+
+			let request = http::Request::get(request_url.as_str());
+			let pending = request
+				.deadline(timeout)
+				.send()
+				.map_err(|_e| ClaimError::HttpError)?;
+			let response = pending
+				.try_wait(timeout)
+				.map_err(|_e| ClaimError::HttpError)?
+				.map_err(|_e| ClaimError::HttpError)?;
+
+			// try to get the response bytes if server returned 200 code
+			// or just return early
+			let response_bytes: Vec<u8>;
+			if response.code == 200 {
+				response_bytes = response.body().collect();
+			} else {
+				return Err(ClaimError::HttpError);
+			}
+
+			// first try to deserialize into expected ok struct
+			// then try to deserialize into known error
+			// else error an invalid format
+			//
+			let deserialize_response_res =
+				serde_json::from_slice::<types::ServerResponse>(response_bytes.as_slice());
+			match deserialize_response_res {
+				Ok(response) => Ok(response),
+				Err(_) => {
+					let deserialize_error_res =
+						serde_json::from_slice::<types::ServerError>(response_bytes.as_slice());
+
+					match deserialize_error_res {
+						Ok(server_error) => Err(ClaimError::ServerError(server_error)),
+						Err(_) => Err(ClaimError::InvalidResponse),
+					}
+				}
+			}
 		}
 
-		// Return an indicater (bool) on weather the offchain worker
-		// should be run on this block number or not
+		/// Return an indicater (bool) on weather the offchain worker
+		/// should be run on this block number or not
 		pub fn should_run_on_this_block(block_number: &T::BlockNumber) -> bool {
 			// This is the number of ocw-run block to skip after running offchain worker
 			// Eg: if block is ran on block_number=3 then
@@ -208,10 +270,10 @@ pub mod pallet {
 			*block_number % ENABLE_IN_EVERY.into() == 0_u32.into()
 		}
 
-		// Helper function to remove anything from pending queue
-		// if same ice address has already recived a claim
-		// This ensures that we do not double credit the same address
-		// because the queue is onchain we have to keep checking for such condition
+		/// Helper function to remove anything from pending queue
+		/// if same ice address has already recived a claim
+		/// This ensures that we do not double credit the same address
+		/// because the queue is onchain we have to keep checking for such condition
 		pub fn remove_complete_from_claim() {}
 	}
 

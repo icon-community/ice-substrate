@@ -84,8 +84,17 @@ pub enum ClaimError {
 	/// When icon_address do not exists in server database
 	NoData,
 
-	/// some error while doing an http request
+	/// Error while doing an http request
+	/// Also might contains the actual error
 	HttpError,
+
+	/// Server returned an response that is actually an error
+	ServerError(ServerError),
+
+	/// Server returned an response in a format that couldn't be understood
+	/// this is set when response neither could not be deserialize into
+	/// valid server response or valid server error
+	InvalidResponse,
 }
 
 /// Structure expected to return from server when doing a request for details of icon_address
@@ -107,4 +116,16 @@ pub struct ServerResponse {
 
 	/// Indicator weather this icon_address is defi_user or not
 	defi_user: bool,
+}
+
+/// Known error server might respond with
+#[derive(Deserialize, Encode, Decode, Clone, Eq, PartialEq, TypeInfo, Copy)]
+#[cfg_attr(feature = "std", derive(Debug))]
+#[cfg_attr(not(feature = "std"), derive(RuntimeDebug))]
+pub enum ServerError {
+	/// When the given icon address do not existsin server
+	InvalidAddress,
+
+	/// When server is in maintainance mode
+	HostOffline,
 }
