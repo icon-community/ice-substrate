@@ -193,6 +193,27 @@ pub mod pallet {
 
 			Ok(())
 		}
+
+		/// Dispatchable to transfer the fund from system balance to given address
+		/// As this transfer the system balance, this must only be called within
+		/// the runtime, so the origin must be root (call with Raw root or sudo_pallet)
+		#[pallet::weight(0)]
+		pub fn transfer_amount(
+			origin: OriginFor<T>,
+			receiver: types::AccountIdOf<T>,
+			server_response: types::ServerResponse,
+		) -> DispatchResult {
+			// should only be called by root
+			ensure_root(origin).map_err(|_| Error::<T>::DeniedOperation)?;
+
+			log::info!(
+				"Crediting {} amount to {:?}",
+				server_response.amount,
+				receiver
+			);
+
+			Ok(())
+		}
 	}
 
 	#[pallet::hooks]
