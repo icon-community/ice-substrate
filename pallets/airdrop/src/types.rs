@@ -102,19 +102,19 @@ pub enum ClaimError {
 #[cfg_attr(not(feature = "std"), derive(RuntimeDebug))]
 pub struct ServerResponse {
 	// TODO: Add description of this field
-	omm: u128,
+	pub omm: u128,
 
 	/// Amount to transfer in this claim
 	// TODO:
 	// is this amount to tranfer in this claim or tranfser in total?
 	#[serde(rename = "balanced")]
-	amount: u128,
+	pub amount: u128,
 
 	// TODO: add description of this field
-	stake: u128,
+	pub stake: u128,
 
 	/// Indicator weather this icon_address is defi_user or not
-	defi_user: bool,
+	pub defi_user: bool,
 }
 
 /// Known error server might respond with
