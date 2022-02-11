@@ -17,7 +17,7 @@ mod types;
 pub mod pallet {
 	use super::types;
 
-	use frame_support::pallet_prelude::*;
+	use frame_support::{fail, pallet_prelude::*};
 	use frame_system::pallet_prelude::*;
 	use sp_std::prelude::*;
 
@@ -47,20 +47,24 @@ pub mod pallet {
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
-		// This input have not been added to ice->snapshotmap
-		// because the map already contains the key of this ice_address
+		/// This input have not been added to ice->snapshotmap
+		/// because the map already contains the key of this ice_address
 		SkippedAddingToMap(types::AccountIdOf<T>),
 
-		// This input have not been added to pending queue
-		// because same ice_address is already present in queue
+		/// This input have not been added to pending queue
+		/// because same ice_address is already present in queue
 		SkippedAddingToQueue(types::AccountIdOf<T>),
 
-		// This ice address have been added to ice->snapshot map
-		// with default snapshot and provided icon_address
+		/// This ice address have been added to ice->snapshot map
+		/// with default snapshot and provided icon_address
 		AddedToMap(types::AccountIdOf<T>),
 
-		// This request have been sucessfullt added to pending queue
+		/// This request have been sucessfully added to pending queue
 		AddedToQueue(types::AccountIdOf<T>),
+
+		/// Event to emit when the cancel_claim_request is ignored
+		/// because the claim is already made or was never in the queue
+		CancelIgnored,
 	}
 
 	#[pallet::storage]
@@ -77,6 +81,12 @@ pub mod pallet {
 	pub enum Error<T> {
 		/// This error will occur when signature validation failed.
 		InvalidSignature,
+
+		/// Error to return when unauthorised operation is attempted
+		DeniedOperation,
+
+		/// Not all data required are supplied with
+		IncompleteData,
 	}
 
 	#[pallet::call]
@@ -138,6 +148,51 @@ pub mod pallet {
 
 			Ok(())
 		}
+
+		/// Dispatchable that allows to cancel the claim request
+		/// Only the root (or pre-authorised accounts) and the claimer itseld will be able to do so
+		/// @parmater:
+		/// origin: - root
+		///			- or a valid origin indicating signed transaction
+		/// to_remove: - if the origin is root: Some(icon_address_to_remove)
+		/// 		   - if the origin is signed: <ignored>
+		#[pallet::weight(5_000)]
+		pub fn cancel_claim_request(
+			origin: OriginFor<T>,
+			to_remove: Option<types::AccountIdOf<T>>,
+		) -> DispatchResult {
+			let is_root = ensure_root(origin.clone()).is_ok();
+			let who = ensure_signed(origin);
+
+			// If origin is root, then remove the address as passed in to_remove
+			// If origin is signed, remove the address calling this dispatchable
+			// ignoring the to_remove parameter
+			// And if origin is anything else, fail with accessDenies error
+			let icon_address_to_remove;
+			if is_root {
+				match to_remove {
+					Some(addr) => icon_address_to_remove = addr,
+					None => fail!(Error::<T>::IncompleteData),
+				}
+			} else {
+				match who {
+					Ok(addr) => icon_address_to_remove = addr,
+					Err(_) => fail!(Error::<T>::DeniedOperation),
+				}
+			}
+
+			// If this address do exists in queue, remove it
+			// Otherwise, emit an event to inform that claim already been made
+			// or was never in request queue
+			let is_in_queue = <PendingClaims<T>>::contains_key(&icon_address_to_remove);
+			if !is_in_queue {
+				Self::deposit_event(Event::<T>::CancelIgnored);
+			} else {
+				<PendingClaims<T>>::remove(icon_address_to_remove);
+			}
+
+			Ok(())
+		}
 	}
 
 	#[pallet::hooks]
@@ -172,26 +227,62 @@ pub mod pallet {
 
 			// for each claims taken, call the process_claim function where actual claiming is done
 			// and display weather the process been succeed
-			for claimer in claims_to_process {
-				Self::process_claim_request(claimer);
+			for claimer in claims_to_process.into_iter() {
+				let claim_res = Self::process_claim_request(claimer.clone());
+				if let Err(err) = claim_res {
+					log::info!("process_claim_request failed with error: {:?}", err);
+				} else {
+					log::info!("Process claim request for {:?} passed..", claimer);
+				}
 			}
 		}
 	}
 
-	// implement all the helper function that are called from pallet dispatchable
+	// implement all the helper function that are called from pallet hooks like offchain_worker
 	impl<T: Config> Pallet<T> {
 		// Function to proceed single claim request
 		pub fn process_claim_request(
 			ice_address: types::AccountIdOf<T>,
 		) -> Result<(), types::ClaimError> {
-			use types::ClaimError;
+			use types::{ClaimError, ServerError};
 
 			// Get the icon address corresponding to this ice_address
 			let icon_address = Self::get_ice_snapshot_map(&ice_address)
 				.ok_or(ClaimError::NoIconAddress)?
 				.icon_address;
 
-			let server_response = Self::fetch_from_server(icon_address);
+			let server_response_res = Self::fetch_from_server(icon_address);
+
+			// let call_to_make: CallType;
+			match server_response_res {
+				Err(err) => {
+					match err {
+						// This icon address do not exists in serevr
+						// so we might just delete it from queue
+						ClaimError::ServerError(err) if err == ServerError::NonExistentData => {
+							// TODO:
+							// set the call_to_make to point to cancel_claim_request
+							// call_to_make = Self::Call::cancel_claim_request {
+							// 	to_remove: ice_address.clone(),
+							// };
+						}
+
+						// we might not have to handle other error espically
+						err => return Err(err),
+					}
+				}
+				Ok(response) => {
+					// TODO:
+					// set the call_to_make to point to transfer_function
+					// call_to_make = Self::Call::transfer_amount {
+					// 	to_remove: ice_address.clone(),
+					// 	server_details: server_response
+					// };
+				}
+			}
+
+			// TODO:
+			// call call_to_make
 
 			Ok(())
 		}
@@ -280,7 +371,7 @@ pub mod pallet {
 		pub fn remove_complete_from_claim() {}
 	}
 
-	// implement all the helper function that are called from pallet hooks like offchain_worker
+	// implement all the helper function that are called from pallet dispatchable
 	impl<T: Config> Pallet<T> {
 		/// Function to make sure that icon_address, ice_address and message are in sync
 		/// On a high level, it does so by checking for these two verification

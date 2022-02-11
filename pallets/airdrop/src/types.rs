@@ -83,9 +83,6 @@ pub enum ClaimError {
 	/// to the ice_address stored in queue
 	NoIconAddress,
 
-	/// When icon_address do not exists in server database
-	NoData,
-
 	/// Error while doing an http request
 	/// Also might contains the actual error
 	HttpError,
@@ -130,4 +127,7 @@ pub enum ServerError {
 
 	/// When server is in maintainance mode
 	HostOffline,
+
+	/// When there is not data about this icon address
+	NonExistentData,
 }
