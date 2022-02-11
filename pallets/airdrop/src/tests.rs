@@ -11,6 +11,8 @@ const PREDEFINED_REQUEST_RESPONSE: (&str, &str) = (
 );
 
 /// A helper macro that will return the required variable to start testing offchain logic
+// TODO:
+// Convert this macro to function
 macro_rules! new_offchain_test_ext {
 	() => {{
 		use sp_core::offchain::TransactionPoolExt;
