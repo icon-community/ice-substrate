@@ -53,6 +53,10 @@ git = 'https://github.com/paritytech/substrate.git'
 default-features = false
 git = 'https://github.com/paritytech/substrate.git'
 
+[dependencies.sp-keystore]
+default-features = false
+git = 'https://github.com/paritytech/substrate.git'
+
 [dependencies.pallet-balances]
 default-features = false
 git = 'https://github.com/paritytech/substrate.git'

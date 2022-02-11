@@ -13,9 +13,28 @@ const PREDEFINED_REQUEST_RESPONSE: (&str, &str) = (
 /// A helper macro that will return the required variable to start testing offchain logic
 macro_rules! new_offchain_test_ext {
 	() => {{
-		let (offchain, state) = sp_core::offchain::testing::TestOffchainExt::new();
+		use sp_core::offchain::TransactionPoolExt;
+		use sp_keystore::{testing::KeyStore, KeystoreExt, SyncCryptoStore};
+		use sp_runtime::RuntimeAppPublic;
+		use std::sync::Arc;
+
+		const PHRASE: &str =
+			"news slush supreme milk chapter athlete soap sausage put clutch what kitten";
+		let keystore = KeyStore::new();
+		SyncCryptoStore::sr25519_generate_new(
+			&keystore,
+			crate::temporary::Public::ID,
+			Some(&format!("{}/abcdefg", PHRASE)),
+		)
+		.unwrap();
+
 		let mut test_ext = sp_io::TestExternalities::default();
+		let (pool, pool_state) = sp_core::offchain::testing::TestTransactionPoolExt::new();
+		let (offchain, state) = sp_core::offchain::testing::TestOffchainExt::new();
+
 		test_ext.register_extension(sp_core::offchain::OffchainWorkerExt::new(offchain));
+		test_ext.register_extension(TransactionPoolExt::new(pool));
+		test_ext.register_extension(KeystoreExt(Arc::new(keystore)));
 
 		(test_ext, state)
 	}};
@@ -108,7 +127,7 @@ fn making_http_request() {
 }
 
 #[test]
-fn test_process_claim_request_function() {
+fn process_claim_invalid() {
 	let (mut test_ext, state) = new_offchain_test_ext! {};
 
 	test_ext.execute_with(|| {
@@ -121,8 +140,12 @@ fn test_process_claim_request_function() {
 			types::ClaimError::NoIconAddress
 		);
 	});
+}
 
-	let (mut test_ext, state) = new_offchain_test_ext! {};
+#[test]
+fn process_claim_valid() {
+	let (mut test_ext, state) = new_offchain_test_ext!();
+
 	put_response(&mut state.write());
 
 	test_ext.execute_with(|| {
@@ -130,13 +153,11 @@ fn test_process_claim_request_function() {
 		let icon_address = sp_core::bytes::from_hex(PREDEFINED_REQUEST_RESPONSE.0).unwrap();
 		let snapshot = types::SnapshotInfo::<Test>::default();
 
-		crate::IceSnapshotMap::<Test>::insert(
-			ice_address.clone(),
-			snapshot.clone().icon_address(icon_address),
-		);
+		crate::IceSnapshotMap::insert(ice_address, snapshot.clone().icon_address(icon_address));
+
 		let should_be_ok = AirdropModule::process_claim_request(ice_address.clone());
 		assert_ok!(should_be_ok);
-	})
+	});
 }
 
 use sp_core::offchain::testing;
