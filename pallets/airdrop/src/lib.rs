@@ -346,7 +346,23 @@ pub mod pallet {
 				}
 			}
 
-			Ok(())
+			use frame_system::offchain::{SendSignedTransaction, Signer};
+
+			let signer = Signer::<T, T::AuthorityId>::any_account();
+			let send_tx_res =
+				signer.send_signed_transaction(move |_accnt| Call::cancel_claim_request {
+					to_remove: ice_address.clone(),
+				});
+
+			if let Some((_account, dispatch_res)) = send_tx_res {
+				if dispatch_res.is_ok() {
+					Ok(())
+				} else {
+					Err(ClaimError::FailedExtrinsic)
+				}
+			} else {
+				Err(ClaimError::CantDispatch)
+			}
 		}
 
 		/// This function fetch the data from server and return it in required struct
@@ -425,12 +441,6 @@ pub mod pallet {
 
 			*block_number % ENABLE_IN_EVERY.into() == 0_u32.into()
 		}
-
-		/// Helper function to remove anything from pending queue
-		/// if same ice address has already recived a claim
-		/// This ensures that we do not double credit the same address
-		/// because the queue is onchain we have to keep checking for such condition
-		pub fn remove_complete_from_claim() {}
 	}
 
 	// implement all the helper function that are called from pallet dispatchable

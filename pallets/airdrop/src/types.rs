@@ -95,6 +95,13 @@ pub enum ClaimError {
 	/// this is set when response neither could not be deserialize into
 	/// valid server response or valid server error
 	InvalidResponse,
+
+	/// Calling an extrinisic resulted in error
+	FailedExtrinsic,
+
+	/// Offchain was not able to dispatch onchain transaction callable,
+	/// eg: no local account
+	CantDispatch,
 }
 
 /// Structure expected to return from server when doing a request for details of icon_address
