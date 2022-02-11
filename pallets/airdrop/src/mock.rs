@@ -1,16 +1,24 @@
 use crate as pallet_airdrop;
+use codec::Encode;
 use frame_support::parameter_types;
 use frame_system as system;
 use pallet_balances;
 use sp_core::H256;
 use sp_runtime::{
+	generic,
 	testing::Header,
-	traits::{BlakeTwo256, IdentityLookup},
+	traits::{BlakeTwo256, Extrinsic as ExtrinsicT, IdentifyAccount, IdentityLookup, Verify},
+	SaturatedConversion,
 };
 
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Test>;
 type Block = frame_system::mocking::MockBlock<Test>;
 type Balance = u128;
+type Signature = sp_core::sr25519::Signature;
+type Index = u64;
+type BlockNumber = u64;
+type Extrinsic = sp_runtime::testing::TestXt<Call, ()>;
+type AuthorityId = crate::temporary::TestAuthId;
 
 frame_support::construct_runtime!(
 	pub enum Test where
@@ -36,11 +44,11 @@ impl system::Config for Test {
 	type DbWeight = ();
 	type Origin = Origin;
 	type Call = Call;
-	type Index = u64;
-	type BlockNumber = u64;
+	type Index = Index;
+	type BlockNumber = BlockNumber;
 	type Hash = H256;
 	type Hashing = BlakeTwo256;
-	type AccountId = u64;
+	type AccountId = sp_core::sr25519::Public;
 	type Lookup = IdentityLookup<Self::AccountId>;
 	type Header = Header;
 	type Event = Event;
@@ -67,6 +75,36 @@ impl pallet_airdrop::Config for Test {
 	type Event = Event;
 	type Currency = Balances;
 	type FetchIconEndpoint = FetchIconEndpoint;
+	type AuthorityId = crate::temporary::TestAuthId;
+}
+
+type AccountId = <<Signature as Verify>::Signer as IdentifyAccount>::AccountId;
+
+impl frame_system::offchain::SigningTypes for Test {
+	type Public = <Signature as Verify>::Signer;
+	type Signature = Signature;
+}
+
+impl<LocalCall> frame_system::offchain::SendTransactionTypes<LocalCall> for Test
+where
+	Call: From<LocalCall>,
+{
+	type OverarchingCall = Call;
+	type Extrinsic = Extrinsic;
+}
+
+impl<LocalCall> frame_system::offchain::CreateSignedTransaction<LocalCall> for Test
+where
+	Call: From<LocalCall>,
+{
+	fn create_transaction<C: frame_system::offchain::AppCrypto<Self::Public, Self::Signature>>(
+		call: Call,
+		_public: <Signature as Verify>::Signer,
+		_account: AccountId,
+		nonce: u64,
+	) -> Option<(Call, <Extrinsic as ExtrinsicT>::SignaturePayload)> {
+		Some((call, (nonce, ())))
+	}
 }
 
 impl pallet_balances::Config for Test {

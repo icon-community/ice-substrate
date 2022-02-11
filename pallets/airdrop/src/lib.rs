@@ -17,7 +17,7 @@ mod types;
 pub mod pallet {
 	use super::types;
 
-	use frame_support::{fail, pallet_prelude::*};
+	use frame_support::pallet_prelude::*;
 	use frame_system::pallet_prelude::*;
 	use sp_std::prelude::*;
 
@@ -25,19 +25,51 @@ pub mod pallet {
 	use pallet_evm_precompile_sha3fips::Sha3FIPS256;
 	use pallet_evm_precompile_simple::ECRecoverPublicKey;
 
+	use frame_support::fail;
 	use frame_support::traits::{Currency, Hooks, ReservableCurrency};
+	use frame_system::offchain::CreateSignedTransaction;
 
 	/// Configure the pallet by specifying the parameters and types on which it depends.
 	#[pallet::config]
-	pub trait Config: frame_system::Config {
+	pub trait Config: frame_system::Config + CreateSignedTransaction<Call<Self>> {
 		/// Because this pallet emits events, it depends on the runtime's definition of an event.
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
 
 		type Currency: Currency<Self::AccountId> + ReservableCurrency<Self::AccountId>;
 
+		/// The overarching dispatch call type.
+		// type Call: From<Call<Self>>;
+
+		/// The identifier type for an offchain worker.
+		type AuthorityId: frame_system::offchain::AppCrypto<Self::Public, Self::Signature>;
+
 		/// Endpoint on where to send request url
 		#[pallet::constant]
 		type FetchIconEndpoint: Get<&'static str>;
+	}
+
+	#[pallet::storage]
+	pub(super) type SudoAccount<T: Config> = StorageValue<_, types::AccountIdOf<T>, ValueQuery>;
+
+	#[pallet::genesis_config]
+	pub struct GenesisConfig<T: Config> {
+		pub sudo_account: types::AccountIdOf<T>,
+	}
+
+	#[cfg(feature = "std")]
+	impl<T: Config> Default for GenesisConfig<T> {
+		fn default() -> Self {
+			Self {
+				sudo_account: types::AccountIdOf::<T>::default(),
+			}
+		}
+	}
+
+	#[pallet::genesis_build]
+	impl<T: Config> GenesisBuild<T> for GenesisConfig<T> {
+		fn build(&self) {
+			<SudoAccount<T>>::set(self.sudo_account.clone());
+		}
 	}
 
 	#[pallet::pallet]
@@ -65,6 +97,9 @@ pub mod pallet {
 		/// Event to emit when the cancel_claim_request is ignored
 		/// because the claim is already made or was never in the queue
 		CancelIgnored,
+
+		/// Wmit when a claim request have been removed from qeue
+		ClaimCancelled,
 	}
 
 	#[pallet::storage]
@@ -150,45 +185,54 @@ pub mod pallet {
 		}
 
 		/// Dispatchable that allows to cancel the claim request
-		/// Only the root (or pre-authorised accounts) and the claimer itseld will be able to do so
-		/// @parmater:
-		/// origin: - root
-		///			- or a valid origin indicating signed transaction
-		/// to_remove: - if the origin is root: Some(icon_address_to_remove)
-		/// 		   - if the origin is signed: <ignored>
+		/// This function is only callable by these party:
+		/// - A root origin
+		/// - Owner of the account being removed
+		/// - Account authorised as configured in this palellet
 		#[pallet::weight(5_000)]
 		pub fn cancel_claim_request(
 			origin: OriginFor<T>,
-			to_remove: Option<types::AccountIdOf<T>>,
+			to_remove: types::AccountIdOf<T>,
 		) -> DispatchResult {
-			let is_root = ensure_root(origin.clone()).is_ok();
-			let who = ensure_signed(origin);
+			log::info!("Inside cancel_claim_request...");
 
-			// If origin is root, then remove the address as passed in to_remove
-			// If origin is signed, remove the address calling this dispatchable
-			// ignoring the to_remove parameter
-			// And if origin is anything else, fail with accessDenies error
-			let icon_address_to_remove;
-			if is_root {
-				match to_remove {
-					Some(addr) => icon_address_to_remove = addr,
-					None => fail!(Error::<T>::IncompleteData),
+			let is_authorised = {
+				match ensure_root(origin.clone()) {
+					// Root is always authorised
+					Ok(()) => true,
+
+					Err(_) => {
+						// Non-root origin must be signed to be authorised
+						match ensure_signed(origin) {
+							Ok(signer) => {
+								let is_sudo = signer == <SudoAccount<T>>::get();
+								let is_owner = signer == to_remove;
+
+								// Signer should be either the sudoAccount configured in this pallet
+								// or should be same as the address to remove ( owner )
+								is_sudo || is_owner
+							}
+							Err(_) => false,
+						}
+					}
 				}
-			} else {
-				match who {
-					Ok(addr) => icon_address_to_remove = addr,
-					Err(_) => fail!(Error::<T>::DeniedOperation),
-				}
+			};
+
+			// If not authorised fail with non-authorised error
+			if !is_authorised {
+				fail!(Error::<T>::DeniedOperation);
 			}
 
-			// If this address do exists in queue, remove it
-			// Otherwise, emit an event to inform that claim already been made
-			// or was never in request queue
-			let is_in_queue = <PendingClaims<T>>::contains_key(&icon_address_to_remove);
-			if !is_in_queue {
-				Self::deposit_event(Event::<T>::CancelIgnored);
+			let is_in_queue = <PendingClaims<T>>::contains_key(&to_remove);
+			if is_in_queue {
+				// If exists in queue remove it then emit respective Event
+				<PendingClaims<T>>::remove(to_remove);
+				Self::deposit_event(Event::<T>::ClaimCancelled);
 			} else {
-				<PendingClaims<T>>::remove(icon_address_to_remove);
+				// If this address do exists in queue, remove it
+				// Otherwise, emit an event to inform that claim already been made
+				// or was never in request queue
+				Self::deposit_event(Event::<T>::CancelIgnored);
 			}
 
 			Ok(())
@@ -301,9 +345,6 @@ pub mod pallet {
 					// };
 				}
 			}
-
-			// TODO:
-			// call call_to_make
 
 			Ok(())
 		}
@@ -490,5 +531,41 @@ pub mod pallet {
 
 			Ok(())
 		}
+	}
+}
+
+// TODO:
+// Do not use this in real production
+/// Temporary module to provide TestAuthId
+pub mod temporary {
+	use sp_core::crypto::KeyTypeId;
+
+	pub const KEY_TYPE: KeyTypeId = KeyTypeId(*b"shot");
+	use codec::alloc::string::String;
+	use sp_core::sr25519::Signature as Sr25519Signature;
+	use sp_runtime::{
+		app_crypto::{app_crypto, sr25519},
+		traits::Verify,
+		MultiSignature, MultiSigner,
+	};
+
+	app_crypto!(sr25519, KEY_TYPE);
+
+	pub struct TestAuthId;
+
+	// implemented for runtime
+	impl frame_system::offchain::AppCrypto<MultiSigner, MultiSignature> for TestAuthId {
+		type RuntimeAppPublic = Public;
+		type GenericSignature = sp_core::sr25519::Signature;
+		type GenericPublic = sp_core::sr25519::Public;
+	}
+
+	// implemented for mock runtime in test
+	impl frame_system::offchain::AppCrypto<<Sr25519Signature as Verify>::Signer, Sr25519Signature>
+		for TestAuthId
+	{
+		type RuntimeAppPublic = Public;
+		type GenericSignature = sp_core::sr25519::Signature;
+		type GenericPublic = sp_core::sr25519::Public;
 	}
 }

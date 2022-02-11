@@ -9,6 +9,7 @@
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
 use codec::{Decode, Encode};
+use pallet_aura::AuraAuthorId;
 use pallet_evm::FeeCalculator;
 use pallet_grandpa::{
 	fg_primitives, AuthorityId as GrandpaId, AuthorityList as GrandpaAuthorityList,
@@ -26,7 +27,7 @@ use sp_runtime::{
 		NumberFor, PostDispatchInfoOf, Verify,
 	},
 	transaction_validity::{TransactionSource, TransactionValidity, TransactionValidityError},
-	ApplyExtrinsicResult, MultiSignature,
+	ApplyExtrinsicResult, MultiSignature, SaturatedConversion,
 };
 use sp_std::{marker::PhantomData, prelude::*};
 #[cfg(feature = "std")]
@@ -60,7 +61,7 @@ use precompiles::FrontierPrecompiles;
 pub use pallet_airdrop;
 
 /// Type of block number.
-pub type BlockNumber = u32;
+pub type BlockNumber = u64;
 
 /// Alias to 512-bit hash when used in the context of a transaction signature on the chain.
 pub type Signature = MultiSignature;
@@ -84,6 +85,9 @@ pub type Hash = sp_core::H256;
 
 /// Digest item type.
 pub type DigestItem = generic::DigestItem<Hash>;
+
+/// The payload being signed in transaction
+pub type SignedPayload = generic::SignedPayload<Call, SignedExtra>;
 
 /// Opaque types. These are used by the CLI to instantiate machinery that don't need to know
 /// the specifics of the runtime. They can then be made to be agnostic over specific formats
@@ -215,15 +219,84 @@ impl frame_system::Config for Runtime {
 	type OnSetCode = ();
 }
 
+/// Implemented as dependency for CreateSignedTransaction
+impl<C> frame_system::offchain::SendTransactionTypes<C> for Runtime
+where
+	Call: From<C>,
+{
+	type Extrinsic = UncheckedExtrinsic;
+	type OverarchingCall = Call;
+}
+
+/// Implemented as dependency for CreateSignedTransaction
+impl frame_system::offchain::SigningTypes for Runtime {
+	type Public = <Signature as sp_runtime::traits::Verify>::Signer;
+	type Signature = Signature;
+}
+
+/// Implement CreateSignedTransaction for pallets/airdrop
+/// to enable the pallet to call dispatchable from offchain worker
+impl<LocalCall> frame_system::offchain::CreateSignedTransaction<LocalCall> for Runtime
+where
+	Call: From<LocalCall>,
+{
+	fn create_transaction<C: frame_system::offchain::AppCrypto<Self::Public, Self::Signature>>(
+		call: Call,
+		public: <Signature as sp_runtime::traits::Verify>::Signer,
+		account: AccountId,
+		index: Index,
+	) -> Option<(
+		Call,
+		<UncheckedExtrinsic as sp_runtime::traits::Extrinsic>::SignaturePayload,
+	)> {
+		let period = BlockHashCount::get() as u64;
+		let current_block = System::block_number()
+			.saturated_into::<BlockNumber>()
+			.saturating_sub(1);
+		let tip = 0;
+		let extra: SignedExtra = (
+			frame_system::CheckSpecVersion::<Runtime>::new(),
+			frame_system::CheckTxVersion::<Runtime>::new(),
+			frame_system::CheckGenesis::<Runtime>::new(),
+			frame_system::CheckEra::<Runtime>::from(generic::Era::mortal(period, current_block)),
+			frame_system::CheckNonce::<Runtime>::from(index),
+			frame_system::CheckWeight::<Runtime>::new(),
+			pallet_transaction_payment::ChargeTransactionPayment::<Runtime>::from(tip),
+		);
+
+		let raw_payload = SignedPayload::new(call, extra)
+			.map_err(|e| {
+				log::warn!("Unable to create signed payload: {:?}", e);
+			})
+			.ok()?;
+		let signature = raw_payload.using_encoded(|payload| C::sign(payload, public))?;
+		let address = account;
+		let (call, extra, _) = raw_payload.deconstruct();
+		Some((
+			call,
+			(
+				sp_runtime::MultiAddress::Id(address),
+				signature.into(),
+				extra,
+			),
+		))
+	}
+}
+
 parameter_types! {
 	pub const AirdropFetchIconEndpoint: &'static str = "http://35.175.202.72:5000/claimDetails?address=";
 }
-
-/// Configure the pallet-template in pallets/template.
+/// Configure the pallet-template in pallets/airdrop
 impl pallet_airdrop::Config for Runtime {
 	type Event = Event;
 	type Currency = Balances;
 	type FetchIconEndpoint = AirdropFetchIconEndpoint;
+	// TODO:
+	// TODO: [V-HIGH-PRIORITY]
+	// Use real authorityId type. It's now using a dummt type
+	// i.e every block produced will be authored in network
+	// Better to use one of POW or Aura
+	type AuthorityId = pallet_airdrop::temporary::TestAuthId;
 }
 
 parameter_types! {
@@ -428,7 +501,7 @@ construct_runtime!(
 		DynamicFee: pallet_dynamic_fee::{Pallet, Call, Storage, Config, Inherent},
 		BaseFee: pallet_base_fee::{Pallet, Call, Storage, Config<T>, Event},
 		Vesting: pallet_vesting::{Pallet, Call, Storage, Config<T>, Event<T>} = 32,
-		Airdrop: pallet_airdrop::{Pallet, Call, Storage, Event<T>},
+		Airdrop: pallet_airdrop::{Pallet, Call, Storage, Event<T>, Config<T>},
 	}
 );
 

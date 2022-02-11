@@ -1,4 +1,7 @@
-use crate::{mock, types, Error};
+use crate::{
+	mock::{self, AirdropModule, Test},
+	types, Error,
+};
 use frame_support::{assert_err, assert_noop, assert_ok};
 
 /// Sample icon address when sent to server retrurning defined response
@@ -102,6 +105,38 @@ fn making_http_request() {
 		let fetch_res = mock::AirdropModule::fetch_from_server(icon_address);
 		assert_ok!(fetch_res);
 	});
+}
+
+#[test]
+fn test_process_claim_request_function() {
+	let (mut test_ext, state) = new_offchain_test_ext! {};
+
+	test_ext.execute_with(|| {
+		let ice_address = types::AccountIdOf::<Test>::default();
+
+		// Nothing is in queue yet so, should fail with no_icon_address
+		let no_icon_address = AirdropModule::process_claim_request(ice_address.clone());
+		assert_eq!(
+			no_icon_address.unwrap_err(),
+			types::ClaimError::NoIconAddress
+		);
+	});
+
+	let (mut test_ext, state) = new_offchain_test_ext! {};
+	put_response(&mut state.write());
+
+	test_ext.execute_with(|| {
+		let ice_address = types::AccountIdOf::<Test>::default();
+		let icon_address = sp_core::bytes::from_hex(PREDEFINED_REQUEST_RESPONSE.0).unwrap();
+		let snapshot = types::SnapshotInfo::<Test>::default();
+
+		crate::IceSnapshotMap::<Test>::insert(
+			ice_address.clone(),
+			snapshot.clone().icon_address(icon_address),
+		);
+		let should_be_ok = AirdropModule::process_claim_request(ice_address.clone());
+		assert_ok!(should_be_ok);
+	})
 }
 
 use sp_core::offchain::testing;

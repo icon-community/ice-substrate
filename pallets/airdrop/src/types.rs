@@ -78,6 +78,7 @@ impl<T: Config> Default for SnapshotInfo<T> {
 /// Possible values of error that can occur when doing claim request from offchain worker
 #[cfg_attr(feature = "std", derive(Debug))]
 #[cfg_attr(not(feature = "std"), derive(RuntimeDebug))]
+#[derive(PartialEq, Eq)]
 pub enum ClaimError {
 	/// When there is no icon address in mapping corresponding
 	/// to the ice_address stored in queue
