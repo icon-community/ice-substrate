@@ -1,11 +1,13 @@
-use crate as integration_tests;
-use frame_support::parameter_types;
+
+use frame_support::{
+	parameter_types,
+};
 use frame_system as system;
 
 use sp_core::H256;
 use sp_runtime::{
 	testing::Header,
-	traits::{BlakeTwo256, IdentityLookup},
+	traits::{BlakeTwo256, Identity, IdentityLookup},
 };
 
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Test>;
@@ -21,9 +23,10 @@ frame_support::construct_runtime!(
 		System: frame_system::{Pallet, Call, Config, Storage, Event<T>},
 		Balances: pallet_balances::{Pallet, Call, Storage, Config<T>, Event<T>},
 		Assets: pallet_assets::{Pallet, Call, Storage, Config<T>, Event<T>},
+		Vesting: pallet_vesting::{Pallet, Call, Storage, Config<T>, Event<T>}
 	}
 );
-
+use crate::mock::sp_api_hidden_includes_construct_runtime::hidden_include::traits::GenesisBuild;
 parameter_types! {
 	pub const BlockHashCount: u64 = 250;
 	pub const SS58Prefix: u8 = 42;
@@ -32,36 +35,36 @@ parameter_types! {
 // Configure FRAME pallets to include in runtime.
 
 impl frame_system::Config for Test {
+	type AccountData = pallet_balances::AccountData<u64>;
+	type AccountId = u64;
 	type BaseCallFilter = frame_support::traits::Everything;
 	type BlockWeights = ();
 	type BlockLength = ();
 	type DbWeight = ();
-	type Origin = Origin;
 	type Call = Call;
 	type Index = u64;
 	type BlockNumber = u64;
 	type Hash = H256;
 	type Hashing = BlakeTwo256;
-	type AccountId = u64;
 	type Lookup = IdentityLookup<Self::AccountId>;
 	type Header = Header;
 	type Event = Event;
 	type BlockHashCount = BlockHashCount;
-	type Version = ();
-	type PalletInfo = PalletInfo;
-	type AccountData = pallet_balances::AccountData<u128>;
 	type OnNewAccount = ();
 	type OnKilledAccount = ();
-	type SystemWeightInfo = ();
-	type SS58Prefix = SS58Prefix;
 	type OnSetCode = ();
+
+	type Origin = Origin;
+	type PalletInfo = PalletInfo;
+	type SS58Prefix = SS58Prefix;
+	type SystemWeightInfo = ();
+	type Version = ();
 }
 
 /// Balance of an account.
-pub type Balance = u128;
+pub type Balance = u64;
 
 parameter_types! {
-	pub const ExistentialDeposit: u128 = 500;
 	// For weight estimation, we assume that the most locks on an individual account will be 50.
 	// This number may need to be adjusted in the future if this assumption no longer holds true.
 	pub const MaxLocks: u32 = 50;
@@ -106,10 +109,84 @@ impl pallet_assets::Config for Test {
 	type WeightInfo = ();
 }
 
-// Build genesis storage according to the mock runtime.
+parameter_types! {
+	pub const MinVestedTransfer: u64 = 256 * 2;
+	pub const ExistentialDeposit: u64 = 256;
+}
+impl pallet_vesting::Config for Test {
+	type BlockNumberToBalance = Identity;
+	type Currency = Balances;
+	type Event = Event;
+	const MAX_VESTING_SCHEDULES: u32 = 3;
+	type MinVestedTransfer = MinVestedTransfer;
+	type WeightInfo = ();
+}
+
+pub struct ExtBuilder {
+	existential_deposit: u64,
+	vesting_genesis_config: Option<Vec<(u64, u64, u64, u64)>>,
+}
+
+impl Default for ExtBuilder {
+	fn default() -> Self {
+		Self { existential_deposit: 1, vesting_genesis_config: None }
+	}
+}
+
+impl ExtBuilder {
+	pub fn existential_deposit(mut self, existential_deposit: u64) -> Self {
+		self.existential_deposit = existential_deposit;
+		self
+	}
+
+	pub fn vesting_genesis_config(mut self, config: Vec<(u64, u64, u64, u64)>) -> Self {
+		self.vesting_genesis_config = Some(config);
+		self
+	}
+
+	pub fn build(self) -> sp_io::TestExternalities {
+		
+		// EXISTENTIAL_DEPOSIT.with(|v| *v.borrow_mut() = self.existential_deposit);
+		
+		let mut t = frame_system::GenesisConfig::default().build_storage::<Test>().unwrap();
+		pallet_balances::GenesisConfig::<Test> {
+			balances: vec![
+				(1, 10 * self.existential_deposit),
+				(2, 20 * self.existential_deposit),
+				(3, 30 * self.existential_deposit),
+				(4, 40 * self.existential_deposit),
+				(12, 10 * self.existential_deposit),
+				(13, 9999 * self.existential_deposit),
+			],
+		}
+		.assimilate_storage(&mut t)
+		.unwrap();
+
+		let vesting = if let Some(vesting_config) = self.vesting_genesis_config {
+			vesting_config
+		} else {
+			vec![
+				(1, 0, 10, 5 * self.existential_deposit),
+				(2, 10, 20, 0),
+				(12, 10, 20, 5 * self.existential_deposit),
+			]
+		};
+
+		pallet_vesting::GenesisConfig::<Test> { vesting }
+			.assimilate_storage(&mut t)
+			.unwrap();
+		let mut ext = sp_io::TestExternalities::new(t);
+		ext.execute_with(|| System::set_block_number(1));
+		ext
+	}
+	
+}
+
 pub fn new_test_ext() -> sp_io::TestExternalities {
 	system::GenesisConfig::default()
 		.build_storage::<Test>()
 		.unwrap()
 		.into()
 }
+
+

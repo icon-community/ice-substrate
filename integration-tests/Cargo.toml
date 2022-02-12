@@ -24,6 +24,7 @@ frame-system = { default-features = false, package = "frame-system", git = "http
 
 pallet-balances = { default-features = false, git = "https://github.com/paritytech/substrate" }
 pallet-assets = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate" }
+pallet-vesting = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate" }
 
 
 sp-core = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate" }
@@ -50,6 +51,7 @@ std = [
 
 	"pallet-balances/std",
 	"pallet-assets/std",
+	"pallet-vesting/std",
 
 	"sp-core/std",
 	"sp-runtime/std",
