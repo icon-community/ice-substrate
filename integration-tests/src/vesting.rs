@@ -51,8 +51,8 @@ fn check_vesting_status() {
 		// // Account 12 has only their illiquid funds locked
 		// assert_eq!(Vesting::vesting_balance(&12), Some(user12_free_balance - ED * 5));
 
-		// System::set_block_number(10);
-		// assert_eq!(System::block_number(), 10);
+		System::set_block_number(10);
+		assert_eq!(System::block_number(), 10);
 
 		// // Account 1 has fully vested by block 10
 		// assert_eq!(Vesting::vesting_balance(&1), Some(0));
@@ -61,8 +61,8 @@ fn check_vesting_status() {
 		// // Account 12 has started vesting by block 10
 		// assert_eq!(Vesting::vesting_balance(&12), Some(user12_free_balance - ED * 5));
 
-		// System::set_block_number(30);
-		// assert_eq!(System::block_number(), 30);
+		System::set_block_number(30);
+		assert_eq!(System::block_number(), 30);
 
 		// assert_eq!(Vesting::vesting_balance(&1), Some(0)); // Account 1 is still fully vested, and not negative
 		// assert_eq!(Vesting::vesting_balance(&2), Some(0)); // Account 2 has fully vested by block 30
