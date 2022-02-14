@@ -285,6 +285,35 @@ pub mod pallet {
 
 			Ok(())
 		}
+
+		/// Public function to deposit some fund for our creditor
+		/// @parameter:
+		/// - origin: Signed Origin from which to credit
+		/// - amount: Amount to donate
+		/// - allow_death: when transferring amount,
+		/// 		if origin's balance drop below minimum balance
+		/// 		then weather to transfer (resulting origin account to vanish)
+		/// 		or cancel the donation
+		/// This function can be used as a mean to credit our creditor if being donated from
+		/// any node operator owned account
+		#[pallet::weight(0)]
+		pub fn donate_to_creditor(
+			origin: OriginFor<T>,
+			amount: types::BalanceOf<T>,
+			allow_death: bool,
+		) -> DispatchResult {
+			let sponser = ensure_signed(origin)?;
+
+			let creditor_account = Self::get_creditor_account();
+			let existance_req = if allow_death {
+				ExistenceRequirement::AllowDeath
+			} else {
+				ExistenceRequirement::KeepAlive
+			};
+			T::Currency::transfer(&sponser, &creditor_account, amount, existance_req);
+
+			Ok(())
+		}
 	}
 
 	#[pallet::hooks]
