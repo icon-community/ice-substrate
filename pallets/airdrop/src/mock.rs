@@ -1,4 +1,5 @@
 use crate as pallet_airdrop;
+use crate::types;
 use codec::Encode;
 use frame_support::parameter_types;
 use frame_system as system;
@@ -66,9 +67,8 @@ impl system::Config for Test {
 parameter_types! {
 	pub const ExistentialDeposit: u128 = 500;
 	pub const MaxLocks: u32 = 50;
-	// TODO:
-	// might be good to have a in-machine server for testing?
 	pub const FetchIconEndpoint: &'static str = "http://35.175.202.72:5000/claimDetails?address=";
+	pub const CreditorAccount: types::AccountIdOf::<Test> = sp_core::sr25519::Public([10; 32]);
 }
 
 impl pallet_airdrop::Config for Test {
@@ -76,6 +76,7 @@ impl pallet_airdrop::Config for Test {
 	type Currency = Balances;
 	type FetchIconEndpoint = FetchIconEndpoint;
 	type AuthorityId = crate::temporary::TestAuthId;
+	type Creditor = CreditorAccount;
 }
 
 type AccountId = <<Signature as Verify>::Signer as IdentifyAccount>::AccountId;

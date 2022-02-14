@@ -1,3 +1,4 @@
+use crate as pallet_airdrop;
 use crate::{
 	mock::{self, AirdropModule, Test},
 	types, Error,
@@ -163,7 +164,73 @@ fn process_claim_valid() {
 }
 
 #[test]
-fn test_transfer() {
+fn test_transfer_valid() {
+	mock::new_test_ext().execute_with(|| {
+		let system_account_id = AirdropModule::get_creditor_account();
+		let claimer = types::AccountIdOf::<Test>::default();
+
+		// Set some balance to creditor account first
+		let diposit_res = <Test as pallet_airdrop::Config>::Currency::set_balance(
+			mock::Origin::root(),
+			system_account_id.clone(),
+			10_00_000_u32.into(),
+			10_000_u32.into(),
+		);
+		assert_ok!(diposit_res);
+
+		// Simulate that we have done a claim_request by adding it to PendingClaims queue
+		pallet_airdrop::PendingClaims::<Test>::insert(&claimer, ());
+
+		// Check for sucess transfer. Ensure that receiver balances is credited and system balances is debited
+		{
+			use frame_support::traits::tokens::currency::Currency;
+
+			let root_origin = mock::Origin::root();
+			let server_response = types::ServerResponse {
+				omm: 123_u32.into(),
+				amount: 10_000_u32.into(),
+				stake: 12_u32.into(),
+				defi_user: true,
+			};
+
+			let pre_system_balance =
+				<Test as pallet_airdrop::Config>::Currency::free_balance(&system_account_id);
+			let pre_user_balance =
+				<Test as pallet_airdrop::Config>::Currency::free_balance(&claimer);
+
+			let transfer_res = AirdropModule::transfer_amount(
+				mock::Origin::root(),
+				claimer.clone(),
+				server_response,
+			);
+			assert_ok!(transfer_res);
+
+			let post_system_balance =
+				<Test as pallet_airdrop::Config>::Currency::free_balance(&system_account_id);
+			let post_user_balance =
+				<Test as pallet_airdrop::Config>::Currency::free_balance(&claimer);
+
+			// Make sure user got right amount of money
+			assert_eq!(post_user_balance, server_response.amount.into());
+
+			// System balance is only requeced by balance transferred only as fee is 0 for this call
+			assert_eq!(
+				post_system_balance,
+				pre_system_balance - server_response.amount
+			);
+
+			// Make sure that net sum of node remains same.
+			// i.e fund is not lost anywhere
+			assert_eq!(
+				pre_system_balance + pre_user_balance,
+				post_system_balance + post_user_balance
+			);
+		}
+	});
+}
+
+#[test]
+fn test_transfer_invalid() {
 	mock::new_test_ext().execute_with(|| {
 		let server_response = types::ServerResponse::default();
 		let receiver = types::AccountIdOf::<Test>::default();

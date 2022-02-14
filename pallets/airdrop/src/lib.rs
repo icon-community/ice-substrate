@@ -46,6 +46,13 @@ pub mod pallet {
 		/// Endpoint on where to send request url
 		#[pallet::constant]
 		type FetchIconEndpoint: Get<&'static str>;
+
+		/// Id of account from which to send fund to claimers
+		/// This account should be credited enough to supply fund for all claim requests
+		#[pallet::constant]
+		// TODO:
+		// not Sure weather AccountId or PalletId here
+		type Creditor: Get<types::AccountIdOf<Self>>;
 	}
 
 	#[pallet::storage]
@@ -98,13 +105,13 @@ pub mod pallet {
 		/// because the claim is already made or was never in the queue
 		CancelIgnored,
 
-		/// Emit when a claim request have been removed from qeue
+		/// Emit when a claim request have been removed from queue
 		ClaimCancelled,
 	}
 
 	#[pallet::storage]
 	#[pallet::getter(fn get_pending_claims)]
-	pub type PendingClaims<T: Config> =
+	pub(super) type PendingClaims<T: Config> =
 		StorageMap<_, Identity, types::AccountIdOf<T>, (), OptionQuery>;
 
 	#[pallet::storage]
@@ -256,26 +263,25 @@ pub mod pallet {
 			// or if user had decided to cancel_claim_request
 			// this entry won't be present in the queue
 			let is_in_queue = <PendingClaims<T>>::contains_key(&receiver);
-			// TODO: also emit event
 			ensure!(is_in_queue, Error::<T>::IncompleteData);
 
-			// TODO:
-			// have real implementation
+			// Convert server_response.amount type ( usually u128 ) to balance type
+			// this will check for underflow overflow if u128 cannot be assigned to balance
+			// Failing due to this reasong implies that we are using incompatible data type
+			// in ServerResponse.amount & pallet_airdrop::Currency
+			let amount = server_response.amount.try_into().map_err(|_| {
+				DispatchError::Other("Cannot convert server_response.value into Balance type")
+			})?;
 
-			let amount: types::BalanceOf<T> = 200_u32.into();
-			let transfer_res = T::Currency::transfer(
-				&types::AccountIdOf::<T>::default(),
+			T::Currency::transfer(
+				&Self::get_creditor_account(),
 				&receiver,
 				amount,
 				ExistenceRequirement::KeepAlive,
-			);
-			log::info!("Transfer Result: {:#?}", transfer_res);
+			)?;
 
-			log::info!(
-				"Crediting {} amount to {:?}",
-				server_response.amount,
-				receiver
-			);
+			// TODO:
+			// emit proper emit thorughout this function
 
 			Ok(())
 		}
@@ -561,6 +567,10 @@ pub mod pallet {
 			// as passed in this function
 
 			Ok(())
+		}
+
+		pub fn get_creditor_account() -> types::AccountIdOf<T> {
+			T::Creditor::get()
 		}
 	}
 }

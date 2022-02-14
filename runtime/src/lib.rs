@@ -284,7 +284,14 @@ where
 }
 
 parameter_types! {
+	/// Server url from which to consume airdrop data from by sending GET request.
+	/// This should also conatins the endpoint path along with =
+	/// Only icon address in 0x format is appended to this. So keep url accordingly
 	pub const AirdropFetchIconEndpoint: &'static str = "http://35.175.202.72:5000/claimDetails?address=";
+
+	/// Account from which to credit the claim request
+	// TODO: Add real creditor account
+	pub const AirdropCreditor: AccountId = AccountId::default();
 }
 /// Configure the pallet-template in pallets/airdrop
 impl pallet_airdrop::Config for Runtime {
@@ -297,6 +304,7 @@ impl pallet_airdrop::Config for Runtime {
 	// i.e every block produced will be authored in network
 	// Better to use one of POW or Aura
 	type AuthorityId = pallet_airdrop::temporary::TestAuthId;
+	type Creditor = AirdropCreditor;
 }
 
 parameter_types! {
