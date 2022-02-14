@@ -26,7 +26,7 @@ pub mod pallet {
 	use pallet_evm_precompile_simple::ECRecoverPublicKey;
 
 	use frame_support::fail;
-	use frame_support::traits::{Currency, Hooks, ReservableCurrency};
+	use frame_support::traits::{Currency, ExistenceRequirement, Hooks, ReservableCurrency};
 	use frame_system::offchain::CreateSignedTransaction;
 
 	/// Configure the pallet by specifying the parameters and types on which it depends.
@@ -98,7 +98,7 @@ pub mod pallet {
 		/// because the claim is already made or was never in the queue
 		CancelIgnored,
 
-		/// Wmit when a claim request have been removed from qeue
+		/// Emit when a claim request have been removed from qeue
 		ClaimCancelled,
 	}
 
@@ -248,7 +248,28 @@ pub mod pallet {
 			server_response: types::ServerResponse,
 		) -> DispatchResult {
 			// should only be called by root
+			// TODO: Make callable from storage sudo account
 			ensure_root(origin).map_err(|_| Error::<T>::DeniedOperation)?;
+
+			// Check again if it is still in the pending queue
+			// Eg: If another node had processed the same request
+			// or if user had decided to cancel_claim_request
+			// this entry won't be present in the queue
+			let is_in_queue = <PendingClaims<T>>::contains_key(&receiver);
+			// TODO: also emit event
+			ensure!(is_in_queue, Error::<T>::IncompleteData);
+
+			// TODO:
+			// have real implementation
+
+			let amount: types::BalanceOf<T> = 200_u32.into();
+			let transfer_res = T::Currency::transfer(
+				&types::AccountIdOf::<T>::default(),
+				&receiver,
+				amount,
+				ExistenceRequirement::KeepAlive,
+			);
+			log::info!("Transfer Result: {:#?}", transfer_res);
 
 			log::info!(
 				"Crediting {} amount to {:?}",

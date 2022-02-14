@@ -162,6 +162,43 @@ fn process_claim_valid() {
 	});
 }
 
+#[test]
+fn test_transfer() {
+	mock::new_test_ext().execute_with(|| {
+		let server_response = types::ServerResponse::default();
+		let receiver = types::AccountIdOf::<Test>::default();
+
+		// Try to claim something when the data is not in queue
+		// simulate the condition when user had cancelled the claim while process was goingon in offchain
+		{
+			let root_origin = mock::Origin::root();
+			let fail_with_absent_queue = AirdropModule::transfer_amount(
+				root_origin.clone(),
+				receiver.clone(),
+				server_response.clone(),
+			);
+			assert_eq!(
+				fail_with_absent_queue.unwrap_err(),
+				crate::Error::<Test>::IncompleteData.into()
+			);
+		}
+
+		// Try to call this function with unauthorised key
+		{
+			let unauthorised_user = mock::Origin::signed(types::AccountIdOf::<Test>::default());
+			let fail_with_permission = AirdropModule::transfer_amount(
+				unauthorised_user,
+				receiver.clone(),
+				server_response.clone(),
+			);
+			assert_eq!(
+				fail_with_permission.unwrap_err(),
+				crate::Error::<Test>::DeniedOperation.into()
+			);
+		}
+	});
+}
+
 use sp_core::offchain::testing;
 /// Helper function to initialise PendingResult struct as per passed by (icon_address & response)
 fn put_response(state: &mut testing::OffchainState) {
