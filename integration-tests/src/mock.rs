@@ -1,7 +1,4 @@
-
-use frame_support::{
-	parameter_types,
-};
+use frame_support::parameter_types;
 use frame_system as system;
 
 use sp_core::H256;
@@ -129,7 +126,10 @@ pub struct ExtBuilder {
 
 impl Default for ExtBuilder {
 	fn default() -> Self {
-		Self { existential_deposit: 1, vesting_genesis_config: None }
+		Self {
+			existential_deposit: 1,
+			vesting_genesis_config: None,
+		}
 	}
 }
 
@@ -145,10 +145,11 @@ impl ExtBuilder {
 	}
 
 	pub fn build(self) -> sp_io::TestExternalities {
-		
 		// EXISTENTIAL_DEPOSIT.with(|v| *v.borrow_mut() = self.existential_deposit);
-		
-		let mut t = frame_system::GenesisConfig::default().build_storage::<Test>().unwrap();
+
+		let mut t = frame_system::GenesisConfig::default()
+			.build_storage::<Test>()
+			.unwrap();
 		pallet_balances::GenesisConfig::<Test> {
 			balances: vec![
 				(1, 10 * self.existential_deposit),
@@ -179,7 +180,6 @@ impl ExtBuilder {
 		ext.execute_with(|| System::set_block_number(1));
 		ext
 	}
-	
 }
 
 pub fn new_test_ext() -> sp_io::TestExternalities {
@@ -188,5 +188,3 @@ pub fn new_test_ext() -> sp_io::TestExternalities {
 		.unwrap()
 		.into()
 }
-
-
