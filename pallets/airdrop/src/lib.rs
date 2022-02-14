@@ -178,11 +178,7 @@ pub mod pallet {
 			}
 
 			if !is_already_on_queue {
-				// TODO:
-				// while adding () value to map, it emits an error for Encode(Like)
-				// been not implemented. Maybe the commit of this dependency do not implement for ()?
-				// Not sure. Figure out the error and solve
-				// <IceSnapshotMap<T>>::insert(&ice_address, ());
+				<PendingClaims<T>>::insert(&ice_address, ());
 				Self::deposit_event(Event::<T>::AddedToQueue(ice_address));
 			} else {
 				Self::deposit_event(Event::<T>::SkippedAddingToQueue(ice_address));
