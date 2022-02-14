@@ -280,6 +280,9 @@ pub mod pallet {
 				ExistenceRequirement::KeepAlive,
 			)?;
 
+			// Now we can remove this claim from queue
+			<PendingClaims<T>>::remove(&receiver);
+
 			// TODO:
 			// emit proper emit thorughout this function
 

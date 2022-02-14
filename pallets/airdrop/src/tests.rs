@@ -225,6 +225,12 @@ fn test_transfer_valid() {
 				pre_system_balance + pre_user_balance,
 				post_system_balance + post_user_balance
 			);
+
+			// Make sure that request is removed from queue after transfer
+			assert_eq!(
+				pallet_airdrop::PendingClaims::<Test>::contains_key(&claimer),
+				false
+			);
 		}
 	});
 }
