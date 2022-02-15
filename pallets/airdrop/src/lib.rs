@@ -315,7 +315,8 @@ pub mod pallet {
 			} else {
 				ExistenceRequirement::KeepAlive
 			};
-			T::Currency::transfer(&sponser, &creditor_account, amount, existance_req);
+
+			T::Currency::transfer(&sponser, &creditor_account, amount, existance_req)?;
 
 			Ok(())
 		}
