@@ -139,3 +139,15 @@ pub enum ServerError {
 	/// When there is not data about this icon address
 	NonExistentData,
 }
+
+/// Trait that marks something is verifable agains the given icon data
+// This was originally created to be implemented against AccountId of airdrop-pallet
+// as a way to ensure that the ice & icon address pair is authorised
+pub trait IconVerifiable {
+	fn verify_with_icon(
+		&self,
+		icon_wallet: &IconAddress,
+		icon_signature: &[u8],
+		message: &[u8],
+	) -> Result<(), SignatureValidationError>;
+}

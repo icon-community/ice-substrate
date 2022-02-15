@@ -29,13 +29,20 @@ pub mod pallet {
 	use frame_support::traits::{Currency, ExistenceRequirement, Hooks, ReservableCurrency};
 	use frame_system::offchain::CreateSignedTransaction;
 
+	use types::IconVerifiable;
+
 	/// Configure the pallet by specifying the parameters and types on which it depends.
 	#[pallet::config]
 	pub trait Config: frame_system::Config + CreateSignedTransaction<Call<Self>> {
+		/// AccountIf type that is same as frame_system's accountId also
+		/// extended to be verifable against icon data
+		type AccountId: IconVerifiable + IsType<<Self as frame_system::Config>::AccountId>;
+
 		/// Because this pallet emits events, it depends on the runtime's definition of an event.
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
 
-		type Currency: Currency<Self::AccountId> + ReservableCurrency<Self::AccountId>;
+		type Currency: Currency<types::AccountIdOf<Self>>
+			+ ReservableCurrency<types::AccountIdOf<Self>>;
 
 		/// The overarching dispatch call type.
 		// type Call: From<Call<Self>>;
@@ -115,7 +122,7 @@ pub mod pallet {
 	#[pallet::storage]
 	#[pallet::getter(fn get_ice_snapshot_map)]
 	pub(super) type IceSnapshotMap<T: Config> =
-		StorageMap<_, Identity, T::AccountId, types::SnapshotInfo<T>, OptionQuery>;
+		StorageMap<_, Identity, types::AccountIdOf<T>, types::SnapshotInfo<T>, OptionQuery>;
 
 	#[pallet::error]
 	pub enum Error<T> {
@@ -150,19 +157,20 @@ pub mod pallet {
 			message: Vec<u8>,
 			icon_signature: Vec<u8>,
 		) -> DispatchResult {
-			let ice_address = ensure_signed(origin)?;
+			// Take signed address compatible with airdrop_pallet::Config::AccountId type
+			// so that we can call verify_with_icon method
+			let ice_address: <T as Config>::AccountId = ensure_signed(origin)?.into();
 
 			// make sure the validation is correct
-			Self::validate_signature(
-				hex::encode(ice_address.encode()).as_bytes(),
-				&icon_address,
-				&icon_signature,
-				&message,
-			)
-			.map_err(|err| {
-				log::info!("Signature validation failed with: {:?}", err);
-				Error::<T>::InvalidSignature
-			})?;
+			ice_address
+				.verify_with_icon(&icon_address, &icon_signature, &message)
+				.map_err(|err| {
+					log::info!("Signature validation failed with: {:?}", err);
+					Error::<T>::InvalidSignature
+				})?;
+
+			// Convert back to to frame_system::Config::AccountId
+			let ice_address: types::AccountIdOf<T> = ice_address.into();
 
 			let is_already_on_map = <IceSnapshotMap<T>>::contains_key(&ice_address);
 			let is_already_on_queue = <IceSnapshotMap<T>>::contains_key(&ice_address);
@@ -636,5 +644,97 @@ pub mod temporary {
 		type RuntimeAppPublic = Public;
 		type GenericSignature = sp_core::sr25519::Signature;
 		type GenericPublic = sp_core::sr25519::Public;
+	}
+}
+
+/// Implement IconVerifiable for Anything that can be decoded into Vec<u8>
+// However not that
+impl types::IconVerifiable for sp_runtime::AccountId32 {
+	fn verify_with_icon(
+		&self,
+		icon_wallet: &types::IconAddress,
+		icon_signature: &[u8],
+		message: &[u8],
+	) -> Result<(), types::SignatureValidationError> {
+		use codec::Encode;
+		use fp_evm::LinearCostPrecompile;
+		use frame_support::ensure;
+		use pallet_evm_precompile_sha3fips::Sha3FIPS256;
+		use pallet_evm_precompile_simple::ECRecoverPublicKey;
+		use types::SignatureValidationError;
+
+		const COST: u64 = 1;
+		const PADDING_FOR_V: [u8; 31] = [0; 31];
+
+		let ice_address = hex::encode(self.encode());
+		let ice_address = ice_address.as_bytes();
+
+		/* =======================================
+				Validate the icon_signature length
+		*/
+		ensure!(
+			icon_signature.len() >= 65,
+			SignatureValidationError::InvalidIconSignature
+		);
+		// === verified the length of icon_signature
+
+		/* ======================================================
+			Verify that the message constains the same ice_address
+			as being passed to this function
+		*/
+		let extracted_ice_address = {
+			// TODO:
+			// make sure that message will always be in expected format
+			const PREFIX_LEN: usize =
+				b"ice_sendTransaction.data.{method.transfer.params.{wallet.".len();
+			let address_len = ice_address.len();
+			&message[PREFIX_LEN..PREFIX_LEN + address_len]
+		};
+
+		ensure!(
+			&ice_address == &extracted_ice_address,
+			SignatureValidationError::InvalidIceAddress
+		);
+		// ==== Verfiied that ice_address in encoded message
+		// and recived in function parameterare same
+
+		/* ================================================
+			verify thet this message is being signed by same
+			icon_address as passed in this function
+		*/
+		let (_exit_status, message_hash) = Sha3FIPS256::execute(&message, COST)
+			.map_err(|_| SignatureValidationError::Sha3Execution)?;
+		let formatted_icon_signature = {
+			let sig_r = &icon_signature[..32];
+			let sig_s = &icon_signature[32..64];
+			let sig_v = &icon_signature[64..];
+
+			// Sig final is in the format of:
+			// object hash + 31 byte padding + 1 byte v + 32 byte r + 32 byte s
+			message_hash
+				.iter()
+				.chain(&PADDING_FOR_V)
+				.chain(sig_v)
+				.chain(sig_r)
+				.chain(sig_s)
+				.cloned()
+				.collect::<sp_std::vec::Vec<u8>>()
+		};
+
+		let (_exit_status, icon_pub_key) =
+			ECRecoverPublicKey::execute(&formatted_icon_signature, COST)
+				.map_err(|_| SignatureValidationError::ECRecoverExecution)?;
+
+		let (_exit_status, computed_icon_address) = Sha3FIPS256::execute(&icon_pub_key, COST)
+			.map_err(|_| SignatureValidationError::Sha3Execution)?;
+
+		ensure!(
+			&computed_icon_address[computed_icon_address.len() - 20..] == icon_wallet.as_slice(),
+			SignatureValidationError::InvalidIconAddress
+		);
+		// ===== It is now verified that the message is signed by same icon address
+		// as passed in this function
+
+		Ok(())
 	}
 }

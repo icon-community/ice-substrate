@@ -298,6 +298,7 @@ parameter_types! {
 }
 /// Configure the pallet-template in pallets/airdrop
 impl pallet_airdrop::Config for Runtime {
+	type AccountId = AccountId;
 	type Event = Event;
 	type Currency = Balances;
 	type FetchIconEndpoint = AirdropFetchIconEndpoint;
