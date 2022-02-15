@@ -176,7 +176,7 @@ pub mod pallet {
 			let is_already_on_queue = <IceSnapshotMap<T>>::contains_key(&ice_address);
 
 			if !is_already_on_map {
-				let new_snapshot = types::SnapshotInfo::<T>::default();
+				let new_snapshot = types::SnapshotInfo::<T>::default().icon_address(icon_address);
 				<IceSnapshotMap<T>>::insert(&ice_address, new_snapshot);
 				Self::deposit_event(Event::<T>::AddedToMap(ice_address.clone()));
 			} else {
