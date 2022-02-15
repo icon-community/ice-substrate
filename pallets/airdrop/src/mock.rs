@@ -73,6 +73,7 @@ parameter_types! {
 
 impl pallet_airdrop::Config for Test {
 	type Event = Event;
+	type AccountId = AccountId;
 	type Currency = Balances;
 	type FetchIconEndpoint = FetchIconEndpoint;
 	type AuthorityId = crate::temporary::TestAuthId;
@@ -126,4 +127,17 @@ pub fn new_test_ext() -> sp_io::TestExternalities {
 		.build_storage::<Test>()
 		.unwrap()
 		.into()
+}
+
+/// Dummy implementation for IconVerififable trait for test AccountId
+// This implementation always passes so should not be dependent upon
+impl types::IconVerifiable for sp_core::sr25519::Public {
+	fn verify_with_icon(
+		&self,
+		icon_wallet: &types::IconAddress,
+		icon_signature: &[u8],
+		message: &[u8],
+	) -> Result<(), types::SignatureValidationError> {
+		Ok(())
+	}
 }

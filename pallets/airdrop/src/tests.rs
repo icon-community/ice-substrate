@@ -272,6 +272,43 @@ fn test_transfer_invalid() {
 	});
 }
 
+#[test]
+fn claim_request_valid() {
+	mock::new_test_ext().execute_with(|| {
+		let message = b"dummy-test-text";
+		let icon_signature = message;
+		let icon_address = message;
+		let ice_address = types::AccountIdOf::<Test>::default();
+
+		let claim_res = AirdropModule::claim_request(
+			mock::Origin::signed(ice_address.clone()),
+			icon_address.to_vec(),
+			message.to_vec(),
+			icon_signature.to_vec(),
+		);
+
+		// Make sure this request passes
+		assert_ok!(claim_res);
+
+		// Expected snapshot to be stored in map
+		let expected_snapshot = types::SnapshotInfo::<Test> {
+			icon_address: vec![],
+			amount: 0,
+			defi_user: false,
+			vesting_percentage: 0,
+			claim_status: false,
+		};
+
+		// Make sure that the ice->snapshot map is set accordingly
+		let map_data = AirdropModule::get_ice_snapshot_map(&ice_address);
+		assert_eq!(map_data, Some(expected_snapshot));
+
+		// Make sure that queue storage is populated accordingly
+		let queue_data = AirdropModule::get_pending_claims(&ice_address);
+		assert_eq!(queue_data, Some(()));
+	});
+}
+
 use sp_core::offchain::testing;
 /// Helper function to initialise PendingResult struct as per passed by (icon_address & response)
 fn put_response(state: &mut testing::OffchainState) {
