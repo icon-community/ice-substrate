@@ -13,8 +13,8 @@ impl OnUnbalanced<NegativeImbalanceOf> for MockTreasury<F> {
     }
 }
 
-pub struct DealWithImbalace;
-impl OnUnbalanced<NegativeImbalance> for DealWithImbalace {
+pub struct DealWithImbalance;
+impl OnUnbalanced<NegativeImbalance> for DealWithImbalance {
     fn on_unbalanceds<B>(mut fees_then_tips: impl Iterator<Item = NegativeImbalance>) {
         if let Some(fees) = fees_then_tips.next() {
             // for fees, 80% to treasury, 20% to author

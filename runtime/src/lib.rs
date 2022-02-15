@@ -58,7 +58,7 @@ use precompiles::FrontierPrecompiles;
 
 
 pub mod impls;
-use impls::DealWithFees;
+use impls::DealWithImbalance;
 /// Type of block number.
 pub type BlockNumber = u32;
 
