@@ -1,13 +1,15 @@
 
-use crate::{AccountId, Authorship, Balances, Treasury};
+use crate::{AccountId, Authorship, Balances};
 use frame_support::traits::{Currency, Imbalance, OnUnbalanced};
 
 type NegativeImbalance = <Balances as Currency<AccountId>>::NegativeImbalance;
 
-pub struct Author;
-impl OnUnbalanced<NegativeImbalance> for Author {
-    fn on_nonzero_unbalanced(amount: NegativeImbalance) {
-        Balances::resolve_creating(&Authorship::author(), amount);
+
+pub struct MockTreasury<F>(sp_std::marker::PhantomData<F>);
+impl OnUnbalanced<NegativeImbalanceOf> for MockTreasury<F> {
+    fn on_nonzero_unbalanced(amount: NegativeImbalanceOf) {
+        // add balance to mock treasury account
+        Balances::resolve_creating(&MOCK_TREASURY, amount);
     }
 }
 
@@ -21,8 +23,7 @@ impl OnUnbalanced<NegativeImbalance> for DealWithImbalace {
                 // for tips, if any, 80% to treasury, 20% to author (though this can be anything)
                 tips.ration_merge_into(80, 20, &mut split);
             }
-            Treasury::on_unbalanced(split.0);
-            Author::on_unbalanced(split.1);
+            MockTreasury::on_unbalanced(split.0);
         }
     }
 }
