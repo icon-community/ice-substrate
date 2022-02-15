@@ -327,7 +327,10 @@ pub mod pallet {
 		#[pallet::weight(10_00_000_000)]
 		pub fn sample_call(_origin: OriginFor<T>, arg: i32) -> DispatchResult {
 			// Indicate that this function is called.
-			println!("Sample_call function called with {}..", arg);
+			#[cfg(test)]
+			{
+				println!("Sample_call function called with {}..", arg);
+			}
 			log::info!("Sample call function called with {}...", arg);
 
 			Ok(())
