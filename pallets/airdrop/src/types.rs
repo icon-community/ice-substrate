@@ -97,12 +97,8 @@ pub enum ClaimError {
 	/// valid server response or valid server error
 	InvalidResponse,
 
-	/// Calling an extrinisic resulted in error
-	FailedExtrinsic,
-
-	/// Offchain was not able to dispatch onchain transaction callable,
-	/// eg: no local account
-	CantDispatch,
+	/// Error was occured when making extrinsic call
+	CallingError(CallDispatchableError),
 }
 
 /// Structure expected to return from server when doing a request for details of icon_address
@@ -139,6 +135,18 @@ pub enum ServerError {
 
 	/// When there is not data about this icon address
 	NonExistentData,
+}
+
+/// Error while calling On-chain calls from offchain worker
+#[cfg_attr(feature = "std", derive(Debug))]
+#[cfg_attr(not(feature = "std"), derive(RuntimeDebug))]
+#[derive(Eq, PartialEq)]
+pub enum CallDispatchableError {
+	/// No any account was found to send signed transaction from
+	NoAccount,
+
+	/// Error while dispatching the call
+	CantDispatch,
 }
 
 /// Trait that marks something is verifable agains the given icon data

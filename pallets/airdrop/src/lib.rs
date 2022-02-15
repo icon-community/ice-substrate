@@ -29,7 +29,7 @@ pub mod pallet {
 	use frame_support::traits::{Currency, ExistenceRequirement, Hooks, ReservableCurrency};
 	use frame_system::offchain::CreateSignedTransaction;
 
-	use types::IconVerifiable;
+	use types::{ClaimError, IconVerifiable};
 
 	/// Configure the pallet by specifying the parameters and types on which it depends.
 	#[pallet::config]
@@ -251,7 +251,7 @@ pub mod pallet {
 		/// As this transfer the system balance, this must only be called within
 		/// the runtime, so the origin must be root (call with Raw root or sudo_pallet)
 		#[pallet::weight(0)]
-		pub fn transfer_amount(
+		pub fn complete_transfer(
 			origin: OriginFor<T>,
 			receiver: types::AccountIdOf<T>,
 			server_response: types::ServerResponse,
@@ -380,18 +380,16 @@ pub mod pallet {
 
 			let server_response_res = Self::fetch_from_server(icon_address);
 
-			// let call_to_make: CallType;
+			let call_to_make: Call<T>;
 			match server_response_res {
 				Err(err) => {
 					match err {
-						// This icon address do not exists in serevr
+						// This icon address do not exists in server
 						// so we might just delete it from queue
 						ClaimError::ServerError(err) if err == ServerError::NonExistentData => {
-							// TODO:
-							// set the call_to_make to point to cancel_claim_request
-							// call_to_make = Self::Call::cancel_claim_request {
-							// 	to_remove: ice_address.clone(),
-							// };
+							call_to_make = Call::cancel_claim_request {
+								to_remove: ice_address.clone(),
+							};
 						}
 
 						// we might not have to handle other error espically
@@ -399,31 +397,47 @@ pub mod pallet {
 					}
 				}
 				Ok(response) => {
-					// TODO:
-					// set the call_to_make to point to transfer_function
-					// call_to_make = Self::Call::transfer_amount {
-					// 	to_remove: ice_address.clone(),
-					// 	server_details: server_response
-					// };
+					// If we got a valid disaptch a call to make transfer which will
+					// also clear the queue
+					call_to_make = Call::complete_transfer {
+						receiver: ice_address.clone(),
+						server_response: response,
+					};
 				}
 			}
 
-			use frame_system::offchain::{SendSignedTransaction, Signer};
+			let call_res = Self::make_signed_call(&call_to_make);
+			call_res.map_err(|err| {
+				log::info!(
+					"Calling extrinsic {:#?} failed with error: {:?}",
+					call_to_make,
+					err
+				);
+				ClaimError::CallingError(err)
+			})
+		}
 
-			let signer = Signer::<T, T::AuthorityId>::any_account();
-			let send_tx_res =
-				signer.send_signed_transaction(move |_accnt| Call::cancel_claim_request {
-					to_remove: ice_address.clone(),
-				});
+		/// Helper function to send signed transaction to provided callback
+		/// and map the resulting error
+		/// @return:
+		/// - Error or the account from which transaction was made
+		pub fn make_signed_call(
+			call_to_make: &Call<T>,
+		) -> Result<(), types::CallDispatchableError> {
+			use frame_system::offchain::SendSignedTransaction;
+			use types::CallDispatchableError;
+
+			let signer = frame_system::offchain::Signer::<T, T::AuthorityId>::any_account();
+			let send_tx_res = signer.send_signed_transaction(move |_accnt| (*call_to_make).clone());
 
 			if let Some((_account, dispatch_res)) = send_tx_res {
 				if dispatch_res.is_ok() {
 					Ok(())
 				} else {
-					Err(ClaimError::FailedExtrinsic)
+					Err(CallDispatchableError::CantDispatch)
 				}
 			} else {
-				Err(ClaimError::CantDispatch)
+				Err(CallDispatchableError::NoAccount)
 			}
 		}
 

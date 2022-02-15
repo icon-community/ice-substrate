@@ -194,7 +194,7 @@ fn test_transfer_valid() {
 			let pre_user_balance =
 				<Test as pallet_airdrop::Config>::Currency::free_balance(&claimer);
 
-			let transfer_res = AirdropModule::transfer_amount(
+			let transfer_res = AirdropModule::complete_transfer(
 				mock::Origin::root(),
 				claimer.clone(),
 				server_response,
@@ -241,7 +241,7 @@ fn test_transfer_invalid() {
 		// simulate the condition when user had cancelled the claim while process was goingon in offchain
 		{
 			let root_origin = mock::Origin::root();
-			let fail_with_absent_queue = AirdropModule::transfer_amount(
+			let fail_with_absent_queue = AirdropModule::complete_transfer(
 				root_origin.clone(),
 				receiver.clone(),
 				server_response.clone(),
@@ -255,7 +255,7 @@ fn test_transfer_invalid() {
 		// Try to call this function with unauthorised key
 		{
 			let unauthorised_user = mock::Origin::signed(types::AccountIdOf::<Test>::default());
-			let fail_with_permission = AirdropModule::transfer_amount(
+			let fail_with_permission = AirdropModule::complete_transfer(
 				unauthorised_user,
 				receiver.clone(),
 				server_response.clone(),
