@@ -320,6 +320,18 @@ pub mod pallet {
 
 			Ok(())
 		}
+
+		/// Dummy function that does absolutely nothing.
+		/// This is only implemented while testing
+		// set high fee so that non user dare to call this to pollute tx-pool
+		#[pallet::weight(10_00_000_000)]
+		pub fn sample_call(_origin: OriginFor<T>, arg: i32) -> DispatchResult {
+			// Indicate that this function is called.
+			println!("Sample_call function called with {}..", arg);
+			log::info!("Sample call function called with {}...", arg);
+
+			Ok(())
+		}
 	}
 
 	#[pallet::hooks]

@@ -305,6 +305,18 @@ fn claim_request_valid() {
 	});
 }
 
+#[test]
+fn make_signed_call_valid() {
+	let (mut test_ext, state) = new_offchain_test_ext!();
+
+	test_ext.execute_with(|| {
+		let call = pallet_airdrop::pallet::Call::sample_call { arg: 10 };
+		let call_res = AirdropModule::make_signed_call(&call);
+
+		assert_ok!(call_res);
+	});
+}
+
 use sp_core::offchain::testing;
 /// Helper function to initialise PendingResult struct as per passed by (icon_address & response)
 fn put_response(state: &mut testing::OffchainState) {
