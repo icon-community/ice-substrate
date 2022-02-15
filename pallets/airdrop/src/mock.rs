@@ -68,7 +68,7 @@ parameter_types! {
 	pub const ExistentialDeposit: u128 = 500;
 	pub const MaxLocks: u32 = 50;
 	pub const FetchIconEndpoint: &'static str = "http://35.175.202.72:5000/claimDetails?address=";
-	pub const CreditorAccount: types::AccountIdOf::<Test> = sp_core::sr25519::Public([10; 32]);
+	pub const CreditorAccount: frame_support::PalletId = frame_support::PalletId(*b"t-aidrop");
 }
 
 impl pallet_airdrop::Config for Test {

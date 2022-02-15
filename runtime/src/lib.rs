@@ -57,6 +57,9 @@ pub use sp_runtime::{Perbill, Permill};
 mod precompiles;
 use precompiles::FrontierPrecompiles;
 
+/// Constants of palletsId
+const AIRDROP_PALLETID: frame_support::PalletId = frame_support::PalletId(*b"airdrops");
+
 /// import the airdrop pallet
 pub use pallet_airdrop;
 
@@ -291,7 +294,7 @@ parameter_types! {
 
 	/// Account from which to credit the claim request
 	// TODO: Add real creditor account
-	pub const AirdropCreditor: AccountId = AccountId::default();
+	pub const AirdropCreditor: frame_support::PalletId = AIRDROP_PALLETID;
 }
 /// Configure the pallet-template in pallets/airdrop
 impl pallet_airdrop::Config for Runtime {

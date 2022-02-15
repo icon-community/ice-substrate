@@ -50,9 +50,7 @@ pub mod pallet {
 		/// Id of account from which to send fund to claimers
 		/// This account should be credited enough to supply fund for all claim requests
 		#[pallet::constant]
-		// TODO:
-		// not Sure weather AccountId or PalletId here
-		type Creditor: Get<types::AccountIdOf<Self>>;
+		type Creditor: Get<frame_support::PalletId>;
 	}
 
 	#[pallet::storage]
@@ -598,7 +596,9 @@ pub mod pallet {
 		}
 
 		pub fn get_creditor_account() -> types::AccountIdOf<T> {
-			T::Creditor::get()
+			use sp_runtime::traits::AccountIdConversion;
+
+			T::Creditor::get().into_account()
 		}
 	}
 }
