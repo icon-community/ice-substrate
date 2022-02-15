@@ -56,6 +56,9 @@ pub use sp_runtime::{Perbill, Permill};
 mod precompiles;
 use precompiles::FrontierPrecompiles;
 
+
+pub mod impls;
+use impls::DealWithFees;
 /// Type of block number.
 pub type BlockNumber = u32;
 
