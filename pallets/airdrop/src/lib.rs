@@ -176,7 +176,7 @@ pub mod pallet {
 			let is_already_on_queue = <IceSnapshotMap<T>>::contains_key(&ice_address);
 
 			if !is_already_on_map {
-				let new_snapshot = types::SnapshotInfo::<T>::default();
+				let new_snapshot = types::SnapshotInfo::<T>::default().icon_address(icon_address);
 				<IceSnapshotMap<T>>::insert(&ice_address, new_snapshot);
 				Self::deposit_event(Event::<T>::AddedToMap(ice_address.clone()));
 			} else {
@@ -483,15 +483,26 @@ pub mod pallet {
 			// which should not be possible
 			.expect("Error while creating dynamic url in pallet_airdrop::fetch_from_server()");
 
+			log::info!("Sending request to: {}", request_url);
 			let request = http::Request::get(request_url.as_str());
-			let pending = request
-				.deadline(timeout)
-				.send()
-				.map_err(|_e| ClaimError::HttpError)?;
+
+			log::info!("Initilizing pending variable..");
+			let pending = request.deadline(timeout).send().map_err(|e| {
+				log::info!("While pending error: {:?}", e);
+				ClaimError::HttpError
+			})?;
+
+			log::info!("Initilizing response variable..");
 			let response = pending
 				.try_wait(timeout)
-				.map_err(|_e| ClaimError::HttpError)?
-				.map_err(|_e| ClaimError::HttpError)?;
+				.map_err(|e| {
+					log::info!("First error: {:?}...", e);
+					ClaimError::HttpError
+				})?
+				.map_err(|e| {
+					log::info!("Second error: {:?}", e);
+					ClaimError::HttpError
+				})?;
 
 			// try to get the response bytes if server returned 200 code
 			// or just return early
@@ -499,6 +510,7 @@ pub mod pallet {
 			if response.code == 200 {
 				response_bytes = response.body().collect();
 			} else {
+				log::info!("Unexpected http code: {}", response.code);
 				return Err(ClaimError::HttpError);
 			}
 

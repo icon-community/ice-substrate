@@ -288,7 +288,7 @@ fn claim_request_valid() {
 
 		// Expected snapshot to be stored in map
 		let expected_snapshot = types::SnapshotInfo::<Test> {
-			icon_address: vec![],
+			icon_address: icon_address.to_vec(),
 			amount: 0,
 			defi_user: false,
 			vesting_percentage: 0,
