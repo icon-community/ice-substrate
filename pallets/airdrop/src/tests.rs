@@ -235,7 +235,7 @@ fn test_transfer_valid() {
 fn test_transfer_invalid() {
 	mock::new_test_ext().execute_with(|| {
 		let server_response = types::ServerResponse::default();
-		let receiver = types::AccountIdOf::<Test>::default();
+		let receiver = sp_core::sr25519::Public([200; 32]);
 
 		// Try to claim something when the data is not in queue
 		// simulate the condition when user had cancelled the claim while process was goingon in offchain
@@ -254,7 +254,7 @@ fn test_transfer_invalid() {
 
 		// Try to call this function with unauthorised key
 		{
-			let unauthorised_user = mock::Origin::signed(types::AccountIdOf::<Test>::default());
+			let unauthorised_user = mock::Origin::signed(sp_core::sr25519::Public([10; 32]));
 			let fail_with_permission = AirdropModule::complete_transfer(
 				unauthorised_user,
 				receiver.clone(),
@@ -263,6 +263,20 @@ fn test_transfer_invalid() {
 			assert_eq!(
 				fail_with_permission.unwrap_err(),
 				crate::Error::<Test>::DeniedOperation.into()
+			);
+		}
+
+		// Try to call the function where there is no entry in queue
+		{
+			let authorised_origin = mock::Origin::signed(crate::SudoAccount::<Test>::get());
+			let fail_with_permission = AirdropModule::complete_transfer(
+				authorised_origin,
+				receiver.clone(),
+				server_response.clone(),
+			);
+			assert_eq!(
+				fail_with_permission.unwrap_err(),
+				crate::Error::<Test>::IncompleteData.into()
 			);
 		}
 	});

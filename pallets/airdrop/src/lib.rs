@@ -257,36 +257,14 @@ pub mod pallet {
 			origin: OriginFor<T>,
 			to_remove: types::AccountIdOf<T>,
 		) -> DispatchResult {
-			log::info!("Inside cancel_claim_request...");
+			let is_authorised = match ensure_signed(origin.clone()) {
+				// Signed account must either be pallet SudoAccount or the owner of this claim request
+				Ok(signer) => signer == <SudoAccount<T>>::get() || signer == to_remove,
 
-			let is_authorised = {
-				// TODO
-				// May be it is not good idea to give permission to root here?
-				match ensure_root(origin.clone()) {
-					// Root is always authorised
-					Ok(()) => true,
-
-					Err(_) => {
-						// Non-root origin must be signed to be authorised
-						match ensure_signed(origin) {
-							Ok(signer) => {
-								let is_sudo = signer == <SudoAccount<T>>::get();
-								let is_owner = signer == to_remove;
-
-								// Signer should be either the sudoAccount configured in this pallet
-								// or should be same as the address to remove ( owner )
-								is_sudo || is_owner
-							}
-							Err(_) => false,
-						}
-					}
-				}
+				// root should always have the permission
+				Err(_) => ensure_root(origin).is_ok(),
 			};
-
-			// If not authorised fail with non-authorised error
-			if !is_authorised {
-				fail!(Error::<T>::DeniedOperation);
-			}
+			ensure!(is_authorised, Error::<T>::DeniedOperation);
 
 			let is_in_queue = <PendingClaims<T>>::contains_key(&to_remove);
 			if is_in_queue {
@@ -329,22 +307,35 @@ pub mod pallet {
 			receiver: types::AccountIdOf<T>,
 			server_response: types::ServerResponse,
 		) -> DispatchResult {
-			// should only be called by root
-			// TODO: Make callable from storage sudo account
-			ensure_root(origin).map_err(|_| Error::<T>::DeniedOperation)?;
+			let is_authorised = match ensure_signed(origin.clone()) {
+				Ok(signer) => signer == <SudoAccount<T>>::get(),
+				Err(_) => ensure_root(origin).is_ok(),
+			};
+			ensure!(is_authorised, {
+				log::info!("complete_transfer called by unauthorised account.");
+				Error::<T>::DeniedOperation
+			});
 
 			// Check again if it is still in the pending queue
 			// Eg: If another node had processed the same request
 			// or if user had decided to cancel_claim_request
 			// this entry won't be present in the queue
 			let is_in_queue = <PendingClaims<T>>::contains_key(&receiver);
-			ensure!(is_in_queue, Error::<T>::IncompleteData);
+			ensure!(is_in_queue, {
+				log::info!(
+					"{}{}",
+					"The claim was no longer in queue",
+					"May be user clanceled or another node did it already?"
+				);
+				Error::<T>::IncompleteData
+			});
 
 			// Convert server_response.amount type ( usually u128 ) to balance type
 			// this will check for underflow overflow if u128 cannot be assigned to balance
 			// Failing due to this reasong implies that we are using incompatible data type
 			// in ServerResponse.amount & pallet_airdrop::Currency
 			let amount = server_response.amount.try_into().map_err(|_| {
+				log::info!("Invalid amount value....");
 				DispatchError::Other("Cannot convert server_response.value into Balance type")
 			})?;
 
@@ -353,7 +344,11 @@ pub mod pallet {
 				&receiver,
 				amount,
 				ExistenceRequirement::KeepAlive,
-			)?;
+			)
+			.map_err(|err| {
+				log::info!("Currency transfer failed with error: {:?}", err);
+				err
+			})?;
 
 			// Now we can remove this claim from queue
 			<PendingClaims<T>>::remove(&receiver);
