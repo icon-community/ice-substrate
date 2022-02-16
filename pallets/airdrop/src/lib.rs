@@ -509,6 +509,14 @@ pub mod pallet {
 		/// and map the resulting error
 		/// @return:
 		/// - Error or the account from which transaction was made
+		/// NOTE:
+		/// As all call are sent from here, it is important to verify that ::any_account()
+		/// in this context returns accounts that are authorised
+		/// i.e present in Storage::SudoAccount
+		/// So that the call is not discarded inside the calling function if it checks for so
+		/// This can be done by intentionally if done:
+		/// rpc call to: author.insertKey(crate::KEY_TYPE_ID, _, ACCOUNT_X)
+		/// extrensic call to: Self::set_authorised(ACCOUNT_X) // Same as above account
 		pub fn make_signed_call(
 			call_to_make: &Call<T>,
 		) -> Result<(), types::CallDispatchableError> {
