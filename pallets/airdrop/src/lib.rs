@@ -1,3 +1,53 @@
+//! # Airdrop pallet
+//! This pallet is responsible to do airdropping to claimers of icon_address.
+//! - [`Config`]
+//! - [`Call`]
+//!
+//! ## Interface
+//!
+//! ### Disptachable function for end-user
+//!
+//! * [`claim_request`]
+//!
+//! Signed call that accepts set of ice data (icon signature, initial message, icon address).
+//! This maps the ice address with icon address ( if previously not done)
+//! and register this request in pending claims.
+//!
+//! * [`cancel_request`]
+//!
+//! Allows any user to cancel last claim request. This does so by just removing
+//! respective entry from pending queue. Only callable by the owner who
+//! first called `claim_request` or root account or palelt authorised account.
+//!
+//! * [`donateto_creditor`]
+//!
+//! Allows any user to donate funds to the pallet account. Pallet account is
+//! the account from which the airdrop funds will be transferred from.
+//! This dispatchable should be called to credit pallet with enough balance
+//! else every call to `complete_transfer` will fail. This should be done before any
+//! user arrives to node for claiming request
+//!
+//! ---
+//! ### Dispatchable calls for internal use
+//! * [`complete_transfer`]
+//!
+//! This transfer the fund to given ice address with given transaction details
+//! inside `ServerResponse` type. If transferring the fund succeed, it will also
+//! remove the queue from pendingClaims and update any snapshot info as needed.
+//!
+//! This is only callable by pallet internal Authorised account
+//!
+//! * [`sample_call`]
+//!
+//! Dummy call implemeneted for testing purpose
+//!
+//! ## Genesis Config
+//! SudoAccount of this pallet ( not `pallet_sudo` ) needs to be configured in genesis config
+//! This can intentionally be made into sudo key of pallet_sudo. But not that changing of
+//! `pallet_sudo`'s key ( i.e calling `pallet_sudo::Call::set_key` ) will leave this unaffected
+//! A similar interafce [`set_authorised`] is provided to set new account to be authorised.
+//! Note: Only one account is authorised at a time
+
 #![cfg_attr(not(feature = "std"), no_std)]
 pub use pallet::*;
 
@@ -112,6 +162,10 @@ pub mod pallet {
 
 		/// Emit when a claim request have been removed from queue
 		ClaimCancelled,
+
+		/// Emit when storage key is updated to new value
+		/// params: 0: previous sudo, 1: new sudo
+		AirdropSudoChanged(types::AccountIdOf<T>, types::AccountIdOf<T>),
 	}
 
 	#[pallet::storage]
@@ -206,6 +260,8 @@ pub mod pallet {
 			log::info!("Inside cancel_claim_request...");
 
 			let is_authorised = {
+				// TODO
+				// May be it is not good idea to give permission to root here?
 				match ensure_root(origin.clone()) {
 					// Root is always authorised
 					Ok(()) => true,
@@ -243,6 +299,23 @@ pub mod pallet {
 				// or was never in request queue
 				Self::deposit_event(Event::<T>::CancelIgnored);
 			}
+
+			Ok(())
+		}
+
+		/// This callback can set new account in SudoAccount storage
+		#[pallet::weight(0)]
+		pub fn set_authorised(
+			origin: OriginFor<T>,
+			new_sudo: types::AccountIdOf<T>,
+		) -> DispatchResult {
+			// Only root can change this ( or sudo )
+			ensure_root(origin)?;
+
+			let previous_sudo = <SudoAccount<T>>::get();
+
+			<SudoAccount<T>>::set(new_sudo.clone());
+			Self::deposit_event(Event::<T>::AirdropSudoChanged(previous_sudo, new_sudo));
 
 			Ok(())
 		}
@@ -324,7 +397,7 @@ pub mod pallet {
 		/// Dummy function that does absolutely nothing.
 		/// This is only implemented while testing
 		// set high fee so that non user dare to call this to pollute tx-pool
-		#[pallet::weight(10_00_000_000)]
+		#[pallet::weight(0)]
 		pub fn sample_call(_origin: OriginFor<T>, arg: i32) -> DispatchResult {
 			// Indicate that this function is called.
 			#[cfg(test)]
