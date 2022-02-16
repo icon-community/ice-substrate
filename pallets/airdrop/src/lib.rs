@@ -356,6 +356,10 @@ pub mod pallet {
 			// TODO:
 			// emit proper emit thorughout this function
 
+			log::info!(
+				"Complete_tranfser function on ice address: {:?} passed..",
+				receiver
+			);
 			Ok(())
 		}
 
@@ -465,23 +469,28 @@ pub mod pallet {
 
 			let call_to_make: Call<T>;
 			match server_response_res {
-				Err(err) => {
-					match err {
-						// This icon address do not exists in server
-						// so we might just delete it from queue
-						ClaimError::ServerError(err) if err == ServerError::NonExistentData => {
-							call_to_make = Call::cancel_claim_request {
-								to_remove: ice_address.clone(),
-							};
-						}
-
-						// we might not have to handle other error espically
-						err => return Err(err),
-					}
+				// If error is NonExistentData then, it signifies this icon address do not exists in server
+				// so we just cancel the request
+				Err(ClaimError::ServerError(ServerError::NonExistentData)) => {
+					call_to_make = Call::cancel_claim_request {
+						to_remove: ice_address.clone(),
+					};
 				}
+
+				// If transferring amount is 0, then we can just cancel this claim too
+				// as transferring 0 amount have no effect
+				Ok(response) if response.amount == 0 => {
+					call_to_make = Call::cancel_claim_request {
+						to_remove: ice_address.clone(),
+					};
+				}
+
+				// If is any other error, just propagate it to caller
+				Err(err) => return Err(err),
+
+				// if response is valid, then call complete_transfer dispatchable
+				// This will also clear the queue
 				Ok(response) => {
-					// If we got a valid disaptch a call to make transfer which will
-					// also clear the queue
 					call_to_make = Call::complete_transfer {
 						receiver: ice_address.clone(),
 						server_response: response,
