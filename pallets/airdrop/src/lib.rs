@@ -140,10 +140,6 @@ pub mod pallet {
 		/// This request have been sucessfully added to pending queue
 		AddedToQueue(types::AccountIdOf<T>),
 
-		/// Event to emit when the cancel_claim_request is ignored
-		/// because the claim is already made or was never in the queue
-		CancelIgnored,
-
 		/// Emit when a claim request have been removed from queue
 		ClaimCancelled,
 
@@ -172,6 +168,9 @@ pub mod pallet {
 
 		/// Not all data required are supplied with
 		IncompleteData,
+
+		/// When expected data is not present in queue
+		NotInQueue,
 	}
 
 	#[pallet::call]
@@ -242,19 +241,16 @@ pub mod pallet {
 			to_remove: types::AccountIdOf<T>,
 		) -> DispatchResult {
 			// If this origin is either root, or the signed by sudo key then this is authorised
-			Self::ensure_root_or_sudo(origin).map_err(|_| Error::<T>::DeniedOperation)?;
+			let is_sudo_or_root = Self::ensure_root_or_sudo(origin.clone()).is_ok();
+			let is_owner = ensure_signed(origin).as_ref().ok() == Some(&to_remove);
+
+			ensure!(is_sudo_or_root || is_owner, Error::<T>::DeniedOperation);
 
 			let is_in_queue = <PendingClaims<T>>::contains_key(&to_remove);
-			if is_in_queue {
-				// If exists in queue remove it then emit respective Event
-				<PendingClaims<T>>::remove(to_remove);
-				Self::deposit_event(Event::<T>::ClaimCancelled);
-			} else {
-				// If this address do exists in queue, remove it
-				// Otherwise, emit an event to inform that claim already been made
-				// or was never in request queue
-				Self::deposit_event(Event::<T>::CancelIgnored);
-			}
+			ensure!(is_in_queue, Error::<T>::NotInQueue);
+
+			<PendingClaims<T>>::remove(to_remove);
+			Self::deposit_event(Event::<T>::ClaimCancelled);
 
 			Ok(())
 		}
