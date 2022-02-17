@@ -194,11 +194,8 @@ fn test_transfer_valid() {
 			let pre_user_balance =
 				<Test as pallet_airdrop::Config>::Currency::free_balance(&claimer);
 
-			let transfer_res = AirdropModule::complete_transfer(
-				mock::Origin::root(),
-				claimer.clone(),
-				server_response,
-			);
+			let transfer_res =
+				AirdropModule::complete_transfer(root_origin, claimer.clone(), server_response);
 			assert_ok!(transfer_res);
 
 			let post_system_balance =
@@ -228,6 +225,35 @@ fn test_transfer_valid() {
 				false
 			);
 		}
+	});
+}
+
+#[test]
+fn test_ensure_root_or_sudo() {
+	mock::new_test_ext().execute_with(|| {
+		use frame_system::ensure_signed;
+		use sp_runtime::DispatchError::BadOrigin;
+
+		let sudo_origin = mock::Origin::signed(AirdropModule::get_sudo_account());
+		let signed_origin = mock::Origin::signed(sp_core::sr25519::Public([12; 32]));
+		let root_origin = mock::Origin::root();
+		let unsigned_origin = mock::Origin::none();
+
+		assert_ne!(
+			ensure_signed(sudo_origin.clone()).unwrap(),
+			ensure_signed(signed_origin.clone()).unwrap(),
+			"Non-sudo and sudo origin are same. Change test value"
+		);
+
+		let sudo_call = AirdropModule::ensure_root_or_sudo(sudo_origin);
+		let root_call = AirdropModule::ensure_root_or_sudo(root_origin);
+		let signed_call = AirdropModule::ensure_root_or_sudo(signed_origin);
+		let unsigned_call = AirdropModule::ensure_root_or_sudo(unsigned_origin);
+
+		assert_ok!(sudo_call);
+		assert_ok!(root_call);
+		assert_err!(signed_call, BadOrigin);
+		assert_err!(unsigned_call, BadOrigin);
 	});
 }
 
@@ -268,7 +294,7 @@ fn test_transfer_invalid() {
 
 		// Try to call the function where there is no entry in queue
 		{
-			let authorised_origin = mock::Origin::signed(crate::SudoAccount::<Test>::get());
+			let authorised_origin = mock::Origin::signed(AirdropModule::get_sudo_account());
 			let fail_with_permission = AirdropModule::complete_transfer(
 				authorised_origin,
 				receiver.clone(),

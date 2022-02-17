@@ -513,7 +513,7 @@ construct_runtime!(
 		DynamicFee: pallet_dynamic_fee::{Pallet, Call, Storage, Config, Inherent},
 		BaseFee: pallet_base_fee::{Pallet, Call, Storage, Config<T>, Event},
 		Vesting: pallet_vesting::{Pallet, Call, Storage, Config<T>, Event<T>} = 32,
-		Airdrop: pallet_airdrop::{Pallet, Call, Storage, Event<T>, Config<T>},
+		Airdrop: pallet_airdrop::{Pallet, Call, Storage, Event<T>},
 	}
 );
 

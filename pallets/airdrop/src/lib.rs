@@ -83,7 +83,9 @@ pub mod pallet {
 
 	/// Configure the pallet by specifying the parameters and types on which it depends.
 	#[pallet::config]
-	pub trait Config: frame_system::Config + CreateSignedTransaction<Call<Self>> {
+	pub trait Config:
+		frame_system::Config + CreateSignedTransaction<Call<Self>> + pallet_sudo::Config
+	{
 		/// AccountIf type that is same as frame_system's accountId also
 		/// extended to be verifable against icon data
 		type AccountId: IconVerifiable + IsType<<Self as frame_system::Config>::AccountId>;
@@ -108,30 +110,6 @@ pub mod pallet {
 		/// This account should be credited enough to supply fund for all claim requests
 		#[pallet::constant]
 		type Creditor: Get<frame_support::PalletId>;
-	}
-
-	#[pallet::storage]
-	pub(super) type SudoAccount<T: Config> = StorageValue<_, types::AccountIdOf<T>, ValueQuery>;
-
-	#[pallet::genesis_config]
-	pub struct GenesisConfig<T: Config> {
-		pub sudo_account: types::AccountIdOf<T>,
-	}
-
-	#[cfg(feature = "std")]
-	impl<T: Config> Default for GenesisConfig<T> {
-		fn default() -> Self {
-			Self {
-				sudo_account: types::AccountIdOf::<T>::default(),
-			}
-		}
-	}
-
-	#[pallet::genesis_build]
-	impl<T: Config> GenesisBuild<T> for GenesisConfig<T> {
-		fn build(&self) {
-			<SudoAccount<T>>::set(self.sudo_account.clone());
-		}
 	}
 
 	#[pallet::pallet]
@@ -257,14 +235,8 @@ pub mod pallet {
 			origin: OriginFor<T>,
 			to_remove: types::AccountIdOf<T>,
 		) -> DispatchResult {
-			let is_authorised = match ensure_signed(origin.clone()) {
-				// Signed account must either be pallet SudoAccount or the owner of this claim request
-				Ok(signer) => signer == <SudoAccount<T>>::get() || signer == to_remove,
-
-				// root should always have the permission
-				Err(_) => ensure_root(origin).is_ok(),
-			};
-			ensure!(is_authorised, Error::<T>::DeniedOperation);
+			// If this origin is either root, or the signed by sudo key then this is authorised
+			Self::ensure_root_or_sudo(origin).map_err(|_| Error::<T>::DeniedOperation)?;
 
 			let is_in_queue = <PendingClaims<T>>::contains_key(&to_remove);
 			if is_in_queue {
@@ -281,40 +253,17 @@ pub mod pallet {
 			Ok(())
 		}
 
-		/// This callback can set new account in SudoAccount storage
-		#[pallet::weight(0)]
-		pub fn set_authorised(
-			origin: OriginFor<T>,
-			new_sudo: types::AccountIdOf<T>,
-		) -> DispatchResult {
-			// Only root can change this ( or sudo )
-			ensure_root(origin)?;
-
-			let previous_sudo = <SudoAccount<T>>::get();
-
-			<SudoAccount<T>>::set(new_sudo.clone());
-			Self::deposit_event(Event::<T>::AirdropSudoChanged(previous_sudo, new_sudo));
-
-			Ok(())
-		}
-
 		/// Dispatchable to transfer the fund from system balance to given address
 		/// As this transfer the system balance, this must only be called within
-		/// the runtime, so the origin must be root (call with Raw root or sudo_pallet)
+		/// sudo or with root origin
 		#[pallet::weight(0)]
 		pub fn complete_transfer(
 			origin: OriginFor<T>,
 			receiver: types::AccountIdOf<T>,
 			server_response: types::ServerResponse,
 		) -> DispatchResult {
-			let is_authorised = match ensure_signed(origin.clone()) {
-				Ok(signer) => signer == <SudoAccount<T>>::get(),
-				Err(_) => ensure_root(origin).is_ok(),
-			};
-			ensure!(is_authorised, {
-				log::info!("complete_transfer called by unauthorised account.");
-				Error::<T>::DeniedOperation
-			});
+			// Make sure this is either sudo or root
+			Self::ensure_root_or_sudo(origin).map_err(|_| Error::<T>::DeniedOperation)?;
 
 			// Check again if it is still in the pending queue
 			// Eg: If another node had processed the same request
@@ -637,6 +586,22 @@ pub mod pallet {
 			use sp_runtime::traits::AccountIdConversion;
 
 			T::Creditor::get().into_account()
+		}
+
+		/// return the key set in sudo pallet
+		#[inline(always)]
+		pub fn get_sudo_account() -> types::AccountIdOf<T> {
+			pallet_sudo::Pallet::<T>::key()
+		}
+
+		/// Helper function to create similar interface like `ensure_root`
+		/// but which instead check for sudo key
+		pub fn ensure_root_or_sudo(origin: OriginFor<T>) -> DispatchResult {
+			let is_root = ensure_root(origin.clone()).is_ok();
+			let is_sudo = ensure_signed(origin).ok() == Some(Self::get_sudo_account());
+
+			ensure!(is_root || is_sudo, DispatchError::BadOrigin);
+			Ok(())
 		}
 	}
 }

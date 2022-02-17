@@ -1,7 +1,6 @@
-use hex_literal::hex;
 use ice_runtime::{
-	currency::ICY, AccountId, AirdropConfig, AuraConfig, BalancesConfig, EVMConfig, EthereumConfig,
-	GenesisConfig, GrandpaConfig, Signature, SudoConfig, SystemConfig, WASM_BINARY,
+	AccountId, AuraConfig, BalancesConfig, EVMConfig, EthereumConfig, GenesisConfig, GrandpaConfig,
+	Signature, SudoConfig, SystemConfig, WASM_BINARY, currency::ICY
 };
 use sc_service::ChainType;
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
@@ -9,6 +8,7 @@ use sp_core::{crypto::UncheckedInto, sr25519, Pair, Public, H160, U256};
 use sp_finality_grandpa::AuthorityId as GrandpaId;
 use sp_runtime::traits::{IdentifyAccount, Verify};
 use std::{collections::BTreeMap, str::FromStr};
+use hex_literal::hex;
 
 // The URL for the telemetry server.
 // const STAGING_TELEMETRY_URL: &str = "wss://telemetry.polkadot.io/submit/";
@@ -60,18 +60,14 @@ pub fn testnet_config() -> Result<ChainSpec, String> {
 				vec![
 					(
 						// AuraId
-						hex!["62687296bffd79f12178c4278b9439d5eeb8ed7cc0b1f2ae29307e806a019659"]
-							.unchecked_into(),
+						hex!["62687296bffd79f12178c4278b9439d5eeb8ed7cc0b1f2ae29307e806a019659"].unchecked_into(),
 						// GrandpaId
-						hex!["27c6da25d03bb6b3c751da3e8c5265b0bb357c15240602443cc286c0658b47f9"]
-							.unchecked_into(),
+						hex!["27c6da25d03bb6b3c751da3e8c5265b0bb357c15240602443cc286c0658b47f9"].unchecked_into(),
 					),
 					(
-						hex!["d893ef775b5689473b2e9fa32c1f15c72a7c4c86f05f03ee32b8aca6ce61b92c"]
-							.unchecked_into(),
-						hex!["85ec524aeacb6e558619a10da82cdf787026209211d1b7462cb176d58f2add86"]
-							.unchecked_into(),
-					),
+						hex!["d893ef775b5689473b2e9fa32c1f15c72a7c4c86f05f03ee32b8aca6ce61b92c"].unchecked_into(),
+						hex!["85ec524aeacb6e558619a10da82cdf787026209211d1b7462cb176d58f2add86"].unchecked_into()
+					)
 				],
 				// Sudo account
 				hex!["62687296bffd79f12178c4278b9439d5eeb8ed7cc0b1f2ae29307e806a019659"].into(),
@@ -136,10 +132,6 @@ pub fn development_config() -> Result<ChainSpec, String> {
 	))
 }
 
-fn get_sudo_account() -> AccountId {
-	get_account_id_from_seed::<sr25519::Public>("Alice").into()
-}
-
 pub fn local_testnet_config() -> Result<ChainSpec, String> {
 	let wasm_binary = WASM_BINARY.ok_or_else(|| "Development wasm not available".to_string())?;
 
@@ -158,7 +150,7 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
 					authority_keys_from_seed("Bob"),
 				],
 				// Sudo account
-				get_sudo_account(),
+				get_account_id_from_seed::<sr25519::Public>("Alice"),
 				// Pre-funded accounts
 				vec![
 					get_account_id_from_seed::<sr25519::Public>("Alice"),
@@ -189,6 +181,7 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
 		None,
 	))
 }
+
 /// Configure initial storage state for FRAME modules.
 fn testnet_genesis(
 	wasm_binary: &[u8],
@@ -208,7 +201,7 @@ fn testnet_genesis(
 				.iter()
 				.cloned()
 				.map(|k| (k, ICY * 300_000_000))
-				.collect(),
+				.collect()
 		},
 		aura: AuraConfig {
 			authorities: initial_authorities.iter().map(|x| (x.0.clone())).collect(),
@@ -229,12 +222,9 @@ fn testnet_genesis(
 				map
 			},
 		},
-		airdrop: AirdropConfig {
-			sudo_account: get_sudo_account(),
-		},
 		ethereum: EthereumConfig {},
 		dynamic_fee: Default::default(),
 		base_fee: Default::default(),
-		vesting: Default::default(),
+		vesting:Default::default()
 	}
 }

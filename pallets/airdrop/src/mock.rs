@@ -29,6 +29,7 @@ frame_support::construct_runtime!(
 	{
 		System: frame_system::{Pallet, Call, Config, Storage, Event<T>},
 		AirdropModule: pallet_airdrop::{Pallet, Call, Storage, Event<T>},
+		Sudo: pallet_sudo::{Pallet, Call, Storage, Event<T>},
 		Balances: pallet_balances::{Pallet, Call, Storage, Config<T>, Event<T>},
 	}
 );
@@ -78,6 +79,11 @@ impl pallet_airdrop::Config for Test {
 	type FetchIconEndpoint = FetchIconEndpoint;
 	type AuthorityId = crate::temporary::TestAuthId;
 	type Creditor = CreditorAccount;
+}
+
+impl pallet_sudo::Config for Test {
+	type Event = Event;
+	type Call = Call;
 }
 
 type AccountId = <<Signature as Verify>::Signer as IdentifyAccount>::AccountId;
