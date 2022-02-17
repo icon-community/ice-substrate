@@ -176,6 +176,11 @@ fn test_transfer_valid() {
 
 		// Simulate that we have done a claim_request by adding it to PendingClaims queue
 		pallet_airdrop::PendingClaims::<Test>::insert(&claimer, ());
+		// Add Dummy snapshot to mapping
+		pallet_airdrop::IceSnapshotMap::<Test>::insert(
+			&claimer,
+			types::SnapshotInfo::<Test>::default(),
+		);
 
 		// Check for sucess transfer. Ensure that receiver balances is credited and system balances is debited
 		{
@@ -220,9 +225,13 @@ fn test_transfer_valid() {
 			);
 
 			// Make sure that request is removed from queue after transfer
+			assert_eq!(AirdropModule::get_pending_claims(&claimer), None);
+			// Make sure this function update the snapshot mapping
 			assert_eq!(
-				pallet_airdrop::PendingClaims::<Test>::contains_key(&claimer),
-				false
+				AirdropModule::get_ice_snapshot_map(&claimer)
+					.unwrap()
+					.claim_status,
+				true
 			);
 		}
 	});
@@ -343,6 +352,23 @@ fn test_transfer_invalid() {
 			);
 			assert_eq!(
 				fail_with_absent_queue.unwrap_err(),
+				crate::Error::<Test>::NotInQueue.into()
+			);
+		}
+
+		// Try to claim when data is in queue but not in map
+		{
+			// Add this to queue
+			crate::PendingClaims::<Test>::insert(&receiver, ());
+
+			let root_origin = mock::Origin::root();
+			let fail_with_absent_queue = AirdropModule::complete_transfer(
+				root_origin.clone(),
+				receiver.clone(),
+				server_response.clone(),
+			);
+			assert_eq!(
+				fail_with_absent_queue.unwrap_err(),
 				crate::Error::<Test>::IncompleteData.into()
 			);
 		}
@@ -361,18 +387,24 @@ fn test_transfer_invalid() {
 			);
 		}
 
-		// Try to call the function where there is no entry in queue
+		// When claim have already been made
 		{
-			let authorised_origin = mock::Origin::signed(AirdropModule::get_sudo_account());
-			let fail_with_permission = AirdropModule::complete_transfer(
-				authorised_origin,
+			// Insert in snapshot map that this claim is already made
+			crate::IceSnapshotMap::<Test>::insert(
+				&receiver,
+				types::SnapshotInfo {
+					claim_status: true,
+					..Default::default()
+				},
+			);
+
+			let root_origin = mock::Origin::root();
+			let fail_with_already_claimed = AirdropModule::complete_transfer(
+				root_origin,
 				receiver.clone(),
 				server_response.clone(),
 			);
-			assert_eq!(
-				fail_with_permission.unwrap_err(),
-				crate::Error::<Test>::IncompleteData.into()
-			);
+			assert_err!(fail_with_already_claimed, Error::<Test>::ClaimAlreadyMade);
 		}
 	});
 }

@@ -171,6 +171,9 @@ pub mod pallet {
 
 		/// When expected data is not present in queue
 		NotInQueue,
+
+		/// Claim has already been made so can't be made again at this time
+		ClaimAlreadyMade,
 	}
 
 	#[pallet::call]
@@ -212,14 +215,18 @@ pub mod pallet {
 			let is_already_on_map = <IceSnapshotMap<T>>::contains_key(&ice_address);
 			let is_already_on_queue = <IceSnapshotMap<T>>::contains_key(&ice_address);
 
+			// If this is new mapping, add it in storage
 			if !is_already_on_map {
 				let new_snapshot = types::SnapshotInfo::<T>::default().icon_address(icon_address);
 				<IceSnapshotMap<T>>::insert(&ice_address, new_snapshot);
 				Self::deposit_event(Event::<T>::AddedToMap(ice_address.clone()));
 			} else {
+				// Having snapshot already in map is not an error.
+				// So emit an event not an error
 				Self::deposit_event(Event::<T>::SkippedAddingToMap(ice_address.clone()));
 			}
 
+			// Add to queue if not present and emit respective event
 			if !is_already_on_queue {
 				<PendingClaims<T>>::insert(&ice_address, ());
 				Self::deposit_event(Event::<T>::AddedToQueue(ice_address));
@@ -278,8 +285,15 @@ pub mod pallet {
 					"The claim was no longer in queue",
 					"May be user clanceled or another node did it already?"
 				);
-				Error::<T>::IncompleteData
+				Error::<T>::NotInQueue
 			});
+
+			// Get snapshot from map and return with error if not present
+			let mut snapshot =
+				Self::get_ice_snapshot_map(&receiver).ok_or(Error::<T>::IncompleteData)?;
+
+			// Also make sure that claim_status of this snapshot is false
+			ensure!(!snapshot.claim_status, Error::<T>::ClaimAlreadyMade);
 
 			// Convert server_response.amount type ( usually u128 ) to balance type
 			// this will check for underflow overflow if u128 cannot be assigned to balance
@@ -290,6 +304,7 @@ pub mod pallet {
 				DispatchError::Other("Cannot convert server_response.value into Balance type")
 			})?;
 
+			// Transfer the amount to this reciver keeping creditor alive
 			T::Currency::transfer(
 				&Self::get_creditor_account(),
 				&receiver,
@@ -300,6 +315,10 @@ pub mod pallet {
 				log::info!("Currency transfer failed with error: {:?}", err);
 				err
 			})?;
+
+			// Update claim_status to true and store it
+			snapshot.claim_status = true;
+			<IceSnapshotMap<T>>::insert(&receiver, snapshot);
 
 			// Now we can remove this claim from queue
 			<PendingClaims<T>>::remove(&receiver);
