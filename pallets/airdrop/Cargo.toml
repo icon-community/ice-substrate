@@ -27,64 +27,64 @@ serde_json = { version = '1.0', default-features = false, features = ['alloc'] }
 
 [dependencies.frame-support]
 default-features = false
-git = "https://github.com/paritytech/substrate.git"
+git = "https://github.com/paritytech/substrate"
 
 [dependencies.frame-system]
 default-features = false
-git = "https://github.com/paritytech/substrate.git"
+git = "https://github.com/paritytech/substrate"
 
 [dependencies.frame-benchmarking]
 default-features = false
-git = "https://github.com/paritytech/substrate.git"
+git = "https://github.com/paritytech/substrate"
 
 [dependencies.sp-runtime]
 default-features = false
-git = 'https://github.com/paritytech/substrate.git'
+git = 'https://github.com/paritytech/substrate'
 
 [dependencies.sp-io]
 default-features = false
-git = 'https://github.com/paritytech/substrate.git'
+git = 'https://github.com/paritytech/substrate'
 
 [dependencies.sp-std]
 default-features = false
-git = 'https://github.com/paritytech/substrate.git'
+git = 'https://github.com/paritytech/substrate'
 
 [dependencies.sp-core]
 default-features = false
-git = 'https://github.com/paritytech/substrate.git'
+git = 'https://github.com/paritytech/substrate'
 
 [dependencies.sp-keystore]
 default-features = false
-git = 'https://github.com/paritytech/substrate.git'
+git = 'https://github.com/paritytech/substrate'
 optional = true
 
 [dependencies.pallet-balances]
 default-features = false
-git = 'https://github.com/paritytech/substrate.git'
+git = 'https://github.com/paritytech/substrate'
 
 [dependencies.pallet-sudo]
 default-features = false
-git = 'https://github.com/paritytech/substrate.git'
+git = 'https://github.com/paritytech/substrate'
 
 # frontier packages
 
 [dependencies.pallet-evm-precompile-sha3fips]
 default-features = false
-git = 'https://github.com/paritytech/frontier.git'
+git = 'https://github.com/paritytech/frontier'
 
 [dependencies.pallet-evm-precompile-simple]
 default-features = false
-git = 'https://github.com/paritytech/frontier.git'
+git = 'https://github.com/paritytech/frontier'
 
 [dependencies.fp-evm]
 default-features = false
-git = 'https://github.com/paritytech/frontier.git'
+git = 'https://github.com/paritytech/frontier'
 
 # development dependencies
 [dev-dependencies]
-sp-core = { default-features = false, git = "https://github.com/paritytech/substrate.git" }
-sp-io = { default-features = false, git = "https://github.com/paritytech/substrate.git" }
-sp-runtime = { default-features = false, git = "https://github.com/paritytech/substrate.git" }
+sp-core = { default-features = false, git = "https://github.com/paritytech/substrate" }
+sp-io = { default-features = false, git = "https://github.com/paritytech/substrate" }
+sp-runtime = { default-features = false, git = "https://github.com/paritytech/substrate" }
 
 [features]
 default = ["std"]
