@@ -26,7 +26,7 @@ macro_rules! new_offchain_test_ext {
 		let keystore = KeyStore::new();
 		SyncCryptoStore::sr25519_generate_new(
 			&keystore,
-			crate::temporary::Public::ID,
+			crate::airdrop_crypto::Public::ID,
 			Some(&format!("{}/abcdefg", PHRASE)),
 		)
 		.unwrap();

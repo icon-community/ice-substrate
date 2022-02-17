@@ -67,7 +67,7 @@ mod types;
 /// For this pallet, account associated with this key must be same as
 /// Key stored in pallet_sudo. So that the calls made from offchain worker
 /// won't get discarded because of Denied Operation
-pub const KEY_TYPE_ID: sp_runtime::KeyTypeId = sp_runtime::KeyTypeId(*b"aird");
+pub const KEY_TYPE_ID: sp_runtime::KeyTypeId = sp_runtime::KeyTypeId(*b"_air");
 
 #[frame_support::pallet]
 pub mod pallet {
@@ -627,35 +627,21 @@ pub mod pallet {
 	}
 }
 
-// TODO:
-// Do not use this in real production
-/// Temporary module to provide TestAuthId
-pub mod temporary {
+pub mod airdrop_crypto {
 	use crate::KEY_TYPE_ID;
 
 	use codec::alloc::string::String;
-	use sp_core::sr25519::Signature as Sr25519Signature;
 	use sp_runtime::{
 		app_crypto::{app_crypto, sr25519},
-		traits::Verify,
 		MultiSignature, MultiSigner,
 	};
 
 	app_crypto!(sr25519, KEY_TYPE_ID);
 
-	pub struct TestAuthId;
+	pub struct AuthId;
 
 	// implemented for runtime
-	impl frame_system::offchain::AppCrypto<MultiSigner, MultiSignature> for TestAuthId {
-		type RuntimeAppPublic = Public;
-		type GenericSignature = sp_core::sr25519::Signature;
-		type GenericPublic = sp_core::sr25519::Public;
-	}
-
-	// implemented for mock runtime in test
-	impl frame_system::offchain::AppCrypto<<Sr25519Signature as Verify>::Signer, Sr25519Signature>
-		for TestAuthId
-	{
+	impl frame_system::offchain::AppCrypto<MultiSigner, MultiSignature> for AuthId {
 		type RuntimeAppPublic = Public;
 		type GenericSignature = sp_core::sr25519::Signature;
 		type GenericPublic = sp_core::sr25519::Public;

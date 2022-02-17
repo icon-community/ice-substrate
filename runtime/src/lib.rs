@@ -296,6 +296,7 @@ parameter_types! {
 	// TODO: Add real creditor account
 	pub const AirdropCreditor: frame_support::PalletId = AIRDROP_PALLETID;
 }
+
 /// Configure the pallet-template in pallets/airdrop
 impl pallet_airdrop::Config for Runtime {
 	type AccountId = AccountId;
@@ -303,11 +304,9 @@ impl pallet_airdrop::Config for Runtime {
 	type Currency = Balances;
 	type FetchIconEndpoint = AirdropFetchIconEndpoint;
 	// TODO:
-	// TODO: [V-HIGH-PRIORITY]
-	// Use real authorityId type. It's now using a dummt type
-	// i.e every block produced will be authored in network
-	// Better to use one of POW or Aura
-	type AuthorityId = pallet_airdrop::temporary::TestAuthId;
+	// Ensure that using app_crypto! generated pairs are safe to use
+	// Also ensure effect of (not)enabling full-crypto feature
+	type AuthorityId = pallet_airdrop::airdrop_crypto::AuthId;
 	type Creditor = AirdropCreditor;
 }
 

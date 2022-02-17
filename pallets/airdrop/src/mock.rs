@@ -19,7 +19,7 @@ type Signature = sp_core::sr25519::Signature;
 type Index = u64;
 type BlockNumber = u64;
 type Extrinsic = sp_runtime::testing::TestXt<Call, ()>;
-type AuthorityId = crate::temporary::TestAuthId;
+type AuthorityId = crate::airdrop_crypto::AuthId;
 
 frame_support::construct_runtime!(
 	pub enum Test where
@@ -77,7 +77,7 @@ impl pallet_airdrop::Config for Test {
 	type AccountId = AccountId;
 	type Currency = Balances;
 	type FetchIconEndpoint = FetchIconEndpoint;
-	type AuthorityId = crate::temporary::TestAuthId;
+	type AuthorityId = crate::airdrop_crypto::AuthId;
 	type Creditor = CreditorAccount;
 }
 
@@ -125,6 +125,19 @@ impl pallet_balances::Config for Test {
 	type ExistentialDeposit = ExistentialDeposit;
 	type AccountStore = System;
 	type WeightInfo = ();
+}
+
+/// Implement AppCrypto with airdrop_pallet::AuthId
+/// to enable Keystore with mock accounts (sr25519) pair
+impl
+	frame_system::offchain::AppCrypto<
+		<sp_core::sr25519::Signature as sp_runtime::traits::Verify>::Signer,
+		sp_core::sr25519::Signature,
+	> for crate::airdrop_crypto::AuthId
+{
+	type RuntimeAppPublic = crate::airdrop_crypto::Public;
+	type GenericSignature = sp_core::sr25519::Signature;
+	type GenericPublic = sp_core::sr25519::Public;
 }
 
 // Build genesis storage according to the mock runtime.
