@@ -213,7 +213,7 @@ pub mod pallet {
 			let ice_address: types::AccountIdOf<T> = ice_address.into();
 
 			let is_already_on_map = <IceSnapshotMap<T>>::contains_key(&ice_address);
-			let is_already_on_queue = <IceSnapshotMap<T>>::contains_key(&ice_address);
+			let is_already_on_queue = <PendingClaims<T>>::contains_key(&ice_address);
 
 			// If this is new mapping, add it in storage
 			if !is_already_on_map {
