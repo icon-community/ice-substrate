@@ -258,6 +258,75 @@ fn test_ensure_root_or_sudo() {
 }
 
 #[test]
+fn test_cancel_claim() {
+	mock::new_test_ext().execute_with(|| {
+		// Unsigned origin is not allowed
+		{
+			let res_denied = AirdropModule::cancel_claim_request(
+				mock::Origin::none(),
+				types::AccountIdOf::<Test>::default(),
+			);
+
+			assert_err!(res_denied, Error::<Test>::DeniedOperation);
+		}
+
+		// Signed but not sudo nor owner
+		{
+			let signed_origin = mock::Origin::signed(sp_core::sr25519::Public([12; 32]));
+			let res_denied = AirdropModule::cancel_claim_request(
+				signed_origin,
+				types::AccountIdOf::<Test>::default(),
+			);
+
+			assert_err!(res_denied, Error::<Test>::DeniedOperation);
+		}
+
+		// When entry to remove is not in queue
+		{
+			let caller_id = sp_core::sr25519::Public([12; 32]);
+			let signed_origin = mock::Origin::signed(caller_id.clone());
+			let res_no_data = AirdropModule::cancel_claim_request(signed_origin, caller_id);
+
+			assert_err!(res_no_data, Error::<Test>::NotInQueue);
+		}
+
+		// Should pass when owner of claimer calls
+		{
+			let caller_id = sp_core::sr25519::Public([12; 32]);
+			let signed_origin = mock::Origin::signed(caller_id.clone());
+			pallet_airdrop::PendingClaims::<Test>::insert(&caller_id, ());
+			let ok_with_owner =
+				AirdropModule::cancel_claim_request(signed_origin.clone(), caller_id.clone());
+
+			assert_ok!(ok_with_owner);
+			assert_eq!(AirdropModule::get_pending_claims(&caller_id), None);
+		}
+
+		// Should pass when root calls in
+		{
+			let caller_id = sp_core::sr25519::Public([12; 32]);
+			pallet_airdrop::PendingClaims::<Test>::insert(&caller_id, ());
+			let ok_with_root =
+				AirdropModule::cancel_claim_request(mock::Origin::root(), caller_id.clone());
+
+			assert_ok!(ok_with_root);
+			assert_eq!(AirdropModule::get_pending_claims(&caller_id), None);
+		}
+
+		// Should pass when sudo calls in
+		{
+			let caller_id = sp_core::sr25519::Public([12; 32]);
+			let sudo_origin = mock::Origin::signed(caller_id.clone());
+			pallet_airdrop::PendingClaims::<Test>::insert(&caller_id, ());
+			let ok_with_root = AirdropModule::cancel_claim_request(sudo_origin, caller_id.clone());
+
+			assert_ok!(ok_with_root);
+			assert_eq!(AirdropModule::get_pending_claims(&caller_id), None);
+		}
+	});
+}
+
+#[test]
 fn test_transfer_invalid() {
 	mock::new_test_ext().execute_with(|| {
 		let server_response = types::ServerResponse::default();
