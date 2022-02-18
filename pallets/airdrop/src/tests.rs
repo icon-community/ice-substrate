@@ -4,44 +4,13 @@ use crate::{
 	types, Error,
 };
 use frame_support::{assert_err, assert_noop, assert_ok};
+use sp_core::offchain::testing::OffchainState;
 
 /// Sample icon address when sent to server retrurning defined response
 const PREDEFINED_REQUEST_RESPONSE: (&str, &str) = (
 	"0x000000000000000000000000000000",
 	r#"{"omm":0,"balanced":300,"stake":464764,"defi_user":true}"#,
 );
-
-/// A helper macro that will return the required variable to start testing offchain logic
-// TODO:
-// Convert this macro to function
-macro_rules! new_offchain_test_ext {
-	() => {{
-		use sp_core::offchain::TransactionPoolExt;
-		use sp_keystore::{testing::KeyStore, KeystoreExt, SyncCryptoStore};
-		use sp_runtime::RuntimeAppPublic;
-		use std::sync::Arc;
-
-		const PHRASE: &str =
-			"news slush supreme milk chapter athlete soap sausage put clutch what kitten";
-		let keystore = KeyStore::new();
-		SyncCryptoStore::sr25519_generate_new(
-			&keystore,
-			crate::airdrop_crypto::Public::ID,
-			Some(&format!("{}/abcdefg", PHRASE)),
-		)
-		.unwrap();
-
-		let mut test_ext = sp_io::TestExternalities::default();
-		let (pool, pool_state) = sp_core::offchain::testing::TestTransactionPoolExt::new();
-		let (offchain, state) = sp_core::offchain::testing::TestOffchainExt::new();
-
-		test_ext.register_extension(sp_core::offchain::OffchainWorkerExt::new(offchain));
-		test_ext.register_extension(TransactionPoolExt::new(pool));
-		test_ext.register_extension(KeystoreExt(Arc::new(keystore)));
-
-		(test_ext, state)
-	}};
-}
 
 /// Test that the signature validation passed against the same AccountId type as used in real runtime
 /// This method will always passed when tested against with mock runtime
@@ -115,7 +84,7 @@ fn siganture_validation_invalid() {
 
 #[test]
 fn making_http_request() {
-	let (mut test_ext, state) = new_offchain_test_ext! {};
+	let (mut test_ext, state) = new_offchain_test_ext();
 	put_response(&mut state.write());
 
 	test_ext.execute_with(|| {
@@ -127,7 +96,7 @@ fn making_http_request() {
 
 #[test]
 fn process_claim_invalid() {
-	let (mut test_ext, state) = new_offchain_test_ext! {};
+	let (mut test_ext, state) = new_offchain_test_ext();
 
 	test_ext.execute_with(|| {
 		let ice_address = types::AccountIdOf::<Test>::default();
@@ -143,7 +112,7 @@ fn process_claim_invalid() {
 
 #[test]
 fn process_claim_valid() {
-	let (mut test_ext, state) = new_offchain_test_ext!();
+	let (mut test_ext, state) = new_offchain_test_ext();
 
 	put_response(&mut state.write());
 
@@ -448,7 +417,7 @@ fn claim_request_valid() {
 
 #[test]
 fn make_signed_call_valid() {
-	let (mut test_ext, state) = new_offchain_test_ext!();
+	let (mut test_ext, state) = new_offchain_test_ext();
 
 	test_ext.execute_with(|| {
 		let call = pallet_airdrop::pallet::Call::sample_call { arg: 10 };
@@ -478,4 +447,36 @@ fn put_response(state: &mut testing::OffchainState) {
 		sent: true,
 		..Default::default()
 	});
+}
+
+// Helper function to return test extension
+// with offchain, transaction pool, keystore etc registered
+fn new_offchain_test_ext() -> (
+	sp_io::TestExternalities,
+	std::sync::Arc<parking_lot::RwLock<OffchainState>>,
+) {
+	use sp_core::offchain::TransactionPoolExt;
+	use sp_keystore::{testing::KeyStore, KeystoreExt, SyncCryptoStore};
+	use sp_runtime::RuntimeAppPublic;
+	use std::sync::Arc;
+
+	const PHRASE: &str =
+		"news slush supreme milk chapter athlete soap sausage put clutch what kitten";
+	let keystore = KeyStore::new();
+	SyncCryptoStore::sr25519_generate_new(
+		&keystore,
+		crate::airdrop_crypto::Public::ID,
+		Some(&format!("{}/abcdefg", PHRASE)),
+	)
+	.unwrap();
+
+	let mut test_ext = sp_io::TestExternalities::default();
+	let (pool, pool_state) = sp_core::offchain::testing::TestTransactionPoolExt::new();
+	let (offchain, state) = sp_core::offchain::testing::TestOffchainExt::new();
+
+	test_ext.register_extension(sp_core::offchain::OffchainWorkerExt::new(offchain));
+	test_ext.register_extension(TransactionPoolExt::new(pool));
+	test_ext.register_extension(KeystoreExt(Arc::new(keystore)));
+
+	(test_ext, state)
 }
