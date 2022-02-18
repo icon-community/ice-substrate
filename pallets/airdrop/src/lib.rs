@@ -141,11 +141,13 @@ pub mod pallet {
 		AddedToQueue(types::AccountIdOf<T>),
 
 		/// Emit when a claim request have been removed from queue
-		ClaimCancelled,
+		ClaimCancelled(types::AccountIdOf<T>),
 
-		/// Emit when storage key is updated to new value
-		/// params: 0: previous sudo, 1: new sudo
-		AirdropSudoChanged(types::AccountIdOf<T>, types::AccountIdOf<T>),
+		/// Emit when claim request was done successfully
+		ClaimRequestSucced(types::AccountIdOf<T>),
+
+		/// Emit when an claim request was successful and fund have been transferred
+		ClaimSuccess(types::AccountIdOf<T>),
 	}
 
 	#[pallet::storage]
@@ -229,10 +231,12 @@ pub mod pallet {
 			// Add to queue if not present and emit respective event
 			if !is_already_on_queue {
 				<PendingClaims<T>>::insert(&ice_address, ());
-				Self::deposit_event(Event::<T>::AddedToQueue(ice_address));
+				Self::deposit_event(Event::<T>::AddedToQueue(ice_address.clone()));
 			} else {
-				Self::deposit_event(Event::<T>::SkippedAddingToQueue(ice_address));
+				Self::deposit_event(Event::<T>::SkippedAddingToQueue(ice_address.clone()));
 			}
+
+			Self::deposit_event(Event::<T>::ClaimRequestSucced(ice_address));
 
 			Ok(())
 		}
@@ -256,8 +260,8 @@ pub mod pallet {
 			let is_in_queue = <PendingClaims<T>>::contains_key(&to_remove);
 			ensure!(is_in_queue, Error::<T>::NotInQueue);
 
-			<PendingClaims<T>>::remove(to_remove);
-			Self::deposit_event(Event::<T>::ClaimCancelled);
+			<PendingClaims<T>>::remove(&to_remove);
+			Self::deposit_event(Event::<T>::ClaimCancelled(to_remove));
 
 			Ok(())
 		}
@@ -323,13 +327,13 @@ pub mod pallet {
 			// Now we can remove this claim from queue
 			<PendingClaims<T>>::remove(&receiver);
 
-			// TODO:
-			// emit proper emit thorughout this function
-
 			log::info!(
 				"Complete_tranfser function on ice address: {:?} passed..",
 				receiver
 			);
+
+			Self::deposit_event(Event::<T>::ClaimSuccess(receiver));
+
 			Ok(())
 		}
 
