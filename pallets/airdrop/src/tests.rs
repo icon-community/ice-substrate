@@ -379,6 +379,35 @@ fn test_transfer_invalid() {
 }
 
 #[test]
+fn claim_request_invalid() {
+	mock::new_test_ext().execute_with(|| {
+		// Already on map
+		{
+			// First make a success claim
+			let dummy_bytes = b"dummy-test-text";
+			let ice_address = types::AccountIdOf::<Test>::default();
+			let claim_res = AirdropModule::claim_request(
+				mock::Origin::signed(ice_address.clone()),
+				b"icon-address".to_vec(),
+				b"dummt-message".to_vec(),
+				b"dummy-signature".to_vec(),
+			);
+			assert_ok!(claim_res);
+
+			// Make another claim from same ice address
+			let double_claim = AirdropModule::claim_request(
+				mock::Origin::signed(ice_address.clone()),
+				b"icon-address".to_vec(),
+				b"dummt-message".to_vec(),
+				b"dummy-signature".to_vec(),
+			);
+			// Make sure no storage is mutated & an error is thrown
+			assert_noop!(double_claim, Error::<Test>::RequestAlreadyMade);
+		}
+	});
+}
+
+#[test]
 fn claim_request_valid() {
 	mock::new_test_ext().execute_with(|| {
 		let message = b"dummy-test-text";

@@ -121,21 +121,6 @@ pub mod pallet {
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
-		/// This input have not been added to ice->snapshotmap
-		/// because the map already contains the key of this ice_address
-		SkippedAddingToMap(types::AccountIdOf<T>),
-
-		/// This input have not been added to pending queue
-		/// because same ice_address is already present in queue
-		SkippedAddingToQueue(types::AccountIdOf<T>),
-
-		/// This ice address have been added to ice->snapshot map
-		/// with default snapshot and provided icon_address
-		AddedToMap(types::AccountIdOf<T>),
-
-		/// This request have been sucessfully added to pending queue
-		AddedToQueue(types::AccountIdOf<T>),
-
 		/// Emit when a claim request have been removed from queue
 		ClaimCancelled(types::AccountIdOf<T>),
 
@@ -172,6 +157,9 @@ pub mod pallet {
 
 		/// Claim has already been made so can't be made again at this time
 		ClaimAlreadyMade,
+
+		/// This request have been already made.
+		RequestAlreadyMade,
 	}
 
 	#[pallet::call]
@@ -211,38 +199,13 @@ pub mod pallet {
 			let ice_address: types::AccountIdOf<T> = ice_address.into();
 
 			let is_already_on_map = <IceSnapshotMap<T>>::contains_key(&ice_address);
-			
-			// If this is new mapping, add it in storage
-			if !is_already_on_map {
-				let new_snapshot = types::SnapshotInfo::<T>::default().icon_address(icon_address);
-				<IceSnapshotMap<T>>::insert(&ice_address, new_snapshot);
-				Self::deposit_event(Event::<T>::AddedToMap(ice_address.clone()));
+			ensure!(!is_already_on_map, Error::<T>::RequestAlreadyMade);
 
-				// TODO:: Also add the record into queue here
+			let new_snapshot = types::SnapshotInfo::<T>::default().icon_address(icon_address);
+			<IceSnapshotMap<T>>::insert(&ice_address, new_snapshot);
+			<PendingClaims<T>>::insert(&ice_address, ());
 
-			} else {
-				// Having snapshot already in map is not an error.
-				// So emit an event not an error
-				// TODO:: Throw error instead of event
-				Self::deposit_event(Event::<T>::SkippedAddingToMap(ice_address.clone()));
-			}
-			
-
-			//------------------------------ REMOVE THESE --------------------------------
-			let is_already_on_queue = <PendingClaims<T>>::contains_key(&ice_address);
-
-			// Add to queue if not present and emit respective event
-			if !is_already_on_queue {
-				<PendingClaims<T>>::insert(&ice_address, ());
-				Self::deposit_event(Event::<T>::AddedToQueue(ice_address.clone()));
-			} else {
-				Self::deposit_event(Event::<T>::SkippedAddingToQueue(ice_address.clone()));
-			}
-			//------------------------------ REMOVE THESE --------------------------------
-
-			// TODO:: Only have a single success event fired in case of successful claim, remove others
 			Self::deposit_event(Event::<T>::ClaimRequestSucced(ice_address));
-
 			Ok(())
 		}
 
