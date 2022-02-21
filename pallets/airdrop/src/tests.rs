@@ -372,10 +372,19 @@ fn test_transfer_invalid() {
 #[test]
 fn claim_request_invalid() {
 	mock::new_test_ext().execute_with(|| {
+		// Called with non-signed origin
+		{
+			let with_root =
+				AirdropModule::claim_request(mock::Origin::root(), vec![], vec![], vec![]);
+			let with_unsigned =
+				AirdropModule::claim_request(mock::Origin::none(), vec![], vec![], vec![]);
+
+			assert_noop!(with_root, sp_runtime::DispatchError::BadOrigin);
+			assert_noop!(with_unsigned, sp_runtime::DispatchError::BadOrigin);
+		}
+
 		// Already on map
 		{
-			// First make a success claim
-			let dummy_bytes = b"dummy-test-text";
 			let ice_address = types::AccountIdOf::<Test>::default();
 			let claim_res = AirdropModule::claim_request(
 				mock::Origin::signed(ice_address.clone()),

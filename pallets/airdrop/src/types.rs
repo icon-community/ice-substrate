@@ -48,9 +48,6 @@ pub struct SnapshotInfo<T: Config> {
 	pub vesting_percentage: u32,
 
 	/// indicator wather the user have claimmed the balance
-	// TODO:
-	// this field might need to be change when working with vesting
-	// might be change into airdropped_amount: BalanceOf<T>
 	pub claim_status: bool,
 }
 
