@@ -12,7 +12,11 @@ on:
         description: 'tag name'
         required: true
         default: 'v0.2.0'
-        
+      chain:
+        description: 'chain name'
+        required: true
+        default: 'test'
+
 jobs:
        
   deploy-rpc:
@@ -52,7 +56,7 @@ jobs:
           username: ${{ secrets.SSH_USER_RPC }}
           key: ${{ secrets.SSH_PRIVATE_KEY_RPC }}
           port: ${{ secrets.SSH_PORT }}
-          script: sh /root/ice-node/rpcrestart.sh
+          script: sh /root/ice-node/rpcrestart.sh ${{ github.event.inputs.chain }}
         
   deploy-validator:
     needs: deploy-rpc
