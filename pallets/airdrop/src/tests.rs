@@ -240,32 +240,37 @@ fn test_cancel_claim() {
 	mock::new_test_ext().execute_with(|| {
 		// Unsigned origin is not allowed
 		{
-			let res_denied = AirdropModule::cancel_claim_request(
-				mock::Origin::none(),
-				types::AccountIdOf::<Test>::default(),
+			assert_noop!(
+				AirdropModule::cancel_claim_request(
+					mock::Origin::none(),
+					types::AccountIdOf::<Test>::default(),
+				),
+				Error::<Test>::DeniedOperation
 			);
-
-			assert_noop!(res_denied, Error::<Test>::DeniedOperation);
 		}
 
 		// Signed but not sudo nor owner
 		{
 			let signed_origin = mock::Origin::signed(sp_core::sr25519::Public([12; 32]));
-			let res_denied = AirdropModule::cancel_claim_request(
-				signed_origin,
-				types::AccountIdOf::<Test>::default(),
-			);
 
-			assert_noop!(res_denied, Error::<Test>::DeniedOperation);
+			assert_noop!(
+				AirdropModule::cancel_claim_request(
+					signed_origin,
+					types::AccountIdOf::<Test>::default(),
+				),
+				Error::<Test>::DeniedOperation
+			);
 		}
 
 		// When entry to remove is not in queue
 		{
 			let caller_id = sp_core::sr25519::Public([12; 32]);
 			let signed_origin = mock::Origin::signed(caller_id.clone());
-			let res_no_data = AirdropModule::cancel_claim_request(signed_origin, caller_id);
 
-			assert_noop!(res_no_data, Error::<Test>::NotInQueue);
+			assert_noop!(
+				AirdropModule::cancel_claim_request(signed_origin, caller_id),
+				Error::<Test>::NotInQueue
+			);
 		}
 
 		// Should pass when owner of claimer calls
@@ -313,13 +318,14 @@ fn test_transfer_invalid() {
 		// Try to claim something when the data is not in queue
 		// simulate the condition when user had cancelled the claim while process was goingon in offchain
 		{
-			let root_origin = mock::Origin::root();
-			let fail_with_absent_queue = AirdropModule::complete_transfer(
-				root_origin.clone(),
-				receiver.clone(),
-				server_response.clone(),
+			assert_noop!(
+				AirdropModule::complete_transfer(
+					mock::Origin::root(),
+					receiver.clone(),
+					server_response.clone(),
+				),
+				Error::<Test>::NotInQueue
 			);
-			assert_noop!(fail_with_absent_queue, crate::Error::<Test>::NotInQueue);
 		}
 
 		// Try to claim when data is in queue but not in map
@@ -327,24 +333,28 @@ fn test_transfer_invalid() {
 			// Add this to queue
 			crate::PendingClaims::<Test>::insert(&receiver, ());
 
-			let root_origin = mock::Origin::root();
-			let fail_with_absent_queue = AirdropModule::complete_transfer(
-				root_origin.clone(),
-				receiver.clone(),
-				server_response.clone(),
+			assert_noop!(
+				AirdropModule::complete_transfer(
+					mock::Origin::root(),
+					receiver.clone(),
+					server_response.clone(),
+				),
+				Error::<Test>::IncompleteData
 			);
-			assert_noop!(fail_with_absent_queue, crate::Error::<Test>::IncompleteData);
 		}
 
 		// Try to call this function with unauthorised key
 		{
 			let unauthorised_user = mock::Origin::signed(sp_core::sr25519::Public([10; 32]));
-			let fail_with_permission = AirdropModule::complete_transfer(
-				unauthorised_user,
-				receiver.clone(),
-				server_response.clone(),
+
+			assert_noop!(
+				AirdropModule::complete_transfer(
+					unauthorised_user,
+					receiver.clone(),
+					server_response.clone(),
+				),
+				Error::<Test>::DeniedOperation
 			);
-			assert_noop!(fail_with_permission, crate::Error::<Test>::DeniedOperation);
 		}
 
 		// When claim have already been made
@@ -358,13 +368,14 @@ fn test_transfer_invalid() {
 				},
 			);
 
-			let root_origin = mock::Origin::root();
-			let fail_with_already_claimed = AirdropModule::complete_transfer(
-				root_origin,
-				receiver.clone(),
-				server_response.clone(),
+			assert_noop!(
+				AirdropModule::complete_transfer(
+					mock::Origin::root(),
+					receiver.clone(),
+					server_response.clone(),
+				),
+				Error::<Test>::ClaimAlreadyMade
 			);
-			assert_noop!(fail_with_already_claimed, Error::<Test>::ClaimAlreadyMade);
 		}
 	});
 }
@@ -374,13 +385,14 @@ fn claim_request_invalid() {
 	mock::new_test_ext().execute_with(|| {
 		// Called with non-signed origin
 		{
-			let with_root =
-				AirdropModule::claim_request(mock::Origin::root(), vec![], vec![], vec![]);
-			let with_unsigned =
-				AirdropModule::claim_request(mock::Origin::none(), vec![], vec![], vec![]);
-
-			assert_noop!(with_root, sp_runtime::DispatchError::BadOrigin);
-			assert_noop!(with_unsigned, sp_runtime::DispatchError::BadOrigin);
+			assert_noop!(
+				AirdropModule::claim_request(mock::Origin::root(), vec![], vec![], vec![]),
+				sp_runtime::DispatchError::BadOrigin
+			);
+			assert_noop!(
+				AirdropModule::claim_request(mock::Origin::none(), vec![], vec![], vec![]),
+				sp_runtime::DispatchError::BadOrigin
+			);
 		}
 
 		// Already on map
@@ -394,15 +406,16 @@ fn claim_request_invalid() {
 			);
 			assert_ok!(claim_res);
 
-			// Make another claim from same ice address
-			let double_claim = AirdropModule::claim_request(
-				mock::Origin::signed(ice_address.clone()),
-				b"icon-address".to_vec(),
-				b"dummt-message".to_vec(),
-				b"dummy-signature".to_vec(),
-			);
 			// Make sure no storage is mutated & an error is thrown
-			assert_noop!(double_claim, Error::<Test>::RequestAlreadyMade);
+			assert_noop!(
+				AirdropModule::claim_request(
+					mock::Origin::signed(ice_address.clone()),
+					b"icon-address".to_vec(),
+					b"dummt-message".to_vec(),
+					b"dummy-signature".to_vec(),
+				),
+				Error::<Test>::RequestAlreadyMade
+			);
 		}
 	});
 }
