@@ -192,6 +192,15 @@ pub mod pallet {
 			// Convert back to to frame_system::Config::AccountId
 			let ice_address: types::AccountIdOf<T> = ice_address.into();
 
+			/*
+			TODO:
+			We might have to check both is_in_queue & is_in_map  independently
+			and do not error on absence of either of them.
+			Consider a activity when:
+			- Use make claim_request ( which will add to map & queue )
+			- Cancel the claim request ( which will remove from queue & data in map is preserved anyway )
+			- then user will never be able to claim again ( because data in already on map & we are throwing error on this condition )
+			*/
 			let is_already_on_map = <IceSnapshotMap<T>>::contains_key(&ice_address);
 			ensure!(!is_already_on_map, Error::<T>::RequestAlreadyMade);
 

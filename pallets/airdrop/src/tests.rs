@@ -474,6 +474,37 @@ fn make_signed_call_valid() {
 	});
 }
 
+#[test]
+fn claim_cancel_claim() {
+	// Test that user can first claim, cancel and again claim successfully
+	mock::new_test_ext().execute_with(|| {
+		let ice_address = types::AccountIdOf::<Test>::default();
+
+		// First claim should succeed
+		assert_ok!(AirdropModule::claim_request(
+			mock::Origin::signed(ice_address.clone()),
+			vec![],
+			vec![],
+			vec![],
+		));
+
+		// Cancel should also succeed
+		assert_ok!(AirdropModule::cancel_claim_request(
+			mock::Origin::root(),
+			ice_address.clone(),
+		));
+
+		// Again making the claim request should also succeed
+		// And also emit event signifying map already exists but only queue is updated
+		assert_ok!(AirdropModule::claim_request(
+			mock::Origin::signed(ice_address.clone()),
+			vec![],
+			vec![],
+			vec![],
+		));
+	});
+}
+
 use sp_core::offchain::testing;
 /// Helper function to initialise PendingResult struct as per passed by (icon_address & response)
 fn put_response(state: &mut testing::OffchainState) {
