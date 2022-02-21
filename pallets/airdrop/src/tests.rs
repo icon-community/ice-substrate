@@ -245,7 +245,7 @@ fn test_cancel_claim() {
 				types::AccountIdOf::<Test>::default(),
 			);
 
-			assert_err!(res_denied, Error::<Test>::DeniedOperation);
+			assert_noop!(res_denied, Error::<Test>::DeniedOperation);
 		}
 
 		// Signed but not sudo nor owner
@@ -256,7 +256,7 @@ fn test_cancel_claim() {
 				types::AccountIdOf::<Test>::default(),
 			);
 
-			assert_err!(res_denied, Error::<Test>::DeniedOperation);
+			assert_noop!(res_denied, Error::<Test>::DeniedOperation);
 		}
 
 		// When entry to remove is not in queue
@@ -265,7 +265,7 @@ fn test_cancel_claim() {
 			let signed_origin = mock::Origin::signed(caller_id.clone());
 			let res_no_data = AirdropModule::cancel_claim_request(signed_origin, caller_id);
 
-			assert_err!(res_no_data, Error::<Test>::NotInQueue);
+			assert_noop!(res_no_data, Error::<Test>::NotInQueue);
 		}
 
 		// Should pass when owner of claimer calls
@@ -319,10 +319,7 @@ fn test_transfer_invalid() {
 				receiver.clone(),
 				server_response.clone(),
 			);
-			assert_eq!(
-				fail_with_absent_queue.unwrap_err(),
-				crate::Error::<Test>::NotInQueue.into()
-			);
+			assert_noop!(fail_with_absent_queue, crate::Error::<Test>::NotInQueue);
 		}
 
 		// Try to claim when data is in queue but not in map
@@ -336,10 +333,7 @@ fn test_transfer_invalid() {
 				receiver.clone(),
 				server_response.clone(),
 			);
-			assert_eq!(
-				fail_with_absent_queue.unwrap_err(),
-				crate::Error::<Test>::IncompleteData.into()
-			);
+			assert_noop!(fail_with_absent_queue, crate::Error::<Test>::IncompleteData);
 		}
 
 		// Try to call this function with unauthorised key
@@ -350,10 +344,7 @@ fn test_transfer_invalid() {
 				receiver.clone(),
 				server_response.clone(),
 			);
-			assert_eq!(
-				fail_with_permission.unwrap_err(),
-				crate::Error::<Test>::DeniedOperation.into()
-			);
+			assert_noop!(fail_with_permission, crate::Error::<Test>::DeniedOperation);
 		}
 
 		// When claim have already been made
@@ -373,7 +364,7 @@ fn test_transfer_invalid() {
 				receiver.clone(),
 				server_response.clone(),
 			);
-			assert_err!(fail_with_already_claimed, Error::<Test>::ClaimAlreadyMade);
+			assert_noop!(fail_with_already_claimed, Error::<Test>::ClaimAlreadyMade);
 		}
 	});
 }
