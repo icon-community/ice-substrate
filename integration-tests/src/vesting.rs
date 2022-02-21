@@ -74,3 +74,27 @@ fn check_vesting_status() {
 		vest_and_assert_no_vesting::<Test>(12);
 	});
 }
+
+	
+#[test]
+fn redeem_vesting(fromAccount: u64, newAccount:u64, amount: T::Balance) {
+	ExtBuilder::default().existential_deposit(ED).build().execute_with(|| {
+		Balances::transfer(fromAccount, newAccount, amount);
+		let user1_free_balance = Balances::free_balance(&newAccount);
+		assert_eq!(newAccount, amount);
+		assert_eq!(Balances::transfer(Some(1).into(), 2, 55));
+		let user1_vesting_schedule = pallet_vesting::VestingInfo::new(
+			ED * 5,
+			128, // Vesting over 10 blocks
+			0,
+		);
+		assert_eq!(Vesting::vesting(&newAccount).unwrap(), vec![user1_vesting_schedule])
+
+		System::set_block_number(10);
+		assert_eq!(System::block_number(), 10);
+
+		System::set_block_number(30);
+		assert_eq!(System::block_number(), 30);
+		vest_and_assert_no_vesting::<Test>(1);
+	}
+}
