@@ -77,10 +77,6 @@ pub mod pallet {
 	use frame_system::pallet_prelude::*;
 	use sp_std::prelude::*;
 
-	use fp_evm::LinearCostPrecompile;
-	use pallet_evm_precompile_sha3fips::Sha3FIPS256;
-	use pallet_evm_precompile_simple::ECRecoverPublicKey;
-
 	use frame_support::fail;
 	use frame_support::traits::{Currency, ExistenceRequirement, Hooks, ReservableCurrency};
 	use frame_system::offchain::CreateSignedTransaction;
@@ -215,18 +211,25 @@ pub mod pallet {
 			let ice_address: types::AccountIdOf<T> = ice_address.into();
 
 			let is_already_on_map = <IceSnapshotMap<T>>::contains_key(&ice_address);
-			let is_already_on_queue = <PendingClaims<T>>::contains_key(&ice_address);
-
+			
 			// If this is new mapping, add it in storage
 			if !is_already_on_map {
 				let new_snapshot = types::SnapshotInfo::<T>::default().icon_address(icon_address);
 				<IceSnapshotMap<T>>::insert(&ice_address, new_snapshot);
 				Self::deposit_event(Event::<T>::AddedToMap(ice_address.clone()));
+
+				// TODO:: Also add the record into queue here
+
 			} else {
 				// Having snapshot already in map is not an error.
 				// So emit an event not an error
+				// TODO:: Throw error instead of event
 				Self::deposit_event(Event::<T>::SkippedAddingToMap(ice_address.clone()));
 			}
+			
+
+			//------------------------------ REMOVE THESE --------------------------------
+			let is_already_on_queue = <PendingClaims<T>>::contains_key(&ice_address);
 
 			// Add to queue if not present and emit respective event
 			if !is_already_on_queue {
@@ -235,7 +238,9 @@ pub mod pallet {
 			} else {
 				Self::deposit_event(Event::<T>::SkippedAddingToQueue(ice_address.clone()));
 			}
+			//------------------------------ REMOVE THESE --------------------------------
 
+			// TODO:: Only have a single success event fired in case of successful claim, remove others
 			Self::deposit_event(Event::<T>::ClaimRequestSucced(ice_address));
 
 			Ok(())
@@ -367,6 +372,7 @@ pub mod pallet {
 			Ok(())
 		}
 
+		// TODO: Remove later on
 		/// Dummy function that does absolutely nothing.
 		/// This is only implemented while testing
 		// set high fee so that non user dare to call this to pollute tx-pool
@@ -397,7 +403,7 @@ pub mod pallet {
 
 			// Get the first CLAIMS_PER_OCW number of claim request from request queue
 			// As queue only contains ice_address, we also need to collect
-			//
+			// TODO:: Figure out way to process claims in first come basis
 			// Destructing the process:
 			// 1) get all the key-value pair of PendingClaims Storage ( in Lexicographic order )
 			// 2) filter out the key (ice_address) if that ice_addess claim_status is true in snapshot map
@@ -695,7 +701,7 @@ impl types::IconVerifiable for sp_runtime::AccountId32 {
 				Validate the icon_signature length
 		*/
 		ensure!(
-			icon_signature.len() >= 65,
+			icon_signature.len() == 65,
 			SignatureValidationError::InvalidIconSignature
 		);
 		// === verified the length of icon_signature

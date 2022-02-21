@@ -106,6 +106,8 @@ pub enum ClaimError {
 #[cfg_attr(feature = "std", derive(Debug))]
 #[cfg_attr(not(feature = "std"), derive(RuntimeDebug))]
 pub struct ServerResponse {
+	// TODO:: Use u64 instead of u128 to save on-chain space
+
 	// TODO: Add description of this field
 	pub omm: u128,
 
