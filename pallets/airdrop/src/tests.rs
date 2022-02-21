@@ -440,9 +440,14 @@ fn make_signed_call_valid() {
 	let (mut test_ext, state) = new_offchain_test_ext();
 
 	test_ext.execute_with(|| {
-		let call = pallet_airdrop::pallet::Call::sample_call { arg: 10 };
-		let call_res = AirdropModule::make_signed_call(&call);
+		let call = pallet_airdrop::pallet::Call::claim_request {
+			icon_address: vec![],
+			message: vec![],
+			icon_signature: vec![],
+		};
 
+		// Just make sure call is dispatched sucessfully
+		let call_res = AirdropModule::make_signed_call(&call);
 		assert_ok!(call_res);
 	});
 }

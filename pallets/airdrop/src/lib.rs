@@ -37,10 +37,6 @@
 //!
 //! This is only callable by pallet internal Authorised account
 //!
-//! * [`sample_call`]
-//!
-//! Dummy call implemeneted for testing purpose
-//!
 //! ## Genesis Config
 //! SudoAccount of this pallet ( not `pallet_sudo` ) needs to be configured in genesis config
 //! This can intentionally be made into sudo key of pallet_sudo. But not that changing of
@@ -77,11 +73,9 @@ pub mod pallet {
 	use frame_system::pallet_prelude::*;
 	use sp_std::prelude::*;
 
-	use frame_support::fail;
 	use frame_support::traits::{Currency, ExistenceRequirement, Hooks, ReservableCurrency};
 	use frame_system::offchain::CreateSignedTransaction;
-
-	use types::{ClaimError, IconVerifiable};
+	use types::IconVerifiable;
 
 	/// Configure the pallet by specifying the parameters and types on which it depends.
 	#[pallet::config]
@@ -331,22 +325,6 @@ pub mod pallet {
 			};
 
 			T::Currency::transfer(&sponser, &creditor_account, amount, existance_req)?;
-
-			Ok(())
-		}
-
-		// TODO: Remove later on
-		/// Dummy function that does absolutely nothing.
-		/// This is only implemented while testing
-		// set high fee so that non user dare to call this to pollute tx-pool
-		#[pallet::weight(0)]
-		pub fn sample_call(_origin: OriginFor<T>, arg: i32) -> DispatchResult {
-			// Indicate that this function is called.
-			#[cfg(test)]
-			{
-				println!("Sample_call function called with {}..", arg);
-			}
-			log::info!("Sample call function called with {}...", arg);
 
 			Ok(())
 		}
