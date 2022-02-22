@@ -34,15 +34,7 @@
 //! This transfer the fund to given ice address with given transaction details
 //! inside `ServerResponse` type. If transferring the fund succeed, it will also
 //! remove the queue from pendingClaims and update any snapshot info as needed.
-//!
-//! This is only callable by pallet internal Authorised account
-//!
-//! ## Genesis Config
-//! SudoAccount of this pallet ( not `pallet_sudo` ) needs to be configured in genesis config
-//! This can intentionally be made into sudo key of pallet_sudo. But not that changing of
-//! `pallet_sudo`'s key ( i.e calling `pallet_sudo::Call::set_key` ) will leave this unaffected
-//! A similar interafce [`set_authorised`] is provided to set new account to be authorised.
-//! Note: Only one account is authorised at a time
+//! This is only callable by sudo/root account
 
 #![cfg_attr(not(feature = "std"), no_std)]
 pub use pallet::*;
@@ -240,6 +232,18 @@ pub mod pallet {
 		/// Dispatchable to transfer the fund from system balance to given address
 		/// As this transfer the system balance, this must only be called within
 		/// sudo or with root origin
+		// TODO:
+		// Sudo pallet can have only one key at a time. This implies that
+		// when sudo key is changed we also have to insert the new sudo key in the
+		// keystore and rotate it so that offchain worker always use new sudo account.
+		// failing to do so will bring offchain worker to a state where it can't send
+		// authorised signed transaction anymore leaving all call to this function to
+		// fail
+		// Some solution:
+		// 1) Node operator should ensure to sync sudo key and keystore as above
+		// 2) Maintain list of accounts local to this pallet only, (was already done)
+		//	  This seems to be good to go approach but brings about the hazard &
+		//	  confusion to maintain two list of authorised accounts
 		#[pallet::weight(0)]
 		pub fn complete_transfer(
 			origin: OriginFor<T>,
