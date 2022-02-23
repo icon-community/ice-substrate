@@ -2496,6 +2496,7 @@ dependencies = [
  "pallet-aura",
  "pallet-balances",
  "pallet-base-fee",
+ "pallet-collective",
  "pallet-dynamic-fee",
  "pallet-ethereum",
  "pallet-evm",
@@ -4215,6 +4216,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "pallet-collective"
+version = "4.0.0-dev"
+source = "git+https://github.com/paritytech/substrate#90dd23e78851605180f3dc3bfcf43e2800354f79"
+dependencies = [
+ "frame-benchmarking",
+ "frame-support",
+ "frame-system",
+ "log",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
 name = "pallet-dynamic-fee"
 version = "4.0.0-dev"
 source = "git+https://github.com/paritytech/frontier.git#ee8c5b4a0ed24bcc2fa794070e443abbdbc4d6a6"
@@ -4461,12 +4479,14 @@ name = "pallet-treasury"
 version = "4.0.0-dev"
 source = "git+https://github.com/paritytech/substrate#90dd23e78851605180f3dc3bfcf43e2800354f79"
 dependencies = [
+ "frame-benchmarking",
  "frame-support",
  "frame-system",
  "impl-trait-for-tuples",
  "pallet-balances",
  "parity-scale-codec",
  "scale-info",
+ "serde",
  "sp-runtime",
  "sp-std",
 ]
