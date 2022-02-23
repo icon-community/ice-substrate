@@ -9,7 +9,6 @@ pub use pallet::*;
 pub mod pallet {
 	use frame_support::pallet_prelude::*;
 	use frame_system::pallet_prelude::*;
-
 	/// Configure the pallet by specifying the parameters and types on which it depends.
 	#[pallet::config]
 	pub trait Config: frame_system::Config {
@@ -34,7 +33,7 @@ pub mod pallet {
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
-		VestingClaimSuccess(T::AccountId, BalanceOf<T>),
+		VestingClaimSuccess(T::AccountId, Balance<T>, DispatchResult),
 	}
 
 	// Errors inform users that something went wrong.
@@ -56,7 +55,6 @@ pub mod pallet {
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn claim(
 			origin: OriginFor<T>,
-			source: u32,
 			claimee_accountId: u32,
 			claim: Balance,
 			per_block: Balance,
@@ -68,12 +66,15 @@ pub mod pallet {
 			let who = ensure_signed(origin)?;
 
 			//Check the source account/Treasury from Genesis Config for free Balance
-			if T::Currency::free_balance(&source) > claim {
-				let claim_vesting_schedule = pallet_vesting::VestingInfo::new(
-					claim,
-					per_block,
-					starting_block,
-				);
+			if T::Currency::free_balance(&origin) > claim {
+				let claim_vesting_schedule =
+					pallet_vesting::VestingInfo::new(claim, per_block, starting_block);
+
+				let result =
+					Vesting::vested_transfer(who, claimee_accountId, claim_vesting_schedule);
+
+				// Emit an event.
+				Self::deposit_event(Event::VestingClaimSuccess(who, Balance, result));
 			}
 
 			/**
@@ -85,30 +86,10 @@ pub mod pallet {
 			 */
 			// Update storage.
 			// <Something<T>>::put(something);
-			// Emit an event.
-			Self::deposit_event(Event::SomethingStored(something, who));
-			// Return a successful DispatchResultWithPostInfo
 
+			// Return a successful DispatchResultWithPostInfo
 			Ok(())
 		}
 
-		/// An example dispatchable that may throw a custom error.
-		#[pallet::weight(10_000 + T::DbWeight::get().reads_writes(1,1))]
-		pub fn cause_error(origin: OriginFor<T>) -> DispatchResult {
-			let _who = ensure_signed(origin)?;
-
-			// Read a value from storage.
-			match <Something<T>>::get() {
-				// Return an error if the value has not been set.
-				None => Err(Error::<T>::NoneValue)?,
-				Some(old) => {
-					// Increment the value read from storage; will error in the event of overflow.
-					let new = old.checked_add(1).ok_or(Error::<T>::StorageOverflow)?;
-					// Update the value in storage with the incremented result.
-					<Something<T>>::put(new);
-					Ok(())
-				}
-			}
-		}
 	}
 }
