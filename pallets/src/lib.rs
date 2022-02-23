@@ -39,15 +39,12 @@ pub mod pallet {
 	// Errors inform users that something went wrong.
 	#[pallet::error]
 	pub enum Error<T> {
-		/// Error names should be descriptive.
-		NoneValue,
-		/// Errors should have helpful documentation associated with them.
-		StorageOverflow,
+		// The Claim is invalid, either the amount
+		InvalidClaim,
+		// The claim is valid but already dispatched
+		AlreadyClaimed,
 	}
 
-	// Dispatchable functions allows users to interact with the pallet and invoke state changes.
-	// These functions materialize as "extrinsics", which are often compared to transactions.
-	// Dispatchable functions must be annotated with a weight and must return a DispatchResult.
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
 		/// An example dispatchable that takes a singles value as a parameter, writes the value to
@@ -55,7 +52,7 @@ pub mod pallet {
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn claim(
 			origin: OriginFor<T>,
-			claimee_accountId: u32,
+			claimer_accountId: u32,
 			claim: Balance,
 			per_block: Balance,
 			starting_block: BlockNumber,
@@ -71,7 +68,7 @@ pub mod pallet {
 					pallet_vesting::VestingInfo::new(claim, per_block, starting_block);
 
 				let result =
-					Vesting::vested_transfer(who, claimee_accountId, claim_vesting_schedule);
+					Vesting::vested_transfer(who, claimer_accountId, claim_vesting_schedule);
 
 				// Emit an event.
 				Self::deposit_event(Event::VestingClaimSuccess(who, Balance, result));
@@ -90,6 +87,5 @@ pub mod pallet {
 			// Return a successful DispatchResultWithPostInfo
 			Ok(())
 		}
-
 	}
 }
