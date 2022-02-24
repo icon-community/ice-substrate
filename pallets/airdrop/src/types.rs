@@ -17,6 +17,9 @@ pub type BalanceOf<T> = <<T as Config>::Currency as Currency<AccountIdOf<T>>>::B
 /// Type that represent IconAddress
 pub type IconAddress = sp_std::vec::Vec<u8>;
 
+///
+pub type BlockNumberOf<T> = <T as frame_system::Config>::BlockNumber;
+
 /// type that represnt the error that can occur while validation the signature
 #[derive(Eq, PartialEq)]
 #[cfg_attr(feature = "std", derive(Debug))]

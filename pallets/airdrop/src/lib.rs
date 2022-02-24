@@ -57,6 +57,12 @@ mod types;
 /// won't get discarded because of Denied Operation
 pub const KEY_TYPE_ID: sp_runtime::KeyTypeId = sp_runtime::KeyTypeId(*b"_air");
 
+/// Gap between on when to run offchain owrker between
+/// This is the number of ocw-run block to skip after running offchain worker
+/// Eg: if block is ran on block_number=3 then
+/// run offchain worker in 3+ENABLE_IN_EVERY block
+pub const OFFCHAIN_WORKER_BLOCK_GAP: u32 = 0;
+
 #[frame_support::pallet]
 pub mod pallet {
 	use super::types;
@@ -115,12 +121,22 @@ pub mod pallet {
 
 		/// Emit when an claim request was successful and fund have been transferred
 		ClaimSuccess(types::AccountIdOf<T>),
+
+		/// An entry from queue was removed
+		RemovedFromQueue(types::AccountIdOf<T>),
 	}
 
 	#[pallet::storage]
 	#[pallet::getter(fn get_pending_claims)]
-	pub(super) type PendingClaims<T: Config> =
-		StorageMap<_, Identity, types::AccountIdOf<T>, (), OptionQuery>;
+	pub(super) type PendingClaims<T: Config> = StorageDoubleMap<
+		_,
+		Twox64Concat,
+		T::BlockNumber,
+		Identity,
+		types::AccountIdOf<T>,
+		(),
+		OptionQuery,
+	>;
 
 	#[pallet::storage]
 	#[pallet::getter(fn get_ice_snapshot_map)]
@@ -196,36 +212,12 @@ pub mod pallet {
 			let is_already_on_map = <IceSnapshotMap<T>>::contains_key(&ice_address);
 			ensure!(!is_already_on_map, Error::<T>::RequestAlreadyMade);
 
+			let current_block_number = Self::get_current_block_number();
 			let new_snapshot = types::SnapshotInfo::<T>::default().icon_address(icon_address);
 			<IceSnapshotMap<T>>::insert(&ice_address, new_snapshot);
-			<PendingClaims<T>>::insert(&ice_address, ());
+			<PendingClaims<T>>::insert(&current_block_number, &ice_address, ());
 
 			Self::deposit_event(Event::<T>::ClaimRequestSucced(ice_address));
-			Ok(())
-		}
-
-		/// Dispatchable that allows to cancel the claim request
-		/// This function is only callable by these party:
-		/// - A root origin
-		/// - Owner of the account being removed
-		/// - Account authorised as configured in this palellet
-		#[pallet::weight(5_000)]
-		pub fn cancel_claim_request(
-			origin: OriginFor<T>,
-			to_remove: types::AccountIdOf<T>,
-		) -> DispatchResult {
-			// If this origin is either root, or the signed by sudo key then this is authorised
-			let is_sudo_or_root = Self::ensure_root_or_sudo(origin.clone()).is_ok();
-			let is_owner = ensure_signed(origin).as_ref().ok() == Some(&to_remove);
-
-			ensure!(is_sudo_or_root || is_owner, Error::<T>::DeniedOperation);
-
-			let is_in_queue = <PendingClaims<T>>::contains_key(&to_remove);
-			ensure!(is_in_queue, Error::<T>::NotInQueue);
-
-			<PendingClaims<T>>::remove(&to_remove);
-			Self::deposit_event(Event::<T>::ClaimCancelled(to_remove));
-
 			Ok(())
 		}
 
@@ -247,17 +239,18 @@ pub mod pallet {
 		#[pallet::weight(0)]
 		pub fn complete_transfer(
 			origin: OriginFor<T>,
+			block_number: types::BlockNumberOf<T>,
 			receiver: types::AccountIdOf<T>,
 			server_response: types::ServerResponse,
 		) -> DispatchResult {
 			// Make sure this is either sudo or root
-			Self::ensure_root_or_sudo(origin).map_err(|_| Error::<T>::DeniedOperation)?;
+			Self::ensure_root_or_sudo(origin.clone()).map_err(|_| Error::<T>::DeniedOperation)?;
 
 			// Check again if it is still in the pending queue
 			// Eg: If another node had processed the same request
 			// or if user had decided to cancel_claim_request
 			// this entry won't be present in the queue
-			let is_in_queue = <PendingClaims<T>>::contains_key(&receiver);
+			let is_in_queue = <PendingClaims<T>>::contains_key(&block_number, &receiver);
 			ensure!(is_in_queue, {
 				log::info!(
 					"{}{}",
@@ -300,14 +293,29 @@ pub mod pallet {
 			<IceSnapshotMap<T>>::insert(&receiver, snapshot);
 
 			// Now we can remove this claim from queue
-			<PendingClaims<T>>::remove(&receiver);
+			Self::remove_from_pending_queue(origin, block_number, receiver.clone())
+				.expect("Removing from queue shouldnot have faied..");
 
 			log::info!(
-				"Complete_tranfser function on ice address: {:?} passed..",
+				"Complete_tranfser function on ice address: {:?} completed..",
 				receiver
 			);
 
 			Self::deposit_event(Event::<T>::ClaimSuccess(receiver));
+
+			Ok(())
+		}
+
+		#[pallet::weight(0)]
+		pub fn remove_from_pending_queue(
+			origin: OriginFor<T>,
+			block_number: types::BlockNumberOf<T>,
+			ice_address: types::AccountIdOf<T>,
+		) -> DispatchResult {
+			Self::ensure_root_or_sudo(origin)?;
+
+			<PendingClaims<T>>::remove(&block_number, &ice_address);
+			Self::deposit_event(Event::<T>::RemovedFromQueue(ice_address));
 
 			Ok(())
 		}
@@ -353,34 +361,16 @@ pub mod pallet {
 				return;
 			}
 
-			const CLAIMS_PER_OCW: usize = 100;
-
-			// Get the first CLAIMS_PER_OCW number of claim request from request queue
-			// As queue only contains ice_address, we also need to collect
-			// TODO:: Figure out way to process claims in first come basis
-			// Destructing the process:
-			// 1) get all the key-value pair of PendingClaims Storage ( in Lexicographic order )
-			// 2) filter out the key (ice_address) if that ice_addess claim_status is true in snapshot map
-			// 3) From the key value pair only collect key (ice_address) ignoring value (nill ())
-			let claims_to_process: Vec<types::AccountIdOf<T>> = <PendingClaims<T>>::iter()
-				.filter_map(|(ice_address, _nill)| {
-					let snapshot = Self::get_ice_snapshot_map(&ice_address);
-					match snapshot {
-						Some(snapshot) if !snapshot.claim_status => Some(ice_address),
-						_ => None,
-					}
-				})
-				.take(CLAIMS_PER_OCW)
-				.collect();
+			let claims_to_process = Self::entries_to_process_in(block_number);
 
 			// for each claims taken, call the process_claim function where actual claiming is done
 			// and display weather the process been succeed
-			for claimer in claims_to_process.into_iter() {
-				let claim_res = Self::process_claim_request(claimer.clone());
+			for claim in claims_to_process.into_iter() {
+				let claim_res = Self::process_claim_request(claim.clone());
 				if let Err(err) = claim_res {
 					log::info!("process_claim_request failed with error: {:?}", err);
 				} else {
-					log::info!("Process claim request for {:?} passed..", claimer);
+					log::info!("Process claim request for {:?} passed..", claim.clone());
 				}
 			}
 		}
@@ -390,7 +380,7 @@ pub mod pallet {
 	impl<T: Config> Pallet<T> {
 		// Function to proceed single claim request
 		pub fn process_claim_request(
-			ice_address: types::AccountIdOf<T>,
+			(stored_block_num, ice_address): (types::BlockNumberOf<T>, types::AccountIdOf<T>),
 		) -> Result<(), types::ClaimError> {
 			use types::{ClaimError, ServerError};
 
@@ -406,16 +396,18 @@ pub mod pallet {
 				// If error is NonExistentData then, it signifies this icon address do not exists in server
 				// so we just cancel the request
 				Err(ClaimError::ServerError(ServerError::NonExistentData)) => {
-					call_to_make = Call::cancel_claim_request {
-						to_remove: ice_address.clone(),
+					call_to_make = Call::remove_from_pending_queue {
+						ice_address: ice_address.clone(),
+						block_number: stored_block_num,
 					};
 				}
 
 				// If transferring amount is 0, then we can just cancel this claim too
 				// as transferring 0 amount have no effect
 				Ok(response) if response.amount == 0 => {
-					call_to_make = Call::cancel_claim_request {
-						to_remove: ice_address.clone(),
+					call_to_make = Call::remove_from_pending_queue {
+						ice_address: ice_address.clone(),
+						block_number: stored_block_num,
 					};
 				}
 
@@ -428,6 +420,7 @@ pub mod pallet {
 					call_to_make = Call::complete_transfer {
 						receiver: ice_address.clone(),
 						server_response: response,
+						block_number: stored_block_num,
 					};
 				}
 			}
@@ -555,13 +548,37 @@ pub mod pallet {
 
 		/// Return an indicater (bool) on weather the offchain worker
 		/// should be run on this block number or not
-		pub fn should_run_on_this_block(block_number: &T::BlockNumber) -> bool {
-			// This is the number of ocw-run block to skip after running offchain worker
-			// Eg: if block is ran on block_number=3 then
-			// run offchain worker in 3+ENABLE_IN_EVERY block
-			const ENABLE_IN_EVERY: u32 = 3;
+		pub fn should_run_on_this_block(block_number: &types::BlockNumberOf<T>) -> bool {
+			*block_number % crate::OFFCHAIN_WORKER_BLOCK_GAP.into() == 0_u32.into()
+		}
 
-			*block_number % ENABLE_IN_EVERY.into() == 0_u32.into()
+		/// Return the entries to process in given block number
+		// Note: As this will pull out athe entries from storage to memory
+		// it is preferred to call this function frequently and keep block gap
+		// minimal
+		pub fn entries_to_process_in(
+			block_number: types::BlockNumberOf<T>,
+		) -> Vec<(types::BlockNumberOf<T>, types::AccountIdOf<T>)> {
+			let mut res: Vec<(types::BlockNumberOf<T>, types::AccountIdOf<T>)> = vec![];
+
+			let take_from = block_number - crate::OFFCHAIN_WORKER_BLOCK_GAP.into();
+			let take_upto = block_number;
+
+			let mut bl_num_iter = take_from;
+			while bl_num_iter <= take_upto {
+				let mut to_add = <PendingClaims<T>>::iter_key_prefix(bl_num_iter)
+					// Filter out entries that are not present in ice_snapshot map
+					// this will skip the entries that were manually added only to pendingQueue
+					.filter(|ice_address| <IceSnapshotMap<T>>::contains_key(ice_address))
+					// Collect block number also. We might use it later on
+					.map(|ice_address| (bl_num_iter, ice_address))
+					.collect::<Vec<_>>();
+
+				res.append(&mut to_add);
+				bl_num_iter += 1_u32.into();
+			}
+
+			res
 		}
 	}
 
@@ -587,6 +604,11 @@ pub mod pallet {
 
 			ensure!(is_root || is_sudo, DispatchError::BadOrigin);
 			Ok(())
+		}
+
+		/// Return block height of Node from which this was called
+		pub fn get_current_block_number() -> types::BlockNumberOf<T> {
+			<frame_system::Pallet<T>>::block_number()
 		}
 	}
 }
