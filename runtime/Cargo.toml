@@ -43,6 +43,7 @@ pallet-assets = { version = "4.0.0-dev", default-features = false, git = "https:
 pallet-collective = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate" }
 pallet-treasury = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate" }
 pallet-vesting = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate" }
+pallet-scheduler = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate" }
 
 pallet-base-fee = { version = "1.0.0-dev", default-features = false, git = "https://github.com/paritytech/frontier" }
 pallet-mint = { version = "3.0.0", default-features = false, path = '../pallets/mint' }
@@ -106,6 +107,7 @@ std = [
 	"pallet-treasury/std",
     "pallet-collective/std",
 	"pallet-mint/std",
+	"pallet-scheduler/std",
 
 	"sp-api/std",
 	"sp-block-builder/std",

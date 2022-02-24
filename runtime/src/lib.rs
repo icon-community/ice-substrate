@@ -7,12 +7,12 @@
 // Make the WASM binary available.
 #[cfg(feature = "std")]
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
-pub use pallet_mint;
 use codec::{Decode, Encode};
 use pallet_evm::FeeCalculator;
 use pallet_grandpa::{
 	fg_primitives, AuthorityId as GrandpaId, AuthorityList as GrandpaAuthorityList,
 };
+pub use pallet_mint;
 use sp_api::impl_runtime_apis;
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 use sp_core::{
@@ -22,8 +22,8 @@ use sp_core::{
 use sp_runtime::{
 	create_runtime_str, generic, impl_opaque_keys,
 	traits::{
-		AccountIdLookup, BlakeTwo256, Block as BlockT, Dispatchable, IdentifyAccount, NumberFor,
-		PostDispatchInfoOf, Verify, ConvertInto
+		AccountIdLookup, BlakeTwo256, Block as BlockT, ConvertInto, Dispatchable, IdentifyAccount,
+		NumberFor, PostDispatchInfoOf, Verify,
 	},
 	transaction_validity::{TransactionSource, TransactionValidity, TransactionValidityError},
 	ApplyExtrinsicResult, MultiSignature,
@@ -34,8 +34,8 @@ use sp_version::NativeVersion;
 use sp_version::RuntimeVersion;
 
 use frame_support::inherent::Vec;
-use sp_std::boxed::Box;
 use sp_core::u32_trait::{_1, _2, _5};
+use sp_std::boxed::Box;
 
 use crate::currency::{ICY, MILLIICY};
 
@@ -62,7 +62,6 @@ pub use sp_runtime::{Perbill, Permill};
 
 mod precompiles;
 use precompiles::FrontierPrecompiles;
-
 
 // pub mod impls;
 // use impls::DealWithImbalance;
@@ -350,17 +349,16 @@ impl pallet_ethereum::Config for Runtime {
 	type StateRoot = pallet_ethereum::IntermediateStateRoot;
 }
 
-
 pub const MILLICENTS: Balance = 1_000_000_000;
 pub const CENTS: Balance = 1_000 * MILLICENTS; // assume this is worth about a cent.
 pub const DOLLARS: Balance = 100 * CENTS;
 
 frame_support::parameter_types! {
-    pub const AssetDeposit: Balance = 500 ;
+	pub const AssetDeposit: Balance = 500 ;
 	pub const AssetAccountDeposit: Balance = 500 ;
 	pub const MetadataDepositBase: Balance = 500 ;
-    pub const MetaDataDepositPerByte: Balance = 500 ;
-    pub const ApprovalDeposit: Balance = 500 ;
+	pub const MetaDataDepositPerByte: Balance = 500 ;
+	pub const ApprovalDeposit: Balance = 500 ;
 	pub const StringLimit: u32 = 50;
 }
 
@@ -426,8 +424,10 @@ parameter_types! {
 
 impl pallet_treasury::Config for Runtime {
 	type Currency = Balances;
-	type ApproveOrigin = pallet_collective::EnsureProportionMoreThan<_1, _2, AccountId, CouncilCollective>;
-	type RejectOrigin = pallet_collective::EnsureProportionMoreThan<_1, _5, AccountId, CouncilCollective>;
+	type ApproveOrigin =
+		pallet_collective::EnsureProportionMoreThan<_1, _2, AccountId, CouncilCollective>;
+	type RejectOrigin =
+		pallet_collective::EnsureProportionMoreThan<_1, _5, AccountId, CouncilCollective>;
 	type Event = Event;
 	type OnSlash = ();
 	type ProposalBond = ProposalBond;
@@ -440,7 +440,6 @@ impl pallet_treasury::Config for Runtime {
 	type WeightInfo = pallet_treasury::weights::SubstrateWeight<Runtime>;
 	type MaxApprovals = MaxApprovals;
 }
-
 
 frame_support::parameter_types! {
 	pub BoundDivision: U256 = U256::from(1024);
@@ -475,7 +474,6 @@ impl pallet_base_fee::Config for Runtime {
 	type DefaultBaseFeePerGas = DefaultBaseFeePerGas;
 }
 
-
 impl pallet_randomness_collective_flip::Config for Runtime {}
 
 impl pallet_mint::Config for Runtime {
@@ -483,7 +481,25 @@ impl pallet_mint::Config for Runtime {
 	type Balance = Balance;
 }
 
+/// Define the types required by the Scheduler pallet.
+parameter_types! {
+    pub MaximumSchedulerWeight: Weight = 10_000_000;
+    pub const MaxScheduledPerBlock: u32 = 50;
+}
+impl pallet_scheduler::Config for Runtime {
+	type Event = Event;
+    type Origin = Origin;
+    type PalletsOrigin = OriginCaller;
+    type Call = Call;
+    type MaximumWeight = MaximumSchedulerWeight;
+    type ScheduleOrigin = frame_system::EnsureRoot<AccountId>;
+    type MaxScheduledPerBlock = MaxScheduledPerBlock;
+    type WeightInfo = ();
+}
 
+pub fn root() -> OriginCaller {
+	frame_system::RawOrigin::Root.into()
+}
 // Create the runtime by composing the FRAME pallets that were previously configured.
 construct_runtime!(
 	pub enum Runtime where
@@ -505,9 +521,10 @@ construct_runtime!(
 		BaseFee: pallet_base_fee::{Pallet, Call, Storage, Config<T>, Event},
 		Vesting: pallet_vesting::{Pallet, Call, Storage, Config<T>, Event<T>} = 32,
 		Assets: pallet_assets::{Pallet, Call, Storage, Config<T>, Event<T>},
-	    Council: pallet_collective::<Instance1>::{Pallet, Call, Storage, Origin<T>, Event<T>, Config<T>},
-        Treasury: pallet_treasury::{Pallet, Call, Storage, Event<T>, Config},
+		Council: pallet_collective::<Instance1>::{Pallet, Call, Storage, Origin<T>, Event<T>, Config<T>},
+		Treasury: pallet_treasury::{Pallet, Call, Storage, Event<T>, Config},
 		Mint: pallet_mint::{Pallet, Call, Storage, Event<T>},
+		Scheduler: pallet_scheduler::{Pallet, Call, Storage, Event<T>},
 	}
 );
 
