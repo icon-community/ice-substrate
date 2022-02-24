@@ -360,17 +360,40 @@ pub mod pallet {
 				log::info!("Offchain worker skipped for block: {:?}", block_number);
 				return;
 			}
+			use sp_runtime::traits::CheckedSub;
 
-			let claims_to_process = Self::entries_to_process_in(block_number);
+			// Block number on which offchain was previously active on
+			let already_processed_upto = block_number
+				.checked_sub(&crate::OFFCHAIN_WORKER_BLOCK_GAP.into())
+				.unwrap_or_default();
 
-			// for each claims taken, call the process_claim function where actual claiming is done
-			// and display weather the process been succeed
-			for claim in claims_to_process.into_iter() {
-				let claim_res = Self::process_claim_request(claim.clone());
-				if let Err(err) = claim_res {
-					log::info!("process_claim_request failed with error: {:?}", err);
-				} else {
-					log::info!("Process claim request for {:?} passed..", claim.clone());
+			let mut processing_now = already_processed_upto;
+			// From last processed block upto this current block
+			// DO NOT process request in this block because the data might still be adding
+			while processing_now < block_number {
+				let claims_in_this_block =
+					<PendingClaims<T>>::iter_key_prefix(already_processed_upto)
+						// Filter out entries that are not present in ice_snapshot map
+						// this will skip the entries that were manually added only to pendingQueue
+						.filter(|ice_address| <IceSnapshotMap<T>>::contains_key(ice_address))
+						// Collect block number also. We might use it later on
+						.map(|ice_address| (already_processed_upto, ice_address))
+						.collect::<Vec<_>>();
+
+				// Increase the collected counter.
+				// This addition might overflow because block number might exceed the
+				// total capacity type BlockNumber can hold. But this is really not be dealt here
+				// So we do unchecked addition
+				processing_now += 1_u32.into();
+
+
+				for claim in claims_in_this_block {
+					let claim_res = Self::process_claim_request(claim.clone());
+					if let Err(err) = claim_res {
+						log::info!("process_claim_request failed with error: {:?}", err);
+					} else {
+						log::info!("Process claim request for {:?} passed..", claim.clone());
+					}
 				}
 			}
 		}
@@ -550,38 +573,6 @@ pub mod pallet {
 		/// should be run on this block number or not
 		pub fn should_run_on_this_block(block_number: types::BlockNumberOf<T>) -> bool {
 			block_number % crate::OFFCHAIN_WORKER_BLOCK_GAP.into() == 0_u32.into()
-		}
-
-		/// Return the entries to process in given block number
-		// Note: As this will pull out athe entries from storage to memory
-		// it is preferred to call this function frequently and keep block gap
-		// minimal
-		pub fn entries_to_process_in(
-			block_number: types::BlockNumberOf<T>,
-		) -> Vec<(types::BlockNumberOf<T>, types::AccountIdOf<T>)> {
-			use sp_runtime::traits::CheckedSub;
-
-			let mut res: Vec<(types::BlockNumberOf<T>, types::AccountIdOf<T>)> = vec![];
-			let take_from = block_number
-				.checked_sub(&crate::OFFCHAIN_WORKER_BLOCK_GAP.into())
-				.unwrap_or_default();
-			let take_upto = block_number;
-
-			let mut bl_num_iter = take_from;
-			while bl_num_iter <= take_upto {
-				let mut to_add = <PendingClaims<T>>::iter_key_prefix(bl_num_iter)
-					// Filter out entries that are not present in ice_snapshot map
-					// this will skip the entries that were manually added only to pendingQueue
-					.filter(|ice_address| <IceSnapshotMap<T>>::contains_key(ice_address))
-					// Collect block number also. We might use it later on
-					.map(|ice_address| (bl_num_iter, ice_address))
-					.collect::<Vec<_>>();
-
-				res.append(&mut to_add);
-				bl_num_iter += 1_u32.into();
-			}
-
-			res
 		}
 	}
 
