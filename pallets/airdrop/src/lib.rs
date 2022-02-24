@@ -386,6 +386,11 @@ pub mod pallet {
 				// So we do unchecked addition
 				processing_now += 1_u32.into();
 
+				// NOTE:
+				// If we wanted to keep last processing counter in onchain db
+				// we have to update that storage here
+				// meaning we have to call an extrinsic from here
+				// so again consider if we really need to have that on onchain data
 
 				for claim in claims_in_this_block {
 					let claim_res = Self::process_claim_request(claim.clone());
