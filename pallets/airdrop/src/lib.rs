@@ -356,7 +356,7 @@ pub mod pallet {
 		fn offchain_worker(block_number: T::BlockNumber) {
 			// If this is not the block to start offchain worker
 			// print a log and early return
-			if !Self::should_run_on_this_block(&block_number) {
+			if !Self::should_run_on_this_block(block_number) {
 				log::info!("Offchain worker skipped for block: {:?}", block_number);
 				return;
 			}
@@ -548,8 +548,8 @@ pub mod pallet {
 
 		/// Return an indicater (bool) on weather the offchain worker
 		/// should be run on this block number or not
-		pub fn should_run_on_this_block(block_number: &types::BlockNumberOf<T>) -> bool {
-			*block_number % crate::OFFCHAIN_WORKER_BLOCK_GAP.into() == 0_u32.into()
+		pub fn should_run_on_this_block(block_number: types::BlockNumberOf<T>) -> bool {
+			block_number % crate::OFFCHAIN_WORKER_BLOCK_GAP.into() == 0_u32.into()
 		}
 
 		/// Return the entries to process in given block number
@@ -559,9 +559,12 @@ pub mod pallet {
 		pub fn entries_to_process_in(
 			block_number: types::BlockNumberOf<T>,
 		) -> Vec<(types::BlockNumberOf<T>, types::AccountIdOf<T>)> {
-			let mut res: Vec<(types::BlockNumberOf<T>, types::AccountIdOf<T>)> = vec![];
+			use sp_runtime::traits::CheckedSub;
 
-			let take_from = block_number - crate::OFFCHAIN_WORKER_BLOCK_GAP.into();
+			let mut res: Vec<(types::BlockNumberOf<T>, types::AccountIdOf<T>)> = vec![];
+			let take_from = block_number
+				.checked_sub(&crate::OFFCHAIN_WORKER_BLOCK_GAP.into())
+				.unwrap_or_default();
 			let take_upto = block_number;
 
 			let mut bl_num_iter = take_from;
