@@ -102,7 +102,8 @@ fn process_claim_invalid() {
 		let ice_address = types::AccountIdOf::<Test>::default();
 
 		// Nothing is in queue yet so, should fail with no_icon_address
-		let no_icon_address = AirdropModule::process_claim_request(ice_address.clone());
+		let no_icon_address =
+			AirdropModule::process_claim_request((0_u32.into(), ice_address.clone()));
 		assert_eq!(
 			no_icon_address.unwrap_err(),
 			types::ClaimError::NoIconAddress
@@ -123,7 +124,8 @@ fn process_claim_valid() {
 
 		crate::IceSnapshotMap::insert(ice_address, snapshot.clone().icon_address(icon_address));
 
-		let should_be_ok = AirdropModule::process_claim_request(ice_address.clone());
+		let should_be_ok =
+			AirdropModule::process_claim_request((1_u32.into(), ice_address.clone()));
 		assert_ok!(should_be_ok);
 	});
 }
@@ -133,6 +135,7 @@ fn test_transfer_valid() {
 	mock::new_test_ext().execute_with(|| {
 		let system_account_id = AirdropModule::get_creditor_account();
 		let claimer = types::AccountIdOf::<Test>::default();
+		let bl_num = types::BlockNumberOf::<Test>::default();
 
 		// Set some balance to creditor account first
 		let diposit_res = <Test as pallet_airdrop::Config>::Currency::set_balance(
@@ -144,7 +147,7 @@ fn test_transfer_valid() {
 		assert_ok!(diposit_res);
 
 		// Simulate that we have done a claim_request by adding it to PendingClaims queue
-		pallet_airdrop::PendingClaims::<Test>::insert(&claimer, ());
+		pallet_airdrop::PendingClaims::<Test>::insert(bl_num, &claimer, ());
 		// Add Dummy snapshot to mapping
 		pallet_airdrop::IceSnapshotMap::<Test>::insert(
 			&claimer,
@@ -168,8 +171,12 @@ fn test_transfer_valid() {
 			let pre_user_balance =
 				<Test as pallet_airdrop::Config>::Currency::free_balance(&claimer);
 
-			let transfer_res =
-				AirdropModule::complete_transfer(root_origin, claimer.clone(), server_response);
+			let transfer_res = AirdropModule::complete_transfer(
+				root_origin,
+				bl_num,
+				claimer.clone(),
+				server_response,
+			);
 			assert_ok!(transfer_res);
 
 			let post_system_balance =
@@ -194,7 +201,7 @@ fn test_transfer_valid() {
 			);
 
 			// Make sure that request is removed from queue after transfer
-			assert_eq!(AirdropModule::get_pending_claims(&claimer), None);
+			assert_eq!(AirdropModule::get_pending_claims(&bl_num, &claimer), None);
 			// Make sure this function update the snapshot mapping
 			assert_eq!(
 				AirdropModule::get_ice_snapshot_map(&claimer)
@@ -236,84 +243,11 @@ fn test_ensure_root_or_sudo() {
 }
 
 #[test]
-fn test_cancel_claim() {
-	mock::new_test_ext().execute_with(|| {
-		// Unsigned origin is not allowed
-		{
-			assert_noop!(
-				AirdropModule::cancel_claim_request(
-					mock::Origin::none(),
-					types::AccountIdOf::<Test>::default(),
-				),
-				Error::<Test>::DeniedOperation
-			);
-		}
-
-		// Signed but not sudo nor owner
-		{
-			let signed_origin = mock::Origin::signed(sp_core::sr25519::Public([12; 32]));
-
-			assert_noop!(
-				AirdropModule::cancel_claim_request(
-					signed_origin,
-					types::AccountIdOf::<Test>::default(),
-				),
-				Error::<Test>::DeniedOperation
-			);
-		}
-
-		// When entry to remove is not in queue
-		{
-			let caller_id = sp_core::sr25519::Public([12; 32]);
-			let signed_origin = mock::Origin::signed(caller_id.clone());
-
-			assert_noop!(
-				AirdropModule::cancel_claim_request(signed_origin, caller_id),
-				Error::<Test>::NotInQueue
-			);
-		}
-
-		// Should pass when owner of claimer calls
-		{
-			let caller_id = sp_core::sr25519::Public([12; 32]);
-			let signed_origin = mock::Origin::signed(caller_id.clone());
-			pallet_airdrop::PendingClaims::<Test>::insert(&caller_id, ());
-			let ok_with_owner =
-				AirdropModule::cancel_claim_request(signed_origin.clone(), caller_id.clone());
-
-			assert_ok!(ok_with_owner);
-			assert_eq!(AirdropModule::get_pending_claims(&caller_id), None);
-		}
-
-		// Should pass when root calls in
-		{
-			let caller_id = sp_core::sr25519::Public([12; 32]);
-			pallet_airdrop::PendingClaims::<Test>::insert(&caller_id, ());
-			let ok_with_root =
-				AirdropModule::cancel_claim_request(mock::Origin::root(), caller_id.clone());
-
-			assert_ok!(ok_with_root);
-			assert_eq!(AirdropModule::get_pending_claims(&caller_id), None);
-		}
-
-		// Should pass when sudo calls in
-		{
-			let caller_id = sp_core::sr25519::Public([12; 32]);
-			let sudo_origin = mock::Origin::signed(caller_id.clone());
-			pallet_airdrop::PendingClaims::<Test>::insert(&caller_id, ());
-			let ok_with_root = AirdropModule::cancel_claim_request(sudo_origin, caller_id.clone());
-
-			assert_ok!(ok_with_root);
-			assert_eq!(AirdropModule::get_pending_claims(&caller_id), None);
-		}
-	});
-}
-
-#[test]
 fn test_transfer_invalid() {
 	mock::new_test_ext().execute_with(|| {
 		let server_response = types::ServerResponse::default();
 		let receiver = sp_core::sr25519::Public([200; 32]);
+		let bl_num = types::BlockNumberOf::<Test>::default();
 
 		// Try to claim something when the data is not in queue
 		// simulate the condition when user had cancelled the claim while process was goingon in offchain
@@ -321,6 +255,7 @@ fn test_transfer_invalid() {
 			assert_noop!(
 				AirdropModule::complete_transfer(
 					mock::Origin::root(),
+					0_u64,
 					receiver.clone(),
 					server_response.clone(),
 				),
@@ -331,11 +266,12 @@ fn test_transfer_invalid() {
 		// Try to claim when data is in queue but not in map
 		{
 			// Add this to queue
-			crate::PendingClaims::<Test>::insert(&receiver, ());
+			crate::PendingClaims::<Test>::insert(&bl_num, &receiver, ());
 
 			assert_noop!(
 				AirdropModule::complete_transfer(
 					mock::Origin::root(),
+					bl_num.clone(),
 					receiver.clone(),
 					server_response.clone(),
 				),
@@ -350,6 +286,7 @@ fn test_transfer_invalid() {
 			assert_noop!(
 				AirdropModule::complete_transfer(
 					unauthorised_user,
+					bl_num.clone(),
 					receiver.clone(),
 					server_response.clone(),
 				),
@@ -371,6 +308,7 @@ fn test_transfer_invalid() {
 			assert_noop!(
 				AirdropModule::complete_transfer(
 					mock::Origin::root(),
+					bl_num.clone(),
 					receiver.clone(),
 					server_response.clone(),
 				),
@@ -427,6 +365,7 @@ fn claim_request_valid() {
 		let icon_signature = message;
 		let icon_address = message;
 		let ice_address = types::AccountIdOf::<Test>::default();
+		let bl_num = AirdropModule::get_current_block_number();
 
 		let claim_res = AirdropModule::claim_request(
 			mock::Origin::signed(ice_address.clone()),
@@ -452,7 +391,7 @@ fn claim_request_valid() {
 		assert_eq!(map_data, Some(expected_snapshot));
 
 		// Make sure that queue storage is populated accordingly
-		let queue_data = AirdropModule::get_pending_claims(&ice_address);
+		let queue_data = AirdropModule::get_pending_claims(&bl_num, &ice_address);
 		assert_eq!(queue_data, Some(()));
 	});
 }
@@ -471,37 +410,6 @@ fn make_signed_call_valid() {
 		// Just make sure call is dispatched sucessfully
 		let call_res = AirdropModule::make_signed_call(&call);
 		assert_ok!(call_res);
-	});
-}
-
-#[test]
-fn claim_cancel_claim() {
-	// Test that user can first claim, cancel and again claim successfully
-	mock::new_test_ext().execute_with(|| {
-		let ice_address = types::AccountIdOf::<Test>::default();
-
-		// First claim should succeed
-		assert_ok!(AirdropModule::claim_request(
-			mock::Origin::signed(ice_address.clone()),
-			vec![],
-			vec![],
-			vec![],
-		));
-
-		// Cancel should also succeed
-		assert_ok!(AirdropModule::cancel_claim_request(
-			mock::Origin::root(),
-			ice_address.clone(),
-		));
-
-		// Again making the claim request should also succeed
-		// And also emit event signifying map already exists but only queue is updated
-		assert_ok!(AirdropModule::claim_request(
-			mock::Origin::signed(ice_address.clone()),
-			vec![],
-			vec![],
-			vec![],
-		));
 	});
 }
 
