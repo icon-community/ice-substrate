@@ -2504,6 +2504,7 @@ dependencies = [
  "pallet-evm-precompile-sha3fips",
  "pallet-evm-precompile-simple",
  "pallet-grandpa",
+ "pallet-mint",
  "pallet-randomness-collective-flip",
  "pallet-sudo",
  "pallet-timestamp",
@@ -4359,6 +4360,22 @@ dependencies = [
  "sp-runtime",
  "sp-session",
  "sp-staking",
+ "sp-std",
+]
+
+[[package]]
+name = "pallet-mint"
+version = "3.0.0"
+dependencies = [
+ "frame-benchmarking",
+ "frame-support",
+ "frame-system",
+ "parity-scale-codec",
+ "scale-info",
+ "serde",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
  "sp-std",
 ]
 

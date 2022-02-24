@@ -4,16 +4,16 @@
 /// Learn more about FRAME and the core library of Substrate FRAME pallets:
 /// <https://substrate.dev/docs/en/knowledgebase/runtime/frame>
 
+
 pub use pallet::*;
+// #[cfg(test)]
+// mod mock;
 
-#[cfg(test)]
-mod mock;
+// #[cfg(test)]
+// mod tests;
 
-#[cfg(test)]
-mod tests;
-
-#[cfg(feature = "runtime-benchmarks")]
-mod benchmarking;
+// #[cfg(feature = "runtime-benchmarks")]
+// mod benchmarking;
 
 #[frame_support::pallet]
 pub mod pallet {
@@ -49,7 +49,6 @@ pub mod pallet {
 
 	/// Token mint can emit two Event types.
 	#[pallet::event]
-	#[pallet::metadata(T::AccountId = "AccountId")]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
 		/// New token supply was minted.
@@ -64,20 +63,9 @@ pub mod pallet {
 	
 	#[pallet::call]
 	impl<T:Config> Pallet<T> {
-		/// Issue an amount of tokens from any origin.
-		/// 
-		/// This would not make sense to have in practice in the current
-		/// implementation. This is an educational ressource.
-		/// 
-		/// Parameters:
-		/// - `amount`: The amount of tokens to mint.
-		///
-		/// Emits `MintedNewSupply` event when successful.
-		///
-		/// TODO: Add checks and set max issuance allowed.  
-		/// Weight: `O(1)`	
+	
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
-		pub(super) fn mint(
+		pub fn mint(
 			origin: OriginFor<T>,
 			#[pallet::compact] amount: T::Balance
 		) -> DispatchResultWithPostInfo {
@@ -94,18 +82,8 @@ pub mod pallet {
 			Ok(().into())
 		}
 		
-		/// Allow minting account to transfer a given balance to another account.
-		///
-		/// Parameters:
-		/// - `to`: The account to receive the transfer.
-		/// - `amount`: The amount of balance to transfer.
-		///
-		/// Emits `Transferred` event when successful.
-		///
-		/// TODO: Add checks on minimum balance required and maximum transferrable balance.  
-		/// Weight: `O(1)`	
 		#[pallet::weight(1_000)]
-		pub(super) fn transfer(
+		pub fn transfer(
 			origin: OriginFor<T>,
 			to: T::AccountId,
 			#[pallet::compact] amount: T::Balance,

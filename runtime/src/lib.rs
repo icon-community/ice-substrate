@@ -7,7 +7,7 @@
 // Make the WASM binary available.
 #[cfg(feature = "std")]
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
-
+pub use pallet_mint;
 use codec::{Decode, Encode};
 use pallet_evm::FeeCalculator;
 use pallet_grandpa::{
@@ -475,7 +475,14 @@ impl pallet_base_fee::Config for Runtime {
 	type DefaultBaseFeePerGas = DefaultBaseFeePerGas;
 }
 
+
 impl pallet_randomness_collective_flip::Config for Runtime {}
+
+impl pallet_mint::Config for Runtime {
+	type Event = Event;
+	type Balance = Balance;
+}
+
 
 // Create the runtime by composing the FRAME pallets that were previously configured.
 construct_runtime!(
@@ -500,6 +507,7 @@ construct_runtime!(
 		Assets: pallet_assets::{Pallet, Call, Storage, Config<T>, Event<T>},
 	    Council: pallet_collective::<Instance1>::{Pallet, Call, Storage, Origin<T>, Event<T>, Config<T>},
         Treasury: pallet_treasury::{Pallet, Call, Storage, Event<T>, Config},
+		Mint: pallet_mint::{Pallet, Call, Storage, Event<T>},
 	}
 );
 
