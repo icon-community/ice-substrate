@@ -61,7 +61,11 @@ pub const KEY_TYPE_ID: sp_runtime::KeyTypeId = sp_runtime::KeyTypeId(*b"_air");
 /// This is the number of ocw-run block to skip after running offchain worker
 /// Eg: if block is ran on block_number=3 then
 /// run offchain worker in 3+ENABLE_IN_EVERY block
-pub const OFFCHAIN_WORKER_BLOCK_GAP: u32 = 0;
+pub const OFFCHAIN_WORKER_BLOCK_GAP: u32 = 3;
+
+// Maximum number of time to retry a failed processing of claim entry
+// There is NO point of seeting this to high value
+pub const DEFAULT_RETRY_COUNT: u8 = 2;
 
 #[frame_support::pallet]
 pub mod pallet {
@@ -124,6 +128,9 @@ pub mod pallet {
 
 		/// An entry from queue was removed
 		RemovedFromQueue(types::AccountIdOf<T>),
+
+		/// Same entry is processed by offchian worker for too many times
+		RetryExceed(types::AccountIdOf<T>, types::BlockNumberOf<T>),
 	}
 
 	#[pallet::storage]
@@ -134,7 +141,7 @@ pub mod pallet {
 		T::BlockNumber,
 		Identity,
 		types::AccountIdOf<T>,
-		(),
+		u8,
 		OptionQuery,
 	>;
 
@@ -162,6 +169,9 @@ pub mod pallet {
 
 		/// This request have been already made.
 		RequestAlreadyMade,
+
+		/// When a same entry is being retried for too many times
+		RetryExceed,
 	}
 
 	#[pallet::call]
@@ -212,10 +222,21 @@ pub mod pallet {
 			let is_already_on_map = <IceSnapshotMap<T>>::contains_key(&ice_address);
 			ensure!(!is_already_on_map, Error::<T>::RequestAlreadyMade);
 
+			// Get the current block number. This is the number where user asked for claim
+			// and we store it in PencingClaims to preserve FIFO
 			let current_block_number = Self::get_current_block_number();
+
+			// Insert with default snapshot but with real icon address mapping
 			let new_snapshot = types::SnapshotInfo::<T>::default().icon_address(icon_address);
 			<IceSnapshotMap<T>>::insert(&ice_address, new_snapshot);
-			<PendingClaims<T>>::insert(&current_block_number, &ice_address, ());
+
+			// insert in queue respective to current block number
+			// and retry as defined in crate level constant
+			<PendingClaims<T>>::insert(
+				&current_block_number,
+				&ice_address,
+				crate::DEFAULT_RETRY_COUNT,
+			);
 
 			Self::deposit_event(Event::<T>::ClaimRequestSucced(ice_address));
 			Ok(())
@@ -236,6 +257,10 @@ pub mod pallet {
 		// 2) Maintain list of accounts local to this pallet only, (was already done)
 		//	  This seems to be good to go approach but brings about the hazard &
 		//	  confusion to maintain two list of authorised accounts
+		//
+		// If any of the step fails in this function,
+		// we pass the flow to register_failed_claim if needed to be retry again
+		// and cancel the request if it dont have to retried again
 		#[pallet::weight(0)]
 		pub fn complete_transfer(
 			origin: OriginFor<T>,
@@ -271,8 +296,13 @@ pub mod pallet {
 			// this will check for underflow overflow if u128 cannot be assigned to balance
 			// Failing due to this reasong implies that we are using incompatible data type
 			// in ServerResponse.amount & pallet_airdrop::Currency
-			let amount = server_response.amount.try_into().map_err(|_| {
-				log::info!("Invalid amount value....");
+			let amount: types::BalanceOf<T> = server_response.amount.try_into().map_err(|_| {
+				// We are moving it to keep for retry
+				// But it will also fail in next time because it is eror
+				// with incompatable format between server response & rust struct
+				Self::register_failed_claim(origin.clone(), block_number, receiver.clone())
+					.expect("Calling register_failed_claim from amount.try_into.This call should not have failed.");
+
 				DispatchError::Other("Cannot convert server_response.value into Balance type")
 			})?;
 
@@ -284,6 +314,9 @@ pub mod pallet {
 				ExistenceRequirement::KeepAlive,
 			)
 			.map_err(|err| {
+				// This is also error from our side. We keep it for next retry
+				Self::register_failed_claim(origin.clone(), block_number, receiver.clone()).expect("Calling register failed_claim from currency::transfer. This call should not have failed..");
+				
 				log::info!("Currency transfer failed with error: {:?}", err);
 				err
 			})?;
@@ -293,8 +326,7 @@ pub mod pallet {
 			<IceSnapshotMap<T>>::insert(&receiver, snapshot);
 
 			// Now we can remove this claim from queue
-			Self::remove_from_pending_queue(origin, block_number, receiver.clone())
-				.expect("Removing from queue shouldnot have faied..");
+			<PendingClaims<T>>::remove(&block_number, &receiver);
 
 			log::info!(
 				"Complete_tranfser function on ice address: {:?} completed..",
@@ -316,6 +348,56 @@ pub mod pallet {
 
 			<PendingClaims<T>>::remove(&block_number, &ice_address);
 			Self::deposit_event(Event::<T>::RemovedFromQueue(ice_address));
+
+			Ok(())
+		}
+
+		/// Call that handles what to do when an entry failed while
+		/// processing in offchain worker
+		/// We move the entry to future block key so that another
+		/// offchain worker can process it again
+		#[pallet::weight(0)]
+		pub fn register_failed_claim(
+			origin: OriginFor<T>,
+			block_number: types::BlockNumberOf<T>,
+			ice_address: types::AccountIdOf<T>,
+		) -> DispatchResult {
+			Self::ensure_root_or_sudo(origin).map_err(|_| Error::<T>::DeniedOperation)?;
+			use sp_runtime::traits::Saturating;
+
+			let retry_remaining = Self::get_pending_claims(&block_number, &ice_address)
+				.ok_or(Error::<T>::IncompleteData)?;
+			let retry_remaining = retry_remaining.checked_sub(1.into()).unwrap_or_default();
+
+			// In both case weather retry is remaining or not
+			// we will remove this entry from this block number key
+			// so do it early to make sure we dont miss this inany case
+			// otherwise this entry will always be floating around in storage
+			<PendingClaims<T>>::remove(&block_number, &ice_address);
+
+			// Check if it's retry counter have been brought to zero
+			// if so do not move this entry to next block
+			ensure!(retry_remaining > 0, {
+				log::info!(
+					"Retry limit exceed for address: {:?} is in block number: {:?}",
+					ice_address,
+					block_number
+				);
+
+				// TODO:
+				// What to do when retry exceed?
+				// it is already removed from queue in previous statements
+				// so is there nothing else to do?
+
+				// Emit event and return with error
+				Self::deposit_event(Event::<T>::RetryExceed(ice_address, block_number));
+				Error::<T>::RetryExceed
+			});
+
+			// This entry have some retry remaining so we put this entry in another block_number key
+			let new_block_number =
+				block_number.saturating_add(crate::OFFCHAIN_WORKER_BLOCK_GAP.into());
+			<PendingClaims<T>>::insert(&new_block_number, &ice_address, retry_remaining);
 
 			Ok(())
 		}
@@ -424,7 +506,7 @@ pub mod pallet {
 				// If error is NonExistentData then, it signifies this icon address do not exists in server
 				// so we just cancel the request
 				Err(ClaimError::ServerError(ServerError::NonExistentData)) => {
-					call_to_make = Call::remove_from_pending_queue {
+					call_to_make = Call::register_failed_claim {
 						ice_address: ice_address.clone(),
 						block_number: stored_block_num,
 					};
@@ -455,6 +537,32 @@ pub mod pallet {
 
 			let call_res = Self::make_signed_call(&call_to_make);
 			call_res.map_err(|err| {
+				// NOTE:
+				// VERY_IMPORTANT:
+				// We have to make very sure that this call will always success.
+				// For eg:
+				// if we are about to register failed request ( which will reove the entry from current key )
+				// and if this calling failed, that that entry will never be removed
+				// Case 2:
+				// If we are about to transfer the amount but if this function never succeed
+				// then the fund will not have been transferred and user neither can do claim again
+				// ( as db shows user had already done the claim )
+				// And this same entry will never be processed by another offchain worker so the airdropping
+				// is lost ( until we query it and do it manually )
+				//
+				// So we have to make sure that this transaction always reach to the transaction pool
+				//
+				// Possible sources of error:
+				// --- 1) The account configured in local storage do not have permission to call authorised function
+				// This usually happen when we update sudo key from pallet_sudo & forget to update & rotate
+				// keys in keystore of this pallet, then the filted from respective call
+				// `ensure_root_or_sudo()` will always fail thus performing no process
+				//
+				// -- 2) There is no account configured in keystore
+				// This can be tested before deploying node
+				// --3) Implementation itself to call signed transaction is buggy
+				// -- This also have to be made sure by the implementors
+
 				log::info!(
 					"Calling extrinsic {:#?} failed with error: {:?}",
 					call_to_make,
