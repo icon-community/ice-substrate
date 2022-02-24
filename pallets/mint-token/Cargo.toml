@@ -1,0 +1,47 @@
+[package]
+authors = ['Substrate DevHub <https://github.com/substrate-developer-hub>']
+description = 'FRAME pallet template for defining custom runtime logic.'
+edition = '2018'
+homepage = 'https://substrate.dev'
+license = 'Unlicense'
+name = 'mint-token'
+readme = 'README.md'
+repository = 'https://github.com/substrate-developer-hub/substrate-node-template/'
+version = '3.0.0'
+
+[package.metadata.docs.rs]
+targets = ['x86_64-unknown-linux-gnu']
+
+
+[dependencies]
+codec = { default-features = false, features = ['derive'], package = 'parity-scale-codec', version = '2.0.0' }
+frame-system = { default-features = false, version = '3.0.0' }
+frame-support = { default-features = false, version = '3.0.0' }
+frame-benchmarking = { default-features = false, optional = true, version = '3.1.0' }
+sp-std = { default-features = false, version = '3.0.0' }
+serde = { version = "1.0.119", optional = true }
+sp-runtime = { default-features = false, version = '3.0.0' }
+
+
+[dev-dependencies]
+sp-core = { version="4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate" }
+sp-io = { default-features = false, version = '3.0.0' }
+
+[features]
+default = ['std']
+std = [
+	'codec/std',
+	'frame-support/std',
+	'frame-system/std',
+	'frame-benchmarking/std',
+	'sp-std/std',
+	'serde',
+]
+runtime-benchmarks = [
+	'frame-benchmarking',
+	'frame-support/runtime-benchmarks',
+	'frame-system/runtime-benchmarks',
+]
+# Note: frame-support `try-runtime` feature is released after v3.
+#   Uncomment the following line when `frame-support` version > `3.0.0`.
+# try-runtime = ['frame-support/try-runtime']
