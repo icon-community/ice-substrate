@@ -147,7 +147,7 @@ fn test_transfer_valid() {
 		assert_ok!(diposit_res);
 
 		// Simulate that we have done a claim_request by adding it to PendingClaims queue
-		pallet_airdrop::PendingClaims::<Test>::insert(bl_num, &claimer, ());
+		pallet_airdrop::PendingClaims::<Test>::insert(bl_num, &claimer, 1_u8);
 		// Add Dummy snapshot to mapping
 		pallet_airdrop::IceSnapshotMap::<Test>::insert(
 			&claimer,
@@ -266,7 +266,7 @@ fn test_transfer_invalid() {
 		// Try to claim when data is in queue but not in map
 		{
 			// Add this to queue
-			crate::PendingClaims::<Test>::insert(&bl_num, &receiver, ());
+			crate::PendingClaims::<Test>::insert(&bl_num, &receiver, 1_u8);
 
 			assert_noop!(
 				AirdropModule::complete_transfer(
@@ -392,7 +392,7 @@ fn claim_request_valid() {
 
 		// Make sure that queue storage is populated accordingly
 		let queue_data = AirdropModule::get_pending_claims(&bl_num, &ice_address);
-		assert_eq!(queue_data, Some(()));
+		assert_eq!(queue_data, Some(pallet_airdrop::DEFAULT_RETRY_COUNT));
 	});
 }
 
