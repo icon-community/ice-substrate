@@ -1,0 +1,30 @@
+[package]
+name = "pallet-simple-inflation"
+version = "0.0.1"
+authors = ['ICE Team <https://icenetwork.io>']
+edition = "2021"
+license = "Apache-2.0"
+homepage = 'https://substrate.dev'
+repository = 'https://github.com/web3labs/ice-substrate/'
+description = "FRAME pallet for manage simple inflation"
+
+[package.metadata.docs.rs]
+targets = ["x86_64-unknown-linux-gnu"]
+
+[dependencies]
+codec = { package = "parity-scale-codec", version = "2.3.1", default-features = false, features = ["derive"] }
+scale-info = { version = "1.0.0", default-features = false, features = ["derive"] }
+frame-support = { default-features = false, git = "https://github.com/paritytech/substrate" }
+frame-system = { default-features = false, package = "frame-system", git = "https://github.com/paritytech/substrate" }
+log = "0.4"
+
+[features]
+default = ["std"]
+std = [
+	"codec/std",
+    "scale-info/std",
+	"frame-support/std",
+	"frame-system/std",
+	"log/std"
+]
+try-runtime = ["frame-support/try-runtime"]

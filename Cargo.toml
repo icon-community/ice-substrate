@@ -2,4 +2,4 @@
 panic = 'unwind'
 
 [workspace]
-members = ['node', 'runtime', 'integration-tests']
+members = ['node', 'runtime', 'integration-tests', "frame/simple-inflation"]
