@@ -38,7 +38,6 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 pub use pallet::*;
-
 #[cfg(test)]
 mod mock;
 
@@ -130,7 +129,11 @@ pub mod pallet {
 		RemovedFromQueue(types::AccountIdOf<T>),
 
 		/// Same entry is processed by offchian worker for too many times
-		RetryExceed(types::AccountIdOf<T>, types::BlockNumberOf<T>),
+		RetryExceed(
+			types::AccountIdOf<T>,
+			types::IconAddress,
+			types::BlockNumberOf<T>,
+		),
 	}
 
 	#[pallet::storage]
@@ -145,6 +148,12 @@ pub mod pallet {
 		OptionQuery,
 	>;
 
+	#[pallet::storage]
+	#[pallet::getter(fn get_processed_upto_counter)]
+	pub(super) type ProcessedUpto<T: Config> = StorageValue<_, types::BlockNumberOf<T>, ValueQuery>;
+
+	// TODO:
+	// Put vector of icon address instead of just one
 	#[pallet::storage]
 	#[pallet::getter(fn get_ice_snapshot_map)]
 	pub(super) type IceSnapshotMap<T: Config> =
@@ -315,8 +324,8 @@ pub mod pallet {
 			)
 			.map_err(|err| {
 				// This is also error from our side. We keep it for next retry
-				Self::register_failed_claim(origin.clone(), block_number, receiver.clone()).expect("Calling register failed_claim from currency::transfer. This call should not have failed..");
-				
+				Self::register_failed_claim(origin.clone(), block_number, receiver.clone()).expect("Calling register failed_claim from currency::transfer. This call should not have failed..");				
+
 				log::info!("Currency transfer failed with error: {:?}", err);
 				err
 			})?;
@@ -365,9 +374,13 @@ pub mod pallet {
 			Self::ensure_root_or_sudo(origin).map_err(|_| Error::<T>::DeniedOperation)?;
 			use sp_runtime::traits::Saturating;
 
+			let icon_address = Self::get_ice_snapshot_map(&ice_address)
+				.ok_or(Error::<T>::IncompleteData)?
+				.icon_address;
 			let retry_remaining = Self::get_pending_claims(&block_number, &ice_address)
-				.ok_or(Error::<T>::IncompleteData)?;
-			let retry_remaining = retry_remaining.checked_sub(1.into()).unwrap_or_default();
+				.ok_or(Error::<T>::IncompleteData)?
+				.checked_sub(1.into())
+				.unwrap_or_default();
 
 			// In both case weather retry is remaining or not
 			// we will remove this entry from this block number key
@@ -390,13 +403,16 @@ pub mod pallet {
 				// so is there nothing else to do?
 
 				// Emit event and return with error
-				Self::deposit_event(Event::<T>::RetryExceed(ice_address, block_number));
+				Self::deposit_event(Event::<T>::RetryExceed(
+					ice_address,
+					icon_address,
+					block_number,
+				));
 				Error::<T>::RetryExceed
 			});
 
 			// This entry have some retry remaining so we put this entry in another block_number key
-			let new_block_number =
-				block_number.saturating_add(crate::OFFCHAIN_WORKER_BLOCK_GAP.into());
+			let new_block_number = Self::get_current_block_number().saturating_add(1_u32.into());
 			<PendingClaims<T>>::insert(&new_block_number, &ice_address, retry_remaining);
 
 			Ok(())
@@ -431,6 +447,18 @@ pub mod pallet {
 
 			Ok(())
 		}
+
+		#[pallet::weight(0)]
+		pub fn update_processed_upto_counter(
+			origin: OriginFor<T>,
+			new_value: types::BlockNumberOf<T>,
+		) -> DispatchResult {
+			Self::ensure_root_or_sudo(origin).map(|_| Error::<T>::DeniedOperation)?;
+
+			<ProcessedUpto<T>>::set(new_value);
+
+			Ok(())
+		}
 	}
 
 	#[pallet::hooks]
@@ -442,37 +470,30 @@ pub mod pallet {
 				log::info!("Offchain worker skipped for block: {:?}", block_number);
 				return;
 			}
-			use sp_runtime::traits::CheckedSub;
 
-			// Block number on which offchain was previously active on
-			let already_processed_upto = block_number
-				.checked_sub(&crate::OFFCHAIN_WORKER_BLOCK_GAP.into())
-				.unwrap_or_default();
+			// We start taking entry from this block number.
+			// This is the block number upto where offchain worker have finished
+			let already_processed_upto = Self::get_processed_upto_counter();
 
-			let mut processing_now = already_processed_upto;
-			// From last processed block upto this current block
+			// This time we start from 1 + last time processed block
+			let mut processing_now = already_processed_upto + 1_u32.into();
+
+			// Now process from last processed block to this current block
 			// DO NOT process request in this block because the data might still be adding
 			while processing_now < block_number {
-				let claims_in_this_block =
-					<PendingClaims<T>>::iter_key_prefix(already_processed_upto)
-						// Filter out entries that are not present in ice_snapshot map
-						// this will skip the entries that were manually added only to pendingQueue
-						.filter(|ice_address| <IceSnapshotMap<T>>::contains_key(ice_address))
-						// Collect block number also. We might use it later on
-						.map(|ice_address| (already_processed_upto, ice_address))
-						.collect::<Vec<_>>();
+				let claims_in_this_block = <PendingClaims<T>>::iter_key_prefix(processing_now)
+					// Filter out entries that are not present in ice_snapshot map
+					// this will skip the entries that were manually added only to pendingQueue
+					.filter(|ice_address| <IceSnapshotMap<T>>::contains_key(ice_address))
+					// Collect block number also. We might use it later on
+					.map(|ice_address| (processing_now, ice_address))
+					.collect::<Vec<_>>();
 
 				// Increase the collected counter.
 				// This addition might overflow because block number might exceed the
 				// total capacity type BlockNumber can hold. But this is really not be dealt here
 				// So we do unchecked addition
 				processing_now += 1_u32.into();
-
-				// NOTE:
-				// If we wanted to keep last processing counter in onchain db
-				// we have to update that storage here
-				// meaning we have to call an extrinsic from here
-				// so again consider if we really need to have that on onchain data
 
 				for claim in claims_in_this_block {
 					let claim_res = Self::process_claim_request(claim.clone());
@@ -483,6 +504,22 @@ pub mod pallet {
 					}
 				}
 			}
+
+			let update_res = Self::make_signed_call(&Call::update_processed_upto_counter {
+				new_value: processing_now,
+			});
+
+			// We assume that calling extrinsic will always pass. If not here is worst case scanerio
+			// update counter is never updated i.e always remains 0
+			// and we will always try processing claims made from request
+			// 0..10(no of block to process in one ocw)
+			// So:
+			// something should keep checking for process_upto value and notify when
+			// the gap between this value and current block is too high
+			// ( which signifies that this counter is not being updated lately )
+			//
+			// Just ignoring the result
+			update_res.ok();
 		}
 	}
 
@@ -562,6 +599,9 @@ pub mod pallet {
 				// This can be tested before deploying node
 				// --3) Implementation itself to call signed transaction is buggy
 				// -- This also have to be made sure by the implementors
+
+				// TODO:
+				// Maintain local sudo account
 
 				log::info!(
 					"Calling extrinsic {:#?} failed with error: {:?}",
