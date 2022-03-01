@@ -23,8 +23,8 @@ use sp_core::{
 use sp_runtime::{
 	create_runtime_str, generic, impl_opaque_keys,
 	traits::{
-		AccountIdLookup, BlakeTwo256, Block as BlockT, ConvertInto, Dispatchable, IdentifyAccount,
-		NumberFor, PostDispatchInfoOf, Verify,
+		AccountIdLookup, BlakeTwo256, Block as BlockT, Dispatchable, IdentifyAccount, NumberFor,
+		PostDispatchInfoOf, Verify, ConvertInto
 	},
 	transaction_validity::{TransactionSource, TransactionValidity, TransactionValidityError},
 	ApplyExtrinsicResult, MultiSignature, SaturatedConversion,
@@ -33,6 +33,12 @@ use sp_std::{marker::PhantomData, prelude::*};
 #[cfg(feature = "std")]
 use sp_version::NativeVersion;
 use sp_version::RuntimeVersion;
+
+use frame_support::inherent::Vec;
+use sp_std::boxed::Box;
+use sp_core::u32_trait::{_1, _2, _5};
+
+use crate::currency::{ICY, MILLIICY};
 
 // A few exports that help ease life for downstream crates.
 use fp_rpc::TransactionStatus;
@@ -43,8 +49,9 @@ pub use frame_support::{
 		constants::{BlockExecutionWeight, ExtrinsicBaseWeight, RocksDbWeight, WEIGHT_PER_SECOND},
 		IdentityFee, Weight,
 	},
-	ConsensusEngineId, StorageValue,
+	ConsensusEngineId, PalletId, StorageValue,
 };
+
 pub use pallet_balances::Call as BalancesCall;
 use pallet_ethereum::{Call::transact, Transaction as EthereumTransaction};
 use pallet_evm::{Account as EVMAccount, EnsureAddressTruncated, HashedAddressMapping, Runner};
@@ -345,15 +352,17 @@ parameter_types! {
 	pub const MinimumPeriod: u64 = SLOT_DURATION / 2;
 }
 
+
 impl pallet_timestamp::Config for Runtime {
 	/// A timestamp: milliseconds since the unix epoch.
 	type Moment = u64;
 	type MinimumPeriod = MinimumPeriod;
+	type OnTimestampSet = SimpleInflation;
 	type WeightInfo = ();
-	#[cfg(feature = "aura")]
-	type OnTimestampSet = Aura;
-	#[cfg(feature = "manual-seal")]
-	type OnTimestampSet = ();
+	// #[cfg(feature = "aura")]
+	// type OnTimestampSet = Aura;
+	// #[cfg(feature = "manual-seal")]
+	// type OnTimestampSet = ();
 }
 
 parameter_types! {
@@ -410,7 +419,7 @@ impl<F: FindAuthor<u32>> FindAuthor<H160> for FindAuthorTruncated<F> {
 }
 
 parameter_types! {
-	pub const ChainId: u64 = 42;
+	pub const ChainId: u64 = 553;
 	pub BlockGasLimit: U256 = U256::from(u32::max_value());
 	pub PrecompilesValue: FrontierPrecompiles<Runtime> = FrontierPrecompiles::<_>::new();
 }
@@ -482,6 +491,57 @@ impl pallet_vesting::Config for Runtime {
 	const MAX_VESTING_SCHEDULES: u32 = 28;
 }
 
+// Treasury Pallet
+parameter_types! {
+	pub const CouncilMotionDuration: BlockNumber = 3 * DAYS;
+	pub const CouncilMaxProposals: u32 = 100;
+	pub const GeneralCouncilMaxMembers: u32 = 100;
+}
+
+type CouncilCollective = pallet_collective::Instance1;
+impl pallet_collective::Config<CouncilCollective> for Runtime {
+	type Origin = Origin;
+	type Proposal = Call;
+	type Event = Event;
+	type MotionDuration = CouncilMotionDuration;
+	type MaxProposals = CouncilMaxProposals;
+	type MaxMembers = GeneralCouncilMaxMembers;
+	type DefaultVote = pallet_collective::PrimeDefaultVote;
+	type WeightInfo = pallet_collective::weights::SubstrateWeight<Runtime>;
+}
+
+parameter_types! {
+	pub const ProposalBond: Permill = Permill::from_percent(5);
+	pub const ProposalBondMinimum: Balance = 1 * ICY;
+	pub const SpendPeriod: BlockNumber = 1 * DAYS;
+	pub const Burn: Permill = Permill::from_percent(1);
+	pub const TreasuryPalletId: PalletId = PalletId(*b"py/trsry");
+
+	pub const MaxApprovals: u32 = 100;
+}
+
+impl pallet_treasury::Config for Runtime {
+	type Currency = Balances;
+	type ApproveOrigin = pallet_collective::EnsureProportionMoreThan<_1, _2, AccountId, CouncilCollective>;
+	type RejectOrigin = pallet_collective::EnsureProportionMoreThan<_1, _5, AccountId, CouncilCollective>;
+	type Event = Event;
+	type OnSlash = ();
+	type ProposalBond = ProposalBond;
+	type ProposalBondMinimum = ProposalBondMinimum;
+	type SpendPeriod = SpendPeriod;
+	type Burn = Burn;
+	type PalletId = TreasuryPalletId;
+	type BurnDestination = ();
+	type SpendFunds = ();
+	type WeightInfo = pallet_treasury::weights::SubstrateWeight<Runtime>;
+	type MaxApprovals = MaxApprovals;
+}
+
+impl pallet_simple_inflation::Config for Runtime {
+
+}
+
+
 frame_support::parameter_types! {
 	pub BoundDivision: U256 = U256::from(1024);
 }
@@ -539,6 +599,9 @@ construct_runtime!(
 		Vesting: pallet_vesting::{Pallet, Call, Storage, Config<T>, Event<T>} = 32,
 		Assets: pallet_assets::{Pallet, Call, Storage, Config<T>, Event<T>},
 		Airdrop: pallet_airdrop::{Pallet, Call, Storage, Event<T>},
+	  Council: pallet_collective::<Instance1>::{Pallet, Call, Storage, Origin<T>, Event<T>, Config<T>},
+    Treasury: pallet_treasury::{Pallet, Call, Storage, Event<T>, Config},
+		SimpleInflation: pallet_simple_inflation::{Pallet}
 	}
 );
 

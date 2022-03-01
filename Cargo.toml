@@ -6,4 +6,6 @@ members = [
     'node',
     'runtime',
     'pallets/airdrop',
+    'integration-tests',
+    'frame/simple-inflation',
 ]
