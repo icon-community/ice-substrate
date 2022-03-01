@@ -9,6 +9,7 @@
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
 use codec::{Decode, Encode};
+use pallet_aura::AuraAuthorId;
 use pallet_evm::FeeCalculator;
 use pallet_grandpa::{
 	fg_primitives, AuthorityId as GrandpaId, AuthorityList as GrandpaAuthorityList,
@@ -26,7 +27,7 @@ use sp_runtime::{
 		PostDispatchInfoOf, Verify, ConvertInto
 	},
 	transaction_validity::{TransactionSource, TransactionValidity, TransactionValidityError},
-	ApplyExtrinsicResult, MultiSignature,
+	ApplyExtrinsicResult, MultiSignature, SaturatedConversion,
 };
 use sp_std::{marker::PhantomData, prelude::*};
 #[cfg(feature = "std")]
@@ -63,8 +64,14 @@ pub use sp_runtime::{Perbill, Permill};
 mod precompiles;
 use precompiles::FrontierPrecompiles;
 
+/// Constants of palletsId
+const AIRDROP_PALLETID: frame_support::PalletId = frame_support::PalletId(*b"airdrops");
+
+/// import the airdrop pallet
+pub use pallet_airdrop;
+
 /// Type of block number.
-pub type BlockNumber = u32;
+pub type BlockNumber = u64;
 
 /// Alias to 512-bit hash when used in the context of a transaction signature on the chain.
 pub type Signature = MultiSignature;
@@ -88,6 +95,9 @@ pub type Hash = sp_core::H256;
 
 /// Digest item type.
 pub type DigestItem = generic::DigestItem<Hash>;
+
+/// The payload being signed in transaction
+pub type SignedPayload = generic::SignedPayload<Call, SignedExtra>;
 
 /// Opaque types. These are used by the CLI to instantiate machinery that don't need to know
 /// the specifics of the runtime. They can then be made to be agnostic over specific formats
@@ -219,6 +229,94 @@ impl frame_system::Config for Runtime {
 	type OnSetCode = ();
 }
 
+/// Implemented as dependency for CreateSignedTransaction
+impl<C> frame_system::offchain::SendTransactionTypes<C> for Runtime
+where
+	Call: From<C>,
+{
+	type Extrinsic = UncheckedExtrinsic;
+	type OverarchingCall = Call;
+}
+
+/// Implemented as dependency for CreateSignedTransaction
+impl frame_system::offchain::SigningTypes for Runtime {
+	type Public = <Signature as sp_runtime::traits::Verify>::Signer;
+	type Signature = Signature;
+}
+
+/// Implement CreateSignedTransaction for pallets/airdrop
+/// to enable the pallet to call dispatchable from offchain worker
+impl<LocalCall> frame_system::offchain::CreateSignedTransaction<LocalCall> for Runtime
+where
+	Call: From<LocalCall>,
+{
+	fn create_transaction<C: frame_system::offchain::AppCrypto<Self::Public, Self::Signature>>(
+		call: Call,
+		public: <Signature as sp_runtime::traits::Verify>::Signer,
+		account: AccountId,
+		index: Index,
+	) -> Option<(
+		Call,
+		<UncheckedExtrinsic as sp_runtime::traits::Extrinsic>::SignaturePayload,
+	)> {
+		let period = BlockHashCount::get() as u64;
+		let current_block = System::block_number()
+			.saturated_into::<BlockNumber>()
+			.saturating_sub(1);
+		let tip = 0;
+		let extra: SignedExtra = (
+			frame_system::CheckSpecVersion::<Runtime>::new(),
+			frame_system::CheckTxVersion::<Runtime>::new(),
+			frame_system::CheckGenesis::<Runtime>::new(),
+			frame_system::CheckEra::<Runtime>::from(generic::Era::mortal(period, current_block)),
+			frame_system::CheckNonce::<Runtime>::from(index),
+			frame_system::CheckWeight::<Runtime>::new(),
+			pallet_transaction_payment::ChargeTransactionPayment::<Runtime>::from(tip),
+		);
+
+		let raw_payload = SignedPayload::new(call, extra)
+			.map_err(|e| {
+				log::warn!("Unable to create signed payload: {:?}", e);
+			})
+			.ok()?;
+		let signature = raw_payload.using_encoded(|payload| C::sign(payload, public))?;
+		let address = account;
+		let (call, extra, _) = raw_payload.deconstruct();
+		Some((
+			call,
+			(
+				sp_runtime::MultiAddress::Id(address),
+				signature.into(),
+				extra,
+			),
+		))
+	}
+}
+
+parameter_types! {
+	/// Server url from which to consume airdrop data from by sending GET request.
+	/// This should also conatins the endpoint path along with =
+	/// Only icon address in 0x format is appended to this. So keep url accordingly
+	pub const AirdropFetchIconEndpoint: &'static str = "http://35.175.202.72:5000/claimDetails?address=";
+
+	/// Account from which to credit the claim request
+	// TODO: Add real creditor account
+	pub const AirdropCreditor: frame_support::PalletId = AIRDROP_PALLETID;
+}
+
+/// Configure the pallet-template in pallets/airdrop
+impl pallet_airdrop::Config for Runtime {
+	type AccountId = AccountId;
+	type Event = Event;
+	type Currency = Balances;
+	type FetchIconEndpoint = AirdropFetchIconEndpoint;
+	// TODO:
+	// Ensure that using app_crypto! generated pairs are safe to use
+	// Also ensure effect of (not)enabling full-crypto feature
+	type AuthorityId = pallet_airdrop::airdrop_crypto::AuthId;
+	type Creditor = AirdropCreditor;
+}
+
 parameter_types! {
 	pub const MaxAuthorities: u32 = 100;
 }
@@ -348,7 +446,6 @@ impl pallet_ethereum::Config for Runtime {
 	type Event = Event;
 	type StateRoot = pallet_ethereum::IntermediateStateRoot;
 }
-
 
 pub const MILLICENTS: Balance = 1_000_000_000;
 pub const CENTS: Balance = 1_000 * MILLICENTS; // assume this is worth about a cent.
@@ -501,10 +598,10 @@ construct_runtime!(
 		BaseFee: pallet_base_fee::{Pallet, Call, Storage, Config<T>, Event},
 		Vesting: pallet_vesting::{Pallet, Call, Storage, Config<T>, Event<T>} = 32,
 		Assets: pallet_assets::{Pallet, Call, Storage, Config<T>, Event<T>},
-	    Council: pallet_collective::<Instance1>::{Pallet, Call, Storage, Origin<T>, Event<T>, Config<T>},
-        Treasury: pallet_treasury::{Pallet, Call, Storage, Event<T>, Config},
-		SimpleInflation: pallet_simple_inflation::{Pallet},
-
+		Airdrop: pallet_airdrop::{Pallet, Call, Storage, Event<T>},
+	  Council: pallet_collective::<Instance1>::{Pallet, Call, Storage, Origin<T>, Event<T>, Config<T>},
+    Treasury: pallet_treasury::{Pallet, Call, Storage, Event<T>, Config},
+		SimpleInflation: pallet_simple_inflation::{Pallet}
 	}
 );
 

@@ -1,0 +1,108 @@
+[package]
+name = "pallet-airdrop"
+version = "4.0.0-dev"
+description = "Logic to do airdrop"
+authors = ["iBriz team <https://github.com/ibriz>"]
+edition = "2021"
+license = "Unlicense"
+publish = false
+repository = "https://github.com/ibriz/ice-substrate.git"
+
+[package.metadata.docs.rs]
+targets = ["x86_64-unknown-linux-gnu"]
+
+[dependencies]
+log = "0.4.14"
+hex = { version = "0.4.3", default-features = false, features = ["alloc"] }
+codec = { package = "parity-scale-codec", version = "2.0.0", default-features = false, features = [
+	"derive",
+] }
+scale-info = { version = "1.0", default-features = false, features = [
+	"derive",
+] }
+serde = { version = '1.0', default-features = false, features = ['derive'] }
+serde_json = { version = '1.0', default-features = false, features = ['alloc'] }
+parking_lot = { version = "0.11", optional = true }
+
+# substrate packages
+
+[dependencies.frame-support]
+default-features = false
+git = "https://github.com/paritytech/substrate"
+
+[dependencies.frame-system]
+default-features = false
+git = "https://github.com/paritytech/substrate"
+
+[dependencies.frame-benchmarking]
+default-features = false
+git = "https://github.com/paritytech/substrate"
+
+[dependencies.sp-runtime]
+default-features = false
+git = 'https://github.com/paritytech/substrate'
+
+[dependencies.sp-io]
+default-features = false
+git = 'https://github.com/paritytech/substrate'
+
+[dependencies.sp-std]
+default-features = false
+git = 'https://github.com/paritytech/substrate'
+
+[dependencies.sp-core]
+default-features = false
+git = 'https://github.com/paritytech/substrate'
+
+[dependencies.sp-keystore]
+default-features = false
+git = 'https://github.com/paritytech/substrate'
+optional = true
+
+[dependencies.pallet-balances]
+default-features = false
+git = 'https://github.com/paritytech/substrate'
+
+[dependencies.pallet-sudo]
+default-features = false
+git = 'https://github.com/paritytech/substrate'
+
+# frontier packages
+
+[dependencies.pallet-evm-precompile-sha3fips]
+default-features = false
+git = 'https://github.com/paritytech/frontier'
+
+[dependencies.pallet-evm-precompile-simple]
+default-features = false
+git = 'https://github.com/paritytech/frontier'
+
+[dependencies.fp-evm]
+default-features = false
+git = 'https://github.com/paritytech/frontier'
+
+# development dependencies
+[dev-dependencies]
+sp-core = { default-features = false, git = "https://github.com/paritytech/substrate" }
+sp-io = { default-features = false, git = "https://github.com/paritytech/substrate" }
+sp-runtime = { default-features = false, git = "https://github.com/paritytech/substrate" }
+
+[features]
+default = ["std"]
+std = [
+	"codec/std",
+	"scale-info/std",
+	"frame-support/std",
+	"frame-system/std",
+	"frame-benchmarking/std",
+	"sp-io/std",
+	"log/std",
+	"sp-runtime/std",
+	"sp-std/std",
+	"pallet-balances/std",
+	"sp-keystore",
+	"parking_lot",
+]
+
+runtime-benchmarks = []
+try-runtime = ["frame-support/try-runtime"]
