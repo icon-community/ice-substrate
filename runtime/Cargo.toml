@@ -14,8 +14,16 @@ publish = false
 targets = ["x86_64-unknown-linux-gnu"]
 
 [dependencies]
-codec = { package = "parity-scale-codec", version = "2.3.1", default-features = false, features = ["derive"] }
+codec = { package = "parity-scale-codec", version = "2.3.1", default-features = false, features = [
+	"derive",
+] }
 serde = { version = "1.0.101", optional = true, features = ["derive"] }
+log = "*"
+
+# Custom pallets
+pallet-airdrop = { path = "../pallets/airdrop", default-features = false }
+
+# Frame packages
 
 frame-executive = { default-features = false, git = "https://github.com/paritytech/substrate" }
 frame-support = { default-features = false, git = "https://github.com/paritytech/substrate" }
@@ -26,9 +34,9 @@ pallet-evm = { version = "6.0.0-dev", default-features = false, git = "https://g
 pallet-ethereum = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/frontier" }
 pallet-dynamic-fee = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/frontier" }
 
-pallet-evm-precompile-modexp   = { version = "2.0.0-dev", default-features = false, git = "https://github.com/paritytech/frontier" }
+pallet-evm-precompile-modexp = { version = "2.0.0-dev", default-features = false, git = "https://github.com/paritytech/frontier" }
 pallet-evm-precompile-sha3fips = { version = "2.0.0-dev", default-features = false, git = "https://github.com/paritytech/frontier" }
-pallet-evm-precompile-simple   = { version = "2.0.0-dev", default-features = false,  git = "https://github.com/paritytech/frontier" }
+pallet-evm-precompile-simple = { version = "2.0.0-dev", default-features = false, git = "https://github.com/paritytech/frontier" }
 
 pallet-aura = { default-features = false, git = "https://github.com/paritytech/substrate" }
 pallet-balances = { default-features = false, git = "https://github.com/paritytech/substrate" }
@@ -46,10 +54,10 @@ pallet-vesting = { version = "4.0.0-dev", default-features = false, git = "https
 pallet-base-fee = { version = "1.0.0-dev", default-features = false, git = "https://github.com/paritytech/frontier" }
 
 sp-api = { default-features = false, git = "https://github.com/paritytech/substrate" }
-sp-block-builder = { default-features = false, git = "https://github.com/paritytech/substrate"}
+sp-block-builder = { default-features = false, git = "https://github.com/paritytech/substrate" }
 sp-consensus-aura = { default-features = false, git = "https://github.com/paritytech/substrate" }
-sp-core = { version="4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate" }
-sp-inherents = { default-features = false, git = "https://github.com/paritytech/substrate"}
+sp-core = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate" }
+sp-inherents = { default-features = false, git = "https://github.com/paritytech/substrate" }
 sp-io = { default-features = false, git = "https://github.com/paritytech/substrate" }
 sp-offchain = { default-features = false, git = "https://github.com/paritytech/substrate" }
 sp-runtime = { default-features = false, git = "https://github.com/paritytech/substrate" }
@@ -58,10 +66,12 @@ sp-std = { default-features = false, git = "https://github.com/paritytech/substr
 sp-transaction-pool = { default-features = false, git = "https://github.com/paritytech/substrate" }
 sp-version = { default-features = false, git = "https://github.com/paritytech/substrate" }
 
-fp-rpc  = { version = "3.0.0-dev", default-features = false, git = "https://github.com/paritytech/frontier" }
+fp-rpc = { version = "3.0.0-dev", default-features = false, git = "https://github.com/paritytech/frontier" }
 fp-self-contained = { version = "1.0.0-dev", default-features = false, git = "https://github.com/paritytech/frontier" }
 
-scale-info = { version = "1.0.0", default-features = false, features = ["derive"] }
+scale-info = { version = "1.0.0", default-features = false, features = [
+	"derive",
+] }
 
 # benchmarking dependencies
 frame-benchmarking = { git = "https://github.com/paritytech/substrate", default-features = false, optional = true }
@@ -77,6 +87,8 @@ manual-seal = []
 std = [
 	"codec/std",
 	"serde",
+
+	"pallet-airdrop/std",
 
 	"frame-executive/std",
 	"frame-support/std",
@@ -126,4 +138,5 @@ runtime-benchmarks = [
 	"pallet-ethereum/runtime-benchmarks",
 	"pallet-evm/runtime-benchmarks",
 	"pallet-vesting/runtime-benchmarks",
+	"pallet-airdrop/runtime-benchmarks",
 ]
