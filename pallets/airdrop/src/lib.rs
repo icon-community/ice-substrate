@@ -40,7 +40,7 @@
 pub use pallet::*;
 
 #[cfg(test)]
-pub mod mock;
+mod mock;
 
 #[cfg(test)]
 mod tests;
@@ -49,7 +49,7 @@ mod tests;
 mod benchmarking;
 
 /// All the types and alises must be defined here
-pub mod types;
+mod types;
 
 /// An identifier for a type of cryptographic key.
 /// For this pallet, account associated with this key must be same as
