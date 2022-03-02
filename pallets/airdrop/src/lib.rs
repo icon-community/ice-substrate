@@ -78,6 +78,8 @@ pub mod pallet {
 	use frame_system::offchain::CreateSignedTransaction;
 	use types::IconVerifiable;
 
+	use sp_runtime::traits::Saturating;
+
 	/// Configure the pallet by specifying the parameters and types on which it depends.
 	#[pallet::config]
 	pub trait Config:
@@ -372,7 +374,6 @@ pub mod pallet {
 			ice_address: types::AccountIdOf<T>,
 		) -> DispatchResult {
 			Self::ensure_root_or_sudo(origin).map_err(|_| Error::<T>::DeniedOperation)?;
-			use sp_runtime::traits::Saturating;
 
 			let icon_address = Self::get_ice_snapshot_map(&ice_address)
 				.ok_or(Error::<T>::IncompleteData)?
@@ -471,42 +472,35 @@ pub mod pallet {
 				return;
 			}
 
-			// We start taking entry from this block number.
-			// This is the block number upto where offchain worker have finished
-			let already_processed_upto = Self::get_processed_upto_counter();
+			// Start processing from one + the block previously processed
+			let start_processing_from =
+				Self::get_processed_upto_counter().saturating_add(1_u32.into());
 
-			// This time we start from 1 + last time processed block
-			let mut processing_now = already_processed_upto + 1_u32.into();
+			// Mark the block numbers we will be processing
+			let mut blocks_to_process =
+				types::PendingClaimsOf::<T>::new(start_processing_from..block_number);
 
-			// Now process from last processed block to this current block
-			// DO NOT process request in this block because the data might still be adding
-			while processing_now < block_number {
-				let claims_in_this_block = <PendingClaims<T>>::iter_key_prefix(processing_now)
-					// Filter out entries that are not present in ice_snapshot map
-					// this will skip the entries that were manually added only to pendingQueue
-					.filter(|ice_address| <IceSnapshotMap<T>>::contains_key(ice_address))
-					// Collect block number also. We might use it later on
-					.map(|ice_address| (processing_now, ice_address))
-					.collect::<Vec<_>>();
+			while let Some((block_number, mut entries_in_block)) = blocks_to_process.next() {
+				while let Some(claimer) = entries_in_block.next() {
+					let claim_res = Self::process_claim_request((block_number, claimer.clone()));
 
-				// Increase the collected counter.
-				// This addition might overflow because block number might exceed the
-				// total capacity type BlockNumber can hold. But this is really not be dealt here
-				// So we do unchecked addition
-				processing_now += 1_u32.into();
-
-				for claim in claims_in_this_block {
-					let claim_res = Self::process_claim_request(claim.clone());
 					if let Err(err) = claim_res {
-						log::info!("process_claim_request failed with error: {:?}", err);
+						log::info!(
+							"Claim process failed for Pending entry {:?} with error {:?}",
+							(claimer, block_number),
+							err
+						);
 					} else {
-						log::info!("Process claim request for {:?} passed..", claim.clone());
+						log::info!(
+							"complete_transfer function called sucessfully on Pending entry {:?}",
+							(claimer, block_number)
+						);
 					}
 				}
 			}
 
 			let update_res = Self::make_signed_call(&Call::update_processed_upto_counter {
-				new_value: processing_now,
+				new_value: block_number.saturating_sub(1_u32.into()),
 			});
 
 			// We assume that calling extrinsic will always pass. If not here is worst case scanerio

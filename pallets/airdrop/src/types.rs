@@ -162,3 +162,39 @@ pub trait IconVerifiable {
 		message: &[u8],
 	) -> Result<(), SignatureValidationError>;
 }
+
+pub struct PendingClaimsOf<T: Config> {
+	range: core::ops::Range<BlockNumberOf<T>>,
+}
+
+impl<T: Config> PendingClaimsOf<T> {
+	pub fn new(range: core::ops::Range<BlockNumberOf<T>>) -> Self {
+		PendingClaimsOf::<T> { range }
+	}
+}
+
+impl<T: Config> core::iter::Iterator for PendingClaimsOf<T> {
+	// This iterator returns a block number and an iterator to entiries
+	// in PendingClaims under same block number
+	type Item = (
+		BlockNumberOf<T>,
+		storage::KeyPrefixIterator<<T as frame_system::Config>::AccountId>,
+	);
+
+	fn next(&mut self) -> Option<Self::Item> {
+		// Take the block to process
+		let this_block = self.range.start;
+		// Increment start by one
+		self.range.start = this_block + 1_u32.into();
+
+		// Check if range is valid
+		if self.range.start > self.range.end {
+			return None;
+		}
+
+		// Get the actual iterator result
+		let this_block_iter = <crate::PendingClaims<T>>::iter_key_prefix(this_block);
+
+		Some((this_block, this_block_iter))
+	}
+}
