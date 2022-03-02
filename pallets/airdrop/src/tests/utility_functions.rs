@@ -105,3 +105,105 @@ fn making_correct_http_request() {
 		assert_ok!(fetch_res);
 	});
 }
+
+#[test]
+fn failed_entry_regestration() {
+	minimal_test_ext().execute_with(|| {
+		let bl_num: types::BlockNumberOf<Test> = 2_u32.into();
+		let claimer = samples::ACCOUNT_ID[1];
+		let retry = 2_u8;
+		let running_bl_num = bl_num + 6;
+
+		// Simulate we running in block running_bl_num;
+		mock::System::set_block_number(running_bl_num);
+
+		// Be sure access is controlled
+		{
+			assert_storage_noop!(assert_eq! {
+				AirdropModule::register_failed_claim(
+					Origin::signed(not_airdrop_sudo(samples::ACCOUNT_ID[1])),
+					bl_num.into(),
+					claimer.clone(),
+				)
+				.unwrap_err(),
+
+				PalletError::DeniedOperation.into()
+			});
+
+			assert_storage_noop!(assert_eq! {
+				AirdropModule::register_failed_claim(
+					Origin::none(),
+					bl_num.into(),
+					claimer.clone(),
+				)
+				.unwrap_err(),
+
+				PalletError::DeniedOperation.into()
+			});
+
+			assert_storage_noop!(assert_ne! {
+				AirdropModule::register_failed_claim(
+					Origin::signed(AirdropModule::get_sudo_account()),
+					bl_num.into(),
+					claimer.clone(),
+				)
+				.unwrap_err(),
+
+				PalletError::DeniedOperation.into()
+			});
+		}
+
+		// When there is no data in map
+		{
+			assert_noop!(
+				AirdropModule::register_failed_claim(Origin::root(), bl_num, claimer.clone()),
+				PalletError::IncompleteData
+			);
+		}
+
+		// Insert sample data in map
+		pallet_airdrop::IceSnapshotMap::insert(&claimer, types::SnapshotInfo::<Test>::default());
+
+		// When there is something in map but not in queue
+		{
+			assert_noop!(
+				AirdropModule::register_failed_claim(Origin::root(), bl_num, claimer.clone()),
+				PalletError::NotInQueue
+			);
+		}
+
+		// Insert a sample data in queue with 0 retry remaining
+		pallet_airdrop::PendingClaims::<Test>::insert(bl_num, &claimer, 0_u8);
+
+		// When there are no more retry left in this entry
+		{
+			assert_err!(
+				AirdropModule::register_failed_claim(Origin::root(), bl_num, claimer.clone()),
+				PalletError::RetryExceed
+			);
+			// Still entry should be removed from queue
+			assert_eq!(None, AirdropModule::get_pending_claims(bl_num, &claimer));
+		}
+
+		// Reinsert in queue with some retry count left
+		pallet_airdrop::PendingClaims::<Test>::insert(bl_num, &claimer, retry);
+
+		// This should now succeed
+		{
+			assert_ok!(AirdropModule::register_failed_claim(
+				Origin::root(),
+				bl_num,
+				claimer.clone()
+			));
+
+			// Make sure entry is no longer in old key
+			assert_eq!(None, AirdropModule::get_pending_claims(bl_num, &claimer));
+
+			// Make sure entry is shifter to another key with retry decremented
+			assert_eq!(
+				Some(retry - 1),
+				AirdropModule::get_pending_claims(running_bl_num + 1, &claimer)
+			);
+		}
+	});
+}
