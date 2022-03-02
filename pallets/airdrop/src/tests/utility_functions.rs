@@ -55,7 +55,7 @@ fn test_ensure_root_or_sudo() {
 		use sp_runtime::DispatchError::BadOrigin;
 
 		let sudo_origin = Origin::signed(AirdropModule::get_sudo_account());
-		let signed_origin = Origin::signed(sp_core::sr25519::Public([12; 32]));
+		let signed_origin = Origin::signed(not_airdrop_sudo(samples::ACCOUNT_ID[2]));
 		let root_origin = Origin::root();
 		let unsigned_origin = Origin::none();
 
