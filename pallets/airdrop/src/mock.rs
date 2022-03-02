@@ -139,24 +139,3 @@ impl
 	type GenericSignature = sp_core::sr25519::Signature;
 	type GenericPublic = sp_core::sr25519::Public;
 }
-
-// Build genesis storage according to the mock runtime.
-pub fn new_test_ext() -> sp_io::TestExternalities {
-	system::GenesisConfig::default()
-		.build_storage::<Test>()
-		.unwrap()
-		.into()
-}
-
-/// Dummy implementation for IconVerififable trait for test AccountId
-// This implementation always passes so should not be dependent upon
-impl types::IconVerifiable for sp_core::sr25519::Public {
-	fn verify_with_icon(
-		&self,
-		icon_wallet: &types::IconAddress,
-		icon_signature: &[u8],
-		message: &[u8],
-	) -> Result<(), types::SignatureValidationError> {
-		Ok(())
-	}
-}
