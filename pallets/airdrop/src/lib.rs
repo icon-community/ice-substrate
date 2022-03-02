@@ -39,16 +39,16 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 pub use pallet::*;
 #[cfg(test)]
-mod mock;
+pub mod mock;
 
 #[cfg(test)]
-mod tests;
+pub mod tests;
 
 #[cfg(feature = "runtime-benchmarks")]
 mod benchmarking;
 
 /// All the types and alises must be defined here
-mod types;
+pub mod types;
 
 /// An identifier for a type of cryptographic key.
 /// For this pallet, account associated with this key must be same as
