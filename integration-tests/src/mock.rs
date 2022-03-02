@@ -1,6 +1,11 @@
 use crate as integration_tests;
-use frame_support::parameter_types;
 use frame_system as system;
+
+use frame_support::{
+	construct_runtime,
+	parameter_types,
+	traits::{ConstU32, Everything},
+};
 
 use sp_core::H256;
 use sp_runtime::{
@@ -12,7 +17,7 @@ type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Test>;
 type Block = frame_system::mocking::MockBlock<Test>;
 
 // Configure a mock runtime to test the pallet.
-frame_support::construct_runtime!(
+construct_runtime!(
 	pub enum Test where
 		Block = Block,
 		NodeBlock = Block,
@@ -32,7 +37,7 @@ parameter_types! {
 // Configure FRAME pallets to include in runtime.
 
 impl frame_system::Config for Test {
-	type BaseCallFilter = frame_support::traits::Everything;
+	type BaseCallFilter = Everything ;
 	type BlockWeights = ();
 	type BlockLength = ();
 	type DbWeight = ();
@@ -82,7 +87,7 @@ impl pallet_balances::Config for Test {
 	type WeightInfo = ();
 }
 
-frame_support::parameter_types! {
+parameter_types! {
 	pub const AssetDeposit: Balance = 500 ;
 	pub const AssetAccountDeposit: Balance = 500 ;
 	pub const MetadataDepositBase: Balance = 500 ;
