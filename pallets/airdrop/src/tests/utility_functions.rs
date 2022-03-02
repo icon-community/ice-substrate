@@ -28,7 +28,7 @@ fn pool_dispatchable_from_offchain() {
 		assert_ok!(AirdropModule::make_signed_call(
 			&pallet_airdrop::pallet::Call::register_failed_claim {
 				block_number: 1_u32.into(),
-				ice_address: vec![]
+				ice_address: samples::ACCOUNT_ID[0]
 			}
 		));
 
