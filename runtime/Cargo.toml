@@ -43,6 +43,9 @@ pallet-assets = {  default-features = false, git = "https://github.com/paritytec
 pallet-collective = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.17" }
 pallet-treasury = {  default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.17" }
 pallet-vesting = {  default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.17" }
+pallet-contracts = {  default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.17" }
+pallet-staking = {  default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.17" }
+
 
 pallet-base-fee = { default-features = false, git = "https://github.com/web3labs/frontier",  branch = "polkadot-v0.9.17" }
 
@@ -113,6 +116,8 @@ std = [
 	"pallet-treasury/std",
     "pallet-collective/std",
 	"pallet-simple-inflation/std",
+	"pallet-contracts/std",
+	"pallet-staking/std",
 	"sp-api/std",
 	"sp-block-builder/std",
 	"sp-consensus-aura/std",
