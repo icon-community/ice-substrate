@@ -55,7 +55,7 @@ impl frame_system::Config for Test {
 	type SystemWeightInfo = ();
 	type SS58Prefix = SS58Prefix;
 	type OnSetCode = ();
-	type MaxConsumers = ();
+	type MaxConsumers = ConstU32<2>;
 }
 
 /// Balance of an account.
