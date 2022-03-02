@@ -326,7 +326,7 @@ pub mod pallet {
 			)
 			.map_err(|err| {
 				// This is also error from our side. We keep it for next retry
-				Self::register_failed_claim(origin.clone(), block_number, receiver.clone()).expect("Calling register failed_claim from currency::transfer. This call should not have failed..");				
+				Self::register_failed_claim(origin.clone(), block_number, receiver.clone()).expect("Calling register failed_claim from currency::transfer. This call should not have failed..");
 
 				log::info!("Currency transfer failed with error: {:?}", err);
 				err
@@ -379,9 +379,7 @@ pub mod pallet {
 				.ok_or(Error::<T>::IncompleteData)?
 				.icon_address;
 			let retry_remaining = Self::get_pending_claims(&block_number, &ice_address)
-				.ok_or(Error::<T>::IncompleteData)?
-				.checked_sub(1.into())
-				.unwrap_or_default();
+				.ok_or(Error::<T>::IncompleteData)?;
 
 			// In both case weather retry is remaining or not
 			// we will remove this entry from this block number key
@@ -414,7 +412,11 @@ pub mod pallet {
 
 			// This entry have some retry remaining so we put this entry in another block_number key
 			let new_block_number = Self::get_current_block_number().saturating_add(1_u32.into());
-			<PendingClaims<T>>::insert(&new_block_number, &ice_address, retry_remaining);
+			<PendingClaims<T>>::insert(
+				&new_block_number,
+				&ice_address,
+				retry_remaining.saturating_sub(1),
+			);
 
 			Ok(())
 		}
@@ -464,7 +466,7 @@ pub mod pallet {
 
 	#[pallet::hooks]
 	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
-		fn offchain_worker(block_number: T::BlockNumber) {
+		fn offchain_worker(block_number: types::BlockNumberOf<T>) {
 			// If this is not the block to start offchain worker
 			// print a log and early return
 			if !Self::should_run_on_this_block(block_number) {
