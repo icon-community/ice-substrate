@@ -379,7 +379,7 @@ pub mod pallet {
 				.ok_or(Error::<T>::IncompleteData)?
 				.icon_address;
 			let retry_remaining = Self::get_pending_claims(&block_number, &ice_address)
-				.ok_or(Error::<T>::IncompleteData)?;
+				.ok_or(Error::<T>::NotInQueue)?;
 
 			// In both case weather retry is remaining or not
 			// we will remove this entry from this block number key
