@@ -39,6 +39,8 @@ pub enum SignatureValidationError {
 #[derive(Eq, PartialEq)]
 pub struct SnapshotInfo<T: Config> {
 	/// Icon address of this snapshot
+	// TODO:
+	// change this to [u8; _]
 	pub icon_address: Vec<u8>,
 
 	/// Total airdroppable-amount this icon_address hold
