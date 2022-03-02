@@ -107,6 +107,7 @@ pub enum ClaimError {
 #[derive(Deserialize, Encode, Decode, Clone, Default, Eq, PartialEq, TypeInfo, Copy)]
 #[cfg_attr(feature = "std", derive(Debug))]
 #[cfg_attr(not(feature = "std"), derive(RuntimeDebug))]
+#[cfg_attr(test, derive(serde::Serialize))]
 pub struct ServerResponse {
 	// TODO:: Use u64 instead of u128 to save on-chain space
 
