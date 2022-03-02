@@ -120,6 +120,35 @@ fn no_data_in_queue() {
 }
 
 #[test]
+fn already_claimed() {
+	minimal_test_ext().execute_with(|| {
+		let bl_num: types::BlockNumberOf<Test> = 1_u32.into();
+		let receiver = samples::ACCOUNT_ID[1];
+
+		// Insert in queue
+		pallet_airdrop::PendingClaims::<Test>::insert(bl_num, &receiver, 1_u8);
+		// Insert in snapshot map that this claim is already made
+		pallet_airdrop::IceSnapshotMap::<Test>::insert(
+			&receiver,
+			types::SnapshotInfo {
+				claim_status: true,
+				..Default::default()
+			},
+		);
+
+		assert_noop!(
+			AirdropModule::complete_transfer(
+				mock::Origin::root(),
+				bl_num,
+				receiver,
+				samples::SERVER_DATA[0],
+			),
+			PalletError::ClaimAlreadyMade
+		);
+	});
+}
+
+#[test]
 fn insufficient_creditor_balance() {
 	minimal_test_ext().execute_with(|| {
 		let claimer = samples::ACCOUNT_ID[1];
