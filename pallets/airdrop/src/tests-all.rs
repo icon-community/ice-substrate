@@ -13,18 +13,6 @@ const PREDEFINED_REQUEST_RESPONSE: (&str, &str) = (
 );
 
 #[test]
-fn making_http_request() {
-	let (mut test_ext, state) = new_offchain_test_ext();
-	put_response(&mut state.write());
-
-	test_ext.execute_with(|| {
-		let icon_address = sp_core::bytes::from_hex(PREDEFINED_REQUEST_RESPONSE.0).unwrap();
-		let fetch_res = mock::AirdropModule::fetch_from_server(icon_address);
-		assert_ok!(fetch_res);
-	});
-}
-
-#[test]
 fn process_claim_invalid() {
 	let (mut test_ext, state) = new_offchain_test_ext();
 
