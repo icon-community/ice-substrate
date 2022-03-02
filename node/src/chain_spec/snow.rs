@@ -91,10 +91,10 @@ pub fn testnet_config() -> Result<ChainSpec, String> {
 		None,
 		// Protocol ID
 		None,
+		None,
 		// Properties
 		serde_json::from_str(ICE_PROPERTIES).unwrap(),
 		// Extensions
-		None,
 		None,
 	))
 }
@@ -135,10 +135,10 @@ pub fn development_config() -> Result<ChainSpec, String> {
 		None,
 		// Protocol ID
 		None,
+		None,
 		// Properties
 		serde_json::from_str(ICE_PROPERTIES).unwrap(),
 		// Extensions
-		None,
 		None,
 	))
 }
