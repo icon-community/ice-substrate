@@ -104,6 +104,7 @@ impl pallet_assets::Config for Test {
 	type Freezer = ();
 	type Extra = ();
 	type WeightInfo = ();
+	type AssetAccountDeposit = ();
 }
 
 // Build genesis storage according to the mock runtime.
