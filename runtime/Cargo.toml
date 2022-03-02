@@ -7,7 +7,7 @@ homepage = 'https://substrate.dev'
 license = 'Apache-2.0'
 name = 'ice-runtime'
 repository = 'https://github.com/web3labs/ice-substrate/'
-version = '0.3.1'
+version = '0.3.3'
 publish = false
 
 [package.metadata.docs.rs]
@@ -16,20 +16,17 @@ targets = ["x86_64-unknown-linux-gnu"]
 [dependencies]
 codec = { package = "parity-scale-codec", version = "2.3.1", default-features = false, features = ["derive"] }
 serde = { version = "1.0.101", optional = true, features = ["derive"] }
+scale-info = { version = "1.0.0", default-features = false, features = ["derive"] }
 
+
+# frame dependencies
 frame-executive = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.17" }
 frame-support = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.17" }
 frame-system = { default-features = false, package = "frame-system", git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.17" }
 frame-system-rpc-runtime-api = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.17" }
 
-pallet-evm = { default-features = false, git = "https://github.com/web3labs/frontier",  branch = "polkadot-v0.9.17" }
-pallet-ethereum = {  default-features = false, git = "https://github.com/web3labs/frontier",  branch = "polkadot-v0.9.17" }
-pallet-dynamic-fee = { default-features = false, git = "https://github.com/web3labs/frontier",  branch = "polkadot-v0.9.17" }
 
-pallet-evm-precompile-modexp   = {  default-features = false, git = "https://github.com/web3labs/frontier",  branch = "polkadot-v0.9.17" }
-pallet-evm-precompile-sha3fips = {  default-features = false, git = "https://github.com/web3labs/frontier",  branch = "polkadot-v0.9.17" }
-pallet-evm-precompile-simple   = {  default-features = false,  git = "https://github.com/web3labs/frontier",  branch = "polkadot-v0.9.17" }
-
+# pallets dependencies from substrate 
 pallet-aura = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.17" }
 pallet-balances = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.17" }
 pallet-grandpa = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.17" }
@@ -38,7 +35,6 @@ pallet-sudo = { default-features = false, git = "https://github.com/paritytech/s
 pallet-timestamp = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.17" }
 pallet-transaction-payment = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.17" }
 pallet-transaction-payment-rpc-runtime-api = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.17" }
-
 pallet-assets = {  default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.17" }
 pallet-collective = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.17" }
 pallet-treasury = {  default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.17" }
@@ -46,12 +42,7 @@ pallet-vesting = {  default-features = false, git = "https://github.com/parityte
 pallet-contracts = {  default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.17" }
 pallet-staking = {  default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.17" }
 
-
-pallet-base-fee = { default-features = false, git = "https://github.com/web3labs/frontier",  branch = "polkadot-v0.9.17" }
-
-pallet-simple-inflation = { path = '../frame/simple-inflation', default-features = false, version = '0.0.1' }
-
-
+# sp dependencies from substrate 
 sp-api = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.17" }
 sp-block-builder = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.17"}
 sp-consensus-aura = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.17" }
@@ -65,16 +56,29 @@ sp-std = { default-features = false, git = "https://github.com/paritytech/substr
 sp-transaction-pool = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.17" }
 sp-version = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.17" }
 
+# pallet dependencies from frontier 
+pallet-base-fee = { default-features = false, git = "https://github.com/web3labs/frontier",  branch = "polkadot-v0.9.17" }
+pallet-evm = { default-features = false, git = "https://github.com/web3labs/frontier",  branch = "polkadot-v0.9.17" }
+pallet-ethereum = {  default-features = false, git = "https://github.com/web3labs/frontier",  branch = "polkadot-v0.9.17" }
+pallet-dynamic-fee = { default-features = false, git = "https://github.com/web3labs/frontier",  branch = "polkadot-v0.9.17" }
+pallet-evm-precompile-modexp   = {  default-features = false, git = "https://github.com/web3labs/frontier",  branch = "polkadot-v0.9.17" }
+pallet-evm-precompile-sha3fips = {  default-features = false, git = "https://github.com/web3labs/frontier",  branch = "polkadot-v0.9.17" }
+pallet-evm-precompile-simple   = {  default-features = false,  git = "https://github.com/web3labs/frontier",  branch = "polkadot-v0.9.17" }
+
+# fp dependencies from frontier 
 fp-rpc  = { default-features = false, git = "https://github.com/web3labs/frontier", branch = "polkadot-v0.9.17"}
 fp-self-contained = {default-features = false, git = "https://github.com/web3labs/frontier", branch = "polkadot-v0.9.17" }
 
-scale-info = { version = "1.0.0", default-features = false, features = ["derive"] }
+# local pallet
+pallet-simple-inflation = { path = '../frame/simple-inflation', default-features = false, version = '0.0.1' }
 
-# benchmarking dependencies
+
+
+# benchmarking dependencies from substrate
 frame-benchmarking = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.17", default-features = false, optional = true }
 frame-system-benchmarking = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.17", default-features = false, optional = true }
 
-# cumulus dependencies
+# cumulus dependencies from cumulus
 cumulus-primitives-core = { git = "https://github.com/paritytech/cumulus", branch = "polkadot-v0.9.17", default-features = false }
 cumulus-primitives-utility = { git = "https://github.com/paritytech/cumulus", branch = "polkadot-v0.9.17", default-features = false }
 cumulus-primitives-timestamp = { git = "https://github.com/paritytech/cumulus", branch = "polkadot-v0.9.17", default-features = false }
@@ -118,6 +122,7 @@ std = [
 	"pallet-simple-inflation/std",
 	"pallet-contracts/std",
 	"pallet-staking/std",
+
 	"sp-api/std",
 	"sp-block-builder/std",
 	"sp-consensus-aura/std",
@@ -130,12 +135,13 @@ std = [
 	"sp-std/std",
 	"sp-transaction-pool/std",
 	"sp-version/std",
+
 	"frame-benchmarking/std",
 	"frame-system-benchmarking/std",
 
 	"scale-info/std",
 
-		"cumulus-primitives-core/std",
+	"cumulus-primitives-core/std",
 	"cumulus-primitives-timestamp/std",
 	"cumulus-primitives-utility/std",
 ]
