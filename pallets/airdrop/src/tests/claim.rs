@@ -146,10 +146,62 @@ fn fail_on_non_existent_data() {
 
 #[test]
 fn remove_on_zero_ice() {
-	todo!();
+	let (mut test_ext, state) = offchain_test_ext();
+	let icon_address = samples::ICON_ADDRESS[0];
+	let mut server_response = samples::SERVER_DATA[1];
+	server_response.amount = 0_u32.into();
+
+	put_response(
+		&mut state.write(),
+		&icon_address.as_bytes().to_vec(),
+		&serde_json::to_string(&server_response).unwrap(),
+	);
+
+	test_ext.execute_with(|| {
+		let claimer = samples::ACCOUNT_ID[1];
+		let bl_num: types::BlockNumberOf<Test> = 2_u32.into();
+		let snapshot = types::SnapshotInfo::<Test>::default()
+			.icon_address(bytes::from_hex(icon_address).unwrap())
+			.clone();
+
+		// Insert in map
+		pallet_airdrop::IceSnapshotMap::insert(&claimer, &snapshot);
+
+		assert_ok!(AirdropModule::process_claim_request((
+			bl_num,
+			claimer.clone()
+		)),);
+
+		todo!("Check the pool that proper call is placed");
+	});
 }
 
 #[test]
 fn valid_process_claim() {
-	todo!();
+	let (mut test_ext, state) = offchain_test_ext();
+	let icon_address = samples::ICON_ADDRESS[0];
+
+	put_response(
+		&mut state.write(),
+		&icon_address.as_bytes().to_vec(),
+		&serde_json::to_string(&samples::SERVER_DATA[1]).unwrap(),
+	);
+
+	test_ext.execute_with(|| {
+		let claimer = samples::ACCOUNT_ID[1];
+		let bl_num: types::BlockNumberOf<Test> = 2_u32.into();
+		let snapshot = types::SnapshotInfo::<Test>::default()
+			.icon_address(bytes::from_hex(icon_address).unwrap())
+			.clone();
+
+		// Insert in map
+		pallet_airdrop::IceSnapshotMap::insert(&claimer, &snapshot);
+
+		assert_ok!(AirdropModule::process_claim_request((
+			bl_num,
+			claimer.clone()
+		)),);
+
+		todo!("Check the pool that proper call is placed");
+	});
 }
