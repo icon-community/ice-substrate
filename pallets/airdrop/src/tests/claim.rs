@@ -1,5 +1,6 @@
 use super::prelude::*;
 use sp_runtime::DispatchError;
+use types::ClaimError;
 
 #[test]
 fn claim_request_access() {
@@ -43,7 +44,7 @@ fn already_in_map() {
 }
 
 #[test]
-fn valid_claim() {
+fn valid_claim_request() {
 	minimal_test_ext().execute_with(|| {
 		let claimer = samples::ACCOUNT_ID[1];
 
@@ -75,4 +76,80 @@ fn valid_claim() {
 			AirdropModule::get_pending_claims(&in_bl_num, &claimer)
 		);
 	});
+}
+
+#[test]
+fn ocw_process_invalid_entry() {
+	let (mut test_ext, _state) = offchain_test_ext();
+
+	test_ext.execute_with(|| {
+		let claimer = samples::ACCOUNT_ID[0];
+		let bl_num: types::BlockNumberOf<Test> = 1_u32.into();
+
+		// When given entry is not in queue
+		{
+			assert_err!(
+				AirdropModule::process_claim_request((bl_num, claimer.clone())),
+				ClaimError::NoIconAddress
+			);
+		}
+	});
+}
+
+#[test]
+fn server_return_valid_error() {
+	use types::ServerError;
+	let icon_address = samples::ICON_ADDRESS[0];
+	let (mut test_ext, state) = offchain_test_ext();
+	put_response(
+		&mut state.write(),
+		&icon_address.as_bytes().to_vec(),
+		r#"NonExistentData"#,
+	);
+
+	test_ext.execute_with(|| {
+		assert_err!(
+			AirdropModule::fetch_from_server(sp_core::bytes::from_hex(icon_address).unwrap()),
+			ClaimError::ServerError(ServerError::NonExistentData),
+		);
+	});
+}
+
+#[test]
+fn fail_on_non_existent_data() {
+	let (mut test_ext, state) = offchain_test_ext();
+	let icon_address = samples::ICON_ADDRESS[0];
+	put_response(
+		&mut state.write(),
+		&icon_address.as_bytes().to_vec(),
+		r#"NonExistentData"#,
+	);
+
+	test_ext.execute_with(|| {
+		let claimer = samples::ACCOUNT_ID[0];
+		let bl_num: types::BlockNumberOf<Test> = 2_u32.into();
+		let snapshot = types::SnapshotInfo::<Test>::default()
+			.icon_address(bytes::from_hex(icon_address).unwrap())
+			.clone();
+
+		// Insert in map
+		pallet_airdrop::IceSnapshotMap::insert(&claimer, &snapshot);
+
+		assert_ok!(AirdropModule::process_claim_request((
+			bl_num,
+			claimer.clone()
+		)),);
+
+		todo!("Check the pool that proper call is placed");
+	});
+}
+
+#[test]
+fn remove_on_zero_ice() {
+	todo!();
+}
+
+#[test]
+fn valid_process_claim() {
+	todo!();
 }

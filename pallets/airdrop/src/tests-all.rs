@@ -13,82 +13,6 @@ const PREDEFINED_REQUEST_RESPONSE: (&str, &str) = (
 );
 
 #[test]
-fn process_claim_invalid() {
-	let (mut test_ext, state) = new_offchain_test_ext();
-
-	test_ext.execute_with(|| {
-		let ice_address = types::AccountIdOf::<Test>::default();
-
-		// Nothing is in queue yet so, should fail with no_icon_address
-		let no_icon_address =
-			AirdropModule::process_claim_request((0_u32.into(), ice_address.clone()));
-		assert_eq!(
-			no_icon_address.unwrap_err(),
-			types::ClaimError::NoIconAddress
-		);
-	});
-}
-
-#[test]
-fn process_claim_valid() {
-	let (mut test_ext, state) = new_offchain_test_ext();
-
-	put_response(&mut state.write());
-
-	test_ext.execute_with(|| {
-		let ice_address = types::AccountIdOf::<Test>::default();
-		let icon_address = sp_core::bytes::from_hex(PREDEFINED_REQUEST_RESPONSE.0).unwrap();
-		let snapshot = types::SnapshotInfo::<Test>::default();
-
-		crate::IceSnapshotMap::insert(ice_address, snapshot.clone().icon_address(icon_address));
-
-		let should_be_ok =
-			AirdropModule::process_claim_request((1_u32.into(), ice_address.clone()));
-		assert_ok!(should_be_ok);
-	});
-}
-
-#[test]
-fn claim_request_invalid() {
-	mock::new_test_ext().execute_with(|| {
-		// Called with non-signed origin
-		{
-			assert_noop!(
-				AirdropModule::claim_request(mock::Origin::root(), vec![], vec![], vec![]),
-				sp_runtime::DispatchError::BadOrigin
-			);
-			assert_noop!(
-				AirdropModule::claim_request(mock::Origin::none(), vec![], vec![], vec![]),
-				sp_runtime::DispatchError::BadOrigin
-			);
-		}
-
-		// Already on map
-		{
-			let ice_address = types::AccountIdOf::<Test>::default();
-			let claim_res = AirdropModule::claim_request(
-				mock::Origin::signed(ice_address.clone()),
-				b"icon-address".to_vec(),
-				b"dummt-message".to_vec(),
-				b"dummy-signature".to_vec(),
-			);
-			assert_ok!(claim_res);
-
-			// Make sure no storage is mutated & an error is thrown
-			assert_noop!(
-				AirdropModule::claim_request(
-					mock::Origin::signed(ice_address.clone()),
-					b"icon-address".to_vec(),
-					b"dummt-message".to_vec(),
-					b"dummy-signature".to_vec(),
-				),
-				Error::<Test>::RequestAlreadyMade
-			);
-		}
-	});
-}
-
-#[test]
 fn claim_request_valid() {
 	mock::new_test_ext().execute_with(|| {
 		let message = b"dummy-test-text";
@@ -123,26 +47,5 @@ fn claim_request_valid() {
 		// Make sure that queue storage is populated accordingly
 		let queue_data = AirdropModule::get_pending_claims(&bl_num, &ice_address);
 		assert_eq!(queue_data, Some(pallet_airdrop::DEFAULT_RETRY_COUNT));
-	});
-}
-use sp_core::offchain::testing;
-/// Helper function to initialise PendingResult struct as per passed by (icon_address & response)
-fn put_response(state: &mut testing::OffchainState) {
-	let uri = mock::FetchIconEndpoint::get()
-		.as_bytes()
-		.iter()
-		.chain(PREDEFINED_REQUEST_RESPONSE.0.as_bytes())
-		.cloned()
-		.collect::<Vec<u8>>();
-	let uri = String::from_utf8(uri).unwrap();
-	let method = "GET".to_string();
-	let response = Some(PREDEFINED_REQUEST_RESPONSE.1.as_bytes().to_vec());
-
-	state.expect_request(testing::PendingRequest {
-		method,
-		uri,
-		response,
-		sent: true,
-		..Default::default()
 	});
 }
