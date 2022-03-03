@@ -1,4 +1,5 @@
 use super::prelude::*;
+use frame_support::traits::Hooks;
 use sp_runtime::DispatchError;
 use types::ClaimError;
 
@@ -203,5 +204,66 @@ fn valid_process_claim() {
 		)),);
 
 		todo!("Check the pool that proper call is placed");
+	});
+}
+
+#[test]
+fn complete_flow() {
+	let claimer_ice_address = samples::ACCOUNT_ID[1];
+	let claimer_icon_address = samples::ICON_ADDRESS[1];
+	let server_data = samples::SERVER_DATA[0];
+
+	minimal_test_ext().execute_with(|| {
+		// Get a block number where offchian worker will run
+		let mut current_block_number: types::BlockNumberOf<Test> = 10_u32.into();
+		while !AirdropModule::should_run_on_this_block(current_block_number) {
+			current_block_number += types::BlockNumberOf::<Test>::from(1_u32);
+		}
+
+		// Set the current block number to certain height
+		mock::System::set_block_number(current_block_number);
+		// Suppose we have done all processing 3 plock previous to current one
+		let cleared_upto: types::BlockNumberOf<Test> =
+			current_block_number - types::BlockNumberOf::<Test>::from(3_u32);
+
+		// Make sure creditor have enough balance
+		assert_ok!(<Test as pallet_airdrop::Config>::Currency::set_balance(
+			mock::Origin::root(),
+			AirdropModule::get_creditor_account(),
+			10_00_000_u32.into(),
+			10_000_u32.into(),
+		));
+
+		// Make a claim reqest
+		assert_ok!(AirdropModule::claim_request(
+			Origin::signed(claimer_ice_address.clone()),
+			bytes::from_hex(claimer_icon_address.clone()).unwrap(),
+			b"any-messsage".to_vec(),
+			b"any-signature".to_vec()
+		));
+
+		// Then process that claim request
+		AirdropModule::offchain_worker(current_block_number);
+
+		todo!("Make sure complete_transfer call is in transaction pool");
+
+		// Make sure user got right balance
+		assert_eq!(
+			server_data.amount,
+			<Test as pallet_airdrop::Config>::Currency::free_balance(&claimer_ice_address),
+		);
+
+		// Make sure queue is cleared
+		assert_eq!(
+			None,
+			AirdropModule::get_pending_claims(current_block_number, &claimer_ice_address)
+		);
+
+		// Make sure claim_status is updated
+		assert!(
+			AirdropModule::get_ice_snapshot_map(&claimer_ice_address)
+				.expect("Should be in map")
+				.claim_status
+		);
 	});
 }
