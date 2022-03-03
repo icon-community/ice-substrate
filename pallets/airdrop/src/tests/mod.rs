@@ -1,4 +1,5 @@
 use crate::mock;
+mod claim;
 mod signature_validation;
 mod transfer;
 mod utility_functions;
