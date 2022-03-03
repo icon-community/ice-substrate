@@ -1,0 +1,10 @@
+[Unit]
+Description=FrostRPC
+
+[Service]
+ExecStart=/root/ice-node/./ice-node --base-path /tmp/ice_node_test/ --chain ./root/ice-node/frost_testnetRaw.json --port 30333 --ws-external --ws-port 9945 --rpc-external --rpc-port 9932 --rpc-cors all --telemetry-url "wss://telemetry.polkadot.io/submit/ 0" --rpc-methods Unsafe --validator --name DEVFrostRPCIceNode
+Restart=always
+RestartSec=120
+
+[Install]
+WantedBy=multi-user.target

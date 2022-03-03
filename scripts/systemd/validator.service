@@ -1,0 +1,10 @@
+[Unit]
+Description=FrostValidator1
+
+[Service]
+ExecStart=/root/ice-node/./ice-node --base-path /tmp/ice_node_test/ --chain ./root/ice-node/frost_testnetRaw.json --port 30333 --telemetry-url "wss://telemetry.polkadot.io/submit/ 0" --validator --name FrostValidator1_DEV --bootnodes /ip4/51.158.117.160/tcp/30333/p2p/12D3KooWA91DpeKK6KkfvKxnXZNcrK7i3NwWBPjisjsuFm8tNzuR
+Restart=always
+RestartSec=120
+
+[Install]
+WantedBy=multi-user.target
