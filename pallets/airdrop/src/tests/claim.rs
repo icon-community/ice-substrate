@@ -76,6 +76,15 @@ fn valid_claim_request() {
 			Some(2_u8),
 			AirdropModule::get_pending_claims(&in_bl_num, &claimer)
 		);
+
+		// Make sure proper event is emitted
+		assert_eq!(
+			get_last_event().expect("Event ClaimRequestSucceed expected"),
+			PalletEvent::ClaimRequestSucced(
+				types::BlockNumberOf::<Test>::default(),
+				claimer.clone()
+			).into(),
+		);
 	});
 }
 

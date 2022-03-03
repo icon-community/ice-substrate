@@ -5,7 +5,10 @@ mod transfer;
 mod utility_functions;
 
 pub mod prelude {
-	pub use super::{minimal_test_ext, not_airdrop_sudo, offchain_test_ext, put_response, samples};
+	pub use super::{
+		get_last_event, minimal_test_ext, not_airdrop_sudo, offchain_test_ext, put_response,
+		samples,
+	};
 	pub use crate as pallet_airdrop;
 	pub use crate::tests;
 	pub use frame_support::{
@@ -15,6 +18,7 @@ pub mod prelude {
 	pub use pallet_airdrop::mock::{self, AirdropModule, Origin, Test};
 	pub use pallet_airdrop::types;
 	pub type PalletError = pallet_airdrop::Error<Test>;
+	pub type PalletEvent = pallet_airdrop::Event<Test>;
 	pub use sp_core::bytes;
 }
 use mock::System;
@@ -143,4 +147,10 @@ pub fn put_response(
 		sent: true,
 		..Default::default()
 	});
+}
+
+pub fn get_last_event() -> Option<<Test as frame_system::Config>::Event> {
+	<frame_system::Pallet<Test>>::events()
+		.pop()
+		.map(|v| v.event)
 }

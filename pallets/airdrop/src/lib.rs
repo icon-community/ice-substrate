@@ -122,7 +122,7 @@ pub mod pallet {
 		ClaimCancelled(types::AccountIdOf<T>),
 
 		/// Emit when claim request was done successfully
-		ClaimRequestSucced(types::AccountIdOf<T>),
+		ClaimRequestSucced(types::BlockNumberOf<T>, types::AccountIdOf<T>),
 
 		/// Emit when an claim request was successful and fund have been transferred
 		ClaimSuccess(types::AccountIdOf<T>),
@@ -238,7 +238,10 @@ pub mod pallet {
 				crate::DEFAULT_RETRY_COUNT,
 			);
 
-			Self::deposit_event(Event::<T>::ClaimRequestSucced(ice_address));
+			Self::deposit_event(Event::<T>::ClaimRequestSucced(
+				current_block_number,
+				ice_address,
+			));
 			Ok(())
 		}
 
