@@ -73,34 +73,17 @@ fn ensure_root_or_sudo() {
 
 #[test]
 fn making_correct_http_request() {
-	use sp_core::offchain::testing;
-	let icon_address = "0xee1448f0867b90e6589289a4b9c06ac4516a75a9";
+	let icon_address = samples::ICON_ADDRESS[0];
 
 	let (mut test_ext, state) = offchain_test_ext();
-	{
-		let uri = String::from_utf8(
-			mock::FetchIconEndpoint::get()
-				.as_bytes()
-				.iter()
-				.chain(icon_address.as_bytes())
-				.cloned()
-				.collect::<Vec<u8>>(),
-		)
-		.unwrap();
-		let response = serde_json::to_string(&samples::SERVER_DATA[0])
-			.ok()
-			.map(|val| val.as_bytes().to_vec());
-		state.write().expect_request(testing::PendingRequest {
-			method: "GET".to_string(),
-			uri,
-			response,
-			sent: true,
-			..Default::default()
-		});
-	}
+	put_response(
+		&mut state.write(),
+		&icon_address.as_bytes().to_vec(),
+		&serde_json::to_string(&samples::SERVER_DATA[0]).unwrap(),
+	);
 
 	test_ext.execute_with(|| {
-		let icon_address = sp_core::bytes::from_hex(icon_address).unwrap();
+		let icon_address = bytes::from_hex(icon_address).unwrap();
 		let fetch_res = AirdropModule::fetch_from_server(icon_address);
 		assert_ok!(fetch_res);
 	});

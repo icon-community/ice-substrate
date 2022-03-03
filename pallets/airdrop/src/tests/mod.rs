@@ -5,7 +5,7 @@ mod transfer;
 mod utility_functions;
 
 pub mod prelude {
-	pub use super::{minimal_test_ext, not_airdrop_sudo, offchain_test_ext, samples};
+	pub use super::{minimal_test_ext, not_airdrop_sudo, offchain_test_ext, put_response, samples};
 	pub use crate as pallet_airdrop;
 	pub use crate::tests;
 	pub use frame_support::{
@@ -15,6 +15,7 @@ pub mod prelude {
 	pub use pallet_airdrop::mock::{self, AirdropModule, Origin, Test};
 	pub use pallet_airdrop::types;
 	pub type PalletError = pallet_airdrop::Error<Test>;
+	pub use sp_core::bytes;
 }
 use mock::System;
 use prelude::*;
@@ -45,6 +46,12 @@ pub mod samples {
 			defi_user: false,
 		},
 	];
+
+	pub const ICON_ADDRESS: &[&str] = &[
+		"0xee1448f0867b90e6589289a4b9c06ac4516a75a9",
+		"0xee33286f367b90e6589289a4b987a6c4516a753a",
+		"0xee12463586abb90e6589289a4b9c06ac4516a7ba",
+	];
 }
 
 /// Dummy implementation for IconVerififable trait for test AccountId
@@ -52,9 +59,9 @@ pub mod samples {
 impl types::IconVerifiable for sp_core::sr25519::Public {
 	fn verify_with_icon(
 		&self,
-		icon_wallet: &types::IconAddress,
-		icon_signature: &[u8],
-		message: &[u8],
+		_icon_wallet: &types::IconAddress,
+		_icon_signature: &[u8],
+		_message: &[u8],
 	) -> Result<(), types::SignatureValidationError> {
 		Ok(())
 	}
@@ -105,4 +112,35 @@ pub fn not_airdrop_sudo(account: types::AccountIdOf<Test>) -> types::AccountIdOf
 	} else {
 		panic!("This address must not be sudo. Change test value.");
 	}
+}
+
+use sp_core::offchain::testing;
+pub fn put_response(
+	state: &mut testing::OffchainState,
+	icon_address: &types::IconAddress,
+	expected_response: &str,
+) {
+	let uri = String::from_utf8(
+		mock::FetchIconEndpoint::get()
+			.as_bytes()
+			.iter()
+			.chain(icon_address.iter())
+			.cloned()
+			.collect::<Vec<u8>>(),
+	)
+	.unwrap();
+
+	let response = if expected_response.is_empty() {
+		None
+	} else {
+		Some(expected_response.to_string().as_bytes().to_vec())
+	};
+
+	state.expect_request(testing::PendingRequest {
+		method: "GET".to_string(),
+		uri,
+		response,
+		sent: true,
+		..Default::default()
+	});
 }
