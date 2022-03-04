@@ -14,7 +14,7 @@ fn complete_transfer_access() {
 				AirdropModule::complete_transfer(
 					Origin::root(),
 					1_u32.into(),
-					samples::ACCOUNT_ID[0],
+					bytes::from_hex(samples::ICON_ADDRESS[0]).unwrap(),
 					samples::SERVER_DATA[0]
 				)
 				.unwrap_err(),
@@ -29,7 +29,7 @@ fn complete_transfer_access() {
 				AirdropModule::complete_transfer(
 					Origin::signed(AirdropModule::get_sudo_account()),
 					1_u32.into(),
-					samples::ACCOUNT_ID[0],
+					bytes::from_hex(samples::ICON_ADDRESS[0]).unwrap(),
 					samples::SERVER_DATA[0]
 				)
 				.unwrap_err(),
@@ -45,7 +45,7 @@ fn complete_transfer_access() {
 				AirdropModule::complete_transfer(
 					Origin::signed(non_sudo),
 					1_u32.into(),
-					samples::ACCOUNT_ID[0],
+					bytes::from_hex(samples::ICON_ADDRESS[0]).unwrap(),
 					samples::SERVER_DATA[0]
 				)
 				.unwrap_err(),
@@ -60,7 +60,7 @@ fn complete_transfer_access() {
 				AirdropModule::complete_transfer(
 					Origin::none(),
 					1_u32.into(),
-					samples::ACCOUNT_ID[0],
+					bytes::from_hex(samples::ICON_ADDRESS[0]).unwrap(),
 					samples::SERVER_DATA[0]
 				)
 				.unwrap_err(),
@@ -74,7 +74,7 @@ fn complete_transfer_access() {
 #[test]
 fn no_data_in_map() {
 	minimal_test_ext().execute_with(|| {
-		let claimer = samples::ACCOUNT_ID[1];
+		let claimer = bytes::from_hex(samples::ICON_ADDRESS[0]).unwrap();
 		let bl_num: types::BlockNumberOf<Test> = 1_u32.into();
 
 		// Insert some data in queue
@@ -97,7 +97,7 @@ fn no_data_in_map() {
 #[test]
 fn no_data_in_queue() {
 	minimal_test_ext().execute_with(|| {
-		let claimer = samples::ACCOUNT_ID[1];
+		let claimer = bytes::from_hex(samples::ICON_ADDRESS[0]).unwrap();
 
 		// Insert some data in map
 		pallet_airdrop::IceSnapshotMap::<Test>::insert(
@@ -123,7 +123,7 @@ fn no_data_in_queue() {
 fn already_claimed() {
 	minimal_test_ext().execute_with(|| {
 		let bl_num: types::BlockNumberOf<Test> = 1_u32.into();
-		let receiver = samples::ACCOUNT_ID[1];
+		let receiver = bytes::from_hex(samples::ICON_ADDRESS[0]).unwrap();
 
 		// Insert in queue
 		pallet_airdrop::PendingClaims::<Test>::insert(bl_num, &receiver, 1_u8);
@@ -151,7 +151,7 @@ fn already_claimed() {
 #[test]
 fn insufficient_creditor_balance() {
 	minimal_test_ext().execute_with(|| {
-		let claimer = samples::ACCOUNT_ID[1];
+		let claimer = bytes::from_hex(samples::ICON_ADDRESS[0]).unwrap();
 		let bl_num: types::BlockNumberOf<Test> = 1_u32.into();
 		let new_bl_num: types::BlockNumberOf<Test> = 6_u32.into();
 		let initial_retry = 1;
@@ -172,7 +172,7 @@ fn insufficient_creditor_balance() {
 			AirdropModule::complete_transfer(
 				Origin::root(),
 				bl_num,
-				claimer,
+				claimer.clone(),
 				samples::SERVER_DATA[0]
 			),
 			BalanceError::InsufficientBalance
@@ -197,7 +197,8 @@ fn insufficient_creditor_balance() {
 #[test]
 fn complete_transfer_valid_flow() {
 	minimal_test_ext().execute_with(|| {
-		let claimer = samples::ACCOUNT_ID[1].clone();
+		let claimer_icon = bytes::from_hex(samples::ICON_ADDRESS[0]).unwrap();
+		let claimer_ice = samples::ACCOUNT_ID[0];
 		let bl_num: types::BlockNumberOf<Test> = 1_u32.into();
 		let server_response = samples::SERVER_DATA[0];
 
@@ -206,23 +207,23 @@ fn complete_transfer_valid_flow() {
 
 		// Simulate we have done claim_request by actually adding it to
 		// both snapshot map and pending queue
-		pallet_airdrop::PendingClaims::<Test>::insert(&bl_num, &claimer, 1_u8);
+		pallet_airdrop::PendingClaims::<Test>::insert(&bl_num, &claimer_icon, 1_u8);
 		pallet_airdrop::IceSnapshotMap::<Test>::insert(
-			&claimer,
-			types::SnapshotInfo::<Test>::default(),
+			&claimer_icon,
+			types::SnapshotInfo::<Test>::default().ice_address(claimer_ice.clone()),
 		);
 
 		// Record free balance of both party before transaction
 		let (pre_system_balance, pre_user_balance) = (
 			get_free_balance(&AirdropModule::get_creditor_account()),
-			get_free_balance(&claimer),
+			get_free_balance(&claimer_ice),
 		);
 
 		// Do actual transfer and make sure execution passes
 		let transfer_res = AirdropModule::complete_transfer(
 			Origin::root(),
 			bl_num,
-			claimer.clone(),
+			claimer_icon.clone(),
 			server_response.clone(),
 		);
 		assert_ok!(transfer_res);
@@ -230,7 +231,7 @@ fn complete_transfer_valid_flow() {
 		// Record free balance of both party after transaction
 		let (post_system_balance, post_user_balance) = (
 			get_free_balance(&AirdropModule::get_creditor_account()),
-			get_free_balance(&claimer),
+			get_free_balance(&claimer_ice),
 		);
 
 		// Bhavioural expectation after complete_transfer is called
@@ -252,10 +253,13 @@ fn complete_transfer_valid_flow() {
 			);
 
 			// Make sure that request is removed from queue after transfer
-			assert_eq!(AirdropModule::get_pending_claims(&bl_num, &claimer), None);
+			assert_eq!(
+				AirdropModule::get_pending_claims(&bl_num, &claimer_icon),
+				None
+			);
 			// Make sure this function update the snapshot mapping
 			assert!(
-				AirdropModule::get_ice_snapshot_map(&claimer)
+				AirdropModule::get_icon_snapshot_map(&claimer_icon)
 					.unwrap()
 					.claim_status
 			);
