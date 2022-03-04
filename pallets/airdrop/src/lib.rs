@@ -526,6 +526,7 @@ pub mod pallet {
 				// If error is NonExistentData then, it signifies this icon address do not exists in server
 				// so we just cancel the request
 				Err(ClaimError::ServerError(ServerError::NonExistentData)) => {
+					// TODO: should we call register_fail or remove_fom_queue?
 					call_to_make = Call::register_failed_claim {
 						icon_address: icon_address.clone(),
 						block_number: stored_block_num,
@@ -535,6 +536,7 @@ pub mod pallet {
 				// If transferring amount is 0, then we can just cancel this claim too
 				// as transferring 0 amount have no effect
 				Ok(response) if response.amount == 0 => {
+					// TODO: should we call register_fail or remove_from_queue
 					call_to_make = Call::remove_from_pending_queue {
 						icon_address: icon_address.clone(),
 						block_number: stored_block_num,
