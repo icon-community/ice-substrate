@@ -119,16 +119,20 @@ pub mod pallet {
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
 		/// Emit when a claim request have been removed from queue
-		ClaimCancelled(types::AccountIdOf<T>),
+		ClaimCancelled(types::IconAddress),
 
 		/// Emit when claim request was done successfully
-		ClaimRequestSucced(types::BlockNumberOf<T>, types::AccountIdOf<T>),
+		ClaimRequestSucced(
+			types::BlockNumberOf<T>,
+			types::AccountIdOf<T>,
+			types::IconAddress,
+		),
 
 		/// Emit when an claim request was successful and fund have been transferred
-		ClaimSuccess(types::AccountIdOf<T>),
+		ClaimSuccess(types::IconAddress),
 
 		/// An entry from queue was removed
-		RemovedFromQueue(types::AccountIdOf<T>),
+		RemovedFromQueue(types::IconAddress),
 
 		/// Same entry is processed by offchian worker for too many times
 		RetryExceed(
@@ -144,8 +148,8 @@ pub mod pallet {
 		_,
 		Twox64Concat,
 		T::BlockNumber,
-		Identity,
-		types::AccountIdOf<T>,
+		Twox64Concat,
+		types::IconAddress,
 		u8,
 		OptionQuery,
 	>;
@@ -157,9 +161,9 @@ pub mod pallet {
 	// TODO:
 	// Put vector of icon address instead of just one
 	#[pallet::storage]
-	#[pallet::getter(fn get_ice_snapshot_map)]
+	#[pallet::getter(fn get_icon_snapshot_map)]
 	pub(super) type IceSnapshotMap<T: Config> =
-		StorageMap<_, Identity, types::AccountIdOf<T>, types::SnapshotInfo<T>, OptionQuery>;
+		StorageMap<_, Twox64Concat, types::IconAddress, types::SnapshotInfo<T>, OptionQuery>;
 
 	#[pallet::error]
 	pub enum Error<T> {
@@ -211,7 +215,7 @@ pub mod pallet {
 			let ice_address: types::AccountIdOf<T> = ensure_signed(origin)?.into();
 
 			// We check the claim status before hand
-			let is_already_on_map = <IceSnapshotMap<T>>::contains_key(&ice_address);
+			let is_already_on_map = <IceSnapshotMap<T>>::contains_key(&icon_address);
 			ensure!(!is_already_on_map, Error::<T>::RequestAlreadyMade);
 
 			// make sure the validation is correct
@@ -227,20 +231,21 @@ pub mod pallet {
 			let current_block_number = Self::get_current_block_number();
 
 			// Insert with default snapshot but with real icon address mapping
-			let new_snapshot = types::SnapshotInfo::<T>::default().icon_address(icon_address);
-			<IceSnapshotMap<T>>::insert(&ice_address, new_snapshot);
+			let new_snapshot = types::SnapshotInfo::<T>::default().ice_address(ice_address.clone());
+			<IceSnapshotMap<T>>::insert(&icon_address, new_snapshot);
 
 			// insert in queue respective to current block number
 			// and retry as defined in crate level constant
 			<PendingClaims<T>>::insert(
 				&current_block_number,
-				&ice_address,
+				&icon_address,
 				crate::DEFAULT_RETRY_COUNT,
 			);
 
 			Self::deposit_event(Event::<T>::ClaimRequestSucced(
 				current_block_number,
 				ice_address,
+				icon_address,
 			));
 			Ok(())
 		}
@@ -268,7 +273,7 @@ pub mod pallet {
 		pub fn complete_transfer(
 			origin: OriginFor<T>,
 			block_number: types::BlockNumberOf<T>,
-			receiver: types::AccountIdOf<T>,
+			receiver_icon: types::IconAddress,
 			server_response: types::ServerResponse,
 		) -> DispatchResult {
 			// Make sure this is either sudo or root
@@ -278,7 +283,7 @@ pub mod pallet {
 			// Eg: If another node had processed the same request
 			// or if user had decided to cancel_claim_request
 			// this entry won't be present in the queue
-			let is_in_queue = <PendingClaims<T>>::contains_key(&block_number, &receiver);
+			let is_in_queue = <PendingClaims<T>>::contains_key(&block_number, &receiver_icon);
 			ensure!(is_in_queue, {
 				log::info!(
 					"{}{}",
@@ -290,7 +295,7 @@ pub mod pallet {
 
 			// Get snapshot from map and return with error if not present
 			let mut snapshot =
-				Self::get_ice_snapshot_map(&receiver).ok_or(Error::<T>::IncompleteData)?;
+				Self::get_icon_snapshot_map(&receiver_icon).ok_or(Error::<T>::IncompleteData)?;
 
 			// Also make sure that claim_status of this snapshot is false
 			ensure!(!snapshot.claim_status, Error::<T>::ClaimAlreadyMade);
@@ -303,7 +308,7 @@ pub mod pallet {
 				// We are moving it to keep for retry
 				// But it will also fail in next time because it is eror
 				// with incompatable format between server response & rust struct
-				Self::register_failed_claim(origin.clone(), block_number, receiver.clone())
+				Self::register_failed_claim(origin.clone(), block_number, receiver_icon.clone())
 					.expect("Calling register_failed_claim from amount.try_into.This call should not have failed.");
 
 				DispatchError::Other("Cannot convert server_response.value into Balance type")
@@ -312,13 +317,13 @@ pub mod pallet {
 			// Transfer the amount to this reciver keeping creditor alive
 			T::Currency::transfer(
 				&Self::get_creditor_account(),
-				&receiver,
+				&snapshot.ice_address,
 				amount,
 				ExistenceRequirement::KeepAlive,
 			)
 			.map_err(|err| {
 				// This is also error from our side. We keep it for next retry
-				Self::register_failed_claim(origin.clone(), block_number, receiver.clone()).expect("Calling register failed_claim from currency::transfer. This call should not have failed..");
+				Self::register_failed_claim(origin.clone(), block_number, receiver_icon.clone()).expect("Calling register failed_claim from currency::transfer. This call should not have failed..");
 
 				log::info!("Currency transfer failed with error: {:?}", err);
 				err
@@ -326,17 +331,12 @@ pub mod pallet {
 
 			// Update claim_status to true and store it
 			snapshot.claim_status = true;
-			<IceSnapshotMap<T>>::insert(&receiver, snapshot);
+			<IceSnapshotMap<T>>::insert(&receiver_icon, snapshot);
 
 			// Now we can remove this claim from queue
-			<PendingClaims<T>>::remove(&block_number, &receiver);
+			<PendingClaims<T>>::remove(&block_number, &receiver_icon);
 
-			log::info!(
-				"Complete_tranfser function on ice address: {:?} completed..",
-				receiver
-			);
-
-			Self::deposit_event(Event::<T>::ClaimSuccess(receiver));
+			Self::deposit_event(Event::<T>::ClaimSuccess(receiver_icon));
 
 			Ok(())
 		}
@@ -345,12 +345,12 @@ pub mod pallet {
 		pub fn remove_from_pending_queue(
 			origin: OriginFor<T>,
 			block_number: types::BlockNumberOf<T>,
-			ice_address: types::AccountIdOf<T>,
+			icon_address: types::IconAddress,
 		) -> DispatchResult {
 			Self::ensure_root_or_sudo(origin)?;
 
-			<PendingClaims<T>>::remove(&block_number, &ice_address);
-			Self::deposit_event(Event::<T>::RemovedFromQueue(ice_address));
+			<PendingClaims<T>>::remove(&block_number, &icon_address);
+			Self::deposit_event(Event::<T>::RemovedFromQueue(icon_address));
 
 			Ok(())
 		}
@@ -363,21 +363,21 @@ pub mod pallet {
 		pub fn register_failed_claim(
 			origin: OriginFor<T>,
 			block_number: types::BlockNumberOf<T>,
-			ice_address: types::AccountIdOf<T>,
+			icon_address: types::IconAddress,
 		) -> DispatchResult {
 			Self::ensure_root_or_sudo(origin).map_err(|_| Error::<T>::DeniedOperation)?;
 
-			let icon_address = Self::get_ice_snapshot_map(&ice_address)
+			let ice_address = Self::get_icon_snapshot_map(&icon_address)
 				.ok_or(Error::<T>::IncompleteData)?
-				.icon_address;
-			let retry_remaining = Self::get_pending_claims(&block_number, &ice_address)
+				.ice_address;
+			let retry_remaining = Self::get_pending_claims(&block_number, &icon_address)
 				.ok_or(Error::<T>::NotInQueue)?;
 
 			// In both case weather retry is remaining or not
 			// we will remove this entry from this block number key
 			// so do it early to make sure we dont miss this inany case
 			// otherwise this entry will always be floating around in storage
-			<PendingClaims<T>>::remove(&block_number, &ice_address);
+			<PendingClaims<T>>::remove(&block_number, &icon_address);
 
 			// Check if it's retry counter have been brought to zero
 			// if so do not move this entry to next block
@@ -406,7 +406,7 @@ pub mod pallet {
 			let new_block_number = Self::get_current_block_number().saturating_add(1_u32.into());
 			<PendingClaims<T>>::insert(
 				&new_block_number,
-				&ice_address,
+				&icon_address,
 				retry_remaining.saturating_sub(1),
 			);
 
@@ -515,16 +515,11 @@ pub mod pallet {
 	impl<T: Config> Pallet<T> {
 		// Function to proceed single claim request
 		pub fn process_claim_request(
-			(stored_block_num, ice_address): (types::BlockNumberOf<T>, types::AccountIdOf<T>),
+			(stored_block_num, icon_address): (types::BlockNumberOf<T>, types::IconAddress),
 		) -> Result<(), types::ClaimError> {
 			use types::{ClaimError, ServerError};
 
-			// Get the icon address corresponding to this ice_address
-			let icon_address = Self::get_ice_snapshot_map(&ice_address)
-				.ok_or(ClaimError::NoIconAddress)?
-				.icon_address;
-
-			let server_response_res = Self::fetch_from_server(icon_address);
+			let server_response_res = Self::fetch_from_server(&icon_address);
 
 			let call_to_make: Call<T>;
 			match server_response_res {
@@ -532,7 +527,7 @@ pub mod pallet {
 				// so we just cancel the request
 				Err(ClaimError::ServerError(ServerError::NonExistentData)) => {
 					call_to_make = Call::register_failed_claim {
-						ice_address: ice_address.clone(),
+						icon_address: icon_address.clone(),
 						block_number: stored_block_num,
 					};
 				}
@@ -541,7 +536,7 @@ pub mod pallet {
 				// as transferring 0 amount have no effect
 				Ok(response) if response.amount == 0 => {
 					call_to_make = Call::remove_from_pending_queue {
-						ice_address: ice_address.clone(),
+						icon_address: icon_address.clone(),
 						block_number: stored_block_num,
 					};
 				}
@@ -553,7 +548,7 @@ pub mod pallet {
 				// This will also clear the queue
 				Ok(response) => {
 					call_to_make = Call::complete_transfer {
-						receiver: ice_address.clone(),
+						receiver_icon: icon_address.clone(),
 						server_response: response,
 						block_number: stored_block_num,
 					};
@@ -634,7 +629,7 @@ pub mod pallet {
 
 		/// This function fetch the data from server and return it in required struct
 		pub fn fetch_from_server(
-			icon_address: types::IconAddress,
+			icon_address: &types::IconAddress,
 		) -> Result<types::ServerResponse, types::ClaimError> {
 			use codec::alloc::string::String;
 			use sp_runtime::offchain::{http, Duration};

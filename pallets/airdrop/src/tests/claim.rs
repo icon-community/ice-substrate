@@ -31,14 +31,19 @@ fn claim_request_access() {
 #[test]
 fn already_in_map() {
 	minimal_test_ext().execute_with(|| {
-		let claimer = samples::ACCOUNT_ID[1];
+		let claimer = bytes::from_hex(samples::ICON_ADDRESS[1]).unwrap();
 
 		// Insert this entry to map
 		pallet_airdrop::IceSnapshotMap::<Test>::insert(&claimer, types::SnapshotInfo::default());
 
 		// Should be an error
 		assert_noop!(
-			AirdropModule::claim_request(Origin::signed(claimer.clone()), vec![], vec![], vec![]),
+			AirdropModule::claim_request(
+				Origin::signed(samples::ACCOUNT_ID[0]),
+				claimer.clone(),
+				vec![],
+				vec![]
+			),
 			PalletError::RequestAlreadyMade
 		);
 	});
@@ -47,17 +52,17 @@ fn already_in_map() {
 #[test]
 fn valid_claim_request() {
 	minimal_test_ext().execute_with(|| {
-		let claimer = samples::ACCOUNT_ID[1];
+		let claimer = bytes::from_hex(samples::ICON_ADDRESS[1]).unwrap();
 
 		assert_ok!(AirdropModule::claim_request(
-			Origin::signed(claimer.clone()),
-			vec![],
+			Origin::signed(samples::ACCOUNT_ID[0]),
+			claimer.clone(),
 			vec![],
 			vec![]
 		));
 
 		let expected_snapshot = types::SnapshotInfo::<Test> {
-			icon_address: vec![],
+			ice_address: samples::ACCOUNT_ID[0],
 			amount: 0_u32.into(),
 			defi_user: false,
 			vesting_percentage: 0_u32.into(),
@@ -66,8 +71,8 @@ fn valid_claim_request() {
 
 		// Make sure correct data is inserted in map
 		assert_eq!(
-			Some(expected_snapshot),
-			AirdropModule::get_ice_snapshot_map(&claimer)
+			Some(expected_snapshot.clone()),
+			AirdropModule::get_icon_snapshot_map(&claimer)
 		);
 
 		// Make sure correct data is inserted in queue
@@ -76,33 +81,6 @@ fn valid_claim_request() {
 			Some(2_u8),
 			AirdropModule::get_pending_claims(&in_bl_num, &claimer)
 		);
-
-		// Make sure proper event is emitted
-		assert_eq!(
-			get_last_event().expect("Event ClaimRequestSucceed expected"),
-			PalletEvent::ClaimRequestSucced(
-				types::BlockNumberOf::<Test>::default(),
-				claimer.clone()
-			).into(),
-		);
-	});
-}
-
-#[test]
-fn ocw_process_invalid_entry() {
-	let (mut test_ext, _state) = offchain_test_ext();
-
-	test_ext.execute_with(|| {
-		let claimer = samples::ACCOUNT_ID[0];
-		let bl_num: types::BlockNumberOf<Test> = 1_u32.into();
-
-		// When given entry is not in queue
-		{
-			assert_err!(
-				AirdropModule::process_claim_request((bl_num, claimer.clone())),
-				ClaimError::NoIconAddress
-			);
-		}
 	});
 }
 
@@ -119,7 +97,7 @@ fn server_return_valid_error() {
 
 	test_ext.execute_with(|| {
 		assert_err!(
-			AirdropModule::fetch_from_server(sp_core::bytes::from_hex(icon_address).unwrap()),
+			AirdropModule::fetch_from_server(&sp_core::bytes::from_hex(icon_address).unwrap()),
 			ClaimError::ServerError(ServerError::NonExistentData),
 		);
 	});
@@ -136,14 +114,8 @@ fn fail_on_non_existent_data() {
 	);
 
 	test_ext.execute_with(|| {
-		let claimer = samples::ACCOUNT_ID[0];
+		let claimer = bytes::from_hex(samples::ICON_ADDRESS[0]).unwrap();
 		let bl_num: types::BlockNumberOf<Test> = 2_u32.into();
-		let snapshot = types::SnapshotInfo::<Test>::default()
-			.icon_address(bytes::from_hex(icon_address).unwrap())
-			.clone();
-
-		// Insert in map
-		pallet_airdrop::IceSnapshotMap::insert(&claimer, &snapshot);
 
 		assert_ok!(AirdropModule::process_claim_request((
 			bl_num,
@@ -157,7 +129,7 @@ fn fail_on_non_existent_data() {
 #[test]
 fn remove_on_zero_ice() {
 	let (mut test_ext, state) = offchain_test_ext();
-	let icon_address = samples::ICON_ADDRESS[0];
+	let icon_address = samples::ICON_ADDRESS[1];
 	let mut server_response = samples::SERVER_DATA[1];
 	server_response.amount = 0_u32.into();
 
@@ -168,19 +140,13 @@ fn remove_on_zero_ice() {
 	);
 
 	test_ext.execute_with(|| {
-		let claimer = samples::ACCOUNT_ID[1];
+		let claimer = bytes::from_hex(icon_address).unwrap();
 		let bl_num: types::BlockNumberOf<Test> = 2_u32.into();
-		let snapshot = types::SnapshotInfo::<Test>::default()
-			.icon_address(bytes::from_hex(icon_address).unwrap())
-			.clone();
-
-		// Insert in map
-		pallet_airdrop::IceSnapshotMap::insert(&claimer, &snapshot);
 
 		assert_ok!(AirdropModule::process_claim_request((
 			bl_num,
 			claimer.clone()
-		)),);
+		)));
 
 		todo!("Check the pool that proper call is placed");
 	});
@@ -198,14 +164,8 @@ fn valid_process_claim() {
 	);
 
 	test_ext.execute_with(|| {
-		let claimer = samples::ACCOUNT_ID[1];
+		let claimer = bytes::from_hex(icon_address.clone()).unwrap();
 		let bl_num: types::BlockNumberOf<Test> = 2_u32.into();
-		let snapshot = types::SnapshotInfo::<Test>::default()
-			.icon_address(bytes::from_hex(icon_address).unwrap())
-			.clone();
-
-		// Insert in map
-		pallet_airdrop::IceSnapshotMap::insert(&claimer, &snapshot);
 
 		assert_ok!(AirdropModule::process_claim_request((
 			bl_num,
@@ -219,10 +179,12 @@ fn valid_process_claim() {
 #[test]
 fn complete_flow() {
 	let claimer_ice_address = samples::ACCOUNT_ID[1];
-	let claimer_icon_address = samples::ICON_ADDRESS[1];
+	let claimer_icon_address = bytes::from_hex(samples::ICON_ADDRESS[1]).unwrap();
 	let server_data = samples::SERVER_DATA[0];
 
-	minimal_test_ext().execute_with(|| {
+	let (mut test_ext, _state) = offchain_test_ext();
+
+	test_ext.execute_with(|| {
 		// Get a block number where offchian worker will run
 		let mut current_block_number: types::BlockNumberOf<Test> = 10_u32.into();
 		while !AirdropModule::should_run_on_this_block(current_block_number) {
@@ -246,7 +208,7 @@ fn complete_flow() {
 		// Make a claim reqest
 		assert_ok!(AirdropModule::claim_request(
 			Origin::signed(claimer_ice_address.clone()),
-			bytes::from_hex(claimer_icon_address.clone()).unwrap(),
+			claimer_icon_address.clone(),
 			b"any-messsage".to_vec(),
 			b"any-signature".to_vec()
 		));
@@ -265,12 +227,12 @@ fn complete_flow() {
 		// Make sure queue is cleared
 		assert_eq!(
 			None,
-			AirdropModule::get_pending_claims(current_block_number, &claimer_ice_address)
+			AirdropModule::get_pending_claims(current_block_number, &claimer_icon_address)
 		);
 
 		// Make sure claim_status is updated
 		assert!(
-			AirdropModule::get_ice_snapshot_map(&claimer_ice_address)
+			AirdropModule::get_icon_snapshot_map(&claimer_icon_address)
 				.expect("Should be in map")
 				.claim_status
 		);

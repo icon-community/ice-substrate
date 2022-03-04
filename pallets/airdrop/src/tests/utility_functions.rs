@@ -19,7 +19,7 @@ fn pool_dispatchable_from_offchain() {
 	test_ext.execute_with(|| {
 		assert_ok!(AirdropModule::make_signed_call(
 			&pallet_airdrop::pallet::Call::claim_request {
-				icon_address: vec![],
+				icon_address: types::IconAddress::default(),
 				message: vec![],
 				icon_signature: vec![],
 			}
@@ -28,13 +28,13 @@ fn pool_dispatchable_from_offchain() {
 		assert_ok!(AirdropModule::make_signed_call(
 			&pallet_airdrop::pallet::Call::register_failed_claim {
 				block_number: 1_u32.into(),
-				ice_address: samples::ACCOUNT_ID[0]
+				icon_address: types::IconAddress::default()
 			}
 		));
 
 		assert_ok!(AirdropModule::make_signed_call(
 			&pallet_airdrop::pallet::Call::claim_request {
-				icon_address: vec![],
+				icon_address: types::IconAddress::default(),
 				message: vec![],
 				icon_signature: vec![],
 			}
@@ -42,7 +42,7 @@ fn pool_dispatchable_from_offchain() {
 
 		assert_ok!(AirdropModule::make_signed_call(
 			&pallet_airdrop::pallet::Call::donate_to_creditor {
-				amount: 100_u128,
+				amount: 100_u32.into(),
 				allow_death: true
 			}
 		));
@@ -84,7 +84,7 @@ fn making_correct_http_request() {
 
 	test_ext.execute_with(|| {
 		let icon_address = bytes::from_hex(icon_address).unwrap();
-		let fetch_res = AirdropModule::fetch_from_server(icon_address);
+		let fetch_res = AirdropModule::fetch_from_server(&icon_address);
 		assert_ok!(fetch_res);
 	});
 }
@@ -93,7 +93,7 @@ fn making_correct_http_request() {
 fn failed_entry_regestration() {
 	minimal_test_ext().execute_with(|| {
 		let bl_num: types::BlockNumberOf<Test> = 2_u32.into();
-		let claimer = samples::ACCOUNT_ID[1];
+		let claimer = bytes::from_hex(samples::ICON_ADDRESS[0]).unwrap();
 		let retry = 2_u8;
 		let running_bl_num = bl_num + 6;
 
@@ -194,10 +194,10 @@ fn failed_entry_regestration() {
 #[test]
 fn pending_claims_getter() {
 	type PendingClaimsOf = types::PendingClaimsOf<Test>;
-	use samples::ACCOUNT_ID;
+	use samples::ICON_ADDRESS;
 
 	let get_flattened_vec = |mut walker: PendingClaimsOf| {
-		let mut res: Vec<(types::BlockNumberOf<Test>, types::AccountIdOf<Test>)> = vec![];
+		let mut res: Vec<(types::BlockNumberOf<Test>, types::IconAddress)> = vec![];
 
 		while let Some((bl_num, mut inner_walker)) = walker.next() {
 			while let Some(entry) = inner_walker.next() {
@@ -208,14 +208,14 @@ fn pending_claims_getter() {
 		res
 	};
 
-	let sample_entries: &[(types::BlockNumberOf<Test>, types::AccountIdOf<Test>)] = &[
-		(1_u32.into(), ACCOUNT_ID[0]),
-		(1_u32.into(), ACCOUNT_ID[1]),
-		(2_u32.into(), ACCOUNT_ID[3]),
-		(10_u32.into(), ACCOUNT_ID[2]),
+	let sample_entries: &[(types::BlockNumberOf<Test>, types::IconAddress)] = &[
+		(1_u32.into(), bytes::from_hex(ICON_ADDRESS[1]).unwrap()),
+		(1_u32.into(), bytes::from_hex(ICON_ADDRESS[0]).unwrap()),
+		(2_u32.into(), bytes::from_hex(ICON_ADDRESS[3]).unwrap()),
+		(10_u32.into(), bytes::from_hex(ICON_ADDRESS[2]).unwrap()),
 	];
 
-	const EMPTY: [(types::BlockNumberOf<Test>, types::AccountIdOf<Test>); 0] = [];
+	const EMPTY: [(types::BlockNumberOf<Test>, types::IconAddress); 0] = [];
 
 	minimal_test_ext().execute_with(|| {
 		// When there is nothing in storage it should always return empty entry
@@ -238,7 +238,10 @@ fn pending_claims_getter() {
 			assert_eq!(EMPTY.to_vec(), entries);
 
 			let entries = get_flattened_vec(PendingClaimsOf::new(10_u32.into()..20_u32.into()));
-			assert_eq!(vec![(10_u32.into(), ACCOUNT_ID[2])], entries);
+			assert_eq!(
+				vec![(10_u32.into(), bytes::from_hex(ICON_ADDRESS[2]).unwrap())],
+				entries
+			);
 		}
 
 		// Make sure out of range is always empty
@@ -252,9 +255,9 @@ fn pending_claims_getter() {
 			let entries = get_flattened_vec(PendingClaimsOf::new(1_u32.into()..3_u32.into()));
 			assert_eq!(
 				vec![
-					(1_u32.into(), ACCOUNT_ID[0]),
-					(1_u32.into(), ACCOUNT_ID[1]),
-					(2_u32.into(), ACCOUNT_ID[3])
+					(1_u32.into(), bytes::from_hex(ICON_ADDRESS[1]).unwrap()),
+					(1_u32.into(), bytes::from_hex(ICON_ADDRESS[0]).unwrap()),
+					(2_u32.into(), bytes::from_hex(ICON_ADDRESS[3]).unwrap())
 				],
 				entries
 			);

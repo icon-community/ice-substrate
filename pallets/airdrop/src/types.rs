@@ -41,7 +41,7 @@ pub struct SnapshotInfo<T: Config> {
 	/// Icon address of this snapshot
 	// TODO:
 	// change this to [u8; _]
-	pub icon_address: Vec<u8>,
+	pub ice_address: AccountIdOf<T>,
 
 	/// Total airdroppable-amount this icon_address hold
 	pub amount: BalanceOf<T>,
@@ -59,8 +59,8 @@ pub struct SnapshotInfo<T: Config> {
 impl<T: Config> SnapshotInfo<T> {
 	/// Helper function to set icon_address in builder-pattern way
 	/// so that initilisation can be done in single line
-	pub fn icon_address(mut self, val: Vec<u8>) -> Self {
-		self.icon_address = val;
+	pub fn ice_address(mut self, val: AccountIdOf<T>) -> Self {
+		self.ice_address = val;
 		self
 	}
 }
@@ -69,7 +69,7 @@ impl<T: Config> SnapshotInfo<T> {
 impl<T: Config> Default for SnapshotInfo<T> {
 	fn default() -> Self {
 		Self {
-			icon_address: sp_std::vec![],
+			ice_address: AccountIdOf::<T>::default(),
 			amount: 0_u32.into(),
 			defi_user: false,
 			vesting_percentage: 0,
@@ -179,10 +179,7 @@ impl<T: Config> PendingClaimsOf<T> {
 impl<T: Config> core::iter::Iterator for PendingClaimsOf<T> {
 	// This iterator returns a block number and an iterator to entiries
 	// in PendingClaims under same block number
-	type Item = (
-		BlockNumberOf<T>,
-		storage::KeyPrefixIterator<<T as frame_system::Config>::AccountId>,
-	);
+	type Item = (BlockNumberOf<T>, storage::KeyPrefixIterator<IconAddress>);
 
 	fn next(&mut self) -> Option<Self::Item> {
 		// Take the block to process
