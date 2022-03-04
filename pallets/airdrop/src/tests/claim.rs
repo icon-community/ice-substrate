@@ -86,10 +86,10 @@ fn valid_claim_request() {
 
 #[test]
 fn fail_on_non_existent_data() {
-	let (mut test_ext, state) = offchain_test_ext();
+	let (mut test_ext, offchain_state, pool_state) = offchain_test_ext();
 	let icon_address = samples::ICON_ADDRESS[0];
 	put_response(
-		&mut state.write(),
+		&mut offchain_state.write(),
 		&icon_address.as_bytes().to_vec(),
 		r#""NonExistentData""#,
 	);
@@ -101,7 +101,7 @@ fn fail_on_non_existent_data() {
 		assert_ok!(AirdropModule::process_claim_request((
 			bl_num,
 			claimer.clone()
-		)),);
+		)));
 
 		todo!("Check the pool that proper call is placed");
 	});
@@ -109,13 +109,13 @@ fn fail_on_non_existent_data() {
 
 #[test]
 fn remove_on_zero_ice() {
-	let (mut test_ext, state) = offchain_test_ext();
+	let (mut test_ext, offchain_state, pool_state) = offchain_test_ext();
 	let icon_address = samples::ICON_ADDRESS[1];
 	let mut server_response = samples::SERVER_DATA[1];
 	server_response.amount = 0_u32.into();
 
 	put_response(
-		&mut state.write(),
+		&mut offchain_state.write(),
 		&icon_address.as_bytes().to_vec(),
 		&serde_json::to_string(&server_response).unwrap(),
 	);
@@ -135,11 +135,11 @@ fn remove_on_zero_ice() {
 
 #[test]
 fn valid_process_claim() {
-	let (mut test_ext, state) = offchain_test_ext();
+	let (mut test_ext, offchain_state, pool_state) = offchain_test_ext();
 	let icon_address = samples::ICON_ADDRESS[0];
 
 	put_response(
-		&mut state.write(),
+		&mut offchain_state.write(),
 		&icon_address.as_bytes().to_vec(),
 		&serde_json::to_string(&samples::SERVER_DATA[1]).unwrap(),
 	);
@@ -224,7 +224,7 @@ fn complete_flow() {
 	let claimer_icon_address = bytes::from_hex(samples::ICON_ADDRESS[1]).unwrap();
 	let server_data = samples::SERVER_DATA[0];
 
-	let (mut test_ext, _state) = offchain_test_ext();
+	let (mut test_ext, offchain_state, pool_state) = offchain_test_ext();
 
 	test_ext.execute_with(|| {
 		// Get a block number where offchian worker will run

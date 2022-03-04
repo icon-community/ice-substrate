@@ -2,7 +2,7 @@ use super::prelude::*;
 
 #[test]
 fn pool_dispatchable_from_offchain() {
-	let (mut test_ext, _state) = offchain_test_ext();
+	let (mut test_ext, _, pool_state) = offchain_test_ext();
 
 	// Basic test that single call can be put on pool
 	test_ext.execute_with(|| {
@@ -13,6 +13,8 @@ fn pool_dispatchable_from_offchain() {
 				icon_signature: vec![],
 			}
 		));
+
+		todo!("Verify in pool too..");
 	});
 
 	// Test that multiple call be put on pool
@@ -46,6 +48,8 @@ fn pool_dispatchable_from_offchain() {
 				allow_death: true
 			}
 		));
+
+		todo!("Verify in pool too..");
 	});
 }
 
@@ -75,9 +79,9 @@ fn ensure_root_or_sudo() {
 fn making_correct_http_request() {
 	let icon_address = samples::ICON_ADDRESS[0];
 
-	let (mut test_ext, state) = offchain_test_ext();
+	let (mut test_ext, offchain_state, _) = offchain_test_ext();
 	put_response(
-		&mut state.write(),
+		&mut offchain_state.write(),
 		&icon_address.as_bytes().to_vec(),
 		&serde_json::to_string(&samples::SERVER_DATA[0]).unwrap(),
 	);

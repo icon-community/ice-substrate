@@ -6,8 +6,8 @@ mod utility_functions;
 
 pub mod prelude {
 	pub use super::{
-		get_last_event, minimal_test_ext, not_airdrop_sudo, offchain_test_ext, put_response,
-		samples,
+		assert_tx_call, get_last_event, minimal_test_ext, not_airdrop_sudo, offchain_test_ext,
+		put_response, samples,
 	};
 	pub use crate as pallet_airdrop;
 	pub use crate::tests;
@@ -19,6 +19,7 @@ pub mod prelude {
 	pub use pallet_airdrop::types;
 	pub type PalletError = pallet_airdrop::Error<Test>;
 	pub type PalletEvent = pallet_airdrop::Event<Test>;
+	pub type PalletCall = pallet_airdrop::Call<Test>;
 	pub use sp_core::bytes;
 }
 use mock::System;
@@ -83,6 +84,7 @@ pub fn minimal_test_ext() -> sp_io::TestExternalities {
 pub fn offchain_test_ext() -> (
 	sp_io::TestExternalities,
 	std::sync::Arc<parking_lot::RwLock<sp_core::offchain::testing::OffchainState>>,
+	std::sync::Arc<parking_lot::RwLock<sp_core::offchain::testing::PoolState>>,
 ) {
 	use sp_core::offchain::TransactionPoolExt;
 	use sp_keystore::{testing::KeyStore, KeystoreExt, SyncCryptoStore};
@@ -100,14 +102,14 @@ pub fn offchain_test_ext() -> (
 	.unwrap();
 
 	let mut test_ext = sp_io::TestExternalities::default();
-	let (pool, _pool_state) = sp_core::offchain::testing::TestTransactionPoolExt::new();
-	let (offchain, state) = sp_core::offchain::testing::TestOffchainExt::new();
+	let (pool, pool_state) = sp_core::offchain::testing::TestTransactionPoolExt::new();
+	let (offchain, offchain_state) = sp_core::offchain::testing::TestOffchainExt::new();
 
 	test_ext.register_extension(sp_core::offchain::OffchainWorkerExt::new(offchain));
 	test_ext.register_extension(TransactionPoolExt::new(pool));
 	test_ext.register_extension(KeystoreExt(Arc::new(keystore)));
 
-	(test_ext, state)
+	(test_ext, offchain_state, pool_state)
 }
 
 // Return the same address if it is not sudo
@@ -154,4 +156,17 @@ pub fn get_last_event() -> Option<<Test as frame_system::Config>::Event> {
 	<frame_system::Pallet<Test>>::events()
 		.pop()
 		.map(|v| v.event)
+}
+
+pub fn assert_tx_call(expected_call: &[&PalletCall], pool_state: &testing::PoolState) {
+	use codec::Encode;
+
+	let all_calls_in_pool = &pool_state.transactions;
+	let expected_call_encoded = expected_call
+		.iter()
+		.map(|call| call.encode())
+		.collect::<Vec<_>>();
+
+	println!("Calls in pool: {:?}\n", all_calls_in_pool);
+	println!("\nCalls expected: {:?}", expected_call_encoded);
 }
