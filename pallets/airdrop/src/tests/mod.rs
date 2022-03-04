@@ -7,7 +7,7 @@ mod utility_functions;
 pub mod prelude {
 	pub use super::{
 		assert_tx_call, get_last_event, minimal_test_ext, not_airdrop_sudo, offchain_test_ext,
-		put_response, samples,
+		put_response, run_to_block, samples,
 	};
 	pub use crate as pallet_airdrop;
 	pub use crate::tests;
@@ -26,7 +26,7 @@ use mock::System;
 use prelude::*;
 
 pub mod samples {
-	use super::types::{ServerResponse, SnapshotInfo};
+	use super::types::ServerResponse;
 	use sp_core::sr25519;
 
 	pub const ACCOUNT_ID: &[sr25519::Public] = &[
@@ -121,6 +121,20 @@ pub fn not_airdrop_sudo(account: types::AccountIdOf<Test>) -> types::AccountIdOf
 	}
 }
 
+pub fn run_to_block(n: types::BlockNumberOf<Test>) {
+	use frame_support::traits::Hooks;
+
+	while System::block_number() < n {
+		if System::block_number() > 1 {
+			AirdropModule::on_finalize(System::block_number());
+			System::on_finalize(System::block_number());
+		}
+		System::set_block_number(System::block_number() + 1);
+		System::on_initialize(System::block_number());
+		AirdropModule::on_initialize(System::block_number());
+	}
+}
+
 use sp_core::offchain::testing;
 pub fn put_response(
 	state: &mut testing::OffchainState,
@@ -166,7 +180,11 @@ pub fn assert_tx_call(expected_call: &[&PalletCall], pool_state: &testing::PoolS
 		.iter()
 		.map(|call| call.encode())
 		.collect::<Vec<_>>();
+	let all_calls_in_pool = all_calls_in_pool
+		.iter()
+		.enumerate()
+		.map(|(index, call)| &call[call.len() - expected_call_encoded[index].len()..])
+		.collect::<Vec<_>>();
 
-	println!("Calls in pool: {:?}\n", all_calls_in_pool);
-	println!("\nCalls expected: {:?}", expected_call_encoded);
+	assert_eq!(expected_call_encoded, all_calls_in_pool);
 }

@@ -4,52 +4,31 @@ use super::prelude::*;
 fn pool_dispatchable_from_offchain() {
 	let (mut test_ext, _, pool_state) = offchain_test_ext();
 
-	// Basic test that single call can be put on pool
 	test_ext.execute_with(|| {
-		assert_ok!(AirdropModule::make_signed_call(
-			&pallet_airdrop::pallet::Call::claim_request {
-				icon_address: vec![],
-				message: vec![],
-				icon_signature: vec![],
-			}
-		));
-
-		todo!("Verify in pool too..");
-	});
-
-	// Test that multiple call be put on pool
-	test_ext.execute_with(|| {
-		assert_ok!(AirdropModule::make_signed_call(
-			&pallet_airdrop::pallet::Call::claim_request {
-				icon_address: types::IconAddress::default(),
-				message: vec![],
-				icon_signature: vec![],
-			}
-		));
-
-		assert_ok!(AirdropModule::make_signed_call(
-			&pallet_airdrop::pallet::Call::register_failed_claim {
+		let calls = [
+			&PalletCall::claim_request {
+				icon_address: bytes::from_hex(samples::ICON_ADDRESS[0]).unwrap(),
+				message: b"icx_sendTransaction.data.{method.transfer.params.{wallet.da8db20713c087e12abae13f522693299b9de1b70ff0464caa5d392396a8f76c}}.dataType.call.from.hxdd9ecb7d3e441d25e8c4f03cd20a80c502f0c374.nid.0x1.nonce.0x1..timestamp.0x5d56f3231f818.to.cx8f87a4ce573a2e1377545feabac48a960e8092bb.version.0x3".to_vec(),
+				icon_signature: bytes::from_hex("0xa64874af3653").unwrap(),
+			},
+			&PalletCall::donate_to_creditor {
+				amount: 10_00_u32.into(),
+				allow_death: true,
+			},
+			&PalletCall::register_failed_claim {
 				block_number: 1_u32.into(),
-				icon_address: types::IconAddress::default()
-			}
-		));
-
-		assert_ok!(AirdropModule::make_signed_call(
-			&pallet_airdrop::pallet::Call::claim_request {
 				icon_address: types::IconAddress::default(),
-				message: vec![],
-				icon_signature: vec![],
-			}
-		));
+			},
+		];
 
-		assert_ok!(AirdropModule::make_signed_call(
-			&pallet_airdrop::pallet::Call::donate_to_creditor {
-				amount: 100_u32.into(),
-				allow_death: true
-			}
-		));
-
-		todo!("Verify in pool too..");
+		assert_ok!(AirdropModule::make_signed_call(&calls[0]));
+		assert_tx_call(&calls[..1], &pool_state.read());
+		
+		assert_ok!(AirdropModule::make_signed_call(&calls[1]));
+		assert_tx_call(&calls[..2], &pool_state.read());
+		
+		assert_ok!(AirdropModule::make_signed_call(&calls[2]));
+		assert_tx_call(&calls[..3], &pool_state.read());
 	});
 }
 

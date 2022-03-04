@@ -95,7 +95,7 @@ fn fail_on_non_existent_data() {
 	);
 
 	test_ext.execute_with(|| {
-		let claimer = bytes::from_hex(samples::ICON_ADDRESS[0]).unwrap();
+		let claimer = bytes::from_hex(icon_address).unwrap();
 		let bl_num: types::BlockNumberOf<Test> = 2_u32.into();
 
 		assert_ok!(AirdropModule::process_claim_request((
@@ -103,7 +103,13 @@ fn fail_on_non_existent_data() {
 			claimer.clone()
 		)));
 
-		todo!("Check the pool that proper call is placed");
+		assert_tx_call(
+			&[&PalletCall::register_failed_claim {
+				icon_address: claimer.clone(),
+				block_number: bl_num,
+			}],
+			&pool_state.read(),
+		);
 	});
 }
 
@@ -129,7 +135,13 @@ fn remove_on_zero_ice() {
 			claimer.clone()
 		)));
 
-		todo!("Check the pool that proper call is placed");
+		assert_tx_call(
+			&[&PalletCall::remove_from_pending_queue {
+				block_number: bl_num.clone(),
+				icon_address: claimer.clone(),
+			}],
+			&pool_state.read(),
+		)
 	});
 }
 
@@ -153,7 +165,14 @@ fn valid_process_claim() {
 			claimer.clone()
 		)),);
 
-		todo!("Check the pool that proper call is placed");
+		assert_tx_call(
+			&[&PalletCall::complete_transfer {
+				block_number: bl_num.clone(),
+				receiver_icon: claimer.clone(),
+				server_response: samples::SERVER_DATA[1],
+			}],
+			&pool_state.read(),
+		);
 	});
 }
 
@@ -226,25 +245,33 @@ fn complete_flow() {
 
 	let (mut test_ext, offchain_state, pool_state) = offchain_test_ext();
 
+	put_response(
+		&mut offchain_state.write(),
+		&samples::ICON_ADDRESS[1].as_bytes().to_vec(),
+		&serde_json::to_string(&server_data).unwrap(),
+	);
+
 	test_ext.execute_with(|| {
-		// Get a block number where offchian worker will run
-		let mut current_block_number: types::BlockNumberOf<Test> = 10_u32.into();
-		while !AirdropModule::should_run_on_this_block(current_block_number) {
-			current_block_number += types::BlockNumberOf::<Test>::from(1_u32);
-		}
-
-		// Set the current block number to certain height
-		mock::System::set_block_number(current_block_number);
-		// Suppose we have done all processing 3 plock previous to current one
-		let cleared_upto: types::BlockNumberOf<Test> =
-			current_block_number - types::BlockNumberOf::<Test>::from(3_u32);
-
 		// Make sure creditor have enough balance
 		assert_ok!(<Test as pallet_airdrop::Config>::Currency::set_balance(
 			mock::Origin::root(),
 			AirdropModule::get_creditor_account(),
 			10_00_000_u32.into(),
 			10_000_u32.into(),
+		));
+
+		// Get a block number where offchian worker will run
+		let mut inserted_in_bl_num: types::BlockNumberOf<Test> = 10_u32.into();
+		while !AirdropModule::should_run_on_this_block(inserted_in_bl_num + 2_u64) {
+			inserted_in_bl_num += 2_u64;
+		}
+		run_to_block(inserted_in_bl_num);
+
+		// Suppose we have done all processing 3 plock previous to current one
+		let cleared_upto: types::BlockNumberOf<Test> = inserted_in_bl_num - 3_u64;
+		assert_ok!(AirdropModule::update_processed_upto_counter(
+			Origin::root(),
+			cleared_upto
 		));
 
 		// Make a claim reqest
@@ -255,10 +282,36 @@ fn complete_flow() {
 			b"any-signature".to_vec()
 		));
 
-		// Then process that claim request
+		let current_block_number = inserted_in_bl_num + 2_u64;
+		run_to_block(inserted_in_bl_num);
+
+		// Call offchain worker to do further processing
 		AirdropModule::offchain_worker(current_block_number);
 
-		todo!("Make sure complete_transfer call is in transaction pool");
+		// Make sure expected call is in queue and make those call directly later on
+		assert_tx_call(
+			&[
+				&PalletCall::complete_transfer {
+					block_number: inserted_in_bl_num,
+					receiver_icon: claimer_icon_address.clone(),
+					server_response: server_data.clone(),
+				},
+				&PalletCall::update_processed_upto_counter {
+					new_value: current_block_number - 1_u64,
+				},
+			],
+			&pool_state.read(),
+		);
+		assert_ok!(AirdropModule::complete_transfer(
+			Origin::signed(AirdropModule::get_sudo_account()),
+			inserted_in_bl_num,
+			claimer_icon_address.clone(),
+			server_data.clone()
+		));
+		assert_ok!(AirdropModule::update_processed_upto_counter(
+			Origin::root(),
+			current_block_number - 1_u64,
+		));
 
 		// Make sure user got right balance
 		assert_eq!(
@@ -269,7 +322,7 @@ fn complete_flow() {
 		// Make sure queue is cleared
 		assert_eq!(
 			None,
-			AirdropModule::get_pending_claims(current_block_number, &claimer_icon_address)
+			AirdropModule::get_pending_claims(inserted_in_bl_num, &claimer_icon_address)
 		);
 
 		// Make sure claim_status is updated
@@ -277,6 +330,12 @@ fn complete_flow() {
 			AirdropModule::get_icon_snapshot_map(&claimer_icon_address)
 				.expect("Should be in map")
 				.claim_status
+		);
+
+		// Make sure processed upto is updated
+		assert_eq!(
+			AirdropModule::get_processed_upto_counter(),
+			current_block_number - 1_u64
 		);
 	});
 }
