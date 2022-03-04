@@ -85,32 +85,13 @@ fn valid_claim_request() {
 }
 
 #[test]
-fn server_return_valid_error() {
-	use types::ServerError;
-	let icon_address = samples::ICON_ADDRESS[0];
-	let (mut test_ext, state) = offchain_test_ext();
-	put_response(
-		&mut state.write(),
-		&icon_address.as_bytes().to_vec(),
-		r#"NonExistentData"#,
-	);
-
-	test_ext.execute_with(|| {
-		assert_err!(
-			AirdropModule::fetch_from_server(&sp_core::bytes::from_hex(icon_address).unwrap()),
-			ClaimError::ServerError(ServerError::NonExistentData),
-		);
-	});
-}
-
-#[test]
 fn fail_on_non_existent_data() {
 	let (mut test_ext, state) = offchain_test_ext();
 	let icon_address = samples::ICON_ADDRESS[0];
 	put_response(
 		&mut state.write(),
 		&icon_address.as_bytes().to_vec(),
-		r#"NonExistentData"#,
+		r#""NonExistentData""#,
 	);
 
 	test_ext.execute_with(|| {
