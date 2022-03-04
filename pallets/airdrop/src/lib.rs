@@ -39,16 +39,16 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 pub use pallet::*;
 #[cfg(test)]
-mod mock;
+pub mod mock;
 
 #[cfg(test)]
-mod tests;
+pub mod tests;
 
 #[cfg(feature = "runtime-benchmarks")]
 mod benchmarking;
 
 /// All the types and alises must be defined here
-mod types;
+pub mod types;
 
 /// An identifier for a type of cryptographic key.
 /// For this pallet, account associated with this key must be same as
@@ -122,7 +122,7 @@ pub mod pallet {
 		ClaimCancelled(types::AccountIdOf<T>),
 
 		/// Emit when claim request was done successfully
-		ClaimRequestSucced(types::AccountIdOf<T>),
+		ClaimRequestSucced(types::BlockNumberOf<T>, types::AccountIdOf<T>),
 
 		/// Emit when an claim request was successful and fund have been transferred
 		ClaimSuccess(types::AccountIdOf<T>),
@@ -208,30 +208,19 @@ pub mod pallet {
 		) -> DispatchResult {
 			// Take signed address compatible with airdrop_pallet::Config::AccountId type
 			// so that we can call verify_with_icon method
-			let ice_address: <T as Config>::AccountId = ensure_signed(origin)?.into();
+			let ice_address: types::AccountIdOf<T> = ensure_signed(origin)?.into();
+
+			// We check the claim status before hand
+			let is_already_on_map = <IceSnapshotMap<T>>::contains_key(&ice_address);
+			ensure!(!is_already_on_map, Error::<T>::RequestAlreadyMade);
 
 			// make sure the validation is correct
-			ice_address
+			<types::AccountIdOf<T> as Into<<T as Config>::AccountId>>::into(ice_address.clone())
 				.verify_with_icon(&icon_address, &icon_signature, &message)
 				.map_err(|err| {
 					log::info!("Signature validation failed with: {:?}", err);
 					Error::<T>::InvalidSignature
 				})?;
-
-			// Convert back to to frame_system::Config::AccountId
-			let ice_address: types::AccountIdOf<T> = ice_address.into();
-
-			/*
-			TODO:
-			We might have to check both is_in_queue & is_in_map  independently
-			and do not error on absence of either of them.
-			Consider a activity when:
-			- Use make claim_request ( which will add to map & queue )
-			- Cancel the claim request ( which will remove from queue & data in map is preserved anyway )
-			- then user will never be able to claim again ( because data in already on map & we are throwing error on this condition )
-			*/
-			let is_already_on_map = <IceSnapshotMap<T>>::contains_key(&ice_address);
-			ensure!(!is_already_on_map, Error::<T>::RequestAlreadyMade);
 
 			// Get the current block number. This is the number where user asked for claim
 			// and we store it in PencingClaims to preserve FIFO
@@ -249,7 +238,10 @@ pub mod pallet {
 				crate::DEFAULT_RETRY_COUNT,
 			);
 
-			Self::deposit_event(Event::<T>::ClaimRequestSucced(ice_address));
+			Self::deposit_event(Event::<T>::ClaimRequestSucced(
+				current_block_number,
+				ice_address,
+			));
 			Ok(())
 		}
 
@@ -326,7 +318,7 @@ pub mod pallet {
 			)
 			.map_err(|err| {
 				// This is also error from our side. We keep it for next retry
-				Self::register_failed_claim(origin.clone(), block_number, receiver.clone()).expect("Calling register failed_claim from currency::transfer. This call should not have failed..");				
+				Self::register_failed_claim(origin.clone(), block_number, receiver.clone()).expect("Calling register failed_claim from currency::transfer. This call should not have failed..");
 
 				log::info!("Currency transfer failed with error: {:?}", err);
 				err
@@ -379,9 +371,7 @@ pub mod pallet {
 				.ok_or(Error::<T>::IncompleteData)?
 				.icon_address;
 			let retry_remaining = Self::get_pending_claims(&block_number, &ice_address)
-				.ok_or(Error::<T>::IncompleteData)?
-				.checked_sub(1.into())
-				.unwrap_or_default();
+				.ok_or(Error::<T>::NotInQueue)?;
 
 			// In both case weather retry is remaining or not
 			// we will remove this entry from this block number key
@@ -414,7 +404,11 @@ pub mod pallet {
 
 			// This entry have some retry remaining so we put this entry in another block_number key
 			let new_block_number = Self::get_current_block_number().saturating_add(1_u32.into());
-			<PendingClaims<T>>::insert(&new_block_number, &ice_address, retry_remaining);
+			<PendingClaims<T>>::insert(
+				&new_block_number,
+				&ice_address,
+				retry_remaining.saturating_sub(1),
+			);
 
 			Ok(())
 		}
@@ -464,7 +458,7 @@ pub mod pallet {
 
 	#[pallet::hooks]
 	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
-		fn offchain_worker(block_number: T::BlockNumber) {
+		fn offchain_worker(block_number: types::BlockNumberOf<T>) {
 			// If this is not the block to start offchain worker
 			// print a log and early return
 			if !Self::should_run_on_this_block(block_number) {

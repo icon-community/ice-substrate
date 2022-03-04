@@ -39,6 +39,8 @@ pub enum SignatureValidationError {
 #[derive(Eq, PartialEq)]
 pub struct SnapshotInfo<T: Config> {
 	/// Icon address of this snapshot
+	// TODO:
+	// change this to [u8; _]
 	pub icon_address: Vec<u8>,
 
 	/// Total airdroppable-amount this icon_address hold
@@ -105,6 +107,7 @@ pub enum ClaimError {
 #[derive(Deserialize, Encode, Decode, Clone, Default, Eq, PartialEq, TypeInfo, Copy)]
 #[cfg_attr(feature = "std", derive(Debug))]
 #[cfg_attr(not(feature = "std"), derive(RuntimeDebug))]
+#[cfg_attr(test, derive(serde::Serialize))]
 pub struct ServerResponse {
 	// TODO:: Use u64 instead of u128 to save on-chain space
 
