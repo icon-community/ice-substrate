@@ -1,7 +1,7 @@
 use super::prelude::*;
 use frame_support::traits::Hooks;
 use sp_runtime::DispatchError;
-use types::ClaimError;
+
 
 #[test]
 fn claim_request_access() {

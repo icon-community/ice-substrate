@@ -1,15 +1,12 @@
 use crate as pallet_airdrop;
-use crate::types;
-use codec::Encode;
+
 use frame_support::parameter_types;
 use frame_system as system;
 use pallet_balances;
 use sp_core::H256;
 use sp_runtime::{
-	generic,
 	testing::Header,
 	traits::{BlakeTwo256, Extrinsic as ExtrinsicT, IdentifyAccount, IdentityLookup, Verify},
-	SaturatedConversion,
 };
 
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Test>;
@@ -19,7 +16,6 @@ type Signature = sp_core::sr25519::Signature;
 type Index = u64;
 type BlockNumber = u64;
 type Extrinsic = sp_runtime::testing::TestXt<Call, ()>;
-type AuthorityId = crate::airdrop_crypto::AuthId;
 
 frame_support::construct_runtime!(
 	pub enum Test where

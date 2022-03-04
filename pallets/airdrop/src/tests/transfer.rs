@@ -1,5 +1,4 @@
 use super::prelude::*;
-use frame_support::traits::tokens::currency::Currency;
 type BalanceError = pallet_balances::pallet::Error<Test>;
 
 #[test]
