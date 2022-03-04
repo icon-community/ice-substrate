@@ -177,6 +177,67 @@ fn valid_process_claim() {
 }
 
 #[test]
+fn multi_ice_single_icon() {
+	minimal_test_ext().execute_with(|| {
+		let icon_address = bytes::from_hex(samples::ICON_ADDRESS[0]).unwrap();
+		let ice_address_one = samples::ACCOUNT_ID[1];
+		let ice_address_two = samples::ACCOUNT_ID[2];
+
+		// Claim with first ice address & main icon address
+		{
+			assert_ok!(AirdropModule::claim_request(
+				Origin::signed(ice_address_one.clone()),
+				icon_address.clone(),
+				vec![],
+				vec![]
+			));
+		}
+
+		// Claim with second ice address & main icon address ( same address as above )
+		{
+			assert_noop!(
+				AirdropModule::claim_request(
+					Origin::signed(ice_address_two.clone()),
+					icon_address.clone(),
+					vec![],
+					vec![],
+				),
+				PalletError::RequestAlreadyMade
+			);
+		}
+	});
+}
+
+#[test]
+fn multi_icon_single_ice() {
+	minimal_test_ext().execute_with(|| {
+		let icon_address_first = bytes::from_hex(samples::ICON_ADDRESS[1]).unwrap();
+		let icon_address_second = bytes::from_hex(samples::ICON_ADDRESS[2]).unwrap();
+		let ice_address = samples::ACCOUNT_ID[1];
+
+		// claim with primary ice_address and first icon address
+		{
+			assert_ok!(AirdropModule::claim_request(
+				Origin::signed(ice_address.clone()),
+				icon_address_first,
+				vec![],
+				vec![]
+			));
+		}
+
+		// Claim with primary ice_address ( ice_address same as above ) & second icon_address
+		{
+			assert_ok!(AirdropModule::claim_request(
+				Origin::signed(ice_address.clone()),
+				icon_address_second,
+				vec![],
+				vec![]
+			));
+		}
+	});
+}
+
+#[test]
 fn complete_flow() {
 	let claimer_ice_address = samples::ACCOUNT_ID[1];
 	let claimer_icon_address = bytes::from_hex(samples::ICON_ADDRESS[1]).unwrap();
