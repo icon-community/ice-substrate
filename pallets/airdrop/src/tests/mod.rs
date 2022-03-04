@@ -2,7 +2,7 @@ use crate::mock;
 // mod claim;
 mod signature_validation;
 // mod transfer;
-// mod utility_functions;
+mod utility_functions;
 
 pub mod prelude {
 	pub use super::{
@@ -55,6 +55,7 @@ pub mod samples {
 		"0xee1448f0867b90e6589289a4b9c06ac4516a75a9",
 		"0xee33286f367b90e6589289a4b987a6c4516a753a",
 		"0xee12463586abb90e6589289a4b9c06ac4516a7ba",
+		"0xee02363546bcc50e643910104321c0623451a65a",
 	];
 }
 
