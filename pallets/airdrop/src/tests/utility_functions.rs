@@ -33,24 +33,41 @@ fn pool_dispatchable_from_offchain() {
 }
 
 #[test]
-fn ensure_root_or_sudo() {
+fn update_offchain_account() {
+	minimal_test_ext().execute_with(||{
+		assert_noop!(
+			AirdropModule::set_offchain_account(Origin::none(), samples::ACCOUNT_ID[1]),
+			PalletError::DeniedOperation
+		);
+
+		assert_noop!(
+			AirdropModule::set_offchain_account(Origin::signed(samples::ACCOUNT_ID[1]), samples::ACCOUNT_ID[2]),
+			PalletError::DeniedOperation
+		);
+
+		assert_ok!(AirdropModule::set_offchain_account(Origin::root(), samples::ACCOUNT_ID[1]));
+		assert_eq!(Some(samples::ACCOUNT_ID[1]), AirdropModule::get_offchain_account());
+	});
+}
+
+#[test]
+fn ensure_root_or_offchain() {
 	minimal_test_ext().execute_with(|| {
 		use sp_runtime::DispatchError::BadOrigin;
 
-		let sudo_origin = Origin::signed(AirdropModule::get_sudo_account());
-		let signed_origin = Origin::signed(not_airdrop_sudo(samples::ACCOUNT_ID[2]));
-		let root_origin = Origin::root();
-		let unsigned_origin = Origin::none();
+		// root origin should pass
+		assert_ok!(AirdropModule::ensure_root_or_offchain(Origin::root()));
 
-		let sudo_call = AirdropModule::ensure_root_or_sudo(sudo_origin);
-		let root_call = AirdropModule::ensure_root_or_sudo(root_origin);
-		let signed_call = AirdropModule::ensure_root_or_sudo(signed_origin);
-		let unsigned_call = AirdropModule::ensure_root_or_sudo(unsigned_origin);
+		// Any signed other than offchian account should fail
+		assert_err!(AirdropModule::ensure_root_or_offchain(Origin::signed(not_offchain_account(samples::ACCOUNT_ID[1]))), BadOrigin);
 
-		assert_ok!(sudo_call);
-		assert_ok!(root_call);
-		assert_err!(signed_call, BadOrigin);
-		assert_err!(unsigned_call, BadOrigin);
+		// Unsigned origin should fail
+		assert_err!(AirdropModule::ensure_root_or_offchain(Origin::none()), BadOrigin);
+
+		// Signed with offchain account should work
+		assert_ok!(AirdropModule::set_offchain_account(Origin::root(), samples::ACCOUNT_ID[1]));
+		assert_ok!(AirdropModule::ensure_root_or_offchain(Origin::signed(samples::ACCOUNT_ID[1])));
+
 	});
 }
 
@@ -87,7 +104,7 @@ fn failed_entry_regestration() {
 		{
 			assert_storage_noop!(assert_eq! {
 				AirdropModule::register_failed_claim(
-					Origin::signed(not_airdrop_sudo(samples::ACCOUNT_ID[1])),
+					Origin::signed(not_offchain_account(samples::ACCOUNT_ID[1])),
 					bl_num.into(),
 					claimer.clone(),
 				)
@@ -107,9 +124,10 @@ fn failed_entry_regestration() {
 				PalletError::DeniedOperation.into()
 			});
 
+			assert_ok!(AirdropModule::set_offchain_account(Origin::root(), samples::ACCOUNT_ID[2]));
 			assert_storage_noop!(assert_ne! {
 				AirdropModule::register_failed_claim(
-					Origin::signed(AirdropModule::get_sudo_account()),
+					Origin::signed(AirdropModule::get_offchain_account().unwrap()),
 					bl_num.into(),
 					claimer.clone(),
 				)

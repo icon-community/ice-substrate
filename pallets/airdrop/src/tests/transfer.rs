@@ -22,11 +22,15 @@ fn complete_transfer_access() {
 			});
 		}
 
-		// Make sure sudo cal call this
+		// Make sure sudo can call this
 		{
+			assert_ok!(AirdropModule::set_offchain_account(
+				Origin::root(),
+				samples::ACCOUNT_ID[1]
+			));
 			assert_storage_noop!(assert_ne! {
 				AirdropModule::complete_transfer(
-					Origin::signed(AirdropModule::get_sudo_account()),
+					Origin::signed(AirdropModule::get_offchain_account().unwrap()),
 					1_u32.into(),
 					bytes::from_hex(samples::ICON_ADDRESS[0]).unwrap(),
 					samples::SERVER_DATA[0]
@@ -39,7 +43,7 @@ fn complete_transfer_access() {
 
 		// Make sure other signed user can't called this
 		{
-			let non_sudo = not_airdrop_sudo(samples::ACCOUNT_ID[2]);
+			let non_sudo = not_offchain_account(samples::ACCOUNT_ID[2]);
 			assert_storage_noop!(assert_eq! {
 				AirdropModule::complete_transfer(
 					Origin::signed(non_sudo),

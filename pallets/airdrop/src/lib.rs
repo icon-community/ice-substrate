@@ -35,6 +35,17 @@
 //! inside `ServerResponse` type. If transferring the fund succeed, it will also
 //! remove the queue from pendingClaims and update any snapshot info as needed.
 //! This is only callable by sudo/root account
+//!
+//! * [`register_failed_claim`]
+//! This dispatchable provides a mean to register that some entry was failed to process
+//! and this responsibility is to be taken by node operator.
+//!
+//! * [`update_processed_upto_counter`]
+//! To update the mark that records upto which block of claiming has been completed
+//!
+//! * [`remove_from_pending_claim`]
+//! To remove something from pending claim as it is no longer needed. For eg: when record
+//! claiming account of this icon address is 0 token
 
 #![cfg_attr(not(feature = "std"), no_std)]
 pub use pallet::*;
@@ -71,7 +82,7 @@ pub mod pallet {
 	use super::types;
 
 	use frame_support::pallet_prelude::*;
-	use frame_system::pallet_prelude::*;
+	use frame_system::{ensure_signed, pallet_prelude::*};
 	use sp_std::prelude::*;
 
 	use frame_support::traits::{Currency, ExistenceRequirement, Hooks, ReservableCurrency};
@@ -140,6 +151,10 @@ pub mod pallet {
 			types::IconAddress,
 			types::BlockNumberOf<T>,
 		),
+
+		/// Value of OffchainAccount sotrage have been changed
+		/// Return old value and new one
+		OffchainAccountChanged(Option<types::AccountIdOf<T>>, types::AccountIdOf<T>),
 	}
 
 	#[pallet::storage]
@@ -158,12 +173,15 @@ pub mod pallet {
 	#[pallet::getter(fn get_processed_upto_counter)]
 	pub(super) type ProcessedUpto<T: Config> = StorageValue<_, types::BlockNumberOf<T>, ValueQuery>;
 
-	// TODO:
-	// Put vector of icon address instead of just one
 	#[pallet::storage]
 	#[pallet::getter(fn get_icon_snapshot_map)]
 	pub(super) type IceSnapshotMap<T: Config> =
 		StorageMap<_, Twox64Concat, types::IconAddress, types::SnapshotInfo<T>, OptionQuery>;
+
+	#[pallet::storage]
+	#[pallet::getter(fn get_offchain_account)]
+	pub(super) type OffchainAccount<T: Config> =
+		StorageValue<_, types::AccountIdOf<T>, OptionQuery>;
 
 	#[pallet::error]
 	pub enum Error<T> {
@@ -277,7 +295,8 @@ pub mod pallet {
 			server_response: types::ServerResponse,
 		) -> DispatchResult {
 			// Make sure this is either sudo or root
-			Self::ensure_root_or_sudo(origin.clone()).map_err(|_| Error::<T>::DeniedOperation)?;
+			Self::ensure_root_or_offchain(origin.clone())
+				.map_err(|_| Error::<T>::DeniedOperation)?;
 
 			// Check again if it is still in the pending queue
 			// Eg: If another node had processed the same request
@@ -341,13 +360,32 @@ pub mod pallet {
 			Ok(())
 		}
 
+		/// Call to set OffchainWorker Account ( Restricted to root only )
+		/// Why?
+		/// We have to have a way that this signed call is from offchain so we can perform
+		/// critical operation. When offchain worker key and this storage have same account
+		/// then we have a way to ensure this call is from offchain worker
+		#[pallet::weight(0)]
+		pub fn set_offchain_account(
+			origin: OriginFor<T>,
+			new_account: types::AccountIdOf<T>,
+		) -> DispatchResult {
+			ensure_root(origin).map_err(|_| Error::<T>::DeniedOperation)?;
+
+			let old_value = Self::get_offchain_account();
+			<OffchainAccount<T>>::set(Some(new_account.clone()));
+			Self::deposit_event(Event::OffchainAccountChanged(old_value, new_account));
+
+			Ok(())
+		}
+
 		#[pallet::weight(0)]
 		pub fn remove_from_pending_queue(
 			origin: OriginFor<T>,
 			block_number: types::BlockNumberOf<T>,
 			icon_address: types::IconAddress,
 		) -> DispatchResult {
-			Self::ensure_root_or_sudo(origin)?;
+			Self::ensure_root_or_offchain(origin)?;
 
 			<PendingClaims<T>>::remove(&block_number, &icon_address);
 			Self::deposit_event(Event::<T>::RemovedFromQueue(icon_address));
@@ -365,7 +403,7 @@ pub mod pallet {
 			block_number: types::BlockNumberOf<T>,
 			icon_address: types::IconAddress,
 		) -> DispatchResult {
-			Self::ensure_root_or_sudo(origin).map_err(|_| Error::<T>::DeniedOperation)?;
+			Self::ensure_root_or_offchain(origin).map_err(|_| Error::<T>::DeniedOperation)?;
 
 			let ice_address = Self::get_icon_snapshot_map(&icon_address)
 				.ok_or(Error::<T>::IncompleteData)?
@@ -448,7 +486,7 @@ pub mod pallet {
 			origin: OriginFor<T>,
 			new_value: types::BlockNumberOf<T>,
 		) -> DispatchResult {
-			Self::ensure_root_or_sudo(origin).map(|_| Error::<T>::DeniedOperation)?;
+			Self::ensure_root_or_offchain(origin).map(|_| Error::<T>::DeniedOperation)?;
 
 			<ProcessedUpto<T>>::set(new_value);
 
@@ -722,19 +760,16 @@ pub mod pallet {
 			T::Creditor::get().into_account()
 		}
 
-		/// return the key set in sudo pallet
-		#[inline(always)]
-		pub fn get_sudo_account() -> types::AccountIdOf<T> {
-			pallet_sudo::Pallet::<T>::key()
-		}
-
 		/// Helper function to create similar interface like `ensure_root`
 		/// but which instead check for sudo key
-		pub fn ensure_root_or_sudo(origin: OriginFor<T>) -> DispatchResult {
+		pub fn ensure_root_or_offchain(origin: OriginFor<T>) -> DispatchResult {
 			let is_root = ensure_root(origin.clone()).is_ok();
-			let is_sudo = ensure_signed(origin).ok() == Some(Self::get_sudo_account());
+			let is_offchain = {
+				let signed = ensure_signed(origin);
+				signed.is_ok() && signed.ok() == Self::get_offchain_account()
+			};
 
-			ensure!(is_root || is_sudo, DispatchError::BadOrigin);
+			ensure!(is_root || is_offchain, DispatchError::BadOrigin);
 			Ok(())
 		}
 

@@ -2,7 +2,6 @@ use super::prelude::*;
 use frame_support::traits::Hooks;
 use sp_runtime::DispatchError;
 
-
 #[test]
 fn claim_request_access() {
 	minimal_test_ext().execute_with(|| {
@@ -260,6 +259,12 @@ fn complete_flow() {
 			10_000_u32.into(),
 		));
 
+		// Set an account as offchain authorised
+		assert_ok!(AirdropModule::set_offchain_account(
+			Origin::root(),
+			samples::ACCOUNT_ID[1]
+		));
+
 		// Get a block number where offchian worker will run
 		let mut inserted_in_bl_num: types::BlockNumberOf<Test> = 10_u32.into();
 		while !AirdropModule::should_run_on_this_block(inserted_in_bl_num + 2_u64) {
@@ -303,7 +308,7 @@ fn complete_flow() {
 			&pool_state.read(),
 		);
 		assert_ok!(AirdropModule::complete_transfer(
-			Origin::signed(AirdropModule::get_sudo_account()),
+			Origin::signed(AirdropModule::get_offchain_account().unwrap()),
 			inserted_in_bl_num,
 			claimer_icon_address.clone(),
 			server_data.clone()

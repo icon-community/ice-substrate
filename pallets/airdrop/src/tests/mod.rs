@@ -6,7 +6,7 @@ mod utility_functions;
 
 pub mod prelude {
 	pub use super::{
-		assert_tx_call, get_last_event, minimal_test_ext, not_airdrop_sudo, offchain_test_ext,
+		assert_tx_call, get_last_event, minimal_test_ext, not_offchain_account, offchain_test_ext,
 		put_response, run_to_block, samples,
 	};
 	pub use crate as pallet_airdrop;
@@ -113,11 +113,11 @@ pub fn offchain_test_ext() -> (
 }
 
 // Return the same address if it is not sudo
-pub fn not_airdrop_sudo(account: types::AccountIdOf<Test>) -> types::AccountIdOf<Test> {
-	if account != AirdropModule::get_sudo_account() {
+pub fn not_offchain_account(account: types::AccountIdOf<Test>) -> types::AccountIdOf<Test> {
+	if account != AirdropModule::get_offchain_account().unwrap_or_default() {
 		account
 	} else {
-		panic!("This address must not be sudo. Change test value.");
+		panic!("This address must not be same as defined in offchian worker. Change test value.");
 	}
 }
 
