@@ -2,7 +2,7 @@ use super::prelude::*;
 
 #[test]
 fn pool_dispatchable_from_offchain() {
-	let (mut test_ext, _, pool_state, _) = offchain_test_ext();
+	let (mut test_ext, _, pool_state, ocw_pub) = offchain_test_ext();
 
 	test_ext.execute_with(|| {
 		let calls = [
@@ -25,7 +25,10 @@ fn pool_dispatchable_from_offchain() {
 		assert_err!(AirdropModule::make_signed_call(&calls[0]), types::CallDispatchableError::NoAccount);
 
 		// Configure an offchain account for further calls
-		assert_ok!(AirdropModule::set_offchain_account(Origin::root(), samples::ACCOUNT_ID[3]));
+		assert_ok!(AirdropModule::set_offchain_account(
+			Origin::root(),
+			ocw_pub.into_account()
+		));
 
 		assert_ok!(AirdropModule::make_signed_call(&calls[0]));
 		assert_tx_call(&calls[..1], &pool_state.read());

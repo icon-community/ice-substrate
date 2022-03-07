@@ -85,7 +85,7 @@ fn valid_claim_request() {
 
 #[test]
 fn fail_on_non_existent_data() {
-	let (mut test_ext, offchain_state, pool_state, _) = offchain_test_ext();
+	let (mut test_ext, offchain_state, pool_state, ocw_pub) = offchain_test_ext();
 	let icon_address = samples::ICON_ADDRESS[0];
 	put_response(
 		&mut offchain_state.write(),
@@ -96,6 +96,11 @@ fn fail_on_non_existent_data() {
 	test_ext.execute_with(|| {
 		let claimer = bytes::from_hex(icon_address).unwrap();
 		let bl_num: types::BlockNumberOf<Test> = 2_u32.into();
+
+		assert_ok!(AirdropModule::set_offchain_account(
+			Origin::root(),
+			ocw_pub.into_account()
+		));
 
 		assert_ok!(AirdropModule::process_claim_request((
 			bl_num,
@@ -114,7 +119,7 @@ fn fail_on_non_existent_data() {
 
 #[test]
 fn remove_on_zero_ice() {
-	let (mut test_ext, offchain_state, pool_state, _) = offchain_test_ext();
+	let (mut test_ext, offchain_state, pool_state, ocw_pub) = offchain_test_ext();
 	let icon_address = samples::ICON_ADDRESS[1];
 	let mut server_response = samples::SERVER_DATA[1];
 	server_response.amount = 0_u32.into();
@@ -128,6 +133,11 @@ fn remove_on_zero_ice() {
 	test_ext.execute_with(|| {
 		let claimer = bytes::from_hex(icon_address).unwrap();
 		let bl_num: types::BlockNumberOf<Test> = 2_u32.into();
+
+		assert_ok!(AirdropModule::set_offchain_account(
+			Origin::root(),
+			ocw_pub.into_account()
+		));
 
 		assert_ok!(AirdropModule::process_claim_request((
 			bl_num,
@@ -146,7 +156,7 @@ fn remove_on_zero_ice() {
 
 #[test]
 fn valid_process_claim() {
-	let (mut test_ext, offchain_state, pool_state, _) = offchain_test_ext();
+	let (mut test_ext, offchain_state, pool_state, ocw_pub) = offchain_test_ext();
 	let icon_address = samples::ICON_ADDRESS[0];
 
 	put_response(
@@ -158,6 +168,11 @@ fn valid_process_claim() {
 	test_ext.execute_with(|| {
 		let claimer = bytes::from_hex(icon_address.clone()).unwrap();
 		let bl_num: types::BlockNumberOf<Test> = 2_u32.into();
+
+		assert_ok!(AirdropModule::set_offchain_account(
+			Origin::root(),
+			ocw_pub.into_account()
+		));
 
 		assert_ok!(AirdropModule::process_claim_request((
 			bl_num,
@@ -242,7 +257,7 @@ fn complete_flow() {
 	let claimer_icon_address = bytes::from_hex(samples::ICON_ADDRESS[1]).unwrap();
 	let server_data = samples::SERVER_DATA[0];
 
-	let (mut test_ext, offchain_state, pool_state, _) = offchain_test_ext();
+	let (mut test_ext, offchain_state, pool_state, ocw_pub) = offchain_test_ext();
 
 	put_response(
 		&mut offchain_state.write(),
@@ -262,7 +277,7 @@ fn complete_flow() {
 		// Set an account as offchain authorised
 		assert_ok!(AirdropModule::set_offchain_account(
 			Origin::root(),
-			samples::ACCOUNT_ID[1]
+			ocw_pub.into_account()
 		));
 
 		// Get a block number where offchian worker will run
