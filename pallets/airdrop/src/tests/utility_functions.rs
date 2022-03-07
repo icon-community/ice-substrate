@@ -21,6 +21,12 @@ fn pool_dispatchable_from_offchain() {
 			},
 		];
 
+		// When no account is configured as offchain account
+		assert_err!(AirdropModule::make_signed_call(&calls[0]), types::CallDispatchableError::NoAccount);
+
+		// Configure an offchain account for further calls
+		assert_ok!(AirdropModule::set_offchain_account(Origin::root(), samples::ACCOUNT_ID[3]));
+
 		assert_ok!(AirdropModule::make_signed_call(&calls[0]));
 		assert_tx_call(&calls[..1], &pool_state.read());
 		
