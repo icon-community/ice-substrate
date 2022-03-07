@@ -244,27 +244,23 @@ pub mod pallet {
 					Error::<T>::InvalidSignature
 				})?;
 
-			// Get the current block number. This is the number where user asked for claim
-			// and we store it in PencingClaims to preserve FIFO
-			let current_block_number = Self::get_current_block_number();
+			Self::claim_request_unchecked(ice_address, icon_address);
 
-			// Insert with default snapshot but with real icon address mapping
-			let new_snapshot = types::SnapshotInfo::<T>::default().ice_address(ice_address.clone());
-			<IceSnapshotMap<T>>::insert(&icon_address, new_snapshot);
+			Ok(())
+		}
 
-			// insert in queue respective to current block number
-			// and retry as defined in crate level constant
-			<PendingClaims<T>>::insert(
-				&current_block_number,
-				&icon_address,
-				crate::DEFAULT_RETRY_COUNT,
-			);
+		// Means to push claim request force fully
+		// This skips signature verification
+		#[pallet::weight(0)]
+		pub fn force_claim_request(
+			origin: OriginFor<T>,
+			ice_address: types::AccountIdOf<T>,
+			icon_address: types::IconAddress,
+		) -> DispatchResult {
+			ensure_root(origin).map_err(|_| Error::<T>::DeniedOperation)?;
 
-			Self::deposit_event(Event::<T>::ClaimRequestSucced(
-				current_block_number,
-				ice_address,
-				icon_address,
-			));
+			Self::claim_request_unchecked(ice_address, icon_address);
+
 			Ok(())
 		}
 
@@ -778,6 +774,36 @@ pub mod pallet {
 			use sp_runtime::traits::AccountIdConversion;
 
 			T::Creditor::get().into_account()
+		}
+
+		/// Do claim request withing checking for anything.
+		/// This is seperated as a means to share logic
+		/// And always should be called only after doing proper check before hand
+		pub fn claim_request_unchecked(
+			ice_address: types::AccountIdOf<T>,
+			icon_address: types::IconAddress,
+		) {
+			// Get the current block number. This is the number where user asked for claim
+			// and we store it in PencingClaims to preserve FIFO
+			let current_block_number = Self::get_current_block_number();
+
+			// Insert with default snapshot but with real icon address mapping
+			let new_snapshot = types::SnapshotInfo::<T>::default().ice_address(ice_address.clone());
+			<IceSnapshotMap<T>>::insert(&icon_address, new_snapshot);
+
+			// insert in queue respective to current block number
+			// and retry as defined in crate level constant
+			<PendingClaims<T>>::insert(
+				&current_block_number,
+				&icon_address,
+				crate::DEFAULT_RETRY_COUNT,
+			);
+
+			Self::deposit_event(Event::<T>::ClaimRequestSucced(
+				current_block_number,
+				ice_address,
+				icon_address,
+			));
 		}
 
 		/// Helper function to create similar interface like `ensure_root`
