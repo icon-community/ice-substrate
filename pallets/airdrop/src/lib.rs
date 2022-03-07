@@ -940,7 +940,7 @@ impl types::IconVerifiable for sp_runtime::AccountId32 {
 
 		let (_exit_status, icon_pub_key) =
 			ECRecoverPublicKey::execute(&formatted_icon_signature, COST)
-				.map_err(|_| SignatureValidationError::ECRecoverExecution)?;
+				.map_err(|_| SignatureValidationError::InvalidIconSignature)?;
 
 		let (_exit_status, computed_icon_address) = Sha3FIPS256::execute(&icon_pub_key, COST)
 			.map_err(|_| SignatureValidationError::Sha3Execution)?;

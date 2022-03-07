@@ -29,7 +29,6 @@ pub enum SignatureValidationError {
 	InvalidIconSignature,
 	InvalidIceAddress,
 	Sha3Execution,
-	ECRecoverExecution,
 }
 
 #[derive(Encode, Decode, Clone, TypeInfo)]
