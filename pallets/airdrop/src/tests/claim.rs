@@ -85,7 +85,7 @@ fn valid_claim_request() {
 
 #[test]
 fn fail_on_non_existent_data() {
-	let (mut test_ext, offchain_state, pool_state) = offchain_test_ext();
+	let (mut test_ext, offchain_state, pool_state, _) = offchain_test_ext();
 	let icon_address = samples::ICON_ADDRESS[0];
 	put_response(
 		&mut offchain_state.write(),
@@ -114,7 +114,7 @@ fn fail_on_non_existent_data() {
 
 #[test]
 fn remove_on_zero_ice() {
-	let (mut test_ext, offchain_state, pool_state) = offchain_test_ext();
+	let (mut test_ext, offchain_state, pool_state, _) = offchain_test_ext();
 	let icon_address = samples::ICON_ADDRESS[1];
 	let mut server_response = samples::SERVER_DATA[1];
 	server_response.amount = 0_u32.into();
@@ -146,7 +146,7 @@ fn remove_on_zero_ice() {
 
 #[test]
 fn valid_process_claim() {
-	let (mut test_ext, offchain_state, pool_state) = offchain_test_ext();
+	let (mut test_ext, offchain_state, pool_state, _) = offchain_test_ext();
 	let icon_address = samples::ICON_ADDRESS[0];
 
 	put_response(
@@ -242,7 +242,7 @@ fn complete_flow() {
 	let claimer_icon_address = bytes::from_hex(samples::ICON_ADDRESS[1]).unwrap();
 	let server_data = samples::SERVER_DATA[0];
 
-	let (mut test_ext, offchain_state, pool_state) = offchain_test_ext();
+	let (mut test_ext, offchain_state, pool_state, _) = offchain_test_ext();
 
 	put_response(
 		&mut offchain_state.write(),

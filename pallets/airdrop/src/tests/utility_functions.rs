@@ -2,7 +2,7 @@ use super::prelude::*;
 
 #[test]
 fn pool_dispatchable_from_offchain() {
-	let (mut test_ext, _, pool_state) = offchain_test_ext();
+	let (mut test_ext, _, pool_state, _) = offchain_test_ext();
 
 	test_ext.execute_with(|| {
 		let calls = [
@@ -81,7 +81,7 @@ fn ensure_root_or_offchain() {
 fn making_correct_http_request() {
 	let icon_address = samples::ICON_ADDRESS[0];
 
-	let (mut test_ext, offchain_state, _) = offchain_test_ext();
+	let (mut test_ext, offchain_state,_,_) = offchain_test_ext();
 	put_response(
 		&mut offchain_state.write(),
 		&icon_address.as_bytes().to_vec(),

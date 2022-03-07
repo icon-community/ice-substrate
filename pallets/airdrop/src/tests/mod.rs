@@ -85,6 +85,7 @@ pub fn offchain_test_ext() -> (
 	sp_io::TestExternalities,
 	std::sync::Arc<parking_lot::RwLock<sp_core::offchain::testing::OffchainState>>,
 	std::sync::Arc<parking_lot::RwLock<sp_core::offchain::testing::PoolState>>,
+	<Test as frame_system::offchain::SigningTypes>::Public,
 ) {
 	use sp_core::offchain::TransactionPoolExt;
 	use sp_keystore::{testing::KeyStore, KeystoreExt, SyncCryptoStore};
@@ -94,7 +95,7 @@ pub fn offchain_test_ext() -> (
 	const PHRASE: &str =
 		"news slush supreme milk chapter athlete soap sausage put clutch what kitten";
 	let keystore = KeyStore::new();
-	SyncCryptoStore::sr25519_generate_new(
+	let public_key = SyncCryptoStore::sr25519_generate_new(
 		&keystore,
 		crate::airdrop_crypto::Public::ID,
 		Some(&format!("{}/abcdefg", PHRASE)),
@@ -109,7 +110,7 @@ pub fn offchain_test_ext() -> (
 	test_ext.register_extension(TransactionPoolExt::new(pool));
 	test_ext.register_extension(KeystoreExt(Arc::new(keystore)));
 
-	(test_ext, offchain_state, pool_state)
+	(test_ext, offchain_state, pool_state, public_key)
 }
 
 // Return the same address if it is not sudo
