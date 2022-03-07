@@ -35,21 +35,31 @@
 //! inside `ServerResponse` type. If transferring the fund succeed, it will also
 //! remove the queue from pendingClaims and update any snapshot info as needed.
 //! This is only callable by sudo/root account
+//!
+//! * [`register_failed_claim`]
+//! This dispatchable provides a mean to register that some entry was failed to process
+//! and this responsibility is to be taken by node operator.
+//!
+//! * [`update_processed_upto_counter`]
+//! To update the mark that records upto which block of claiming has been completed
+//!
+//! * [`remove_from_pending_claim`]
+//! To remove something from pending claim as it is no longer needed. For eg: when record
+//! claiming account of this icon address is 0 token
 
 #![cfg_attr(not(feature = "std"), no_std)]
 pub use pallet::*;
+#[cfg(test)]
+pub mod mock;
 
 #[cfg(test)]
-mod mock;
-
-#[cfg(test)]
-mod tests;
+pub mod tests;
 
 #[cfg(feature = "runtime-benchmarks")]
 mod benchmarking;
 
 /// All the types and alises must be defined here
-mod types;
+pub mod types;
 
 /// An identifier for a type of cryptographic key.
 /// For this pallet, account associated with this key must be same as
@@ -72,12 +82,14 @@ pub mod pallet {
 	use super::types;
 
 	use frame_support::pallet_prelude::*;
-	use frame_system::pallet_prelude::*;
+	use frame_system::{ensure_signed, pallet_prelude::*};
 	use sp_std::prelude::*;
 
 	use frame_support::traits::{Currency, ExistenceRequirement, Hooks, ReservableCurrency};
 	use frame_system::offchain::CreateSignedTransaction;
 	use types::IconVerifiable;
+
+	use sp_runtime::traits::Saturating;
 
 	/// Configure the pallet by specifying the parameters and types on which it depends.
 	#[pallet::config]
@@ -118,19 +130,31 @@ pub mod pallet {
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
 		/// Emit when a claim request have been removed from queue
-		ClaimCancelled(types::AccountIdOf<T>),
+		ClaimCancelled(types::IconAddress),
 
 		/// Emit when claim request was done successfully
-		ClaimRequestSucced(types::AccountIdOf<T>),
+		ClaimRequestSucced(
+			types::BlockNumberOf<T>,
+			types::AccountIdOf<T>,
+			types::IconAddress,
+		),
 
 		/// Emit when an claim request was successful and fund have been transferred
-		ClaimSuccess(types::AccountIdOf<T>),
+		ClaimSuccess(types::IconAddress),
 
 		/// An entry from queue was removed
-		RemovedFromQueue(types::AccountIdOf<T>),
+		RemovedFromQueue(types::IconAddress),
 
 		/// Same entry is processed by offchian worker for too many times
-		RetryExceed(types::AccountIdOf<T>, types::BlockNumberOf<T>),
+		RetryExceed(
+			types::AccountIdOf<T>,
+			types::IconAddress,
+			types::BlockNumberOf<T>,
+		),
+
+		/// Value of OffchainAccount sotrage have been changed
+		/// Return old value and new one
+		OffchainAccountChanged(Option<types::AccountIdOf<T>>, types::AccountIdOf<T>),
 	}
 
 	#[pallet::storage]
@@ -139,16 +163,25 @@ pub mod pallet {
 		_,
 		Twox64Concat,
 		T::BlockNumber,
-		Identity,
-		types::AccountIdOf<T>,
+		Twox64Concat,
+		types::IconAddress,
 		u8,
 		OptionQuery,
 	>;
 
 	#[pallet::storage]
-	#[pallet::getter(fn get_ice_snapshot_map)]
+	#[pallet::getter(fn get_processed_upto_counter)]
+	pub(super) type ProcessedUpto<T: Config> = StorageValue<_, types::BlockNumberOf<T>, ValueQuery>;
+
+	#[pallet::storage]
+	#[pallet::getter(fn get_icon_snapshot_map)]
 	pub(super) type IceSnapshotMap<T: Config> =
-		StorageMap<_, Identity, types::AccountIdOf<T>, types::SnapshotInfo<T>, OptionQuery>;
+		StorageMap<_, Twox64Concat, types::IconAddress, types::SnapshotInfo<T>, OptionQuery>;
+
+	#[pallet::storage]
+	#[pallet::getter(fn get_offchain_account)]
+	pub(super) type OffchainAccount<T: Config> =
+		StorageValue<_, types::AccountIdOf<T>, OptionQuery>;
 
 	#[pallet::error]
 	pub enum Error<T> {
@@ -197,48 +230,37 @@ pub mod pallet {
 		) -> DispatchResult {
 			// Take signed address compatible with airdrop_pallet::Config::AccountId type
 			// so that we can call verify_with_icon method
-			let ice_address: <T as Config>::AccountId = ensure_signed(origin)?.into();
+			let ice_address: types::AccountIdOf<T> = ensure_signed(origin)?.into();
+
+			// We check the claim status before hand
+			let is_already_on_map = <IceSnapshotMap<T>>::contains_key(&icon_address);
+			ensure!(!is_already_on_map, Error::<T>::RequestAlreadyMade);
 
 			// make sure the validation is correct
-			ice_address
+			<types::AccountIdOf<T> as Into<<T as Config>::AccountId>>::into(ice_address.clone())
 				.verify_with_icon(&icon_address, &icon_signature, &message)
 				.map_err(|err| {
 					log::info!("Signature validation failed with: {:?}", err);
 					Error::<T>::InvalidSignature
 				})?;
 
-			// Convert back to to frame_system::Config::AccountId
-			let ice_address: types::AccountIdOf<T> = ice_address.into();
+			Self::claim_request_unchecked(ice_address, icon_address);
 
-			/*
-			TODO:
-			We might have to check both is_in_queue & is_in_map  independently
-			and do not error on absence of either of them.
-			Consider a activity when:
-			- Use make claim_request ( which will add to map & queue )
-			- Cancel the claim request ( which will remove from queue & data in map is preserved anyway )
-			- then user will never be able to claim again ( because data in already on map & we are throwing error on this condition )
-			*/
-			let is_already_on_map = <IceSnapshotMap<T>>::contains_key(&ice_address);
-			ensure!(!is_already_on_map, Error::<T>::RequestAlreadyMade);
+			Ok(())
+		}
 
-			// Get the current block number. This is the number where user asked for claim
-			// and we store it in PencingClaims to preserve FIFO
-			let current_block_number = Self::get_current_block_number();
+		// Means to push claim request force fully
+		// This skips signature verification
+		#[pallet::weight(0)]
+		pub fn force_claim_request(
+			origin: OriginFor<T>,
+			ice_address: types::AccountIdOf<T>,
+			icon_address: types::IconAddress,
+		) -> DispatchResult {
+			ensure_root(origin).map_err(|_| Error::<T>::DeniedOperation)?;
 
-			// Insert with default snapshot but with real icon address mapping
-			let new_snapshot = types::SnapshotInfo::<T>::default().icon_address(icon_address);
-			<IceSnapshotMap<T>>::insert(&ice_address, new_snapshot);
+			Self::claim_request_unchecked(ice_address, icon_address);
 
-			// insert in queue respective to current block number
-			// and retry as defined in crate level constant
-			<PendingClaims<T>>::insert(
-				&current_block_number,
-				&ice_address,
-				crate::DEFAULT_RETRY_COUNT,
-			);
-
-			Self::deposit_event(Event::<T>::ClaimRequestSucced(ice_address));
 			Ok(())
 		}
 
@@ -265,17 +287,18 @@ pub mod pallet {
 		pub fn complete_transfer(
 			origin: OriginFor<T>,
 			block_number: types::BlockNumberOf<T>,
-			receiver: types::AccountIdOf<T>,
+			receiver_icon: types::IconAddress,
 			server_response: types::ServerResponse,
 		) -> DispatchResult {
 			// Make sure this is either sudo or root
-			Self::ensure_root_or_sudo(origin.clone()).map_err(|_| Error::<T>::DeniedOperation)?;
+			Self::ensure_root_or_offchain(origin.clone())
+				.map_err(|_| Error::<T>::DeniedOperation)?;
 
 			// Check again if it is still in the pending queue
 			// Eg: If another node had processed the same request
 			// or if user had decided to cancel_claim_request
 			// this entry won't be present in the queue
-			let is_in_queue = <PendingClaims<T>>::contains_key(&block_number, &receiver);
+			let is_in_queue = <PendingClaims<T>>::contains_key(&block_number, &receiver_icon);
 			ensure!(is_in_queue, {
 				log::info!(
 					"{}{}",
@@ -287,7 +310,7 @@ pub mod pallet {
 
 			// Get snapshot from map and return with error if not present
 			let mut snapshot =
-				Self::get_ice_snapshot_map(&receiver).ok_or(Error::<T>::IncompleteData)?;
+				Self::get_icon_snapshot_map(&receiver_icon).ok_or(Error::<T>::IncompleteData)?;
 
 			// Also make sure that claim_status of this snapshot is false
 			ensure!(!snapshot.claim_status, Error::<T>::ClaimAlreadyMade);
@@ -300,7 +323,7 @@ pub mod pallet {
 				// We are moving it to keep for retry
 				// But it will also fail in next time because it is eror
 				// with incompatable format between server response & rust struct
-				Self::register_failed_claim(origin.clone(), block_number, receiver.clone())
+				Self::register_failed_claim(origin.clone(), block_number, receiver_icon.clone())
 					.expect("Calling register_failed_claim from amount.try_into.This call should not have failed.");
 
 				DispatchError::Other("Cannot convert server_response.value into Balance type")
@@ -309,31 +332,45 @@ pub mod pallet {
 			// Transfer the amount to this reciver keeping creditor alive
 			T::Currency::transfer(
 				&Self::get_creditor_account(),
-				&receiver,
+				&snapshot.ice_address,
 				amount,
 				ExistenceRequirement::KeepAlive,
 			)
 			.map_err(|err| {
 				// This is also error from our side. We keep it for next retry
-				Self::register_failed_claim(origin.clone(), block_number, receiver.clone()).expect("Calling register failed_claim from currency::transfer. This call should not have failed..");
-				
+				Self::register_failed_claim(origin.clone(), block_number, receiver_icon.clone()).expect("Calling register failed_claim from currency::transfer. This call should not have failed..");
+
 				log::info!("Currency transfer failed with error: {:?}", err);
 				err
 			})?;
 
 			// Update claim_status to true and store it
 			snapshot.claim_status = true;
-			<IceSnapshotMap<T>>::insert(&receiver, snapshot);
+			<IceSnapshotMap<T>>::insert(&receiver_icon, snapshot);
 
 			// Now we can remove this claim from queue
-			<PendingClaims<T>>::remove(&block_number, &receiver);
+			<PendingClaims<T>>::remove(&block_number, &receiver_icon);
 
-			log::info!(
-				"Complete_tranfser function on ice address: {:?} completed..",
-				receiver
-			);
+			Self::deposit_event(Event::<T>::ClaimSuccess(receiver_icon));
 
-			Self::deposit_event(Event::<T>::ClaimSuccess(receiver));
+			Ok(())
+		}
+
+		/// Call to set OffchainWorker Account ( Restricted to root only )
+		/// Why?
+		/// We have to have a way that this signed call is from offchain so we can perform
+		/// critical operation. When offchain worker key and this storage have same account
+		/// then we have a way to ensure this call is from offchain worker
+		#[pallet::weight(0)]
+		pub fn set_offchain_account(
+			origin: OriginFor<T>,
+			new_account: types::AccountIdOf<T>,
+		) -> DispatchResult {
+			ensure_root(origin).map_err(|_| Error::<T>::DeniedOperation)?;
+
+			let old_value = Self::get_offchain_account();
+			<OffchainAccount<T>>::set(Some(new_account.clone()));
+			Self::deposit_event(Event::OffchainAccountChanged(old_value, new_account));
 
 			Ok(())
 		}
@@ -342,12 +379,12 @@ pub mod pallet {
 		pub fn remove_from_pending_queue(
 			origin: OriginFor<T>,
 			block_number: types::BlockNumberOf<T>,
-			ice_address: types::AccountIdOf<T>,
+			icon_address: types::IconAddress,
 		) -> DispatchResult {
-			Self::ensure_root_or_sudo(origin)?;
+			Self::ensure_root_or_offchain(origin)?;
 
-			<PendingClaims<T>>::remove(&block_number, &ice_address);
-			Self::deposit_event(Event::<T>::RemovedFromQueue(ice_address));
+			<PendingClaims<T>>::remove(&block_number, &icon_address);
+			Self::deposit_event(Event::<T>::RemovedFromQueue(icon_address));
 
 			Ok(())
 		}
@@ -360,20 +397,21 @@ pub mod pallet {
 		pub fn register_failed_claim(
 			origin: OriginFor<T>,
 			block_number: types::BlockNumberOf<T>,
-			ice_address: types::AccountIdOf<T>,
+			icon_address: types::IconAddress,
 		) -> DispatchResult {
-			Self::ensure_root_or_sudo(origin).map_err(|_| Error::<T>::DeniedOperation)?;
-			use sp_runtime::traits::Saturating;
+			Self::ensure_root_or_offchain(origin).map_err(|_| Error::<T>::DeniedOperation)?;
 
-			let retry_remaining = Self::get_pending_claims(&block_number, &ice_address)
-				.ok_or(Error::<T>::IncompleteData)?;
-			let retry_remaining = retry_remaining.checked_sub(1.into()).unwrap_or_default();
+			let ice_address = Self::get_icon_snapshot_map(&icon_address)
+				.ok_or(Error::<T>::IncompleteData)?
+				.ice_address;
+			let retry_remaining = Self::get_pending_claims(&block_number, &icon_address)
+				.ok_or(Error::<T>::NotInQueue)?;
 
 			// In both case weather retry is remaining or not
 			// we will remove this entry from this block number key
 			// so do it early to make sure we dont miss this inany case
 			// otherwise this entry will always be floating around in storage
-			<PendingClaims<T>>::remove(&block_number, &ice_address);
+			<PendingClaims<T>>::remove(&block_number, &icon_address);
 
 			// Check if it's retry counter have been brought to zero
 			// if so do not move this entry to next block
@@ -390,14 +428,21 @@ pub mod pallet {
 				// so is there nothing else to do?
 
 				// Emit event and return with error
-				Self::deposit_event(Event::<T>::RetryExceed(ice_address, block_number));
+				Self::deposit_event(Event::<T>::RetryExceed(
+					ice_address,
+					icon_address,
+					block_number,
+				));
 				Error::<T>::RetryExceed
 			});
 
 			// This entry have some retry remaining so we put this entry in another block_number key
-			let new_block_number =
-				block_number.saturating_add(crate::OFFCHAIN_WORKER_BLOCK_GAP.into());
-			<PendingClaims<T>>::insert(&new_block_number, &ice_address, retry_remaining);
+			let new_block_number = Self::get_current_block_number().saturating_add(1_u32.into());
+			<PendingClaims<T>>::insert(
+				&new_block_number,
+				&icon_address,
+				retry_remaining.saturating_sub(1),
+			);
 
 			Ok(())
 		}
@@ -431,58 +476,72 @@ pub mod pallet {
 
 			Ok(())
 		}
+
+		#[pallet::weight(0)]
+		pub fn update_processed_upto_counter(
+			origin: OriginFor<T>,
+			new_value: types::BlockNumberOf<T>,
+		) -> DispatchResult {
+			Self::ensure_root_or_offchain(origin).map(|_| Error::<T>::DeniedOperation)?;
+
+			<ProcessedUpto<T>>::set(new_value);
+
+			Ok(())
+		}
 	}
 
 	#[pallet::hooks]
 	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
-		fn offchain_worker(block_number: T::BlockNumber) {
+		fn offchain_worker(block_number: types::BlockNumberOf<T>) {
 			// If this is not the block to start offchain worker
 			// print a log and early return
 			if !Self::should_run_on_this_block(block_number) {
 				log::info!("Offchain worker skipped for block: {:?}", block_number);
 				return;
 			}
-			use sp_runtime::traits::CheckedSub;
 
-			// Block number on which offchain was previously active on
-			let already_processed_upto = block_number
-				.checked_sub(&crate::OFFCHAIN_WORKER_BLOCK_GAP.into())
-				.unwrap_or_default();
+			// Start processing from one + the block previously processed
+			let start_processing_from =
+				Self::get_processed_upto_counter().saturating_add(1_u32.into());
 
-			let mut processing_now = already_processed_upto;
-			// From last processed block upto this current block
-			// DO NOT process request in this block because the data might still be adding
-			while processing_now < block_number {
-				let claims_in_this_block =
-					<PendingClaims<T>>::iter_key_prefix(already_processed_upto)
-						// Filter out entries that are not present in ice_snapshot map
-						// this will skip the entries that were manually added only to pendingQueue
-						.filter(|ice_address| <IceSnapshotMap<T>>::contains_key(ice_address))
-						// Collect block number also. We might use it later on
-						.map(|ice_address| (already_processed_upto, ice_address))
-						.collect::<Vec<_>>();
+			// Mark the block numbers we will be processing
+			let mut blocks_to_process =
+				types::PendingClaimsOf::<T>::new(start_processing_from..block_number);
 
-				// Increase the collected counter.
-				// This addition might overflow because block number might exceed the
-				// total capacity type BlockNumber can hold. But this is really not be dealt here
-				// So we do unchecked addition
-				processing_now += 1_u32.into();
+			while let Some((block_number, mut entries_in_block)) = blocks_to_process.next() {
+				while let Some(claimer) = entries_in_block.next() {
+					let claim_res = Self::process_claim_request((block_number, claimer.clone()));
 
-				// NOTE:
-				// If we wanted to keep last processing counter in onchain db
-				// we have to update that storage here
-				// meaning we have to call an extrinsic from here
-				// so again consider if we really need to have that on onchain data
-
-				for claim in claims_in_this_block {
-					let claim_res = Self::process_claim_request(claim.clone());
 					if let Err(err) = claim_res {
-						log::info!("process_claim_request failed with error: {:?}", err);
+						log::info!(
+							"Claim process failed for Pending entry {:?} with error {:?}",
+							(claimer, block_number),
+							err
+						);
 					} else {
-						log::info!("Process claim request for {:?} passed..", claim.clone());
+						log::info!(
+							"complete_transfer function called sucessfully on Pending entry {:?}",
+							(claimer, block_number)
+						);
 					}
 				}
 			}
+
+			let update_res = Self::make_signed_call(&Call::update_processed_upto_counter {
+				new_value: block_number.saturating_sub(1_u32.into()),
+			});
+
+			// We assume that calling extrinsic will always pass. If not here is worst case scanerio
+			// update counter is never updated i.e always remains 0
+			// and we will always try processing claims made from request
+			// 0..10(no of block to process in one ocw)
+			// So:
+			// something should keep checking for process_upto value and notify when
+			// the gap between this value and current block is too high
+			// ( which signifies that this counter is not being updated lately )
+			//
+			// Just ignoring the result
+			update_res.ok();
 		}
 	}
 
@@ -490,24 +549,20 @@ pub mod pallet {
 	impl<T: Config> Pallet<T> {
 		// Function to proceed single claim request
 		pub fn process_claim_request(
-			(stored_block_num, ice_address): (types::BlockNumberOf<T>, types::AccountIdOf<T>),
+			(stored_block_num, icon_address): (types::BlockNumberOf<T>, types::IconAddress),
 		) -> Result<(), types::ClaimError> {
 			use types::{ClaimError, ServerError};
 
-			// Get the icon address corresponding to this ice_address
-			let icon_address = Self::get_ice_snapshot_map(&ice_address)
-				.ok_or(ClaimError::NoIconAddress)?
-				.icon_address;
-
-			let server_response_res = Self::fetch_from_server(icon_address);
+			let server_response_res = Self::fetch_from_server(&icon_address);
 
 			let call_to_make: Call<T>;
 			match server_response_res {
 				// If error is NonExistentData then, it signifies this icon address do not exists in server
 				// so we just cancel the request
 				Err(ClaimError::ServerError(ServerError::NonExistentData)) => {
+					// TODO: should we call register_fail or remove_fom_queue?
 					call_to_make = Call::register_failed_claim {
-						ice_address: ice_address.clone(),
+						icon_address: icon_address.clone(),
 						block_number: stored_block_num,
 					};
 				}
@@ -515,8 +570,9 @@ pub mod pallet {
 				// If transferring amount is 0, then we can just cancel this claim too
 				// as transferring 0 amount have no effect
 				Ok(response) if response.amount == 0 => {
+					// TODO: should we call register_fail or remove_from_queue
 					call_to_make = Call::remove_from_pending_queue {
-						ice_address: ice_address.clone(),
+						icon_address: icon_address.clone(),
 						block_number: stored_block_num,
 					};
 				}
@@ -528,7 +584,7 @@ pub mod pallet {
 				// This will also clear the queue
 				Ok(response) => {
 					call_to_make = Call::complete_transfer {
-						receiver: ice_address.clone(),
+						receiver_icon: icon_address.clone(),
 						server_response: response,
 						block_number: stored_block_num,
 					};
@@ -563,6 +619,9 @@ pub mod pallet {
 				// --3) Implementation itself to call signed transaction is buggy
 				// -- This also have to be made sure by the implementors
 
+				// TODO:
+				// Maintain local sudo account
+
 				log::info!(
 					"Calling extrinsic {:#?} failed with error: {:?}",
 					call_to_make,
@@ -588,25 +647,45 @@ pub mod pallet {
 			call_to_make: &Call<T>,
 		) -> Result<(), types::CallDispatchableError> {
 			use frame_system::offchain::SendSignedTransaction;
+			use frame_system::offchain::SigningTypes;
 			use types::CallDispatchableError;
 
-			let signer = frame_system::offchain::Signer::<T, T::AuthorityId>::any_account();
+			// If we can send this from account then only extrinsic will pass ensure_ statement
+			let send_from = <<T as SigningTypes>::Public as Decode>::decode(
+				&mut Self::get_offchain_account()
+					.ok_or(CallDispatchableError::NoAccount)?
+					.encode()
+					.as_ref(),
+			)
+			.map_err(|err| {
+				log::info!(
+					"[make_signed_call] Converting to Public from AccountId failed with error: {:?}",
+					err
+				);
+				CallDispatchableError::NoAccount
+			})?;
+
+			let signer = frame_system::offchain::Signer::<T, T::AuthorityId>::all_accounts()
+				.with_filter(vec![send_from]);
+			if !signer.can_sign() {
+				return Err(CallDispatchableError::NoAccount);
+			}
+
 			let send_tx_res = signer.send_signed_transaction(move |_accnt| (*call_to_make).clone());
 
-			if let Some((_account, dispatch_res)) = send_tx_res {
-				if dispatch_res.is_ok() {
-					Ok(())
-				} else {
-					Err(CallDispatchableError::CantDispatch)
-				}
+			if let Some((_accnt, send_tx_res)) = send_tx_res.iter().next() {
+				send_tx_res.map_err(|_| CallDispatchableError::CantDispatch)
 			} else {
-				Err(CallDispatchableError::NoAccount)
+				log::info!(
+					"[make_signed_call] calling send_signed_transaction returned empty result."
+				);
+				Err(CallDispatchableError::CantDispatch)
 			}
 		}
 
 		/// This function fetch the data from server and return it in required struct
 		pub fn fetch_from_server(
-			icon_address: types::IconAddress,
+			icon_address: &types::IconAddress,
 		) -> Result<types::ServerResponse, types::ClaimError> {
 			use codec::alloc::string::String;
 			use sp_runtime::offchain::{http, Duration};
@@ -697,19 +776,46 @@ pub mod pallet {
 			T::Creditor::get().into_account()
 		}
 
-		/// return the key set in sudo pallet
-		#[inline(always)]
-		pub fn get_sudo_account() -> types::AccountIdOf<T> {
-			pallet_sudo::Pallet::<T>::key()
+		/// Do claim request withing checking for anything.
+		/// This is seperated as a means to share logic
+		/// And always should be called only after doing proper check before hand
+		pub fn claim_request_unchecked(
+			ice_address: types::AccountIdOf<T>,
+			icon_address: types::IconAddress,
+		) {
+			// Get the current block number. This is the number where user asked for claim
+			// and we store it in PencingClaims to preserve FIFO
+			let current_block_number = Self::get_current_block_number();
+
+			// Insert with default snapshot but with real icon address mapping
+			let new_snapshot = types::SnapshotInfo::<T>::default().ice_address(ice_address.clone());
+			<IceSnapshotMap<T>>::insert(&icon_address, new_snapshot);
+
+			// insert in queue respective to current block number
+			// and retry as defined in crate level constant
+			<PendingClaims<T>>::insert(
+				&current_block_number,
+				&icon_address,
+				crate::DEFAULT_RETRY_COUNT,
+			);
+
+			Self::deposit_event(Event::<T>::ClaimRequestSucced(
+				current_block_number,
+				ice_address,
+				icon_address,
+			));
 		}
 
 		/// Helper function to create similar interface like `ensure_root`
 		/// but which instead check for sudo key
-		pub fn ensure_root_or_sudo(origin: OriginFor<T>) -> DispatchResult {
+		pub fn ensure_root_or_offchain(origin: OriginFor<T>) -> DispatchResult {
 			let is_root = ensure_root(origin.clone()).is_ok();
-			let is_sudo = ensure_signed(origin).ok() == Some(Self::get_sudo_account());
+			let is_offchain = {
+				let signed = ensure_signed(origin);
+				signed.is_ok() && signed.ok() == Self::get_offchain_account()
+			};
 
-			ensure!(is_root || is_sudo, DispatchError::BadOrigin);
+			ensure!(is_root || is_offchain, DispatchError::BadOrigin);
 			Ok(())
 		}
 
@@ -834,7 +940,7 @@ impl types::IconVerifiable for sp_runtime::AccountId32 {
 
 		let (_exit_status, icon_pub_key) =
 			ECRecoverPublicKey::execute(&formatted_icon_signature, COST)
-				.map_err(|_| SignatureValidationError::ECRecoverExecution)?;
+				.map_err(|_| SignatureValidationError::InvalidIconSignature)?;
 
 		let (_exit_status, computed_icon_address) = Sha3FIPS256::execute(&icon_pub_key, COST)
 			.map_err(|_| SignatureValidationError::Sha3Execution)?;
