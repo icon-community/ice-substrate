@@ -1,0 +1,100 @@
+#ice-substrate artifact deployment on dev environments
+name: ice-substrate artifact deployment on dev environments
+
+on: 
+  workflow_dispatch:
+    inputs:
+      icenode:
+        description: 'artifact name'
+        required: true
+        default: 'ice-node-'
+      tags:
+        description: 'tag name'
+        required: true
+        default: 'v0.2.0'
+      chain:
+        description: 'chain name'
+        required: true
+        default: 'test'
+
+jobs:
+       
+  deploy-rpc:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install SSH Key
+        uses: shimataro/ssh-key-action@v2
+        with:
+          key: ${{ secrets.SSH_PRIVATE_KEY_RPC }} 
+          known_hosts: 'just-a-placeholder-so-we-dont-get-errors'
+      - name: Adding Known Hosts
+        run: ssh-keyscan -H ${{ secrets.SSH_HOST_RPC }} >> ~/.ssh/known_hosts
+
+      - id: download-release-asset
+        name: Download release asset  
+        uses: dsaltares/fetch-gh-release-asset@master
+        with:
+          repo: "web3labs/ice-substrate"
+          version: tags/${{ github.event.inputs.tags }}
+          file: ${{ github.event.inputs.icenode }}.zip
+          target: ice-node.zip
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: ls artifact
+        run:
+          ls
+      - name: unzip artifact
+        run:
+          unzip ice-node.zip
+      - name: remove zip
+        run: rm -rvf *.zip
+      - name: deploy with rsync
+        run: rsync -avz ice* ${{ secrets.SSH_USER_RPC }}@${{ secrets.SSH_HOST_RPC }}:/root/ice-node/
+      - name: executing remote ssh commands using ssh key
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST_RPC }}
+          username: ${{ secrets.SSH_USER_RPC }}
+          key: ${{ secrets.SSH_PRIVATE_KEY_RPC }}
+          port: ${{ secrets.SSH_PORT }}
+          script: sh /root/ice-node/rpcrestart.sh ${{ github.event.inputs.chain }}
+        
+  deploy-validator:
+    needs: deploy-rpc
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install SSH Key
+        uses: shimataro/ssh-key-action@v2
+        with:
+          key: ${{ secrets.SSH_PRIVATE_KEY_VALID }} 
+          known_hosts: 'just-a-placeholder-so-we-dont-get-errors'
+      - name: Adding Known Hosts
+        run: ssh-keyscan -H ${{ secrets.SSH_HOST_VALID }} >> ~/.ssh/known_hosts
+
+      - id: download-release-asset
+        name: Download release asset  
+        uses: dsaltares/fetch-gh-release-asset@master
+        with:
+          repo: "web3labs/ice-substrate"
+          version: tags/${{ github.event.inputs.tags }}
+          file: ${{ github.event.inputs.icenode }}.zip
+          target: ice-node.zip
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: ls artifact
+        run:
+          ls
+      - name: unzip artifact
+        run:
+          unzip ice-node.zip
+      - name: remove zip
+        run: rm -rvf *.zip
+      
+      - name: deploy with rsync
+        run: rsync -avz ice* ${{ secrets.SSH_USER_VALID }}@${{ secrets.SSH_HOST_VALID }}:/root/ice-node/
+      - name: executing remote ssh commands using ssh key
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST_VALID }}
+          username: ${{ secrets.SSH_USER_VALID }}
+          key: ${{ secrets.SSH_PRIVATE_KEY_VALID }}
+          port: ${{ secrets.SSH_PORT }}
+          script: sh /root/ice-node/validrestart.sh

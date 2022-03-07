@@ -5,7 +5,7 @@
 [![Medium](https://img.shields.io/badge/Medium-gray?logo=medium)](https://medium.com/@helloiconworld)
 [![Telegram](https://img.shields.io/badge/Telegram-gray?logo=telegram)](https://t.me/joinchat/UG3uX-USLBwxYWRh)
 
-ICE Network is an EVM compatible network built with Parity’s Substrate framework.
+ICE Network is an EVM compatible network built with Parity’s Substrate framework. ICE is the first network to use the Substrate SDK to extend the feature-set of an existing layer one blockchain protocol. In addition, ICE will provide the much-needed addition of EVM compatibility to the ICON ecosystem
 
 ## Build & Run
 

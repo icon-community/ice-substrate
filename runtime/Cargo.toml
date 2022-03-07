@@ -4,10 +4,10 @@ build = 'build.rs'
 description = 'ICE Network is an EVM compatible network built with Substrate framework'
 edition = '2021'
 homepage = 'https://substrate.dev'
-license = 'Apache'
+license = 'Apache-2.0'
 name = 'ice-runtime'
 repository = 'https://github.com/web3labs/ice-substrate/'
-version = '0.0.2'
+version = '0.3.1'
 publish = false
 
 [package.metadata.docs.rs]
@@ -48,10 +48,14 @@ pallet-transaction-payment = { default-features = false, git = "https://github.c
 pallet-transaction-payment-rpc-runtime-api = { default-features = false, git = "https://github.com/paritytech/substrate" }
 
 pallet-assets = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate" }
+pallet-collective = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate" }
 pallet-treasury = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate" }
 pallet-vesting = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate" }
 
 pallet-base-fee = { version = "1.0.0-dev", default-features = false, git = "https://github.com/paritytech/frontier" }
+
+pallet-simple-inflation = { path = '../frame/simple-inflation', default-features = false, version = '0.0.1' }
+
 
 sp-api = { default-features = false, git = "https://github.com/paritytech/substrate" }
 sp-block-builder = { default-features = false, git = "https://github.com/paritytech/substrate" }
@@ -112,7 +116,10 @@ std = [
 	"pallet-transaction-payment/std",
 	"pallet-base-fee/std",
 	"pallet-vesting/std",
-
+	"pallet-assets/std",
+	"pallet-treasury/std",
+    "pallet-collective/std",
+	"pallet-simple-inflation/std",
 	"sp-api/std",
 	"sp-block-builder/std",
 	"sp-consensus-aura/std",
@@ -138,4 +145,6 @@ runtime-benchmarks = [
 	"pallet-evm/runtime-benchmarks",
 	"pallet-vesting/runtime-benchmarks",
 	"pallet-airdrop/runtime-benchmarks",
+	"pallet-collective/runtime-benchmarks",
+  "pallet-treasury/runtime-benchmarks",
 ]

@@ -1,0 +1,59 @@
+[package]
+authors = ['ICE Team <https://icenetwork.io>']
+description = 'ICE Network is an EVM compatible network built with Substrate framework'
+edition = '2021'
+homepage = 'https://substrate.dev'
+license = 'Apache-2.0'
+name = 'integration-tests'
+repository = 'https://github.com/web3labs/ice-substrate/'
+version = '0.0.2'
+publish = false
+
+
+[package.metadata.docs.rs]
+targets = ["x86_64-unknown-linux-gnu"]
+
+[dependencies]
+codec = { package = "parity-scale-codec", version = "2.3.1", default-features = false, features = [
+	"derive",
+] }
+serde = { version = "1.0.101", optional = true, features = ["derive"] }
+
+frame-support = { default-features = false, git = "https://github.com/paritytech/substrate" }
+frame-system = { default-features = false, package = "frame-system", git = "https://github.com/paritytech/substrate" }
+
+pallet-balances = { default-features = false, git = "https://github.com/paritytech/substrate" }
+pallet-assets = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate" }
+
+
+sp-core = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate" }
+sp-runtime = { default-features = false, git = "https://github.com/paritytech/substrate" }
+sp-std = { default-features = false, git = "https://github.com/paritytech/substrate" }
+sp-io = { default-features = false, git = "https://github.com/paritytech/substrate" }
+
+scale-info = { version = "1.0.0", default-features = false, features = [
+	"derive",
+] }
+
+[dev-dependencies]
+substrate-wasm-builder = { git = "https://github.com/paritytech/substrate" }
+
+[features]
+default = ["std"]
+manual-seal = []
+std = [
+	"codec/std",
+	"serde",
+
+	"frame-support/std",
+	"frame-system/std",
+
+	"pallet-balances/std",
+	"pallet-assets/std",
+
+	"sp-core/std",
+	"sp-runtime/std",
+	"sp-std/std",
+	"sp-io/std",
+	"scale-info/std",
+]
