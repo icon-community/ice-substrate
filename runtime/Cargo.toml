@@ -39,8 +39,12 @@ pallet-assets = {  default-features = false, git = "https://github.com/paritytec
 pallet-collective = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.17" }
 pallet-treasury = {  default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.17" }
 pallet-vesting = {  default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.17" }
-pallet-contracts = {  default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.17" }
 pallet-staking = {  default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.17" }
+
+# Contracts specific packages
+pallet-contracts = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.17", default-features = false }
+pallet-contracts-primitives = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.17", default-features = false }
+pallet-contracts-rpc-runtime-api = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.17", default-features = false }
 
 # sp dependencies from substrate 
 sp-api = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.17" }
@@ -128,6 +132,8 @@ std = [
     "pallet-collective/std",
 	"pallet-simple-inflation/std",
 	"pallet-contracts/std",
+	"pallet-contracts-primitives/std",
+	"pallet-contracts-rpc-runtime-api/std",
 	"pallet-staking/std",
 
 	"sp-api/std",

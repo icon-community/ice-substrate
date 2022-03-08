@@ -55,6 +55,8 @@ sp-block-builder = { branch = "polkadot-v0.9.17", git = "https://github.com/pari
 sc-basic-authorship = { branch = "polkadot-v0.9.17", git = "https://github.com/paritytech/substrate" }
 substrate-frame-rpc-system = { branch = "polkadot-v0.9.17", git = "https://github.com/paritytech/substrate" }
 pallet-transaction-payment-rpc = {branch = "polkadot-v0.9.17", git = "https://github.com/paritytech/substrate" }
+pallet-contracts-rpc = { branch = "polkadot-v0.9.17", git = "https://github.com/paritytech/substrate" }
+
 
 # These dependencies are used for runtime benchmarking
 frame-benchmarking = { branch = "polkadot-v0.9.17", git = "https://github.com/paritytech/substrate" }
