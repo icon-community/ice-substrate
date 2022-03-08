@@ -93,9 +93,7 @@ pub mod pallet {
 
 	/// Configure the pallet by specifying the parameters and types on which it depends.
 	#[pallet::config]
-	pub trait Config:
-		frame_system::Config + CreateSignedTransaction<Call<Self>> + pallet_sudo::Config
-	{
+	pub trait Config: frame_system::Config + CreateSignedTransaction<Call<Self>> {
 		/// AccountIf type that is same as frame_system's accountId also
 		/// extended to be verifable against icon data
 		type AccountId: IconVerifiable + IsType<<Self as frame_system::Config>::AccountId>;

@@ -63,10 +63,6 @@ optional = true
 default-features = false
 git = 'https://github.com/paritytech/substrate'
 
-[dependencies.pallet-sudo]
-default-features = false
-git = 'https://github.com/paritytech/substrate'
-
 # frontier packages
 
 [dependencies.pallet-evm-precompile-sha3fips]

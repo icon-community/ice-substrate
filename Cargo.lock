@@ -2459,7 +2459,7 @@ dependencies = [
 
 [[package]]
 name = "ice-node"
-version = "0.0.2"
+version = "0.3.1"
 dependencies = [
  "async-trait",
  "fc-consensus",
@@ -2517,7 +2517,7 @@ dependencies = [
 
 [[package]]
 name = "ice-runtime"
-version = "0.0.2"
+version = "0.3.1"
 dependencies = [
  "fp-rpc",
  "fp-self-contained",
@@ -4199,7 +4199,6 @@ dependencies = [
  "pallet-balances",
  "pallet-evm-precompile-sha3fips",
  "pallet-evm-precompile-simple",
- "pallet-sudo",
  "parity-scale-codec",
  "parking_lot",
  "scale-info",
