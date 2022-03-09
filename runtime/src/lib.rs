@@ -272,8 +272,8 @@ impl pallet_grandpa::Config for Runtime {
 
 
 parameter_types! {
-	pub const DepositPerItem: Balance = deposit(1, 0);
-	pub const DepositPerByte: Balance = deposit(0, 1);
+	pub const DepositPerItem: Balance = currency::deposit(1, 0);
+	pub const DepositPerByte: Balance = currency::deposit(0, 1);
 	// The lazy deletion runs inside on_initialize.
 	pub DeletionWeightLimit: Weight = AVERAGE_ON_INITIALIZE_RATIO *
 		RuntimeBlockWeights::get().max_block;
@@ -427,11 +427,6 @@ impl pallet_ethereum::Config for Runtime {
 pub const MILLICENTS: Balance = 1_000_000_000;
 pub const CENTS: Balance = 1_000 * MILLICENTS; // assume this is worth about a cent.
 pub const DOLLARS: Balance = 100 * CENTS;
-
-/// Charge fee for stored bytes and items.
-pub const fn deposit(items: u32, bytes: u32) -> Balance {
-    (items as Balance + bytes as Balance) * MILLIICY / 1_000_000
-}
 
 
 frame_support::parameter_types! {
