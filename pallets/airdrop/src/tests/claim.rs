@@ -7,20 +7,20 @@ fn claim_request_access() {
 	minimal_test_ext().execute_with(|| {
 		// Unsigned should not be able to call
 		assert_noop!(
-			AirdropModule::claim_request(Origin::none(), vec![], vec![], vec![]),
+			AirdropModule::claim_request(Origin::none(), samples::ICON_ADDRESS[1], vec![], vec![]),
 			DispatchError::BadOrigin
 		);
 
 		// Root should not be able to call
 		assert_noop!(
-			AirdropModule::claim_request(Origin::root(), vec![], vec![], vec![]),
+			AirdropModule::claim_request(Origin::root(), samples::ICON_ADDRESS[1], vec![], vec![]),
 			DispatchError::BadOrigin
 		);
 
 		// Signed user should be able to call
 		assert_ok!(AirdropModule::claim_request(
 			Origin::signed(samples::ACCOUNT_ID[0]),
-			vec![],
+			samples::ICON_ADDRESS[1],
 			vec![],
 			vec![]
 		));
@@ -30,7 +30,7 @@ fn claim_request_access() {
 #[test]
 fn already_in_map() {
 	minimal_test_ext().execute_with(|| {
-		let claimer = bytes::from_hex(samples::ICON_ADDRESS[1]).unwrap();
+		let claimer = samples::ICON_ADDRESS[1];
 
 		// Insert this entry to map
 		pallet_airdrop::IceSnapshotMap::<Test>::insert(&claimer, types::SnapshotInfo::default());
@@ -51,7 +51,7 @@ fn already_in_map() {
 #[test]
 fn valid_claim_request() {
 	minimal_test_ext().execute_with(|| {
-		let claimer = bytes::from_hex(samples::ICON_ADDRESS[1]).unwrap();
+		let claimer = samples::ICON_ADDRESS[1];
 
 		assert_ok!(AirdropModule::claim_request(
 			Origin::signed(samples::ACCOUNT_ID[0]),
@@ -89,12 +89,12 @@ fn fail_on_non_existent_data() {
 	let icon_address = samples::ICON_ADDRESS[0];
 	put_response(
 		&mut offchain_state.write(),
-		&icon_address.as_bytes().to_vec(),
+		&icon_address,
 		r#""NonExistentData""#,
 	);
 
 	test_ext.execute_with(|| {
-		let claimer = bytes::from_hex(icon_address).unwrap();
+		let claimer = icon_address;
 		let bl_num: types::BlockNumberOf<Test> = 2_u32.into();
 
 		assert_ok!(AirdropModule::set_offchain_account(
@@ -126,12 +126,12 @@ fn remove_on_zero_ice() {
 
 	put_response(
 		&mut offchain_state.write(),
-		&icon_address.as_bytes().to_vec(),
+		&icon_address,
 		&serde_json::to_string(&server_response).unwrap(),
 	);
 
 	test_ext.execute_with(|| {
-		let claimer = bytes::from_hex(icon_address).unwrap();
+		let claimer = icon_address;
 		let bl_num: types::BlockNumberOf<Test> = 2_u32.into();
 
 		assert_ok!(AirdropModule::set_offchain_account(
@@ -161,12 +161,12 @@ fn valid_process_claim() {
 
 	put_response(
 		&mut offchain_state.write(),
-		&icon_address.as_bytes().to_vec(),
+		&icon_address,
 		&serde_json::to_string(&samples::SERVER_DATA[1]).unwrap(),
 	);
 
 	test_ext.execute_with(|| {
-		let claimer = bytes::from_hex(icon_address.clone()).unwrap();
+		let claimer = icon_address.clone();
 		let bl_num: types::BlockNumberOf<Test> = 2_u32.into();
 
 		assert_ok!(AirdropModule::set_offchain_account(
@@ -193,7 +193,7 @@ fn valid_process_claim() {
 #[test]
 fn multi_ice_single_icon() {
 	minimal_test_ext().execute_with(|| {
-		let icon_address = bytes::from_hex(samples::ICON_ADDRESS[0]).unwrap();
+		let icon_address = samples::ICON_ADDRESS[0];
 		let ice_address_one = samples::ACCOUNT_ID[1];
 		let ice_address_two = samples::ACCOUNT_ID[2];
 
@@ -225,8 +225,8 @@ fn multi_ice_single_icon() {
 #[test]
 fn multi_icon_single_ice() {
 	minimal_test_ext().execute_with(|| {
-		let icon_address_first = bytes::from_hex(samples::ICON_ADDRESS[1]).unwrap();
-		let icon_address_second = bytes::from_hex(samples::ICON_ADDRESS[2]).unwrap();
+		let icon_address_first = samples::ICON_ADDRESS[1];
+		let icon_address_second = samples::ICON_ADDRESS[2];
 		let ice_address = samples::ACCOUNT_ID[1];
 
 		// claim with primary ice_address and first icon address
@@ -254,14 +254,14 @@ fn multi_icon_single_ice() {
 #[test]
 fn complete_flow() {
 	let claimer_ice_address = samples::ACCOUNT_ID[1];
-	let claimer_icon_address = bytes::from_hex(samples::ICON_ADDRESS[1]).unwrap();
+	let claimer_icon_address = samples::ICON_ADDRESS[1];
 	let server_data = samples::SERVER_DATA[0];
 
 	let (mut test_ext, offchain_state, pool_state, ocw_pub) = offchain_test_ext();
 
 	put_response(
 		&mut offchain_state.write(),
-		&samples::ICON_ADDRESS[1].as_bytes().to_vec(),
+		&claimer_icon_address,
 		&serde_json::to_string(&server_data).unwrap(),
 	);
 

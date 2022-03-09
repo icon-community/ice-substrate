@@ -23,7 +23,7 @@ scale-info = { version = "1.0", default-features = false, features = [
 serde = { version = '1.0', default-features = false, features = ['derive'] }
 serde_json = { version = '1.0', default-features = false, features = ['alloc'] }
 parking_lot = { version = "0.11", optional = true }
-
+hex-literal = { version = "*", default-features = false }
 # substrate packages
 
 [dependencies.frame-support]

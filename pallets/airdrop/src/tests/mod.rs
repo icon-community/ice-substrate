@@ -15,19 +15,22 @@ pub mod prelude {
 		assert_err, assert_err_ignore_postinfo, assert_err_with_weight, assert_noop, assert_ok,
 		assert_storage_noop,
 	};
+	pub use hex_literal::hex as decode_hex;
 	pub use pallet_airdrop::mock::{self, AirdropModule, Origin, Test};
 	pub use pallet_airdrop::types;
+	pub use sp_core::bytes;
 	pub use sp_runtime::traits::IdentifyAccount;
+
 	pub type PalletError = pallet_airdrop::Error<Test>;
 	pub type PalletEvent = pallet_airdrop::Event<Test>;
 	pub type PalletCall = pallet_airdrop::Call<Test>;
-	pub use sp_core::bytes;
 }
 use mock::System;
 use prelude::*;
 
 pub mod samples {
-	use super::types::ServerResponse;
+	use super::decode_hex;
+	use super::types::{IconAddress, ServerResponse};
 	use sp_core::sr25519;
 
 	pub const ACCOUNT_ID: &[sr25519::Public] = &[
@@ -53,11 +56,11 @@ pub mod samples {
 		},
 	];
 
-	pub const ICON_ADDRESS: &[&str] = &[
-		"0xee1448f0867b90e6589289a4b9c06ac4516a75a9",
-		"0xee33286f367b90e6589289a4b987a6c4516a753a",
-		"0xee12463586abb90e6589289a4b9c06ac4516a7ba",
-		"0xee02363546bcc50e643910104321c0623451a65a",
+	pub const ICON_ADDRESS: &[IconAddress] = &[
+		decode_hex!("ee1448f0867b90e6589289a4b9c06ac4516a75a9"),
+		decode_hex!("ee33286f367b90e6589289a4b987a6c4516a753a"),
+		decode_hex!("ee12463586abb90e6589289a4b9c06ac4516a7ba"),
+		decode_hex!("ee02363546bcc50e643910104321c0623451a65a"),
 	];
 }
 
@@ -147,7 +150,7 @@ pub fn put_response(
 		mock::FetchIconEndpoint::get()
 			.as_bytes()
 			.iter()
-			.chain(icon_address.iter())
+			.chain(bytes::to_hex(icon_address, false).as_bytes().iter())
 			.cloned()
 			.collect::<Vec<u8>>(),
 	)

@@ -13,7 +13,7 @@ fn complete_transfer_access() {
 				AirdropModule::complete_transfer(
 					Origin::root(),
 					1_u32.into(),
-					bytes::from_hex(samples::ICON_ADDRESS[0]).unwrap(),
+					samples::ICON_ADDRESS[0],
 					samples::SERVER_DATA[0]
 				)
 				.unwrap_err(),
@@ -32,7 +32,7 @@ fn complete_transfer_access() {
 				AirdropModule::complete_transfer(
 					Origin::signed(AirdropModule::get_offchain_account().unwrap()),
 					1_u32.into(),
-					bytes::from_hex(samples::ICON_ADDRESS[0]).unwrap(),
+					samples::ICON_ADDRESS[0],
 					samples::SERVER_DATA[0]
 				)
 				.unwrap_err(),
@@ -48,7 +48,7 @@ fn complete_transfer_access() {
 				AirdropModule::complete_transfer(
 					Origin::signed(non_sudo),
 					1_u32.into(),
-					bytes::from_hex(samples::ICON_ADDRESS[0]).unwrap(),
+					samples::ICON_ADDRESS[0],
 					samples::SERVER_DATA[0]
 				)
 				.unwrap_err(),
@@ -63,7 +63,7 @@ fn complete_transfer_access() {
 				AirdropModule::complete_transfer(
 					Origin::none(),
 					1_u32.into(),
-					bytes::from_hex(samples::ICON_ADDRESS[0]).unwrap(),
+					samples::ICON_ADDRESS[0],
 					samples::SERVER_DATA[0]
 				)
 				.unwrap_err(),
@@ -77,7 +77,7 @@ fn complete_transfer_access() {
 #[test]
 fn no_data_in_map() {
 	minimal_test_ext().execute_with(|| {
-		let claimer = bytes::from_hex(samples::ICON_ADDRESS[0]).unwrap();
+		let claimer = samples::ICON_ADDRESS[0];
 		let bl_num: types::BlockNumberOf<Test> = 1_u32.into();
 
 		// Insert some data in queue
@@ -100,7 +100,7 @@ fn no_data_in_map() {
 #[test]
 fn no_data_in_queue() {
 	minimal_test_ext().execute_with(|| {
-		let claimer = bytes::from_hex(samples::ICON_ADDRESS[0]).unwrap();
+		let claimer = samples::ICON_ADDRESS[0];
 
 		// Insert some data in map
 		pallet_airdrop::IceSnapshotMap::<Test>::insert(
@@ -126,7 +126,7 @@ fn no_data_in_queue() {
 fn already_claimed() {
 	minimal_test_ext().execute_with(|| {
 		let bl_num: types::BlockNumberOf<Test> = 1_u32.into();
-		let receiver = bytes::from_hex(samples::ICON_ADDRESS[0]).unwrap();
+		let receiver = samples::ICON_ADDRESS[0];
 
 		// Insert in queue
 		pallet_airdrop::PendingClaims::<Test>::insert(bl_num, &receiver, 1_u8);
@@ -154,7 +154,7 @@ fn already_claimed() {
 #[test]
 fn insufficient_creditor_balance() {
 	minimal_test_ext().execute_with(|| {
-		let claimer = bytes::from_hex(samples::ICON_ADDRESS[0]).unwrap();
+		let claimer = samples::ICON_ADDRESS[0];
 		let bl_num: types::BlockNumberOf<Test> = 1_u32.into();
 		let new_bl_num: types::BlockNumberOf<Test> = 6_u32.into();
 		let initial_retry = 1;
@@ -200,7 +200,7 @@ fn insufficient_creditor_balance() {
 #[test]
 fn complete_transfer_valid_flow() {
 	minimal_test_ext().execute_with(|| {
-		let claimer_icon = bytes::from_hex(samples::ICON_ADDRESS[0]).unwrap();
+		let claimer_icon = samples::ICON_ADDRESS[0];
 		let claimer_ice = samples::ACCOUNT_ID[0];
 		let bl_num: types::BlockNumberOf<Test> = 1_u32.into();
 		let server_response = samples::SERVER_DATA[0];

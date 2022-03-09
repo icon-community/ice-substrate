@@ -7,7 +7,7 @@ fn pool_dispatchable_from_offchain() {
 	test_ext.execute_with(|| {
 		let calls = [
 			&PalletCall::claim_request {
-				icon_address: bytes::from_hex(samples::ICON_ADDRESS[0]).unwrap(),
+				icon_address: samples::ICON_ADDRESS[0],
 				message: b"icx_sendTransaction.data.{method.transfer.params.{wallet.da8db20713c087e12abae13f522693299b9de1b70ff0464caa5d392396a8f76c}}.dataType.call.from.hxdd9ecb7d3e441d25e8c4f03cd20a80c502f0c374.nid.0x1.nonce.0x1..timestamp.0x5d56f3231f818.to.cx8f87a4ce573a2e1377545feabac48a960e8092bb.version.0x3".to_vec(),
 				icon_signature: bytes::from_hex("0xa64874af3653").unwrap(),
 			},
@@ -87,12 +87,11 @@ fn making_correct_http_request() {
 	let (mut test_ext, offchain_state,_,_) = offchain_test_ext();
 	put_response(
 		&mut offchain_state.write(),
-		&icon_address.as_bytes().to_vec(),
+		&icon_address,
 		&serde_json::to_string(&samples::SERVER_DATA[0]).unwrap(),
 	);
 
 	test_ext.execute_with(|| {
-		let icon_address = bytes::from_hex(icon_address).unwrap();
 		let fetch_res = AirdropModule::fetch_from_server(&icon_address);
 		assert_ok!(fetch_res);
 	});
@@ -102,7 +101,7 @@ fn making_correct_http_request() {
 fn failed_entry_regestration() {
 	minimal_test_ext().execute_with(|| {
 		let bl_num: types::BlockNumberOf<Test> = 2_u32.into();
-		let claimer = bytes::from_hex(samples::ICON_ADDRESS[0]).unwrap();
+		let claimer = samples::ICON_ADDRESS[0];
 		let retry = 2_u8;
 		let running_bl_num = bl_num + 6;
 
@@ -219,10 +218,10 @@ fn pending_claims_getter() {
 	};
 
 	let sample_entries: &[(types::BlockNumberOf<Test>, types::IconAddress)] = &[
-		(1_u32.into(), bytes::from_hex(ICON_ADDRESS[1]).unwrap()),
-		(1_u32.into(), bytes::from_hex(ICON_ADDRESS[0]).unwrap()),
-		(2_u32.into(), bytes::from_hex(ICON_ADDRESS[3]).unwrap()),
-		(10_u32.into(), bytes::from_hex(ICON_ADDRESS[2]).unwrap()),
+		(1_u32.into(),ICON_ADDRESS[0]),
+		(1_u32.into(), ICON_ADDRESS[1]),
+		(2_u32.into(), ICON_ADDRESS[3]),
+		(10_u32.into(), ICON_ADDRESS[2]),
 	];
 
 	const EMPTY: [(types::BlockNumberOf<Test>, types::IconAddress); 0] = [];
@@ -249,7 +248,7 @@ fn pending_claims_getter() {
 
 			let entries = get_flattened_vec(PendingClaimsOf::new(10_u32.into()..20_u32.into()));
 			assert_eq!(
-				vec![(10_u32.into(), bytes::from_hex(ICON_ADDRESS[2]).unwrap())],
+				vec![(10_u32.into(),ICON_ADDRESS[2])],
 				entries
 			);
 		}
@@ -265,9 +264,9 @@ fn pending_claims_getter() {
 			let entries = get_flattened_vec(PendingClaimsOf::new(1_u32.into()..3_u32.into()));
 			assert_eq!(
 				vec![
-					(1_u32.into(), bytes::from_hex(ICON_ADDRESS[1]).unwrap()),
-					(1_u32.into(), bytes::from_hex(ICON_ADDRESS[0]).unwrap()),
-					(2_u32.into(), bytes::from_hex(ICON_ADDRESS[3]).unwrap())
+					(1_u32.into(), ICON_ADDRESS[0]),
+					(1_u32.into(), ICON_ADDRESS[1]),
+					(2_u32.into(), ICON_ADDRESS[3])
 				],
 				entries
 			);
