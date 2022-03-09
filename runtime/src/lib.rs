@@ -175,7 +175,7 @@ const NORMAL_DISPATCH_RATIO: Perbill = Perbill::from_percent(75);
 
 parameter_types! {
     pub const Version: RuntimeVersion = VERSION;
-    pub const BlockHashCount: BlockNumber = 2400;
+    pub const BlockHashCount: BlockNumber = 256;
     /// We allow for 1 seconds of compute with a 2 second average block time.
     pub RuntimeBlockWeights: BlockWeights = BlockWeights
         ::with_sensible_defaults(1 * WEIGHT_PER_SECOND, NORMAL_DISPATCH_RATIO);
