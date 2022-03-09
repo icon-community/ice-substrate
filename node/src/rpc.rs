@@ -8,7 +8,7 @@ use fc_rpc::{
 };
 use fc_rpc_core::types::{FeeHistoryCache, FilterPool};
 use fp_storage::EthereumStorageSchema;
-use ice_runtime::{opaque::Block, AccountId, Balance, Hash, Index};
+use ice_runtime::{opaque::Block, AccountId, Balance, Hash, BlockNumber, Index};
 use jsonrpc_pubsub::manager::SubscriptionManager;
 use sc_client_api::{
 	backend::{AuxStore, Backend, StateBackend, StorageProvider},
@@ -108,6 +108,7 @@ where
 	C: HeaderBackend<Block> + HeaderMetadata<Block, Error = BlockChainError>,
 	C: Send + Sync + 'static,
 	C::Api: substrate_frame_rpc_system::AccountNonceApi<Block, AccountId, Index>,
+	C::Api: pallet_contracts_rpc::ContractsRuntimeApi<Block, AccountId, Balance, BlockNumber, Hash>,
 	C::Api: BlockBuilder<Block>,
 	C::Api: pallet_transaction_payment_rpc::TransactionPaymentRuntimeApi<Block, Balance>,
 	C::Api: fp_rpc::ConvertTransactionRuntimeApi<Block>,
@@ -122,6 +123,8 @@ where
 	};
 	use pallet_transaction_payment_rpc::{TransactionPayment, TransactionPaymentApi};
 	use substrate_frame_rpc_system::{FullSystem, SystemApi};
+	use pallet_contracts_rpc::{Contracts, ContractsApi};
+
 
 	let mut io = jsonrpc_core::IoHandler::default();
 	let FullDeps {
@@ -150,6 +153,9 @@ where
 	io.extend_with(TransactionPaymentApi::to_delegate(TransactionPayment::new(
 		client.clone(),
 	)));
+
+	// Contracts RPC API extension
+	io.extend_with(ContractsApi::to_delegate(Contracts::new(client.clone())));
 
 	let mut signers = Vec::new();
 	if enable_dev_signer {
@@ -202,6 +208,7 @@ where
 		),
 		overrides,
 	)));
+
 
 	match command_sink {
 		Some(command_sink) => {
