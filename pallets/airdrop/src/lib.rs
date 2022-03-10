@@ -673,36 +673,25 @@ pub mod pallet {
 			let call_res = Self::make_signed_call(&call_to_make);
 			call_res.map_err(|err| {
 				// NOTE:
-				// VERY_IMPORTANT:
-				// We have to make very sure that this call will always success.
-				// For eg:
-				// if we are about to register failed request ( which will reove the entry from current key )
-				// and if this calling failed, that that entry will never be removed
-				// Case 2:
-				// If we are about to transfer the amount but if this function never succeed
-				// then the fund will not have been transferred and user neither can do claim again
-				// ( as db shows user had already done the claim )
-				// And this same entry will never be processed by another offchain worker so the airdropping
-				// is lost ( until we query it and do it manually )
-				//
-				// So we have to make sure that this transaction always reach to the transaction pool
-				//
+				// If this call failed, i.e this statement is reached
+				// then is is responsibility of node operator to do this claim manually
 				// Possible sources of error:
-				// --- 1) The account configured in local storage do not have permission to call authorised function
-				// This usually happen when we update sudo key from pallet_sudo & forget to update & rotate
-				// keys in keystore of this pallet, then the filted from respective call
-				// `ensure_root_or_sudo()` will always fail thus performing no process
+				// - See make_signed_call
 				//
-				// -- 2) There is no account configured in keystore
-				// This can be tested before deploying node
-				// --3) Implementation itself to call signed transaction is buggy
-				// -- This also have to be made sure by the implementors
-
-				// TODO:
-				// Maintain local sudo account
+				// Additionally, it is checked that onchain storage of sudo is same as in keystore
+				// but it is possible that this storage is changed after call is put on transaction pool
+				// this will also make the call fail as it will no longer be validated as offchain
+				//
+				// Workaround:
+				// While changing offchain account we must do it in this order:
+				// 1) remove old entry from KeyStore
+				// 2) Add new entry in Keystore
+				// 3) Then only call to modiy OffchainAccount on-chain storage
+				// - On step 1,2 `make_signed_call` will fail but at least we wont loose the entry
+				// - and after we complete step 3, all will fine
 
 				log::error!(
-					"Calling extrinsic {:#?} failed with error: {:?}",
+					"[Airdorp pallet] Calling extrinsic {:#?} failed with error: {:?}",
 					call_to_make,
 					err
 				);
