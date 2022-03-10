@@ -553,7 +553,7 @@ pub mod pallet {
 		) -> DispatchResult {
 			Self::ensure_root_or_offchain(origin).map(|_| Error::<T>::DeniedOperation)?;
 
-			log::trace!("ProceedUpto Counter updating to value: {}", new_value);
+			log::trace!("ProceedUpto Counter updating to value: {:?}", new_value);
 			<ProcessedUpto<T>>::set(new_value);
 
 			Ok(())
