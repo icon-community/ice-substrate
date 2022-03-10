@@ -232,13 +232,25 @@ pub mod pallet {
 
 			// We check the claim status before hand
 			let is_already_on_map = <IceSnapshotMap<T>>::contains_key(&icon_address);
-			ensure!(!is_already_on_map, Error::<T>::RequestAlreadyMade);
+			ensure!(!is_already_on_map, {
+				log::trace!(
+					"[Airdrop pallet] Address pair: {:?} was ignored. {}",
+					(&ice_address, &icon_address),
+					"Entry already exists in map"
+				);
+				Error::<T>::RequestAlreadyMade
+			});
 
 			// make sure the validation is correct
 			<types::AccountIdOf<T> as Into<<T as Config>::AccountId>>::into(ice_address.clone())
 				.verify_with_icon(&icon_address, &icon_signature, &message)
 				.map_err(|err| {
-					log::info!("Signature validation failed with: {:?}", err);
+					log::trace!(
+						"[Airdrop pallet] Address pair: {:?} was ignored. {}{:?}",
+						(&ice_address, &icon_address),
+						"Signature verification failed with error: ",
+						err
+					);
 					Error::<T>::InvalidSignature
 				})?;
 
@@ -256,6 +268,11 @@ pub mod pallet {
 			icon_address: types::IconAddress,
 		) -> DispatchResult {
 			ensure_root(origin).map_err(|_| Error::<T>::DeniedOperation)?;
+
+			log::trace!(
+				"[Airdrop pallet] Address pair: {:?} was forced to be inserted",
+				(&ice_address, &icon_address),
+			);
 
 			Self::claim_request_unchecked(ice_address, icon_address);
 
@@ -299,19 +316,29 @@ pub mod pallet {
 			let is_in_queue = <PendingClaims<T>>::contains_key(&block_number, &receiver_icon);
 			ensure!(is_in_queue, {
 				log::info!(
-					"{}{}",
-					"The claim was no longer in queue",
-					"May be user clanceled or another node did it already?"
+					"[Airdrop pallet] There is no entry in PendingClaims for {:?}",
+					(receiver_icon, block_number)
 				);
 				Error::<T>::NotInQueue
 			});
 
 			// Get snapshot from map and return with error if not present
-			let mut snapshot =
-				Self::get_icon_snapshot_map(&receiver_icon).ok_or(Error::<T>::IncompleteData)?;
+			let mut snapshot = Self::get_icon_snapshot_map(&receiver_icon).ok_or({
+				log::info!(
+					"[Airdrop pallet] There is no entry in SnapshotMap for {:?}",
+					receiver_icon
+				);
+				Error::<T>::IncompleteData
+			})?;
 
 			// Also make sure that claim_status of this snapshot is false
-			ensure!(!snapshot.claim_status, Error::<T>::ClaimAlreadyMade);
+			ensure!(!snapshot.claim_status, {
+				log::trace!(
+					"[Airdrop pallet] Claiming for pair {:?} ignored because claim_status was true",
+					(&receiver_icon, &block_number)
+				);
+				Error::<T>::ClaimAlreadyMade
+			});
 
 			// Convert server_response.amount type ( usually u128 ) to balance type
 			// this will check for underflow overflow if u128 cannot be assigned to balance
@@ -349,6 +376,11 @@ pub mod pallet {
 			// Now we can remove this claim from queue
 			<PendingClaims<T>>::remove(&block_number, &receiver_icon);
 
+			log::trace!(
+				"[Airdrop pallet] Transfer done for pair {:?}",
+				(&receiver_icon, &block_number)
+			);
+
 			Self::deposit_event(Event::<T>::ClaimSuccess(receiver_icon));
 
 			Ok(())
@@ -368,6 +400,13 @@ pub mod pallet {
 
 			let old_value = Self::get_offchain_account();
 			<OffchainAccount<T>>::set(Some(new_account.clone()));
+
+			log::info!(
+				"[Airdrop pallet] {} {:?}",
+				"Value for OffchainAccount was changed in onchain storage. (Old, New): ",
+				(&old_value, &new_account)
+			);
+
 			Self::deposit_event(Event::OffchainAccountChanged(old_value, new_account));
 
 			Ok(())
@@ -383,6 +422,12 @@ pub mod pallet {
 
 			<PendingClaims<T>>::remove(&block_number, &icon_address);
 			Self::deposit_event(Event::<T>::RemovedFromQueue(icon_address));
+
+			log::info!(
+				"[Airdrop pallet] {} {:?}",
+				"Remove_from_pending_queue called for {:?}. Pass",
+				(&icon_address, &block_number)
+			);
 
 			Ok(())
 		}
@@ -400,10 +445,24 @@ pub mod pallet {
 			Self::ensure_root_or_offchain(origin).map_err(|_| Error::<T>::DeniedOperation)?;
 
 			let ice_address = Self::get_icon_snapshot_map(&icon_address)
-				.ok_or(Error::<T>::IncompleteData)?
+				.ok_or({
+					log::info!(
+						"[Airdrop pallet] {}. {:?}",
+						"Cannot register as failed claim because was not in map",
+						(&icon_address, &block_number)
+					);
+					Error::<T>::IncompleteData
+				})?
 				.ice_address;
-			let retry_remaining = Self::get_pending_claims(&block_number, &icon_address)
-				.ok_or(Error::<T>::NotInQueue)?;
+			let retry_remaining =
+				Self::get_pending_claims(&block_number, &icon_address).ok_or({
+					log::info!(
+						"[Airdrop pallet] {}. {:?}",
+						"Cannot register as failed claim because was not in queue",
+						(&icon_address, &block_number)
+					);
+					Error::<T>::NotInQueue
+				})?;
 
 			// In both case weather retry is remaining or not
 			// we will remove this entry from this block number key
@@ -414,9 +473,9 @@ pub mod pallet {
 			// Check if it's retry counter have been brought to zero
 			// if so do not move this entry to next block
 			ensure!(retry_remaining > 0, {
-				log::info!(
-					"Retry limit exceed for address: {:?} is in block number: {:?}",
-					ice_address,
+				log::trace!(
+					"[Airdrop pallet] Retry limit exceed for pair {:?} is in block number: {:?}",
+					(&ice_address, &icon_address),
 					block_number
 				);
 
@@ -440,6 +499,12 @@ pub mod pallet {
 				&new_block_number,
 				&icon_address,
 				retry_remaining.saturating_sub(1),
+			);
+
+			log::trace!(
+				"[Airdrop pallet] Register of pair {:?} in height {:?} succeed. Old retry: ",
+				(&ice_address, &icon_address),
+				new_block_number
 			);
 
 			Ok(())
@@ -482,6 +547,7 @@ pub mod pallet {
 		) -> DispatchResult {
 			Self::ensure_root_or_offchain(origin).map(|_| Error::<T>::DeniedOperation)?;
 
+			log::trace!("ProceedUpto Counter updating to value: {}", new_value);
 			<ProcessedUpto<T>>::set(new_value);
 
 			Ok(())
@@ -494,7 +560,7 @@ pub mod pallet {
 			// If this is not the block to start offchain worker
 			// print a log and early return
 			if !Self::should_run_on_this_block(block_number) {
-				log::info!("Offchain worker skipped for block: {:?}", block_number);
+				log::trace!("Offchain worker skipped for block: {:?}", block_number);
 				return;
 			}
 
@@ -511,13 +577,13 @@ pub mod pallet {
 					let claim_res = Self::process_claim_request((block_number, claimer.clone()));
 
 					if let Err(err) = claim_res {
-						log::info!(
+						log::error!(
 							"Claim process failed for Pending entry {:?} with error {:?}",
 							(claimer, block_number),
 							err
 						);
 					} else {
-						log::info!(
+						log::trace!(
 							"complete_transfer function called sucessfully on Pending entry {:?}",
 							(claimer, block_number)
 						);
@@ -559,6 +625,10 @@ pub mod pallet {
 				// so we just cancel the request
 				Err(ClaimError::ServerError(ServerError::NonExistentData)) => {
 					// TODO: should we call register_fail or remove_fom_queue?
+					log::trace!(
+						"[Airdrop pallet] Server returned NoData for entry {:?}",
+						(&icon_address, &stored_block_num)
+					);
 					call_to_make = Call::register_failed_claim {
 						icon_address: icon_address.clone(),
 						block_number: stored_block_num,
@@ -569,6 +639,10 @@ pub mod pallet {
 				// as transferring 0 amount have no effect
 				Ok(response) if response.amount == 0 => {
 					// TODO: should we call register_fail or remove_from_queue
+					log::trace!(
+						"[Airdrop pallet] Airdropping amount is 0 for {:?}",
+						(&icon_address, &stored_block_num)
+					);
 					call_to_make = Call::remove_from_pending_queue {
 						icon_address: icon_address.clone(),
 						block_number: stored_block_num,
@@ -576,7 +650,14 @@ pub mod pallet {
 				}
 
 				// If is any other error, just propagate it to caller
-				Err(err) => return Err(err),
+				Err(err) => {
+					log::error!(
+						"[Airdrop pallet] Cannot fetch from server for entry {:?}. Error: {:?}",
+						(&icon_address, &stored_block_num),
+						err
+					);
+					return Err(err);
+				}
 
 				// if response is valid, then call complete_transfer dispatchable
 				// This will also clear the queue
@@ -620,7 +701,7 @@ pub mod pallet {
 				// TODO:
 				// Maintain local sudo account
 
-				log::info!(
+				log::error!(
 					"Calling extrinsic {:#?} failed with error: {:?}",
 					call_to_make,
 					err
@@ -656,8 +737,8 @@ pub mod pallet {
 					.as_ref(),
 			)
 			.map_err(|err| {
-				log::info!(
-					"[make_signed_call] Converting to Public from AccountId failed with error: {:?}",
+				log::error!(
+					"[Airdrop pallet] Converting to Public from AccountId failed with error: {:?}",
 					err
 				);
 				CallDispatchableError::NoAccount
@@ -666,6 +747,7 @@ pub mod pallet {
 			let signer = frame_system::offchain::Signer::<T, T::AuthorityId>::all_accounts()
 				.with_filter(vec![send_from]);
 			if !signer.can_sign() {
+				log::error!("[Airdrop pallet] KeyStore account and onchain offchain accoutn value do not intersect");
 				return Err(CallDispatchableError::NoAccount);
 			}
 
@@ -674,8 +756,8 @@ pub mod pallet {
 			if let Some((_accnt, send_tx_res)) = send_tx_res.iter().next() {
 				send_tx_res.map_err(|_| CallDispatchableError::CantDispatch)
 			} else {
-				log::info!(
-					"[make_signed_call] calling send_signed_transaction returned empty result."
+				log::error!(
+					"[Airdrop pallet] Calling send_transaction returned 0 result while at least one was expected"
 				);
 				Err(CallDispatchableError::CantDispatch)
 			}
@@ -704,16 +786,20 @@ pub mod pallet {
 					.cloned()
 					.collect(),
 			)
-			// we can expect as only possibility to have error will be non-utf8 bytes in icon_address
-			// which should not be possible
-			.expect("Error while creating dynamic url in pallet_airdrop::fetch_from_server()");
+			.map_err(|err| {
+				log::error!(
+					"[Airdrop pallet] While encoding http url for {:?}. Error: {:?}",
+					icon_address,
+					err
+				);
+				ClaimError::HttpError
+			})?;
 
-			log::info!("Sending request to: {}", request_url);
+			log::trace!("[Airdrop pallet] Sending request to {}", request_url);
 			let request = http::Request::get(request_url.as_str());
 
-			log::info!("Initilizing pending variable..");
 			let pending = request.deadline(timeout).send().map_err(|e| {
-				log::info!("While pending error: {:?}", e);
+				log::warn!("[Airdrop pallet]. Error in {} : {:?}", line!(), e);
 				ClaimError::HttpError
 			})?;
 
@@ -721,11 +807,11 @@ pub mod pallet {
 			let response = pending
 				.try_wait(timeout)
 				.map_err(|e| {
-					log::info!("First error: {:?}...", e);
+					log::warn!("[Airdrop pallet]. Error in {} : {:?}", line!(), e);
 					ClaimError::HttpError
 				})?
 				.map_err(|e| {
-					log::info!("Second error: {:?}", e);
+					log::warn!("[Airdrop pallet]. Error in {} : {:?}", line!(), e);
 					ClaimError::HttpError
 				})?;
 
@@ -735,7 +821,11 @@ pub mod pallet {
 			if response.code == 200 {
 				response_bytes = response.body().collect();
 			} else {
-				log::info!("Unexpected http code: {}", response.code);
+				log::warn!(
+					"[Airdrop pallet]. Error in {}. Unexpected http code: {}",
+					line!(),
+					response.code
+				);
 				return Err(ClaimError::HttpError);
 			}
 
@@ -787,7 +877,7 @@ pub mod pallet {
 
 			// Insert with default snapshot but with real icon address mapping
 			let new_snapshot = types::SnapshotInfo::<T>::default().ice_address(ice_address.clone());
-			<IceSnapshotMap<T>>::insert(&icon_address, new_snapshot);
+			<IceSnapshotMap<T>>::insert(&icon_address, &new_snapshot);
 
 			// insert in queue respective to current block number
 			// and retry as defined in crate level constant
@@ -795,6 +885,12 @@ pub mod pallet {
 				&current_block_number,
 				&icon_address,
 				crate::DEFAULT_RETRY_COUNT,
+			);
+
+			log::trace!(
+				"[Airdrop pallet] Address pair: {:?} was inserted in map & pending claims in block height: {:?}",
+				(&ice_address, &icon_address),
+				current_block_number
 			);
 
 			Self::deposit_event(Event::<T>::ClaimRequestSucced(
