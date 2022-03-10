@@ -230,6 +230,12 @@ pub mod pallet {
 			// so that we can call verify_with_icon method
 			let ice_address: types::AccountIdOf<T> = ensure_signed(origin)?.into();
 
+			log::trace!(
+				"[Airdorp pallet] Claim_request called by user: {:?} with message: {:?} and sig: {:?}",
+				(&icon_address, &ice_address),
+				message, icon_signature
+			);
+
 			// We check the claim status before hand
 			let is_already_on_map = <IceSnapshotMap<T>>::contains_key(&icon_address);
 			ensure!(!is_already_on_map, {
