@@ -270,12 +270,12 @@ pub mod pallet {
 
 		// Means to push claim request force fully
 		// This skips signature verification
-		#[pallet::weight(0)]
+		#[pallet::weight(10_000)]
 		pub fn force_claim_request(
 			origin: OriginFor<T>,
 			ice_address: types::AccountIdOf<T>,
 			icon_address: types::IconAddress,
-		) -> DispatchResult {
+		) -> DispatchResultWithPostInfo {
 			ensure_root(origin).map_err(|_| Error::<T>::DeniedOperation)?;
 
 			log::trace!(
@@ -285,7 +285,7 @@ pub mod pallet {
 
 			Self::claim_request_unchecked(ice_address, icon_address);
 
-			Ok(())
+			Ok(Pays::No.into())
 		}
 
 		/// Dispatchable to transfer the fund from system balance to given address
@@ -307,13 +307,13 @@ pub mod pallet {
 		// If any of the step fails in this function,
 		// we pass the flow to register_failed_claim if needed to be retry again
 		// and cancel the request if it dont have to retried again
-		#[pallet::weight(0)]
+		#[pallet::weight(10_000)]
 		pub fn complete_transfer(
 			origin: OriginFor<T>,
 			block_number: types::BlockNumberOf<T>,
 			receiver_icon: types::IconAddress,
 			server_response: types::ServerResponse,
-		) -> DispatchResult {
+		) -> DispatchResultWithPostInfo {
 			// Make sure this is either sudo or root
 			Self::ensure_root_or_offchain(origin.clone())
 				.map_err(|_| Error::<T>::DeniedOperation)?;
@@ -392,7 +392,7 @@ pub mod pallet {
 
 			Self::deposit_event(Event::<T>::ClaimSuccess(receiver_icon));
 
-			Ok(())
+			Ok(Pays::No.into())
 		}
 
 		/// Call to set OffchainWorker Account ( Restricted to root only )
@@ -400,11 +400,11 @@ pub mod pallet {
 		/// We have to have a way that this signed call is from offchain so we can perform
 		/// critical operation. When offchain worker key and this storage have same account
 		/// then we have a way to ensure this call is from offchain worker
-		#[pallet::weight(0)]
+		#[pallet::weight(10_000)]
 		pub fn set_offchain_account(
 			origin: OriginFor<T>,
 			new_account: types::AccountIdOf<T>,
-		) -> DispatchResult {
+		) -> DispatchResultWithPostInfo {
 			ensure_root(origin).map_err(|_| Error::<T>::DeniedOperation)?;
 
 			let old_account = Self::get_offchain_account();
@@ -421,15 +421,15 @@ pub mod pallet {
 				new_account,
 			});
 
-			Ok(())
+			Ok(Pays::No.into())
 		}
 
-		#[pallet::weight(0)]
+		#[pallet::weight(10_000)]
 		pub fn remove_from_pending_queue(
 			origin: OriginFor<T>,
 			block_number: types::BlockNumberOf<T>,
 			icon_address: types::IconAddress,
-		) -> DispatchResult {
+		) -> DispatchResultWithPostInfo {
 			Self::ensure_root_or_offchain(origin)?;
 
 			<PendingClaims<T>>::remove(&block_number, &icon_address);
@@ -441,19 +441,19 @@ pub mod pallet {
 				(&icon_address, &block_number)
 			);
 
-			Ok(())
+			Ok(Pays::No.into())
 		}
 
 		/// Call that handles what to do when an entry failed while
 		/// processing in offchain worker
 		/// We move the entry to future block key so that another
 		/// offchain worker can process it again
-		#[pallet::weight(0)]
+		#[pallet::weight(10_000)]
 		pub fn register_failed_claim(
 			origin: OriginFor<T>,
 			block_number: types::BlockNumberOf<T>,
 			icon_address: types::IconAddress,
-		) -> DispatchResult {
+		) -> DispatchResultWithPostInfo {
 			Self::ensure_root_or_offchain(origin).map_err(|_| Error::<T>::DeniedOperation)?;
 
 			let ice_address = Self::get_icon_snapshot_map(&icon_address)
@@ -519,7 +519,7 @@ pub mod pallet {
 				new_block_number
 			);
 
-			Ok(())
+			Ok(Pays::No.into())
 		}
 
 		/// Public function to deposit some fund for our creditor
@@ -532,7 +532,7 @@ pub mod pallet {
 		/// 		or cancel the donation
 		/// This function can be used as a mean to credit our creditor if being donated from
 		/// any node operator owned account
-		#[pallet::weight(0)]
+		#[pallet::weight(10_000)]
 		pub fn donate_to_creditor(
 			origin: OriginFor<T>,
 			amount: types::BalanceOf<T>,
@@ -552,17 +552,17 @@ pub mod pallet {
 			Ok(())
 		}
 
-		#[pallet::weight(0)]
+		#[pallet::weight(10_000)]
 		pub fn update_processed_upto_counter(
 			origin: OriginFor<T>,
 			new_value: types::BlockNumberOf<T>,
-		) -> DispatchResult {
+		) -> DispatchResultWithPostInfo {
 			Self::ensure_root_or_offchain(origin).map(|_| Error::<T>::DeniedOperation)?;
 
 			log::trace!("ProceedUpto Counter updating to value: {:?}", new_value);
 			<ProcessedUpto<T>>::set(new_value);
 
-			Ok(())
+			Ok(Pays::No.into())
 		}
 	}
 
