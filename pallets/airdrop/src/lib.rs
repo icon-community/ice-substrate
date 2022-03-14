@@ -131,11 +131,11 @@ pub mod pallet {
 		ClaimCancelled(types::IconAddress),
 
 		/// Emit when claim request was done successfully
-		ClaimRequestSucced(
-			types::BlockNumberOf<T>,
-			types::AccountIdOf<T>,
-			types::IconAddress,
-		),
+		ClaimRequestSucced {
+			ice_address: types::AccountIdOf<T>,
+			icon_address: types::IconAddress,
+			registered_in: types::BlockNumberOf<T>,
+		},
 
 		/// Emit when an claim request was successful and fund have been transferred
 		ClaimSuccess(types::IconAddress),
@@ -144,15 +144,18 @@ pub mod pallet {
 		RemovedFromQueue(types::IconAddress),
 
 		/// Same entry is processed by offchian worker for too many times
-		RetryExceed(
-			types::AccountIdOf<T>,
-			types::IconAddress,
-			types::BlockNumberOf<T>,
-		),
+		RetryExceed {
+			ice_address: types::AccountIdOf<T>,
+			icon_address: types::IconAddress,
+			was_in: types::BlockNumberOf<T>,
+		},
 
 		/// Value of OffchainAccount sotrage have been changed
 		/// Return old value and new one
-		OffchainAccountChanged(Option<types::AccountIdOf<T>>, types::AccountIdOf<T>),
+		OffchainAccountChanged {
+			old_account: Option<types::AccountIdOf<T>>,
+			new_account: types::AccountIdOf<T>,
+		},
 	}
 
 	#[pallet::storage]
@@ -404,16 +407,19 @@ pub mod pallet {
 		) -> DispatchResult {
 			ensure_root(origin).map_err(|_| Error::<T>::DeniedOperation)?;
 
-			let old_value = Self::get_offchain_account();
+			let old_account = Self::get_offchain_account();
 			<OffchainAccount<T>>::set(Some(new_account.clone()));
 
 			log::info!(
 				"[Airdrop pallet] {} {:?}",
 				"Value for OffchainAccount was changed in onchain storage. (Old, New): ",
-				(&old_value, &new_account)
+				(&old_account, &new_account)
 			);
 
-			Self::deposit_event(Event::OffchainAccountChanged(old_value, new_account));
+			Self::deposit_event(Event::OffchainAccountChanged {
+				old_account,
+				new_account,
+			});
 
 			Ok(())
 		}
@@ -491,11 +497,11 @@ pub mod pallet {
 				// so is there nothing else to do?
 
 				// Emit event and return with error
-				Self::deposit_event(Event::<T>::RetryExceed(
+				Self::deposit_event(Event::<T>::RetryExceed {
 					ice_address,
 					icon_address,
-					block_number,
-				));
+					was_in: block_number,
+				});
 				Error::<T>::RetryExceed
 			});
 
@@ -888,11 +894,11 @@ pub mod pallet {
 				current_block_number
 			);
 
-			Self::deposit_event(Event::<T>::ClaimRequestSucced(
-				current_block_number,
+			Self::deposit_event(Event::<T>::ClaimRequestSucced {
+				registered_in: current_block_number,
 				ice_address,
 				icon_address,
-			));
+			});
 		}
 
 		/// Helper function to create similar interface like `ensure_root`
