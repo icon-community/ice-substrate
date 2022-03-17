@@ -7,7 +7,7 @@ on:
       icenode:
         description: 'artifact name'
         required: true
-        default: 'ice-node-'
+        default: 'ice-node'
       tags:
         description: 'version'
         required: true

@@ -68,6 +68,6 @@ jobs:
         with:
           upload_url: ${{ steps.create-new-release.outputs.upload_url }}
           asset_path: ./ice-node.zip
-          asset_name: ice-node-${{ steps.version.outputs.tag_name }}.zip
+          asset_name: ice-node.zip
           asset_content_type: application/zip
 
