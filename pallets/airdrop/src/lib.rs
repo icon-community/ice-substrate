@@ -576,6 +576,11 @@ pub mod pallet {
 				return;
 			}
 
+			log::info!(
+				"Creditor account address is: {:?}",
+				Self::get_creditor_account()
+			);
+
 			// Start processing from one + the block previously processed
 			let start_processing_from =
 				Self::get_processed_upto_counter().saturating_add(1_u32.into());
