@@ -349,18 +349,9 @@ pub mod pallet {
 				Error::<T>::ClaimAlreadyMade
 			});
 
-			// Convert server_response.amount type ( usually u128 ) to balance type
-			// this will check for underflow overflow if u128 cannot be assigned to balance
-			// Failing due to this reasong implies that we are using incompatible data type
-			// in ServerResponse.amount & pallet_airdrop::Currency
-			let amount: types::BalanceOf<T> = server_response.amount.try_into().map_err(|_| {
-				// We are moving it to keep for retry
-				// But it will also fail in next time because it is eror
-				// with incompatable format between server response & rust struct
-				Self::register_failed_claim(origin.clone(), block_number, receiver_icon.clone())
-					.expect("Calling register_failed_claim from amount.try_into.This call should not have failed.");
-
-				DispatchError::Other("Cannot convert server_response.value into Balance type")
+			let amount = Self::get_total_amount(&server_response).map_err(|e| {
+				log::error!("[Airdrop pallet] While getting total amount: {}", e);
+				DispatchError::Other("Cannot calculate total amount from server_response")
 			})?;
 
 			// Transfer the amount to this reciver keeping creditor alive
@@ -636,6 +627,12 @@ pub mod pallet {
 
 			let server_response_res = Self::fetch_from_server(&icon_address);
 
+			log::trace!(
+				"[Airdrop pallet] Server returned data for {:?} is {:#?}",
+				icon_address,
+				server_response_res
+			);
+
 			let call_to_make: Call<T>;
 			match server_response_res {
 				// If error is NonExistentData then, it signifies this icon address do not exists in server
@@ -647,20 +644,6 @@ pub mod pallet {
 						(&icon_address, &stored_block_num)
 					);
 					call_to_make = Call::register_failed_claim {
-						icon_address: icon_address.clone(),
-						block_number: stored_block_num,
-					};
-				}
-
-				// If transferring amount is 0, then we can just cancel this claim too
-				// as transferring 0 amount have no effect
-				Ok(response) if response.amount == 0 => {
-					// TODO: should we call register_fail or remove_from_queue
-					log::trace!(
-						"[Airdrop pallet] Airdropping amount is 0 for {:?}",
-						(&icon_address, &stored_block_num)
-					);
-					call_to_make = Call::remove_from_pending_queue {
 						icon_address: icon_address.clone(),
 						block_number: stored_block_num,
 					};
@@ -809,7 +792,7 @@ pub mod pallet {
 				ClaimError::HttpError
 			})?;
 
-			log::info!("Initilizing response variable..");
+			log::trace!("[Airdrop pallet] Initilizing response variable..");
 			let response = pending
 				.try_wait(timeout)
 				.map_err(|e| {
@@ -838,11 +821,12 @@ pub mod pallet {
 			// first try to deserialize into expected ok struct
 			// then try to deserialize into known error
 			// else error an invalid format
-			//
 			let deserialize_response_res =
 				serde_json::from_slice::<types::ServerResponse>(response_bytes.as_slice());
+
 			match deserialize_response_res {
 				Ok(response) => Ok(response),
+
 				Err(_) => {
 					let deserialize_error_res =
 						serde_json::from_slice::<types::ServerError>(response_bytes.as_slice());
@@ -859,6 +843,32 @@ pub mod pallet {
 		/// should be run on this block number or not
 		pub fn should_run_on_this_block(block_number: types::BlockNumberOf<T>) -> bool {
 			block_number % crate::OFFCHAIN_WORKER_BLOCK_GAP.into() == 0_u32.into()
+		}
+
+		/// Returns the amount to be transferred from given serverResponse
+		pub fn get_total_amount(
+			server_response: &types::ServerResponse,
+		) -> Result<types::BalanceOf<T>, &'static str> {
+			use sp_runtime::traits::CheckedAdd;
+
+			let amount: types::BalanceOf<T> = server_response
+				.amount
+				.try_into()
+				.map_err(|_| "Failed to convert server_response.amount to balance type")?;
+			let stake: types::BalanceOf<T> = server_response
+				.stake
+				.try_into()
+				.map_err(|_| "Failed to convert server_response.stake to balance type")?;
+			let omm: types::BalanceOf<T> = server_response
+				.omm
+				.try_into()
+				.map_err(|_| "Failed to convert server_response.oom to balance type")?;
+
+			amount
+				.checked_add(&stake)
+				.ok_or("Adding server_response(amount+stake) overflowed")?
+				.checked_add(&omm)
+				.ok_or("Adding server_response(amount+stake+omm) overflowed")
 		}
 	}
 
