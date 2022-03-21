@@ -2,7 +2,7 @@
 name = "pallet-airdrop"
 version = "4.0.0-dev"
 description = "Logic to do airdrop"
-authors = ["iBriz team <https://github.com/ibriz>"]
+authors = ["ICONOSphere <social@iconosphere.io>"]
 edition = "2021"
 license = "Unlicense"
 publish = false
