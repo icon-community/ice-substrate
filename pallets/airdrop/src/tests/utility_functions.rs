@@ -169,9 +169,8 @@ fn failed_entry_regestration() {
 
 		// When there are no more retry left in this entry
 		{
-			assert_err!(
-				AirdropModule::register_failed_claim(Origin::root(), bl_num, claimer.clone()),
-				PalletError::RetryExceed
+			assert_ok!(
+				AirdropModule::register_failed_claim(Origin::root(), bl_num, claimer.clone())
 			);
 			// Still entry should be removed from queue
 			assert_eq!(None, AirdropModule::get_pending_claims(bl_num, &claimer));

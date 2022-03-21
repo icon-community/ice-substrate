@@ -486,7 +486,7 @@ pub mod pallet {
 
 			// Check if it's retry counter have been brought to zero
 			// if so do not move this entry to next block
-			ensure!(retry_remaining > 0, {
+			if retry_remaining == 0_u8 {
 				log::trace!(
 					"[Airdrop pallet] Retry limit exceed for pair {:?} is in block number: {:?}",
 					(&ice_address, &icon_address),
@@ -498,14 +498,16 @@ pub mod pallet {
 				// it is already removed from queue in previous statements
 				// so is there nothing else to do?
 
-				// Emit event and return with error
+				// Emit event that retry been exceed
 				Self::deposit_event(Event::<T>::RetryExceed {
 					ice_address,
 					icon_address,
 					was_in: block_number,
 				});
-				Error::<T>::RetryExceed
-			});
+
+				// Exceeding retry is still an expected Ok behaviour
+				return Ok(Pays::No.into());
+			}
 
 			// This entry have some retry remaining so we put this entry in another block_number key
 			let new_block_number = Self::get_current_block_number().saturating_add(1_u32.into());
