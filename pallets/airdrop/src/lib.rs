@@ -283,6 +283,17 @@ pub mod pallet {
 				(&ice_address, &icon_address),
 			);
 
+			// If it is already in map, even force_insert will fail
+			let is_already_on_map = <IceSnapshotMap<T>>::contains_key(&icon_address);
+			ensure!(!is_already_on_map, {
+				log::trace!(
+					"[Airdrop pallet] Address pair: {:?} was ignored. {}",
+					(&ice_address, &icon_address),
+					"Entry already exists in map"
+				);
+				Error::<T>::RequestAlreadyMade
+			});
+
 			Self::claim_request_unchecked(ice_address, icon_address);
 
 			Ok(Pays::No.into())
