@@ -4,7 +4,7 @@ use fc_consensus::FrontierBlockImport;
 use fc_mapping_sync::{MappingSyncWorker, SyncStrategy};
 use fc_rpc::EthTask;
 use fc_rpc_core::types::{FeeHistoryCache, FilterPool};
-use ice_runtime::{self, opaque::Block, RuntimeApi, SLOT_DURATION};
+use frost_runtime::{self, opaque::Block, RuntimeApi, SLOT_DURATION};
 use futures::StreamExt;
 use sc_cli::SubstrateCli;
 use sc_client_api::{BlockBackend, BlockchainEvents, ExecutorProvider};
@@ -28,6 +28,7 @@ use std::{
 	time::Duration,
 };
 
+
 use crate::cli::Cli;
 #[cfg(feature = "manual-seal")]
 use crate::cli::Sealing;
@@ -44,11 +45,11 @@ impl sc_executor::NativeExecutionDispatch for ExecutorDispatch {
 	type ExtendHostFunctions = ();
 
 	fn dispatch(method: &str, data: &[u8]) -> Option<Vec<u8>> {
-		ice_runtime::api::dispatch(method, data)
+		frost_runtime::api::dispatch(method, data)
 	}
 
 	fn native_version() -> sc_executor::NativeVersion {
-		ice_runtime::native_version()
+		frost_runtime::native_version()
 	}
 }
 
@@ -304,7 +305,7 @@ fn remote_keystore(_url: &String) -> Result<Arc<LocalKeystore>, &'static str> {
 }
 
 /// Builds a new service for a full client.
-pub fn new_full(mut config: Configuration, cli: &Cli) -> Result<TaskManager, ServiceError> {
+pub fn start_frost_node(mut config: Configuration, cli: &Cli) -> Result<TaskManager, ServiceError> {
 	let sc_service::PartialComponents {
 		client,
 		backend,
@@ -413,7 +414,7 @@ pub fn new_full(mut config: Configuration, cli: &Cli) -> Result<TaskManager, Ser
 		let max_past_logs = cli.run.max_past_logs;
 
 		Box::new(move |deny_unsafe, _| {
-			let deps = crate::rpc::FullDeps {
+			let deps = crate::rpc::FullDepsForFrost {
 				client: client.clone(),
 				pool: pool.clone(),
 				graph: pool.pool().clone(),
@@ -431,7 +432,7 @@ pub fn new_full(mut config: Configuration, cli: &Cli) -> Result<TaskManager, Ser
 				block_data_cache: block_data_cache.clone(),
 			};
 
-			Ok(crate::rpc::create_full(
+			Ok(crate::rpc::create_full_frost(
 				deps,
 				subscription_task_executor.clone(),
 			))

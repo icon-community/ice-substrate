@@ -1,0 +1,178 @@
+[package]
+authors = ['ICE Team <https://icenetwork.io>']
+build = 'build.rs'
+description = 'ICE Network is an EVM compatible network built with Substrate framework'
+edition = '2021'
+homepage = 'https://substrate.dev'
+license = 'Apache-2.0'
+name = 'frost-runtime'
+repository = 'https://github.com/web3labs/ice-substrate/'
+version = '0.4.1'
+publish = false
+
+[package.metadata.docs.rs]
+targets = ["x86_64-unknown-linux-gnu"]
+
+[dependencies]
+codec = { package = "parity-scale-codec", version = "2.3.1", default-features = false, features = ["derive"] }
+serde = { version = "1.0.101", optional = true, features = ["derive"] }
+scale-info = { version = "1.0.0", default-features = false, features = ["derive"] }
+
+
+# frame dependencies
+frame-executive = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.17" }
+frame-support = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.17" }
+frame-system = { default-features = false, package = "frame-system", git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.17" }
+frame-system-rpc-runtime-api = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.17" }
+
+
+# pallets dependencies from substrate 
+pallet-aura = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.17" }
+pallet-balances = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.17" }
+pallet-grandpa = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.17" }
+pallet-randomness-collective-flip = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.17" }
+pallet-sudo = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.17" }
+pallet-timestamp = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.17" }
+pallet-transaction-payment = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.17" }
+pallet-transaction-payment-rpc-runtime-api = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.17" }
+pallet-assets = {  default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.17" }
+pallet-collective = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.17" }
+pallet-treasury = {  default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.17" }
+pallet-vesting = {  default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.17" }
+pallet-staking = {  default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.17" }
+
+# Contracts specific packages
+pallet-contracts = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.17", default-features = false }
+pallet-contracts-primitives = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.17", default-features = false }
+pallet-contracts-rpc-runtime-api = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.17", default-features = false }
+
+# sp dependencies from substrate 
+sp-api = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.17" }
+sp-block-builder = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.17"}
+sp-consensus-aura = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.17" }
+sp-core = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.17" }
+sp-inherents = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.17"}
+sp-io = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.17" }
+sp-offchain = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.17" }
+sp-runtime = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.17" }
+sp-session = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.17" }
+sp-std = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.17" }
+sp-transaction-pool = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.17" }
+sp-version = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.17" }
+
+# pallet dependencies from frontier 
+pallet-base-fee = { default-features = false, git = "https://github.com/web3labs/frontier",  branch = "polkadot-v0.9.17" }
+pallet-evm = { default-features = false, git = "https://github.com/web3labs/frontier",  branch = "polkadot-v0.9.17" }
+pallet-ethereum = {  default-features = false, git = "https://github.com/web3labs/frontier",  branch = "polkadot-v0.9.17" }
+pallet-dynamic-fee = { default-features = false, git = "https://github.com/web3labs/frontier",  branch = "polkadot-v0.9.17" }
+pallet-evm-precompile-modexp   = {  default-features = false, git = "https://github.com/web3labs/frontier",  branch = "polkadot-v0.9.17" }
+pallet-evm-precompile-sha3fips = {  default-features = false, git = "https://github.com/web3labs/frontier",  branch = "polkadot-v0.9.17" }
+pallet-evm-precompile-simple   = {  default-features = false,  git = "https://github.com/web3labs/frontier",  branch = "polkadot-v0.9.17" }
+
+# fp dependencies from frontier 
+fp-rpc  = { default-features = false, git = "https://github.com/web3labs/frontier", branch = "polkadot-v0.9.17"}
+fp-self-contained = {default-features = false, git = "https://github.com/web3labs/frontier", branch = "polkadot-v0.9.17" }
+
+# local pallet
+pallet-simple-inflation = { path = '../../frame/simple-inflation', default-features = false, version = '0.0.1' }
+
+# ice-runtime-common = { default-features = false, path = "../common", optional = true }
+
+# try-runtime
+frame-try-runtime = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.17", default-features = false, optional = true }
+try-runtime-cli = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.17", default-features = false, optional = true }
+
+
+# benchmarking dependencies from substrate
+frame-benchmarking = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.17", default-features = false, optional = true }
+frame-system-benchmarking = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.17", default-features = false, optional = true }
+
+
+[build-dependencies]
+substrate-wasm-builder = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.17" }
+
+[features]
+default = ["std", "aura"]
+aura = []
+manual-seal = []
+std = [
+	"codec/std",
+	"serde",
+
+	"frame-executive/std",
+	"frame-support/std",
+	"frame-system-rpc-runtime-api/std",
+	"frame-system/std",
+	"fp-rpc/std",
+	"fp-self-contained/std",
+
+	"pallet-ethereum/std",
+	"pallet-evm/std",
+	"pallet-dynamic-fee/std",
+	"pallet-evm-precompile-simple/std",
+	"pallet-evm-precompile-sha3fips/std",
+	"pallet-aura/std",
+	"pallet-balances/std",
+	"pallet-grandpa/std",
+	"pallet-randomness-collective-flip/std",
+	"pallet-sudo/std",
+	"pallet-timestamp/std",
+	"pallet-transaction-payment-rpc-runtime-api/std",
+	"pallet-transaction-payment/std",
+	"pallet-base-fee/std",
+	"pallet-vesting/std",
+	"pallet-assets/std",
+	"pallet-treasury/std",
+    "pallet-collective/std",
+	"pallet-simple-inflation/std",
+	"pallet-contracts/std",
+	"pallet-contracts-primitives/std",
+	"pallet-contracts-rpc-runtime-api/std",
+	"pallet-staking/std",
+
+	"sp-api/std",
+	"sp-block-builder/std",
+	"sp-consensus-aura/std",
+	"sp-core/std",
+	"sp-inherents/std",
+	"sp-io/std",
+	"sp-offchain/std",
+	"sp-runtime/std",
+	"sp-session/std",
+	"sp-std/std",
+	"sp-transaction-pool/std",
+	"sp-version/std",
+
+	"frame-benchmarking/std",
+	"frame-system-benchmarking/std",
+
+	"scale-info/std",
+	# "ice-runtime-common",
+]
+runtime-benchmarks = [
+	"frame-benchmarking",
+	"frame-system-benchmarking",
+	"frame-system/runtime-benchmarks",
+	"pallet-ethereum/runtime-benchmarks",
+	"pallet-evm/runtime-benchmarks",
+	"pallet-vesting/runtime-benchmarks",
+	"pallet-collective/runtime-benchmarks",
+    "pallet-treasury/runtime-benchmarks",
+]
+
+
+try-runtime = [
+    "frame-try-runtime",
+    "frame-executive/try-runtime",
+    "frame-support/try-runtime",
+    "frame-system/try-runtime",
+    "pallet-aura/try-runtime",
+    "pallet-balances/try-runtime",
+    "pallet-contracts/try-runtime",
+    "pallet-grandpa/try-runtime",
+    "pallet-randomness-collective-flip/try-runtime",
+    "pallet-sudo/try-runtime",
+    "pallet-timestamp/try-runtime",
+    "pallet-transaction-payment/try-runtime",
+    "pallet-vesting/try-runtime",
+]
