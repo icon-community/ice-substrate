@@ -3,7 +3,7 @@ use sc_service::ChainType;
 use arctic_runtime::{
     wasm_binary_unwrap, AccountId, AuraConfig, AuraId, Balance, BalancesConfig, BaseFeeConfig,
     CollatorSelectionConfig, EVMConfig, GenesisConfig, ParachainInfoConfig, CouncilConfig,
-    SessionConfig, Signature, SudoConfig, SystemConfig, VestingConfig
+    SessionConfig, Signature, SudoConfig, SystemConfig, VestingConfig, SessionKeys
 };
 use arctic_runtime::currency::{ICY, MILLIICY};
 use sp_core::{sr25519, Pair, Public};
@@ -52,6 +52,10 @@ pub fn get_chain_spec(para_id: u32) -> ArcticChainSpec {
     )
 }
 
+fn session_keys(aura: AuraId) -> SessionKeys {
+    SessionKeys { aura }
+}
+
 /// Helper function to create Arctic GenesisConfig.
 fn make_genesis(
     balances: Vec<(AccountId, Balance)>,
@@ -86,7 +90,6 @@ fn make_genesis(
         parachain_info: ParachainInfoConfig { parachain_id },
         balances: BalancesConfig { balances },
         vesting: VestingConfig { vesting: vec![] },
-        session:  Default::default(),
         aura: AuraConfig {
             authorities: vec![],
         },
@@ -95,6 +98,12 @@ fn make_genesis(
             desired_candidates: 200,
             candidacy_bond: 32_000 * ICY,
             invulnerables: authorities.iter().map(|x| x.0.clone()).collect::<Vec<_>>(),
+        },
+        session: SessionConfig {
+            keys: authorities
+                .iter()
+                .map(|x| (x.0.clone(), x.0.clone(), session_keys(x.1.clone())))
+                .collect::<Vec<_>>(),
         },
         evm: EVMConfig {
 			accounts: {

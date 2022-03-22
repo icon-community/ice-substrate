@@ -23,7 +23,6 @@ pub mod xcm_config;
 use codec::{Decode, Encode};
 use pallet_evm::FeeCalculator;
 
-use crate::opaque::SessionKeys;
 
 use frame_system::limits::{BlockLength, BlockWeights};
 
@@ -140,13 +139,14 @@ pub mod opaque {
 	pub type Block = generic::Block<Header, UncheckedExtrinsic>;
 	/// Opaque block identifier type.
 	pub type BlockId = generic::BlockId<Block>;
+}
 
-	impl_opaque_keys! {
-		pub struct SessionKeys {
-			pub aura: Aura,
-		}
+impl_opaque_keys! {
+	pub struct SessionKeys {
+		pub aura: Aura,
 	}
 }
+
 
 pub const VERSION: RuntimeVersion = RuntimeVersion {
 	spec_name: create_runtime_str!("frost-testnet"),
