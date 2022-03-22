@@ -728,41 +728,16 @@ pub mod pallet {
 			call_to_make: &Call<T>,
 		) -> Result<(), types::CallDispatchableError> {
 			use frame_system::offchain::SendSignedTransaction;
-			use frame_system::offchain::SigningTypes;
 			use types::CallDispatchableError;
 
-			// If we can send this from account then only extrinsic will pass ensure_ statement
-			let send_from = <<T as SigningTypes>::Public as Decode>::decode(
-				&mut Self::get_offchain_account()
-					.ok_or(CallDispatchableError::NoAccount)?
-					.encode()
-					.as_ref(),
-			)
-			.map_err(|err| {
-				log::error!(
-					"[Airdrop pallet] Converting to Public from AccountId failed with error: {:?}",
-					err
-				);
-				CallDispatchableError::NoAccount
-			})?;
+			let signer = frame_system::offchain::Signer::<T, T::AuthorityId>::any_account();
+			let send_tx_res =
+				signer.send_signed_transaction(move |_account| (*call_to_make).clone());
 
-			let signer = frame_system::offchain::Signer::<T, T::AuthorityId>::all_accounts()
-				.with_filter(vec![send_from]);
-			if !signer.can_sign() {
-				log::error!("[Airdrop pallet] KeyStore account and onchain offchain accoutn value do not intersect");
-				return Err(CallDispatchableError::NoAccount);
-			}
-
-			let send_tx_res = signer.send_signed_transaction(move |_accnt| (*call_to_make).clone());
-
-			if let Some((_accnt, send_tx_res)) = send_tx_res.iter().next() {
-				send_tx_res.map_err(|_| CallDispatchableError::CantDispatch)
-			} else {
-				log::error!(
-					"[Airdrop pallet] Calling send_transaction returned 0 result while at least one was expected"
-				);
-				Err(CallDispatchableError::CantDispatch)
-			}
+			send_tx_res
+				.ok_or(CallDispatchableError::NoAccount)?
+				.1
+				.map_err(|_| CallDispatchableError::CantDispatch)
 		}
 
 		/// This function fetch the data from server and return it in required struct
