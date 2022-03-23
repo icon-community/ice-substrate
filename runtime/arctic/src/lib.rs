@@ -149,8 +149,8 @@ impl_opaque_keys! {
 
 
 pub const VERSION: RuntimeVersion = RuntimeVersion {
-	spec_name: create_runtime_str!("frost-testnet"),
-	impl_name: create_runtime_str!("frost-testnet"),
+	spec_name: create_runtime_str!("arctic-testnet"),
+	impl_name: create_runtime_str!("arctic-testnet"),
 	authoring_version: 1,
 	spec_version: 1,
 	impl_version: 1,

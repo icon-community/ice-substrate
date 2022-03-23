@@ -248,7 +248,7 @@ pub fn new_partial(
 		);
 
 		let slot_duration = sc_consensus_aura::slot_duration(&*client)?.slot_duration();
-		let target_gas_price = cli.run.target_gas_price;
+		let target_gas_price = 1;
 
 		let import_queue =
 			sc_consensus_aura::import_queue::<AuraPair, _, _, _, _, _, _>(ImportQueueParams {
@@ -390,11 +390,11 @@ pub fn start_frost_node(mut config: Configuration, cli: &Cli) -> Result<TaskMana
 	let enable_grandpa = !config.disable_grandpa;
 	let prometheus_registry = config.prometheus_registry().cloned();
 	let is_authority = config.role.is_authority();
-	let enable_dev_signer = cli.run.enable_dev_signer;
+	let enable_dev_signer = false;
 	let subscription_task_executor =
 		sc_rpc::SubscriptionTaskExecutor::new(task_manager.spawn_handle());
 	let overrides = crate::rpc::overrides_handle(client.clone());
-	let fee_history_limit = cli.run.fee_history_limit;
+	let fee_history_limit = 2048;
 
 	let block_data_cache = Arc::new(fc_rpc::EthBlockDataCache::new(
 		task_manager.spawn_handle(),
@@ -411,7 +411,7 @@ pub fn start_frost_node(mut config: Configuration, cli: &Cli) -> Result<TaskMana
 		let frontier_backend = frontier_backend.clone();
 		let overrides = overrides.clone();
 		let fee_history_cache = fee_history_cache.clone();
-		let max_past_logs = cli.run.max_past_logs;
+		let max_past_logs = 10000;
 
 		Box::new(move |deny_unsafe, _| {
 			let deps = crate::rpc::FullDepsForFrost {
@@ -508,7 +508,7 @@ pub fn start_frost_node(mut config: Configuration, cli: &Cli) -> Result<TaskMana
 				telemetry.as_ref().map(|x| x.handle()),
 			);
 
-			let target_gas_price = cli.run.target_gas_price;
+			let target_gas_price = 1;
 
 			// Background authorship future
 			match sealing {
@@ -588,7 +588,7 @@ pub fn start_frost_node(mut config: Configuration, cli: &Cli) -> Result<TaskMana
 
 			let slot_duration = sc_consensus_aura::slot_duration(&*client)?;
 			let raw_slot_duration = slot_duration.slot_duration();
-			let target_gas_price = cli.run.target_gas_price;
+			let target_gas_price = 1;
 
 			let aura = sc_consensus_aura::start_aura::<AuraPair, _, _, _, _, _, _, _, _, _, _, _>(
 				StartAuraParams {

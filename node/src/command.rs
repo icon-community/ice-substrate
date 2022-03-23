@@ -25,6 +25,8 @@ use sp_core::hexdisplay::HexDisplay;
 use sp_runtime::traits::Block as BlockT;
 use std::{io::Write, net::SocketAddr};
 
+const PARA_ID: u32 = 2000;
+
 trait IdentifyChain {
     fn is_frost(&self) -> bool;
     fn is_arctic(&self) -> bool;
@@ -105,7 +107,7 @@ impl SubstrateCli for Cli {
     }
 
     fn load_spec(&self, id: &str) -> std::result::Result<Box<dyn sc_service::ChainSpec>, String> {
-        load_spec(id, self.run.parachain_id)
+        load_spec(id, PARA_ID)
     }
 
     fn native_runtime_version(chain_spec: &Box<dyn ChainSpec>) -> &'static RuntimeVersion {
@@ -353,7 +355,7 @@ pub fn run() -> Result<()> {
             }
         }
         None => {
-            let runner = cli.create_runner(&*cli.run)?;
+            let runner = cli.create_runner(&cli.run.normalize())?;
 
             runner.run_node_until_exit(|config| async move {
                 if config.chain_spec.is_frost() {
@@ -367,7 +369,8 @@ pub fn run() -> Result<()> {
                         .chain(cli.relaychain_args.iter()),
                 );
 
-                let id = ParaId::from(cli.run.parachain_id);
+                info!("Relaychain Args: {}", cli.relaychain_args.join(" "));
+                let id = ParaId::from(PARA_ID);
 
                 let parachain_account =
                     AccountIdConversion::<polkadot_primitives::v0::AccountId>::into_account(&id);

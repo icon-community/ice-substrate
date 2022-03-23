@@ -46,7 +46,7 @@ pub fn get_chain_spec(para_id: u32) -> ArcticChainSpec {
         None,
         Extensions {
             bad_blocks: Default::default(),
-            relay_chain: "tokyo".into(),
+            relay_chain: "arctic".into(),
             para_id,
         },
     )

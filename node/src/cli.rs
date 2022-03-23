@@ -1,6 +1,7 @@
 use clap::Parser;
 use sc_cli::{KeySubcommand, SignCmd, VanityCmd, VerifyCmd};
 use std::path::PathBuf;
+use structopt::StructOpt;
 
 /// An overarching CLI command definition.
 #[derive(Debug, clap::Parser)]
@@ -11,12 +12,13 @@ pub struct Cli {
 
     #[allow(missing_docs)]
     #[clap(flatten)]
-    pub run: RunCmd,
+    pub run: cumulus_client_cli::RunCmd,
 
     /// Relaychain arguments
     #[clap(raw = true)]
     pub relaychain_args: Vec<String>,
 }
+
 
 /// Possible subcommands of the main binary.
 #[derive(Debug, clap::Subcommand)]
@@ -86,8 +88,8 @@ pub struct ExportGenesisStateCommand {
 
     /// Id of the parachain this state is for.
     ///
-    /// Default: 2053
-    #[clap(long, default_value = "2053")]
+    /// Default: 2000
+    #[clap(long, default_value = "2000")]
     pub parachain_id: u32,
 
     /// The name of the chain for that the genesis state should be exported.
@@ -111,48 +113,48 @@ pub struct ExportGenesisWasmCommand {
     pub chain: Option<String>,
 }
 
-#[allow(missing_docs)]
-#[derive(Debug, clap::Parser)]
-pub struct RunCmd {
-    #[allow(missing_docs)]
-    #[clap(flatten)]
-    pub base: sc_cli::RunCmd,
+// #[allow(missing_docs)]
+// #[derive(Debug, clap::Parser)]
+// pub struct RunCmd {
+//     #[allow(missing_docs)]
+//     #[clap(flatten)]
+//     pub base: cumulus_client_cli::RunCmd,
 
-    /// Id of the parachain this collator collates for.
-    ///
-    /// Default: 2053
-    #[clap(long, default_value = "2053")]
-    pub parachain_id: u32,
+//     /// Id of the parachain this collator collates for.
+//     ///
+//     /// Default: 2000
+//     #[clap(long, default_value = "2000")]
+//     pub parachain_id: u32,
 
-    /// Choose sealing method.
-	#[cfg(feature = "manual-seal")]
-	#[clap(long, arg_enum, ignore_case = true)]
-	pub sealing: Sealing,
+//     /// Choose sealing method.
+// 	#[cfg(feature = "manual-seal")]
+// 	#[clap(long, arg_enum, ignore_case = true)]
+// 	pub sealing: Sealing,
 
-	#[clap(long)]
-	pub enable_dev_signer: bool,
+// 	#[clap(long)]
+// 	pub enable_dev_signer: bool,
 
-	/// Maximum number of logs in a query.
-	#[clap(long, default_value = "10000")]
-	pub max_past_logs: u32,
+// 	/// Maximum number of logs in a query.
+// 	#[clap(long, default_value = "10000")]
+// 	pub max_past_logs: u32,
 
-	/// Maximum fee history cache size.
-	#[clap(long, default_value = "2048")]
-	pub fee_history_limit: u64,
+// 	/// Maximum fee history cache size.
+// 	#[clap(long, default_value = "2048")]
+// 	pub fee_history_limit: u64,
 
-	/// The dynamic-fee pallet target gas price set by block author
-	#[clap(long, default_value = "1")]
-	pub target_gas_price: u64,
+// 	/// The dynamic-fee pallet target gas price set by block author
+// 	#[clap(long, default_value = "1")]
+// 	pub target_gas_price: u64,
 
-}
+// }
 
-impl std::ops::Deref for RunCmd {
-    type Target = sc_cli::RunCmd;
+// impl std::ops::Deref for RunCmd {
+//     type Target = sc_cli::RunCmd;
 
-    fn deref(&self) -> &Self::Target {
-        &self.base
-    }
-}
+//     fn deref(&self) -> &Self::Target {
+//         &self.base
+//     }
+// }
 
 #[derive(Debug)]
 #[allow(missing_docs)]
@@ -166,6 +168,7 @@ pub struct RelayChainCli {
     /// The base path that should be used by the relay chain.
     pub base_path: Option<PathBuf>,
 }
+
 
 impl RelayChainCli {
     /// Parse the relay chain CLI parameters using the para chain `Configuration`.
