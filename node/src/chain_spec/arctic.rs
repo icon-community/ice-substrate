@@ -16,6 +16,13 @@ use super::{get_from_seed, Extensions};
 
 pub type ArcticChainSpec = sc_service::GenericChainSpec<GenesisConfig, Extensions>;
 
+const ARCTIC_PROPERTIES: &str = r#"
+        {
+            "ss58Format": 42,
+            "tokenDecimals": 18,
+            "tokenSymbol": "ICZ"
+        }"#;
+
 
 /// Gen Arctic chain specification for given parachain id.
 pub fn get_chain_spec(para_id: u32) -> ArcticChainSpec {
@@ -43,7 +50,7 @@ pub fn get_chain_spec(para_id: u32) -> ArcticChainSpec {
         None,
         None,
         None,
-        None,
+        serde_json::from_str(ARCTIC_PROPERTIES).unwrap(),
         Extensions {
             bad_blocks: Default::default(),
             relay_chain: "arctic".into(),
