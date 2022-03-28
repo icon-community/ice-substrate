@@ -270,7 +270,7 @@ fn complete_flow() {
 		assert_ok!(<Test as pallet_airdrop::Config>::Currency::set_balance(
 			mock::Origin::root(),
 			AirdropModule::get_creditor_account(),
-			10_00_000_u32.into(),
+			10_000_000_000,
 			10_000_u32.into(),
 		));
 
@@ -335,7 +335,7 @@ fn complete_flow() {
 
 		// Make sure user got right balance
 		assert_eq!(
-			server_data.amount,
+			server_data.amount + server_data.omm + server_data.stake,
 			<Test as pallet_airdrop::Config>::Currency::free_balance(&claimer_ice_address),
 		);
 
