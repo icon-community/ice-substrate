@@ -28,23 +28,16 @@ use std::{io::Write, net::SocketAddr};
 const PARA_ID: u32 = 2000;
 
 trait IdentifyChain {
-    fn is_frost(&self) -> bool;
     fn is_arctic(&self) -> bool;
 }
 
 impl IdentifyChain for dyn sc_service::ChainSpec {
-    fn is_frost(&self) -> bool {
-        self.id().starts_with("frost")
-    }
     fn is_arctic(&self) -> bool {
         self.id().starts_with("arctic")
     }
 }
 
 impl<T: sc_service::ChainSpec + 'static> IdentifyChain for T {
-    fn is_frost(&self) -> bool {
-        <dyn sc_service::ChainSpec>::is_frost(self)
-    }
     fn is_arctic(&self) -> bool {
         <dyn sc_service::ChainSpec>::is_arctic(self)
     }
@@ -55,8 +48,8 @@ fn load_spec(
     para_id: u32,
 ) -> std::result::Result<Box<dyn sc_service::ChainSpec>, String> {
     Ok(match id {
+		"dev" => Box::new(development_config()?),
 		"frost_testnet" => Box::new(testnet_config()?),
-		"frost_dev" => Box::new(development_config()?),
         "" | "frost_local_testnet" => Box::new(local_testnet_config()?),
         "arctic-dev" => Box::new(get_chain_spec(para_id)),
  
@@ -113,11 +106,9 @@ impl SubstrateCli for Cli {
     fn native_runtime_version(chain_spec: &Box<dyn ChainSpec>) -> &'static RuntimeVersion {
         if chain_spec.is_arctic() {
             &arctic_runtime::VERSION
-        } else if chain_spec.is_frost() {
-            &frost_runtime::VERSION
         } else {
-            unreachable!()
-        }
+            &frost_runtime::VERSION
+        } 
 	}
 
 }
@@ -180,61 +171,108 @@ pub fn run() -> Result<()> {
         }
         Some(Subcommand::CheckBlock(cmd)) => {
             let runner = cli.create_runner(cmd)?;
-            runner.async_run(|config| {
-                let PartialComponents {
-                    client,
-                    task_manager,
-                    import_queue,
-                    ..
-                } = arctic::new_partial::<arctic_service::RuntimeApi, arctic_service::Executor, _>(
-                    &config,
-                    arctic::build_import_queue,
-                )?;
-                Ok((cmd.run(client, import_queue), task_manager))
-            })
+            if runner.config().chain_spec.is_arctic() {
+                runner.async_run(|config| {
+                    let PartialComponents {
+                        client,
+                        task_manager,
+                        import_queue,
+                        ..
+                    } = arctic::new_partial::<arctic_service::RuntimeApi, arctic_service::Executor, _>(
+                        &config,
+                        arctic::build_import_queue,
+                    )?;
+                    Ok((cmd.run(client, import_queue), task_manager))
+                })
+            } else {
+                runner.async_run(|config| {
+                    let PartialComponents {
+                        client,
+                        task_manager,
+                        import_queue,
+                        ..
+                    } = frost::new_partial(&config, &cli)?;
+                    Ok((cmd.run(client, import_queue), task_manager))
+                })
+            }
+   
         }
         Some(Subcommand::ExportBlocks(cmd)) => {
             let runner = cli.create_runner(cmd)?;
-            runner.async_run(|config| {
-                let PartialComponents {
-                    client,
-                    task_manager,
-                    ..
-                } = arctic::new_partial::<arctic_service::RuntimeApi, arctic_service::Executor, _>(
-                    &config,
-                    arctic::build_import_queue,
-                )?;
-                Ok((cmd.run(client, config.database), task_manager))
-            })
+            if runner.config().chain_spec.is_arctic() {
+                runner.async_run(|config| {
+                    let PartialComponents {
+                        client,
+                        task_manager,
+                        ..
+                    } = arctic::new_partial::<arctic_service::RuntimeApi, arctic_service::Executor, _>(
+                        &config,
+                        arctic::build_import_queue,
+                    )?;
+                    Ok((cmd.run(client, config.database), task_manager))
+                })
+            } else {
+                runner.async_run(|config| {
+                    let PartialComponents {
+                        client,
+                        task_manager,
+                        ..
+                    } = frost::new_partial(&config, &cli)?;
+                    Ok((cmd.run(client, config.database), task_manager))
+                })
+            }
         }
         Some(Subcommand::ExportState(cmd)) => {
             let runner = cli.create_runner(cmd)?;
-            runner.async_run(|config| {
-                let PartialComponents {
-                    client,
-                    task_manager,
-                    ..
-                } = arctic::new_partial::<arctic_service::RuntimeApi, arctic_service::Executor, _>(
-                    &config,
-                    arctic::build_import_queue,
-                )?;
-                Ok((cmd.run(client, config.chain_spec), task_manager))
-            })
+            if runner.config().chain_spec.is_arctic() {
+                runner.async_run(|config| {
+                    let PartialComponents {
+                        client,
+                        task_manager,
+                        ..
+                    } = arctic::new_partial::<arctic_service::RuntimeApi, arctic_service::Executor, _>(
+                        &config,
+                        arctic::build_import_queue,
+                    )?;
+                    Ok((cmd.run(client, config.chain_spec), task_manager))
+                })
+            } else {
+                runner.async_run(|config| {
+                    let PartialComponents {
+                        client,
+                        task_manager,
+                        ..
+                    } = frost::new_partial(&config, &cli)?;
+                    Ok((cmd.run(client, config.chain_spec), task_manager))
+                })
+            }
         }
         Some(Subcommand::ImportBlocks(cmd)) => {
             let runner = cli.create_runner(cmd)?;
-            runner.async_run(|config| {
-                let PartialComponents {
-                    client,
-                    task_manager,
-                    import_queue,
-                    ..
-                } = arctic::new_partial::<arctic_service::RuntimeApi, arctic_service::Executor, _>(
-                    &config,
-                    arctic::build_import_queue,
-                )?;
-                Ok((cmd.run(client, import_queue), task_manager))
-            })
+            if runner.config().chain_spec.is_arctic() {
+                runner.async_run(|config| {
+                    let PartialComponents {
+                        client,
+                        task_manager,
+                        import_queue,
+                        ..
+                    } = arctic::new_partial::<arctic_service::RuntimeApi, arctic_service::Executor, _>(
+                        &config,
+                        arctic::build_import_queue,
+                    )?;
+                    Ok((cmd.run(client, import_queue), task_manager))
+                })
+            } else {
+                runner.async_run(|config| {
+                    let PartialComponents {
+                        client,
+                        task_manager,
+                        import_queue,
+                        ..
+                    } = frost::new_partial(&config, &cli)?;
+                    Ok((cmd.run(client, import_queue), task_manager))
+                })
+            }
         }
         Some(Subcommand::PurgeChain(cmd)) => {
             let runner = cli.create_runner(cmd)?;
@@ -257,18 +295,30 @@ pub fn run() -> Result<()> {
         }
         Some(Subcommand::Revert(cmd)) => {
             let runner = cli.create_runner(cmd)?;
-            runner.async_run(|config| {
-                let PartialComponents {
-                    client,
-                    task_manager,
-                    backend,
-                    ..
-                } = arctic::new_partial::<arctic_service::RuntimeApi, arctic_service::Executor, _>(
-                    &config,
-                    arctic::build_import_queue,
-                )?;
-                Ok((cmd.run(client, backend), task_manager))
-            })
+            if runner.config().chain_spec.is_arctic() {
+                runner.async_run(|config| {
+                    let PartialComponents {
+                        client,
+                        task_manager,
+                        backend,
+                        ..
+                    } = arctic::new_partial::<arctic_service::RuntimeApi, arctic_service::Executor, _>(
+                        &config,
+                        arctic::build_import_queue,
+                    )?;
+                    Ok((cmd.run(client, backend), task_manager))
+                })
+            } else {
+                runner.async_run(|config| {
+                    let PartialComponents {
+                        client,
+                        task_manager,
+                        backend,
+                        ..
+                    } = frost::new_partial(&config, &cli)?;
+                    Ok((cmd.run(client, backend), task_manager))
+                })
+            }
         }
         Some(Subcommand::ExportGenesisState(params)) => {
             let mut builder = sc_cli::LoggerBuilder::new("");
@@ -358,7 +408,8 @@ pub fn run() -> Result<()> {
             let runner = cli.create_runner(&cli.run.normalize())?;
 
             runner.run_node_until_exit(|config| async move {
-                if config.chain_spec.is_frost() {
+                if !config.chain_spec.is_arctic() {
+                    info!("Starting Frost Node");
                     return frost::start_frost_node(config, &cli).map_err(Into::into);
                 }
 

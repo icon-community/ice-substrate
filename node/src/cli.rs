@@ -113,48 +113,6 @@ pub struct ExportGenesisWasmCommand {
     pub chain: Option<String>,
 }
 
-// #[allow(missing_docs)]
-// #[derive(Debug, clap::Parser)]
-// pub struct RunCmd {
-//     #[allow(missing_docs)]
-//     #[clap(flatten)]
-//     pub base: cumulus_client_cli::RunCmd,
-
-//     /// Id of the parachain this collator collates for.
-//     ///
-//     /// Default: 2000
-//     #[clap(long, default_value = "2000")]
-//     pub parachain_id: u32,
-
-//     /// Choose sealing method.
-// 	#[cfg(feature = "manual-seal")]
-// 	#[clap(long, arg_enum, ignore_case = true)]
-// 	pub sealing: Sealing,
-
-// 	#[clap(long)]
-// 	pub enable_dev_signer: bool,
-
-// 	/// Maximum number of logs in a query.
-// 	#[clap(long, default_value = "10000")]
-// 	pub max_past_logs: u32,
-
-// 	/// Maximum fee history cache size.
-// 	#[clap(long, default_value = "2048")]
-// 	pub fee_history_limit: u64,
-
-// 	/// The dynamic-fee pallet target gas price set by block author
-// 	#[clap(long, default_value = "1")]
-// 	pub target_gas_price: u64,
-
-// }
-
-// impl std::ops::Deref for RunCmd {
-//     type Target = sc_cli::RunCmd;
-
-//     fn deref(&self) -> &Self::Target {
-//         &self.base
-//     }
-// }
 
 #[derive(Debug)]
 #[allow(missing_docs)]

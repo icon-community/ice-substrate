@@ -328,6 +328,7 @@ pub fn start_frost_node(mut config: Configuration, cli: &Cli) -> Result<TaskMana
 			}
 		};
 	}
+
 	let grandpa_protocol_name = sc_finality_grandpa::protocol_standard_name(
 		&client
 			.block_hash(0)
@@ -383,6 +384,7 @@ pub fn start_frost_node(mut config: Configuration, cli: &Cli) -> Result<TaskMana
 		);
 	}
 
+
 	let role = config.role.clone();
 	let force_authoring = config.force_authoring;
 	let backoff_authoring_blocks: Option<()> = None;
@@ -390,7 +392,7 @@ pub fn start_frost_node(mut config: Configuration, cli: &Cli) -> Result<TaskMana
 	let enable_grandpa = !config.disable_grandpa;
 	let prometheus_registry = config.prometheus_registry().cloned();
 	let is_authority = config.role.is_authority();
-	let enable_dev_signer = false;
+	let enable_dev_signer = true;
 	let subscription_task_executor =
 		sc_rpc::SubscriptionTaskExecutor::new(task_manager.spawn_handle());
 	let overrides = crate::rpc::overrides_handle(client.clone());
@@ -402,6 +404,7 @@ pub fn start_frost_node(mut config: Configuration, cli: &Cli) -> Result<TaskMana
 		50,
 		50,
 	));
+
 
 	let rpc_extensions_builder = {
 		let client = client.clone();
@@ -439,6 +442,7 @@ pub fn start_frost_node(mut config: Configuration, cli: &Cli) -> Result<TaskMana
 		})
 	};
 
+
 	let _rpc_handlers = sc_service::spawn_tasks(sc_service::SpawnTasksParams {
 		network: network.clone(),
 		client: client.clone(),
@@ -465,6 +469,7 @@ pub fn start_frost_node(mut config: Configuration, cli: &Cli) -> Result<TaskMana
 		)
 		.for_each(|()| futures::future::ready(())),
 	);
+
 
 	// Spawn Frontier EthFilterApi maintenance task.
 	if let Some(filter_pool) = filter_pool {
@@ -573,7 +578,6 @@ pub fn start_frost_node(mut config: Configuration, cli: &Cli) -> Result<TaskMana
 	#[cfg(feature = "aura")]
 	{
 		let (block_import, grandpa_link) = consensus_result;
-
 		if role.is_authority() {
 			let proposer_factory = sc_basic_authorship::ProposerFactory::new(
 				task_manager.spawn_handle(),
@@ -651,7 +655,6 @@ pub fn start_frost_node(mut config: Configuration, cli: &Cli) -> Result<TaskMana
 			telemetry: telemetry.as_ref().map(|x| x.handle()),
 			protocol_name: grandpa_protocol_name,
 		};
-
 		if enable_grandpa {
 			// start the full GRANDPA voter
 			// NOTE: non-authorities could run the GRANDPA observer protocol, but at

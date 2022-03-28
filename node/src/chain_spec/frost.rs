@@ -53,7 +53,7 @@ pub fn testnet_config() -> Result<FrostChainSpec, String> {
 		"Frost Testnet",
 		// ID
 		"frost_testnet",
-		ChainType::Custom(String::from("snow")),
+		ChainType::Custom(String::from("frost")),
 		move || {
 			testnet_genesis(
 				wasm_binary,
@@ -101,12 +101,11 @@ pub fn testnet_config() -> Result<FrostChainSpec, String> {
 
 pub fn development_config() -> Result<FrostChainSpec, String> {
 	let wasm_binary = WASM_BINARY.ok_or_else(|| "Development wasm not available".to_string())?;
-
 	Ok(FrostChainSpec::from_genesis(
 		// Name
 		"Frost Development",
 		// ID
-		"frost_dev",
+		"dev",
 		ChainType::Development,
 		move || {
 			testnet_genesis(
