@@ -49,9 +49,9 @@ fn load_spec(
 ) -> std::result::Result<Box<dyn sc_service::ChainSpec>, String> {
     Ok(match id {
 		"dev" => Box::new(development_config()?),
-		"frost_testnet" => Box::new(testnet_config()?),
-        "" | "frost_local_testnet" => Box::new(local_testnet_config()?),
-        "arctic-dev" => Box::new(get_chain_spec(para_id)),
+		"frost" => Box::new(testnet_config()?),
+        "" | "frost-local-testnet" => Box::new(local_testnet_config()?),
+        "arctic" => Box::new(get_chain_spec(para_id)),
  
         path => {
             let chain_spec = ArcticChainSpec::from_json_file(path.into())?;

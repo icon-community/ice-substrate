@@ -1,11 +1,11 @@
 use cumulus_primitives_core::ParaId;
 use sc_service::ChainType;
 use arctic_runtime::{
-    wasm_binary_unwrap, AccountId, AuraConfig, AuraId, Balance, BalancesConfig, BaseFeeConfig,
+    wasm_binary_unwrap, AccountId, AuraConfig, AuraId, Balance, BalancesConfig,
     CollatorSelectionConfig, EVMConfig, GenesisConfig, ParachainInfoConfig, CouncilConfig,
     SessionConfig, Signature, SudoConfig, SystemConfig, VestingConfig, SessionKeys
 };
-use arctic_runtime::currency::{ICY, MILLIICY};
+use arctic_runtime::currency::{ICY};
 use sp_core::{sr25519, Pair, Public};
 use std::{collections::BTreeMap};
 
@@ -14,6 +14,7 @@ use std::marker::PhantomData;
 use super::{get_from_seed, Extensions};
 
 
+/// Publicly expose ArcticChainSpec for sc service
 pub type ArcticChainSpec = sc_service::GenericChainSpec<GenesisConfig, Extensions>;
 
 const ARCTIC_PROPERTIES: &str = r#"
@@ -59,6 +60,7 @@ pub fn get_chain_spec(para_id: u32) -> ArcticChainSpec {
     )
 }
 
+/// Helper for session keys to map aura id
 fn session_keys(aura: AuraId) -> SessionKeys {
     SessionKeys { aura }
 }
@@ -85,7 +87,6 @@ fn make_genesis(
     // We will pre-deploy it under all of our precompiles to ensure they can be called from
     // within contracts.
     // (PUSH1 0x00 PUSH1 0x00 REVERT)
-    let revert_bytecode = vec![0x60, 0x00, 0x60, 0x00, 0xFD];
 
     GenesisConfig {
         system: SystemConfig {

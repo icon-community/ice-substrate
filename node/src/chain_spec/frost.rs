@@ -45,6 +45,7 @@ pub fn authority_keys_from_seed(s: &str) -> (AuraId, GrandpaId) {
 	(get_from_seed::<AuraId>(s), get_from_seed::<GrandpaId>(s))
 }
 
+/// Initialize frost testnet configuration
 pub fn testnet_config() -> Result<FrostChainSpec, String> {
 	let wasm_binary = WASM_BINARY.ok_or_else(|| "Development wasm not available".to_string())?;
 
@@ -99,6 +100,7 @@ pub fn testnet_config() -> Result<FrostChainSpec, String> {
 	))
 }
 
+/// Initialize frost development configuration
 pub fn development_config() -> Result<FrostChainSpec, String> {
 	let wasm_binary = WASM_BINARY.ok_or_else(|| "Development wasm not available".to_string())?;
 	Ok(FrostChainSpec::from_genesis(
@@ -142,6 +144,7 @@ pub fn development_config() -> Result<FrostChainSpec, String> {
 	))
 }
 
+/// Initialize frost local testnet configuration
 pub fn local_testnet_config() -> Result<FrostChainSpec, String> {
 	let wasm_binary = WASM_BINARY.ok_or_else(|| "Development wasm not available".to_string())?;
 

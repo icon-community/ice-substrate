@@ -1,7 +1,6 @@
 use clap::Parser;
 use sc_cli::{KeySubcommand, SignCmd, VanityCmd, VerifyCmd};
 use std::path::PathBuf;
-use structopt::StructOpt;
 
 /// An overarching CLI command definition.
 #[derive(Debug, clap::Parser)]

@@ -35,9 +35,6 @@ use sc_consensus_manual_seal::rpc::{ManualSeal, ManualSealApi};
 
 
 
-
-
-
 pub fn open_frontier_backend(
     config: &sc_service::Configuration,
 ) -> Result<Arc<fc_db::Backend<Block>>, String> {
@@ -176,7 +173,7 @@ where
     let max_past_logs: u32 = 10_000;
     let max_stored_filters: usize = 500;
 
-	let mut signers = Vec::new();
+	let signers = Vec::new();
 	io.extend_with(EthApiServer::to_delegate(EthApi::new(
 		client.clone(),
 		pool.clone(),
@@ -285,12 +282,8 @@ where
 	A: ChainApi<Block = Block> + 'static,
 {
 	use fc_rpc::{
-		EthApi, EthApiServer, EthDevSigner, EthFilterApi, EthFilterApiServer, EthPubSubApi,
-		EthPubSubApiServer, EthSigner, HexEncodedIdProvider, NetApi, NetApiServer, Web3Api,
-		Web3ApiServer,
+		EthDevSigner, EthSigner
 	};
-	use pallet_transaction_payment_rpc::{TransactionPayment, TransactionPaymentApi};
-	use frame_rpc_system::{FullSystem, SystemApi};
 	use pallet_contracts_rpc::{Contracts, ContractsApi};
 
 

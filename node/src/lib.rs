@@ -1,7 +1,3 @@
-#![warn(missing_docs)]
-#![warn(unused_extern_crates)]
-
-
 mod cli;
 mod command;
 mod primitives;
@@ -10,9 +6,23 @@ mod chain_spec;
 mod service;
 mod shell_upgrade;
 
+/// chain_spec
 pub use chain_spec::*;
+
+/// service
 pub use service::*;
+
+/// cli
 pub use cli::*;
+
+/// command
 pub use command::*;
+
+/// primitives
 pub use primitives::*;
+
+/// shell_upgrade
 pub use shell_upgrade::*;
+
+
+

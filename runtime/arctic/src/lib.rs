@@ -29,20 +29,19 @@ use frame_system::limits::{BlockLength, BlockWeights};
 use sp_api::impl_runtime_apis;
 pub use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 use sp_core::{
-	crypto::{KeyTypeId, Public},
+	crypto::{KeyTypeId},
 	OpaqueMetadata, H160, H256, U256,
 };
 use sp_runtime::{
 	create_runtime_str, generic, impl_opaque_keys,
 	traits::{
-		AccountIdLookup, BlakeTwo256, Block as BlockT, Dispatchable, IdentifyAccount, NumberFor,
+		AccountIdLookup, BlakeTwo256, Block as BlockT, Dispatchable, IdentifyAccount,
 		PostDispatchInfoOf, Verify, ConvertInto
 	},
 	transaction_validity::{TransactionSource, TransactionValidity, TransactionValidityError},
 	ApplyExtrinsicResult, MultiSignature,
 };
 
-use frame_support::weights::DispatchClass;
 use sp_std::{marker::PhantomData, prelude::*};
 #[cfg(feature = "std")]
 use sp_version::NativeVersion;
@@ -57,14 +56,14 @@ use sp_core::u32_trait::{_1, _2, _5};
 use xcm_config::{XcmConfig, XcmOriginToTransactDispatchOrigin};
 
 // Polkadot Imports
-use polkadot_runtime_common::{RocksDbWeight, SlowAdjustingFeeUpdate};
+use polkadot_runtime_common::{RocksDbWeight};
 
 // XCM Imports
 use xcm::latest::prelude::BodyId;
 use xcm_executor::XcmExecutor;
 
 
-use crate::currency::{ICY, MILLIICY};
+use crate::currency::{ICY};
 
 // A few exports that help ease life for downstream crates.
 use fp_rpc::TransactionStatus;

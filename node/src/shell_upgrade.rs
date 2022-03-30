@@ -13,8 +13,11 @@ use crate::primitives::Block;
 
 use crate::primitives::*;
 
+/// Enum for BuildOnAccess
 pub enum BuildOnAccess<R> {
+    /// Uninitialized access
     Uninitialized(Option<Box<dyn FnOnce() -> R + Send + Sync>>),
+    /// Initialize access
     Initialized(R),
 }
 
@@ -31,9 +34,16 @@ impl<R> BuildOnAccess<R> {
     }
 }
 
+/// struct for WaitForAuraConsensus
 pub struct WaitForAuraConsensus<Client> {
+
+    /// client
     pub client: Arc<Client>,
+
+    /// aura_consensus
     pub aura_consensus: Arc<Mutex<BuildOnAccess<Box<dyn ParachainConsensus<Block>>>>>,
+
+    /// relay_chain_consensus
     pub relay_chain_consensus: Arc<Mutex<Box<dyn ParachainConsensus<Block>>>>,
 }
 
@@ -82,9 +92,15 @@ where
     }
 }
 
+/// Verifier
 pub struct Verifier<Client> {
+    /// client
     pub client: Arc<Client>,
+
+    /// aura_verifier
     pub aura_verifier: BuildOnAccess<Box<dyn VerifierT<Block>>>,
+
+    /// relay_chain_verifier
     pub relay_chain_verifier: Box<dyn VerifierT<Block>>,
 }
 

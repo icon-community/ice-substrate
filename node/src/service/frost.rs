@@ -33,7 +33,7 @@ use crate::cli::Cli;
 #[cfg(feature = "manual-seal")]
 use crate::cli::Sealing;
 
-// Our native executor instance.
+/// Our native executor instance.
 pub struct ExecutorDispatch;
 
 impl sc_executor::NativeExecutionDispatch for ExecutorDispatch {
@@ -58,6 +58,7 @@ type FullClient =
 type FullBackend = sc_service::TFullBackend<Block>;
 type FullSelectChain = sc_consensus::LongestChain<FullBackend, Block>;
 
+/// Consensure Result for Frontier Block import
 #[cfg(feature = "aura")]
 pub type ConsensusResult = (
 	FrontierBlockImport<
@@ -78,6 +79,7 @@ pub type ConsensusResult = (
 /// Each call will increment timestamp by slot_duration making Aura think time has passed.
 pub struct MockTimestampInherentDataProvider;
 
+/// INHERENT_IDENTIFIER for timestamp
 pub const INHERENT_IDENTIFIER: InherentIdentifier = *b"timstap0";
 
 thread_local!(static TIMESTAMP: RefCell<u64> = RefCell::new(0));
@@ -104,6 +106,7 @@ impl sp_inherents::InherentDataProvider for MockTimestampInherentDataProvider {
 	}
 }
 
+/// Getting frontier database directory
 pub fn frontier_database_dir(config: &Configuration) -> std::path::PathBuf {
 	let config_dir = config
 		.base_path
@@ -116,6 +119,7 @@ pub fn frontier_database_dir(config: &Configuration) -> std::path::PathBuf {
 	config_dir.join("frontier").join("db")
 }
 
+/// get frontier backend connection with database
 pub fn open_frontier_backend(config: &Configuration) -> Result<Arc<fc_db::Backend<Block>>, String> {
 	Ok(Arc::new(fc_db::Backend::<Block>::new(
 		&fc_db::DatabaseSettings {

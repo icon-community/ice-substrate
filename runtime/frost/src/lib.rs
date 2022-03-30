@@ -19,7 +19,7 @@ use frame_system::limits::{BlockLength, BlockWeights};
 use sp_api::impl_runtime_apis;
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 use sp_core::{
-	crypto::{KeyTypeId, Public},
+	crypto::{KeyTypeId},
 	OpaqueMetadata, H160, H256, U256,
 };
 use sp_runtime::{
@@ -32,7 +32,6 @@ use sp_runtime::{
 	ApplyExtrinsicResult, MultiSignature,
 };
 
-use frame_support::weights::DispatchClass;
 use sp_std::{marker::PhantomData, prelude::*};
 #[cfg(feature = "std")]
 use sp_version::NativeVersion;
@@ -42,7 +41,7 @@ use frame_support::inherent::Vec;
 use sp_std::boxed::Box;
 use sp_core::u32_trait::{_1, _2, _5};
 
-use crate::currency::{ICY, MILLIICY};
+use crate::currency::{ICY};
 
 // A few exports that help ease life for downstream crates.
 use fp_rpc::TransactionStatus;
@@ -69,9 +68,6 @@ pub use sp_runtime::{Perbill, Permill};
 /// We assume that ~10% of the block weight is consumed by `on_initialize` handlers.
 /// This is used to limit the maximal weight of a single extrinsic.
 const AVERAGE_ON_INITIALIZE_RATIO: Perbill = Perbill::from_percent(10);
-
-/// We allow for 2 seconds of compute with a 6 second average block time.
-const MAXIMUM_BLOCK_WEIGHT: Weight = 2 * WEIGHT_PER_SECOND;
 
 mod precompile;
 use precompile::FrontierPrecompiles;
