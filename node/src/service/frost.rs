@@ -4,7 +4,7 @@ use fc_consensus::FrontierBlockImport;
 use fc_mapping_sync::{MappingSyncWorker, SyncStrategy};
 use fc_rpc::EthTask;
 use fc_rpc_core::types::{FeeHistoryCache, FilterPool};
-use ice_runtime::{self, opaque::Block, RuntimeApi, SLOT_DURATION};
+use frost_runtime::{self, opaque::Block, RuntimeApi, SLOT_DURATION};
 use futures::StreamExt;
 use sc_cli::SubstrateCli;
 use sc_client_api::{BlockBackend, BlockchainEvents, ExecutorProvider};
@@ -28,11 +28,12 @@ use std::{
 	time::Duration,
 };
 
+
 use crate::cli::Cli;
 #[cfg(feature = "manual-seal")]
 use crate::cli::Sealing;
 
-// Our native executor instance.
+/// Our native executor instance.
 pub struct ExecutorDispatch;
 
 impl sc_executor::NativeExecutionDispatch for ExecutorDispatch {
@@ -44,11 +45,11 @@ impl sc_executor::NativeExecutionDispatch for ExecutorDispatch {
 	type ExtendHostFunctions = ();
 
 	fn dispatch(method: &str, data: &[u8]) -> Option<Vec<u8>> {
-		ice_runtime::api::dispatch(method, data)
+		frost_runtime::api::dispatch(method, data)
 	}
 
 	fn native_version() -> sc_executor::NativeVersion {
-		ice_runtime::native_version()
+		frost_runtime::native_version()
 	}
 }
 
@@ -57,6 +58,7 @@ type FullClient =
 type FullBackend = sc_service::TFullBackend<Block>;
 type FullSelectChain = sc_consensus::LongestChain<FullBackend, Block>;
 
+/// Consensure Result for Frontier Block import
 #[cfg(feature = "aura")]
 pub type ConsensusResult = (
 	FrontierBlockImport<
@@ -77,6 +79,7 @@ pub type ConsensusResult = (
 /// Each call will increment timestamp by slot_duration making Aura think time has passed.
 pub struct MockTimestampInherentDataProvider;
 
+/// INHERENT_IDENTIFIER for timestamp
 pub const INHERENT_IDENTIFIER: InherentIdentifier = *b"timstap0";
 
 thread_local!(static TIMESTAMP: RefCell<u64> = RefCell::new(0));
@@ -103,6 +106,7 @@ impl sp_inherents::InherentDataProvider for MockTimestampInherentDataProvider {
 	}
 }
 
+/// Getting frontier database directory
 pub fn frontier_database_dir(config: &Configuration) -> std::path::PathBuf {
 	let config_dir = config
 		.base_path
@@ -115,6 +119,7 @@ pub fn frontier_database_dir(config: &Configuration) -> std::path::PathBuf {
 	config_dir.join("frontier").join("db")
 }
 
+/// get frontier backend connection with database
 pub fn open_frontier_backend(config: &Configuration) -> Result<Arc<fc_db::Backend<Block>>, String> {
 	Ok(Arc::new(fc_db::Backend::<Block>::new(
 		&fc_db::DatabaseSettings {
@@ -247,7 +252,7 @@ pub fn new_partial(
 		);
 
 		let slot_duration = sc_consensus_aura::slot_duration(&*client)?.slot_duration();
-		let target_gas_price = cli.run.target_gas_price;
+		let target_gas_price = 1;
 
 		let import_queue =
 			sc_consensus_aura::import_queue::<AuraPair, _, _, _, _, _, _>(ImportQueueParams {
@@ -304,7 +309,7 @@ fn remote_keystore(_url: &String) -> Result<Arc<LocalKeystore>, &'static str> {
 }
 
 /// Builds a new service for a full client.
-pub fn new_full(mut config: Configuration, cli: &Cli) -> Result<TaskManager, ServiceError> {
+pub fn start_frost_node(mut config: Configuration, cli: &Cli) -> Result<TaskManager, ServiceError> {
 	let sc_service::PartialComponents {
 		client,
 		backend,
@@ -327,6 +332,7 @@ pub fn new_full(mut config: Configuration, cli: &Cli) -> Result<TaskManager, Ser
 			}
 		};
 	}
+
 	let grandpa_protocol_name = sc_finality_grandpa::protocol_standard_name(
 		&client
 			.block_hash(0)
@@ -382,6 +388,7 @@ pub fn new_full(mut config: Configuration, cli: &Cli) -> Result<TaskManager, Ser
 		);
 	}
 
+
 	let role = config.role.clone();
 	let force_authoring = config.force_authoring;
 	let backoff_authoring_blocks: Option<()> = None;
@@ -389,11 +396,11 @@ pub fn new_full(mut config: Configuration, cli: &Cli) -> Result<TaskManager, Ser
 	let enable_grandpa = !config.disable_grandpa;
 	let prometheus_registry = config.prometheus_registry().cloned();
 	let is_authority = config.role.is_authority();
-	let enable_dev_signer = cli.run.enable_dev_signer;
+	let enable_dev_signer = true;
 	let subscription_task_executor =
 		sc_rpc::SubscriptionTaskExecutor::new(task_manager.spawn_handle());
 	let overrides = crate::rpc::overrides_handle(client.clone());
-	let fee_history_limit = cli.run.fee_history_limit;
+	let fee_history_limit = 2048;
 
 	let block_data_cache = Arc::new(fc_rpc::EthBlockDataCache::new(
 		task_manager.spawn_handle(),
@@ -401,6 +408,7 @@ pub fn new_full(mut config: Configuration, cli: &Cli) -> Result<TaskManager, Ser
 		50,
 		50,
 	));
+
 
 	let rpc_extensions_builder = {
 		let client = client.clone();
@@ -410,10 +418,10 @@ pub fn new_full(mut config: Configuration, cli: &Cli) -> Result<TaskManager, Ser
 		let frontier_backend = frontier_backend.clone();
 		let overrides = overrides.clone();
 		let fee_history_cache = fee_history_cache.clone();
-		let max_past_logs = cli.run.max_past_logs;
+		let max_past_logs = 10000;
 
 		Box::new(move |deny_unsafe, _| {
-			let deps = crate::rpc::FullDeps {
+			let deps = crate::rpc::FullDepsForFrost {
 				client: client.clone(),
 				pool: pool.clone(),
 				graph: pool.pool().clone(),
@@ -431,12 +439,13 @@ pub fn new_full(mut config: Configuration, cli: &Cli) -> Result<TaskManager, Ser
 				block_data_cache: block_data_cache.clone(),
 			};
 
-			Ok(crate::rpc::create_full(
+			Ok(crate::rpc::create_full_frost(
 				deps,
 				subscription_task_executor.clone(),
 			))
 		})
 	};
+
 
 	let _rpc_handlers = sc_service::spawn_tasks(sc_service::SpawnTasksParams {
 		network: network.clone(),
@@ -464,6 +473,7 @@ pub fn new_full(mut config: Configuration, cli: &Cli) -> Result<TaskManager, Ser
 		)
 		.for_each(|()| futures::future::ready(())),
 	);
+
 
 	// Spawn Frontier EthFilterApi maintenance task.
 	if let Some(filter_pool) = filter_pool {
@@ -507,7 +517,7 @@ pub fn new_full(mut config: Configuration, cli: &Cli) -> Result<TaskManager, Ser
 				telemetry.as_ref().map(|x| x.handle()),
 			);
 
-			let target_gas_price = cli.run.target_gas_price;
+			let target_gas_price = 1;
 
 			// Background authorship future
 			match sealing {
@@ -572,7 +582,6 @@ pub fn new_full(mut config: Configuration, cli: &Cli) -> Result<TaskManager, Ser
 	#[cfg(feature = "aura")]
 	{
 		let (block_import, grandpa_link) = consensus_result;
-
 		if role.is_authority() {
 			let proposer_factory = sc_basic_authorship::ProposerFactory::new(
 				task_manager.spawn_handle(),
@@ -587,7 +596,7 @@ pub fn new_full(mut config: Configuration, cli: &Cli) -> Result<TaskManager, Ser
 
 			let slot_duration = sc_consensus_aura::slot_duration(&*client)?;
 			let raw_slot_duration = slot_duration.slot_duration();
-			let target_gas_price = cli.run.target_gas_price;
+			let target_gas_price = 1;
 
 			let aura = sc_consensus_aura::start_aura::<AuraPair, _, _, _, _, _, _, _, _, _, _, _>(
 				StartAuraParams {
@@ -650,7 +659,6 @@ pub fn new_full(mut config: Configuration, cli: &Cli) -> Result<TaskManager, Ser
 			telemetry: telemetry.as_ref().map(|x| x.handle()),
 			protocol_name: grandpa_protocol_name,
 		};
-
 		if enable_grandpa {
 			// start the full GRANDPA voter
 			// NOTE: non-authorities could run the GRANDPA observer protocol, but at

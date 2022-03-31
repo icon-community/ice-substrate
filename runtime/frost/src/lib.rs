@@ -19,7 +19,7 @@ use frame_system::limits::{BlockLength, BlockWeights};
 use sp_api::impl_runtime_apis;
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 use sp_core::{
-	crypto::{KeyTypeId, Public},
+	crypto::{KeyTypeId},
 	OpaqueMetadata, H160, H256, U256,
 };
 use sp_runtime::{
@@ -32,7 +32,6 @@ use sp_runtime::{
 	ApplyExtrinsicResult, MultiSignature,
 };
 
-use frame_support::weights::DispatchClass;
 use sp_std::{marker::PhantomData, prelude::*};
 #[cfg(feature = "std")]
 use sp_version::NativeVersion;
@@ -42,7 +41,7 @@ use frame_support::inherent::Vec;
 use sp_std::boxed::Box;
 use sp_core::u32_trait::{_1, _2, _5};
 
-use crate::currency::{ICY, MILLIICY};
+use crate::currency::{ICY};
 
 // A few exports that help ease life for downstream crates.
 use fp_rpc::TransactionStatus;
@@ -70,11 +69,8 @@ pub use sp_runtime::{Perbill, Permill};
 /// This is used to limit the maximal weight of a single extrinsic.
 const AVERAGE_ON_INITIALIZE_RATIO: Perbill = Perbill::from_percent(10);
 
-/// We allow for 2 seconds of compute with a 6 second average block time.
-const MAXIMUM_BLOCK_WEIGHT: Weight = 2 * WEIGHT_PER_SECOND;
-
-mod precompiles;
-use precompiles::FrontierPrecompiles;
+mod precompile;
+use precompile::FrontierPrecompiles;
 
 /// Type of block number.
 pub type BlockNumber = u32;
@@ -395,7 +391,7 @@ impl<F: FindAuthor<u32>> FindAuthor<H160> for FindAuthorTruncated<F> {
 }
 
 parameter_types! {
-	pub const ChainId: u64 = 553;
+	pub const ChainId: u64 = 42;
 	pub BlockGasLimit: U256 = U256::from(u32::max_value());
 	pub PrecompilesValue: FrontierPrecompiles<Runtime> = FrontierPrecompiles::<_>::new();
 }
@@ -965,6 +961,22 @@ impl_runtime_apis! {
 		}
 	}
 
+	#[cfg(feature = "try-runtime")]
+	impl frame_try_runtime::TryRuntime<Block> for Runtime {
+		fn on_runtime_upgrade() -> (Weight, Weight) {
+			// NOTE: intentional unwrap: we don't want to propagate the error backwards, and want to
+			// have a backtrace here. If any of the pre/post migration checks fail, we shall stop
+			// right here and right now.
+			let weight = Executive::try_runtime_upgrade().unwrap();
+
+			(weight, RuntimeBlockWeights::get().max_block)
+		}
+
+		fn execute_block_no_check(block: Block) -> Weight {
+			Executive::execute_block_no_check(block)
+		}
+	}
+	
 	#[cfg(feature = "runtime-benchmarks")]
 	impl frame_benchmarking::Benchmark<Block> for Runtime {
 		fn dispatch_benchmark(

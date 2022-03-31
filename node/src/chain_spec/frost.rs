@@ -1,4 +1,4 @@
-use ice_runtime::{
+use frost_runtime::{
 	AccountId, AuraConfig, BalancesConfig, CouncilConfig, EVMConfig, EthereumConfig, GenesisConfig, GrandpaConfig,
 	Signature, SudoConfig, SystemConfig, WASM_BINARY, currency::ICY
 };
@@ -13,7 +13,7 @@ use std::marker::PhantomData;
 
 // The URL for the telemetry server.
 // const STAGING_TELEMETRY_URL: &str = "wss://telemetry.polkadot.io/submit/";
-const ICE_PROPERTIES: &str = r#"
+const FROST_PROPERTIES: &str = r#"
         {
             "ss58Format": 42,
             "tokenDecimals": 18,
@@ -21,7 +21,7 @@ const ICE_PROPERTIES: &str = r#"
         }"#;
 
 /// Specialized `ChainSpec`. This is a specialization of the general Substrate ChainSpec type.
-pub type ChainSpec = sc_service::GenericChainSpec<GenesisConfig>;
+pub type FrostChainSpec = sc_service::GenericChainSpec<GenesisConfig>;
 
 /// Generate a crypto pair from seed.
 pub fn get_from_seed<TPublic: Public>(seed: &str) -> <TPublic::Pair as Pair>::Public {
@@ -45,15 +45,16 @@ pub fn authority_keys_from_seed(s: &str) -> (AuraId, GrandpaId) {
 	(get_from_seed::<AuraId>(s), get_from_seed::<GrandpaId>(s))
 }
 
-pub fn testnet_config() -> Result<ChainSpec, String> {
+/// Initialize frost testnet configuration
+pub fn testnet_config() -> Result<FrostChainSpec, String> {
 	let wasm_binary = WASM_BINARY.ok_or_else(|| "Development wasm not available".to_string())?;
 
-	Ok(ChainSpec::from_genesis(
+	Ok(FrostChainSpec::from_genesis(
 		// Name
-		"Testnet",
+		"Frost Testnet",
 		// ID
-		"testnet",
-		ChainType::Custom(String::from("snow")),
+		"frost_testnet",
+		ChainType::Custom(String::from("frost")),
 		move || {
 			testnet_genesis(
 				wasm_binary,
@@ -93,18 +94,18 @@ pub fn testnet_config() -> Result<ChainSpec, String> {
 		None,
 		None,
 		// Properties
-		serde_json::from_str(ICE_PROPERTIES).unwrap(),
+		serde_json::from_str(FROST_PROPERTIES).unwrap(),
 		// Extensions
 		None,
 	))
 }
 
-pub fn development_config() -> Result<ChainSpec, String> {
+/// Initialize frost development configuration
+pub fn development_config() -> Result<FrostChainSpec, String> {
 	let wasm_binary = WASM_BINARY.ok_or_else(|| "Development wasm not available".to_string())?;
-
-	Ok(ChainSpec::from_genesis(
+	Ok(FrostChainSpec::from_genesis(
 		// Name
-		"Development",
+		"Frost Development",
 		// ID
 		"dev",
 		ChainType::Development,
@@ -137,20 +138,21 @@ pub fn development_config() -> Result<ChainSpec, String> {
 		None,
 		None,
 		// Properties
-		serde_json::from_str(ICE_PROPERTIES).unwrap(),
+		serde_json::from_str(FROST_PROPERTIES).unwrap(),
 		// Extensions
 		None,
 	))
 }
 
-pub fn local_testnet_config() -> Result<ChainSpec, String> {
+/// Initialize frost local testnet configuration
+pub fn local_testnet_config() -> Result<FrostChainSpec, String> {
 	let wasm_binary = WASM_BINARY.ok_or_else(|| "Development wasm not available".to_string())?;
 
-	Ok(ChainSpec::from_genesis(
+	Ok(FrostChainSpec::from_genesis(
 		// Name
-		"Local Testnet",
+		"Frost Local Testnet",
 		// ID
-		"local_testnet",
+		"frost_local_testnet",
 		ChainType::Local,
 		move || {
 			testnet_genesis(
