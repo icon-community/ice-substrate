@@ -4,6 +4,7 @@ use crate::{
     service::arctic,
     service::arctic_service,
     service::frost,
+    chain_spec::Extensions,
     chain_spec::arctic::*,
     chain_spec::frost::*,
     primitives::Block
@@ -412,6 +413,9 @@ pub fn run() -> Result<()> {
                     info!("Starting Frost Node");
                     return frost::start_frost_node(config, &cli).map_err(Into::into);
                 }
+                let para_id = Extensions::try_get(&*config.chain_spec)
+					.map(|e| e.para_id)
+					.ok_or_else(|| "Could not find parachain ID in chain-spec.")?;
 
                 let polkadot_cli = RelayChainCli::new(
                     &config,
@@ -421,7 +425,7 @@ pub fn run() -> Result<()> {
                 );
 
                 info!("Relaychain Args: {}", cli.relaychain_args.join(" "));
-                let id = ParaId::from(PARA_ID);
+                let id = ParaId::from(para_id);
 
                 let parachain_account =
                     AccountIdConversion::<polkadot_primitives::v0::AccountId>::into_account(&id);
