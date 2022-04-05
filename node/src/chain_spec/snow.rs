@@ -1,6 +1,6 @@
 use ice_runtime::{
 	AccountId, AuraConfig, BalancesConfig, CouncilConfig, EVMConfig, EthereumConfig, GenesisConfig, GrandpaConfig,
-	Signature, SudoConfig, SystemConfig, WASM_BINARY, currency::ICY
+	Signature, SudoConfig, SystemConfig,AirdropConfig, WASM_BINARY, currency::ICY
 };
 use sc_service::ChainType;
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
@@ -82,6 +82,7 @@ pub fn testnet_config() -> Result<ChainSpec, String> {
 					hex!["d893ef775b5689473b2e9fa32c1f15c72a7c4c86f05f03ee32b8aca6ce61b92c"].into(),
 					hex!["98003761bff94c8c44af38b8a92c1d5992d061d41f700c76255c810d447d613f"].into(),
 				],
+				hex!["98003761bff94c8c44af38b8a92c1d5992d061d41f700c76255c810d447d613f"].into(),
 				true,
 			)
 		},
@@ -125,6 +126,7 @@ pub fn development_config() -> Result<ChainSpec, String> {
 					get_account_id_from_seed::<sr25519::Public>("Alice//stash"),
 					get_account_id_from_seed::<sr25519::Public>("Bob//stash"),
 				],
+				get_account_id_from_seed::<sr25519::Public>("CreditorAccount"),
 				true,
 			)
 		},
@@ -179,6 +181,7 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
 					get_account_id_from_seed::<sr25519::Public>("Eve//stash"),
 					get_account_id_from_seed::<sr25519::Public>("Ferdie//stash"),
 				],
+				get_account_id_from_seed::<sr25519::Public>("CreditorAccount"),
 				true,
 			)
 		},
@@ -202,6 +205,7 @@ fn testnet_genesis(
 	council_members: Vec<AccountId>,
 	root_key: AccountId,
 	endowed_accounts: Vec<AccountId>,
+	creditor_account:AccountId,
 	_enable_println: bool,
 ) -> GenesisConfig {
 	GenesisConfig {
@@ -246,5 +250,8 @@ fn testnet_genesis(
             phantom: PhantomData,
         },
         treasury: Default::default(),
+		airdrop: AirdropConfig {
+			creditor_account:Some(creditor_account)
+		},
 	}
 }

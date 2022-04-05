@@ -184,6 +184,10 @@ pub mod pallet {
 	pub(super) type OffchainAccount<T: Config> =
 		StorageValue<_, types::AccountIdOf<T>, OptionQuery>;
 
+	#[pallet::storage]
+	#[pallet::getter(fn creditor_account)]
+	pub(super) type CreditorAccount<T: Config> = StorageValue<_, types::AccountIdOf<T>, OptionQuery>;
+
 	#[pallet::error]
 	pub enum Error<T> {
 		/// This error will occur when signature validation failed.
@@ -863,9 +867,7 @@ pub mod pallet {
 	// implement all the helper function that are called from pallet dispatchable
 	impl<T: Config> Pallet<T> {
 		pub fn get_creditor_account() -> types::AccountIdOf<T> {
-			use sp_runtime::traits::AccountIdConversion;
-
-			T::Creditor::get().into_account()
+			Self::creditor_account().expect("Creditor Account Not Set")
 		}
 
 		/// Do claim request withing checking for anything.
@@ -920,6 +922,30 @@ pub mod pallet {
 		/// Return block height of Node from which this was called
 		pub fn get_current_block_number() -> types::BlockNumberOf<T> {
 			<frame_system::Pallet<T>>::block_number()
+		}
+	}
+
+	
+
+	#[pallet::genesis_config]
+	pub struct GenesisConfig<T: Config> {
+		/// The `AccountId` of the sudo key.
+		pub creditor_account: Option<types::AccountIdOf<T>>,
+	}
+
+	#[cfg(feature = "std")]
+	impl<T: Config> Default for GenesisConfig<T> {
+		fn default() -> Self {
+			Self { creditor_account: None }
+		}
+	}
+
+	#[pallet::genesis_build]
+	impl<T: Config> GenesisBuild<T> for GenesisConfig<T> {
+		fn build(&self) {
+			if let Some(ref key) = self.creditor_account {
+				CreditorAccount::<T>::put(key);
+			}
 		}
 	}
 }
@@ -1053,3 +1079,4 @@ impl types::IconVerifiable for sp_runtime::AccountId32 {
 		Ok(())
 	}
 }
+

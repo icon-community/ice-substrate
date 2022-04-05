@@ -25,6 +25,7 @@ pub mod prelude {
 	pub type PalletEvent = pallet_airdrop::Event<Test>;
 	pub type PalletCall = pallet_airdrop::Call<Test>;
 }
+
 use mock::System;
 use prelude::*;
 
@@ -79,10 +80,16 @@ impl types::IconVerifiable for sp_core::sr25519::Public {
 
 // Build genesis storage according to the mock runtime.
 pub fn minimal_test_ext() -> sp_io::TestExternalities {
-	frame_system::GenesisConfig::default()
-		.build_storage::<Test>()
-		.unwrap()
-		.into()
+		use hex_literal::hex;
+		use codec::Decode;
+		use frame_support::traits::GenesisBuild;
+		let mut t = frame_system::GenesisConfig::default().build_storage::<Test>().unwrap();
+		let account_hex=hex!["d893ef775b5689473b2e9fa32c1f15c72a7c4c86f05f03ee32b8aca6ce61b92c"];
+		let account_id = types::AccountIdOf::<Test>::decode(&mut &account_hex[..]).unwrap();
+		pallet_airdrop::GenesisConfig::<Test> { creditor_account: Some(account_id) }
+			.assimilate_storage(&mut t)
+			.unwrap();
+		t.into()
 }
 
 pub fn offchain_test_ext() -> (
@@ -106,7 +113,7 @@ pub fn offchain_test_ext() -> (
 	)
 	.unwrap();
 
-	let mut test_ext = sp_io::TestExternalities::default();
+	let mut test_ext = minimal_test_ext();// sp_io::TestExternalities::default();
 	let (pool, pool_state) = sp_core::offchain::testing::TestTransactionPoolExt::new();
 	let (offchain, offchain_state) = sp_core::offchain::testing::TestOffchainExt::new();
 
