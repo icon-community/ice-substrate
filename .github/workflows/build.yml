@@ -10,6 +10,8 @@ jobs:
   build-project: 
     name: Build project
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
     steps:
     - uses: actions/checkout@v2
       with:
