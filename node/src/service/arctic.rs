@@ -6,9 +6,11 @@ use cumulus_client_network::BlockAnnounceValidator;
 use cumulus_client_service::{
     prepare_node_config, start_collator, start_full_node, StartCollatorParams, StartFullNodeParams,
 };
+use cumulus_relay_chain_interface::{RelayChainError, RelayChainInterface, RelayChainResult};
+use cumulus_client_cli::CollatorOptions;
 use cumulus_primitives_core::ParaId;
-use cumulus_relay_chain_interface::RelayChainInterface;
-use cumulus_relay_chain_local::build_relay_chain_interface;
+use cumulus_relay_chain_rpc_interface::RelayChainRPCInterface;
+use cumulus_relay_chain_inprocess_interface::build_inprocess_relay_chain;
 use fc_consensus::FrontierBlockImport;
 use fc_rpc_core::types::{FeeHistoryCache, FilterPool};
 use futures::{StreamExt};
@@ -19,10 +21,10 @@ use sc_network::NetworkService;
 use sc_service::{Configuration, PartialComponents, Role, TFullBackend, TFullClient, TaskManager};
 use sc_telemetry::{Telemetry, TelemetryHandle, TelemetryWorker, TelemetryWorkerHandle};
 use sp_api::ConstructRuntimeApi;
-use sp_consensus::SlotData;
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 use sp_keystore::SyncCryptoStorePtr;
 use sp_runtime::traits::BlakeTwo256;
+use polkadot_service::CollatorPair;
 use std::{collections::BTreeMap, sync::Arc, time::Duration};
 use substrate_prometheus_endpoint::Registry;
 use crate::primitives::*;
@@ -52,6 +54,24 @@ pub mod arctic {
             arctic_runtime::native_version()
         }
     }
+}
+
+
+/// build relay chain interface
+async fn build_relay_chain_interface(
+	polkadot_config: Configuration,
+	parachain_config: &Configuration,
+	telemetry_worker_handle: Option<TelemetryWorkerHandle>,
+	task_manager: &mut TaskManager,
+	collator_options: CollatorOptions,
+) -> RelayChainResult<(Arc<(dyn RelayChainInterface + 'static)>, Option<CollatorPair>)> {
+	match collator_options.relay_chain_rpc_url {
+		Some(relay_chain_url) => Ok((
+			Arc::new(RelayChainRPCInterface::new(relay_chain_url).await?) as Arc<_>,
+			None,
+		)),
+		None => build_inprocess_relay_chain(polkadot_config, parachain_config, telemetry_worker_handle, task_manager),
+	}
 }
 
 
@@ -194,6 +214,7 @@ async fn start_node_impl<RuntimeApi, Executor, BIQ, BIC>(
     parachain_config: Configuration,
     polkadot_config: Configuration,
     id: ParaId,
+    collator_options: CollatorOptions,
     build_import_queue: BIQ,
     build_consensus: BIC,
 ) -> sc_service::error::Result<(
@@ -265,14 +286,14 @@ where
 
     let client = params.client.clone();
     let backend = params.backend.clone();
-
     let mut task_manager = params.task_manager;
     let (relay_chain_interface, collator_key) =
-        build_relay_chain_interface(polkadot_config, telemetry_worker_handle, &mut task_manager)
-            .map_err(|e| match e {
-                polkadot_service::Error::Sub(x) => x,
-                s => format!("{}", s).into(),
-            })?;
+        build_relay_chain_interface(polkadot_config, &parachain_config, telemetry_worker_handle, &mut task_manager, collator_options.clone())
+        .await
+        .map_err(|e| match e {
+            RelayChainError::ServiceError(polkadot_service::Error::Sub(x)) => x,
+            s => s.to_string().into(),
+        })?;
     let block_announce_validator = BlockAnnounceValidator::new(relay_chain_interface.clone(), id);
 
     let force_authoring = parachain_config.force_authoring;
@@ -308,6 +329,8 @@ where
             client.clone(),
             backend.clone(),
             frontier_backend.clone(),
+            10,
+            10,
             fc_mapping_sync::SyncStrategy::Parachain,
         )
         .for_each(|()| futures::future::ready(())),
@@ -422,7 +445,7 @@ where
             spawner,
             parachain_consensus,
             import_queue,
-            collator_key,
+            collator_key: collator_key.expect("Command line arguments do not allow this. qed"),
             relay_chain_slot_duration,
         };
 
@@ -434,8 +457,9 @@ where
             task_manager: &mut task_manager,
             para_id: id,
             relay_chain_interface,
-            relay_chain_slot_duration,
             import_queue,
+            relay_chain_slot_duration,
+            collator_options,
         };
 
         start_full_node(params)?;
@@ -456,6 +480,7 @@ async fn start_contracts_node_impl<RuntimeApi, Executor, BIQ, BIC>(
     parachain_config: Configuration,
     polkadot_config: Configuration,
     id: ParaId,
+    collator_options: CollatorOptions,
     build_import_queue: BIQ,
     build_consensus: BIC,
 ) -> sc_service::error::Result<(
@@ -530,11 +555,12 @@ where
 
     let mut task_manager = params.task_manager;
     let (relay_chain_interface, collator_key) =
-        build_relay_chain_interface(polkadot_config, telemetry_worker_handle, &mut task_manager)
-            .map_err(|e| match e {
-                polkadot_service::Error::Sub(x) => x,
-                s => format!("{}", s).into(),
-            })?;
+    build_relay_chain_interface(polkadot_config, &parachain_config, telemetry_worker_handle, &mut task_manager, collator_options.clone())
+        .await
+        .map_err(|e| match e {
+            RelayChainError::ServiceError(polkadot_service::Error::Sub(x)) => x,
+            s => s.to_string().into(),
+    })?;
     let block_announce_validator = BlockAnnounceValidator::new(relay_chain_interface.clone(), id);
 
     let force_authoring = parachain_config.force_authoring;
@@ -570,6 +596,7 @@ where
             client.clone(),
             backend.clone(),
             frontier_backend.clone(),
+            10,10,
             fc_mapping_sync::SyncStrategy::Parachain,
         )
         .for_each(|()| futures::future::ready(())),
@@ -689,7 +716,7 @@ where
             spawner,
             parachain_consensus,
             import_queue,
-            collator_key,
+            collator_key: collator_key.expect("Command line arguments do not allow this. qed"),
             relay_chain_slot_duration,
         };
 
@@ -701,8 +728,9 @@ where
             task_manager: &mut task_manager,
             para_id: id,
             relay_chain_interface,
-            relay_chain_slot_duration,
             import_queue,
+            relay_chain_slot_duration,
+            collator_options
         };
 
         start_full_node(params)?;
@@ -766,9 +794,9 @@ where
                     let time = sp_timestamp::InherentDataProvider::from_system_time();
 
                     let slot =
-                    sp_consensus_aura::inherents::InherentDataProvider::from_timestamp_and_duration(
+                    sp_consensus_aura::inherents::InherentDataProvider::from_timestamp_and_slot_duration(
                         *time,
-                        slot_duration.slot_duration(),
+                        slot_duration,
                     );
 
                     Ok((time, slot))
@@ -808,7 +836,8 @@ where
 pub async fn start_arctic_node(
     parachain_config: Configuration,
     polkadot_config: Configuration,
-    id: ParaId
+    id: ParaId,
+    collator_options: CollatorOptions
 ) -> sc_service::error::Result<(
     TaskManager,
     Arc<TFullClient<Block, arctic::RuntimeApi, NativeElseWasmExecutor<arctic::Executor>>>,
@@ -817,6 +846,7 @@ pub async fn start_arctic_node(
         parachain_config,
         polkadot_config,
         id,
+        collator_options,
         |client,
          block_import,
          config,
@@ -840,9 +870,9 @@ pub async fn start_arctic_node(
                     let time = sp_timestamp::InherentDataProvider::from_system_time();
 
                     let slot =
-                        sp_consensus_aura::inherents::InherentDataProvider::from_timestamp_and_duration(
+                        sp_consensus_aura::inherents::InherentDataProvider::from_timestamp_and_slot_duration(
                             *time,
-                            slot_duration.slot_duration(),
+                            slot_duration,
                         );
 
                     Ok((time, slot))
@@ -900,9 +930,9 @@ pub async fn start_arctic_node(
                                 ).await;
                             let time = sp_timestamp::InherentDataProvider::from_system_time();
                             let slot =
-                                sp_consensus_aura::inherents::InherentDataProvider::from_timestamp_and_duration(
+                                sp_consensus_aura::inherents::InherentDataProvider::from_timestamp_and_slot_duration(
                                     *time,
-                                    slot_duration.slot_duration(),
+                                    slot_duration,
                                 );
 
                             let parachain_inherent = parachain_inherent.ok_or_else(|| {

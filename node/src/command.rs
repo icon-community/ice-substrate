@@ -407,6 +407,7 @@ pub fn run() -> Result<()> {
         }
         None => {
             let runner = cli.create_runner(&cli.run.normalize())?;
+            let collator_options = cli.run.collator_options();
 
             runner.run_node_until_exit(|config| async move {
                 if !config.chain_spec.is_arctic() {
@@ -454,7 +455,7 @@ pub fn run() -> Result<()> {
                     }
                 );
 
-                arctic::start_arctic_node(config, polkadot_config, id)
+                arctic::start_arctic_node(config, polkadot_config, id, collator_options)
                 .await
                 .map(|r| r.0)
                 .map_err(Into::into)
