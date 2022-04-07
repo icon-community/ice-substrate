@@ -10,30 +10,30 @@ on:
 jobs:
   build: 
     name: Build project
-    runs-on: ubuntu-latest
+    runs-on:
+      - self-hosted
+      - ubuntu-20.4
     steps:
-    - uses: actions/checkout@v2
-    - name: Install rust dependencies
-      run: |
-        scripts/init.sh
-        cargo --version
-        rustc --version
-        cargo +$WASM_BUILD_TOOLCHAIN --version
-        rustc +$WASM_BUILD_TOOLCHAIN --version
-      env:
-        WASM_BUILD_TOOLCHAIN: nightly-2022-01-16
     - name: Checkout the source code
       uses: actions/checkout@master
       with:
         submodules: true
-    - name: Check targets are installed correctly
-      run: rustup target list --installed
-    - name: Run all tests
-      run: cargo test --all
-    - name: Cleanup after tests
-      run: cargo clean
-    - name: Build optimized binary
-      run: cargo build --release
+    - name: Test and Build optimized binary 
+      run: |
+        sudo apt update
+        sudo apt install -y git clang curl libssl-dev llvm libudev-dev
+        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+        source $HOME/.cargo/env
+        rustup default stable
+        rustup update
+        rustup update nightly
+        rustup target add wasm32-unknown-unknown --toolchain nightly
+        rustup show
+        cargo --version
+        rustc --version
+        cargo test --all
+        cargo clean
+        cargo build --release
     - uses: actions/upload-artifact@v2
       with:
         name: ice-node
@@ -70,4 +70,3 @@ jobs:
           asset_path: ./ice-node.zip
           asset_name: ice-node-${{ steps.version.outputs.tag_name }}.zip
           asset_content_type: application/zip
-
