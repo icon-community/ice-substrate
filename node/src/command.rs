@@ -206,7 +206,6 @@ pub fn run() -> Result<()> {
             } else {
                 runner.sync_run(|config| cmd.run::<frost_runtime::Block, frost::ExecutorDispatch>(config))
             } 
-            
 		}
         Some(Subcommand::ExportBlocks(cmd)) => {
             let runner = cli.create_runner(cmd)?;
