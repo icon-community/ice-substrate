@@ -3,3 +3,4 @@ panic = 'unwind'
 
 [workspace]
 members = ['node', 'runtime/arctic', 'runtime/frost',  "frame/simple-inflation"]
+

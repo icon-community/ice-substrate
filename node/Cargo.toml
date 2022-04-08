@@ -159,7 +159,9 @@ aura = [
 ]
 manual-seal = ['frost-runtime/manual-seal']
 rpc_binary_search_estimate = ["fc-rpc/rpc_binary_search_estimate"]
+
 runtime-benchmarks = [
+    "polkadot-service/runtime-benchmarks",
 	"frost-runtime/runtime-benchmarks",
 	"arctic-runtime/runtime-benchmarks",
 ]

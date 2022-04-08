@@ -198,6 +198,11 @@ pub fn run() -> Result<()> {
             }
    
         }
+        Some(Subcommand::Benchmark(cmd)) => {
+            let runner = cli.create_runner(cmd)?;
+            let chain_spec = &runner.config().chain_spec;
+            runner.sync_run(|config| cmd.run::<arctic_runtime::Block, arctic_service::Executor>(config))
+		}
         Some(Subcommand::ExportBlocks(cmd)) => {
             let runner = cli.create_runner(cmd)?;
             if runner.config().chain_spec.is_arctic() {
