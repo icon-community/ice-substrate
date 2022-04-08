@@ -20,13 +20,12 @@ jobs:
     - name: Test and Build optimized binary
       run: |
         sudo apt update
-        sudo apt install -y git clang curl libssl-dev llvm libudev-dev
+        sudo apt install -y git clang curl libssl-dev llvm libudev-dev build-essential
         curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
         source $HOME/.cargo/env
-        rustup default stable
-        rustup update
-        rustup update nightly
-        rustup target add wasm32-unknown-unknown --toolchain nightly
+        rustup toolchain add nightly-2022-01-16
+        rustup default nightly-2022-01-16
+        rustup target add wasm32-unknown-unknown --toolchain nightly-2022-01-16
         rustup show
         cargo --version
         rustc --version
