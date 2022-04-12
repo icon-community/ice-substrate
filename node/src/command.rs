@@ -198,6 +198,15 @@ pub fn run() -> Result<()> {
             }
    
         }
+        Some(Subcommand::Benchmark(cmd)) => {
+            let runner = cli.create_runner(cmd)?;
+            let chain_spec = &runner.config().chain_spec;
+            if chain_spec.is_arctic() {
+                runner.sync_run(|config| cmd.run::<arctic_runtime::Block, arctic_service::Executor>(config))
+            } else {
+                runner.sync_run(|config| cmd.run::<frost_runtime::Block, frost::ExecutorDispatch>(config))
+            } 
+		}
         Some(Subcommand::ExportBlocks(cmd)) => {
             let runner = cli.create_runner(cmd)?;
             if runner.config().chain_spec.is_arctic() {
@@ -370,12 +379,6 @@ pub fn run() -> Result<()> {
         Some(Subcommand::Sign(cmd)) => cmd.run(),
         Some(Subcommand::Verify(cmd)) => cmd.run(),
         Some(Subcommand::Vanity(cmd)) => cmd.run(),
-        #[cfg(feature = "frame-benchmarking")]
-        Some(Subcommand::Benchmark(cmd)) => {
-            let runner = cli.create_runner(cmd)?;
-            let chain_spec = &runner.config().chain_spec;
-            runner.sync_run(|config| cmd.run::<arctic_runtime::Block, arctic_service::Executor>(config))
-        }
         #[cfg(feature = "try-runtime")]
         Some(Subcommand::TryRuntime(cmd)) => {
             let runner = cli.create_runner(cmd)?;
@@ -407,6 +410,7 @@ pub fn run() -> Result<()> {
         }
         None => {
             let runner = cli.create_runner(&cli.run.normalize())?;
+            let collator_options = cli.run.collator_options();
 
             runner.run_node_until_exit(|config| async move {
                 if !config.chain_spec.is_arctic() {
@@ -454,7 +458,7 @@ pub fn run() -> Result<()> {
                     }
                 );
 
-                arctic::start_arctic_node(config, polkadot_config, id)
+                arctic::start_arctic_node(config, polkadot_config, id, collator_options)
                 .await
                 .map(|r| r.0)
                 .map_err(Into::into)

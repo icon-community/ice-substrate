@@ -1,5 +1,5 @@
 #![cfg(test)]
 
-mod assets;
+mod vesting;
 
 mod mock;
