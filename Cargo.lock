@@ -3839,6 +3839,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "integration-tests"
+version = "0.0.2"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "pallet-assets",
+ "pallet-balances",
+ "pallet-vesting",
+ "parity-scale-codec",
+ "scale-info",
+ "serde",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+ "substrate-wasm-builder",
+]
+
+[[package]]
 name = "io-lifetimes"
 version = "0.4.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
