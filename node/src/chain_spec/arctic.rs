@@ -49,7 +49,8 @@ pub fn get_chain_spec(para_id: u32) -> ArcticChainSpec {
         para_id.into()),
         vec![],
         None,
-        None,
+        // Protocol ID
+		Some("arctic"),
         None,
         serde_json::from_str(ARCTIC_PROPERTIES).unwrap(),
         Extensions {
