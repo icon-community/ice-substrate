@@ -5,8 +5,8 @@ use arctic_runtime::{
     CollatorSelectionConfig, EVMConfig, GenesisConfig, ParachainInfoConfig, CouncilConfig,
     SessionConfig, Signature, SudoConfig, SystemConfig, VestingConfig, SessionKeys
 };
-use sp_core::{crypto::UncheckedInto, sr25519, Pair, Public};
 use arctic_runtime::currency::{ICY};
+use sp_core::{crypto::UncheckedInto, sr25519, Pair, Public};
 use std::{collections::BTreeMap};
 use hex_literal::hex;
 use sp_runtime::traits::{IdentifyAccount, Verify};
@@ -31,37 +31,36 @@ pub fn get_chain_spec(para_id: u32) -> ArcticChainSpec {
     ArcticChainSpec::from_genesis(
         "Arctic Testnet",
         "arctic",
-        ChainType::Development,
+        ChainType::Custom(String::from("arctic")),
         move || make_genesis(
-                // endowed accounts
-                vec![
+             // Endowed accounts
+            vec![
                     hex!["62687296bffd79f12178c4278b9439d5eeb8ed7cc0b1f2ae29307e806a019659"].into(),
                     hex!["d893ef775b5689473b2e9fa32c1f15c72a7c4c86f05f03ee32b8aca6ce61b92c"].into(),
                     hex!["98003761bff94c8c44af38b8a92c1d5992d061d41f700c76255c810d447d613f"].into(),
-                ],
-        	    // Initial PoA authorities
-				vec![
+            ], 
+             // Initial PoA authorities
+			vec![
 					(
-						hex!["62687296bffd79f12178c4278b9439d5eeb8ed7cc0b1f2ae29307e806a019659"].unchecked_into(),
-						hex!["27c6da25d03bb6b3c751da3e8c5265b0bb357c15240602443cc286c0658b47f9"].into(),
+						hex!["62687296bffd79f12178c4278b9439d5eeb8ed7cc0b1f2ae29307e806a019659"].into(),
+						hex!["27c6da25d03bb6b3c751da3e8c5265b0bb357c15240602443cc286c0658b47f9"].unchecked_into(),
 					),
 					(
-						hex!["d893ef775b5689473b2e9fa32c1f15c72a7c4c86f05f03ee32b8aca6ce61b92c"].unchecked_into(),
-						hex!["85ec524aeacb6e558619a10da82cdf787026209211d1b7462cb176d58f2add86"].into()
+						hex!["d893ef775b5689473b2e9fa32c1f15c72a7c4c86f05f03ee32b8aca6ce61b92c"].into(),
+						hex!["85ec524aeacb6e558619a10da82cdf787026209211d1b7462cb176d58f2add86"].unchecked_into()
 					)
-				], 
-                // Council members
-                vec![
-                    hex!["62687296bffd79f12178c4278b9439d5eeb8ed7cc0b1f2ae29307e806a019659"].into()
-                ],
-				// Sudo account
-				hex!["62687296bffd79f12178c4278b9439d5eeb8ed7cc0b1f2ae29307e806a019659"].into(), 
-                para_id.into()
+			],
+            // Council members
+            vec![
+                hex!["62687296bffd79f12178c4278b9439d5eeb8ed7cc0b1f2ae29307e806a019659"].into()
+            ],
+            // Sudo account
+            hex!["62687296bffd79f12178c4278b9439d5eeb8ed7cc0b1f2ae29307e806a019659"].into(), 
+            para_id.into()
         ),
         vec![],
         None,
-        // Protocol ID
-		Some("arctic"),
+        None,
         None,
         serde_json::from_str(ARCTIC_PROPERTIES).unwrap(),
         Extensions {
@@ -76,36 +75,44 @@ pub fn get_chain_spec(para_id: u32) -> ArcticChainSpec {
 pub fn get_dev_chain_spec(para_id: u32) -> ArcticChainSpec {
     // Alice as default
     let sudo_key = get_account_id_from_seed::<sr25519::Public>("Alice");
+    let endowned = vec![
+        (
+            get_account_id_from_seed::<sr25519::Public>("Alice")
+        ),
+        (
+            get_account_id_from_seed::<sr25519::Public>("Bob")
+        ),
+    ];
 
     ArcticChainSpec::from_genesis(
         "Arctic Dev",
-        "dev-arctic",
+        "arctic-dev",
         ChainType::Development,
         move || make_genesis(
-                // endowed accounts
-                vec![
-					get_account_id_from_seed::<sr25519::Public>("Alice"),
-					get_account_id_from_seed::<sr25519::Public>("Bob"),
-					get_account_id_from_seed::<sr25519::Public>("Alice//stash"),
-					get_account_id_from_seed::<sr25519::Public>("Bob//stash"),
-				], 
-                // authorities
-                vec![
-                    authority_keys_from_seed("Alice"),
-					authority_keys_from_seed("Bob"),
-                ],
-                // council members
-                vec![
-                    get_account_id_from_seed::<sr25519::Public>("Alice")
-                ],
-                // sudo account
-                sudo_key.clone(), 
-                para_id.into()
+            // Endowed accounts
+            endowned.clone(), 
+            // Initial PoA authorities
+            vec![
+                (
+                    get_account_id_from_seed::<sr25519::Public>("Alice"),
+                    get_from_seed::<AuraId>("Alice"),
+                ),
+                (
+                    get_account_id_from_seed::<sr25519::Public>("Bob"),
+                    get_from_seed::<AuraId>("Bob"),
+                ),
+            ],
+            // Council members
+            vec![
+                get_account_id_from_seed::<sr25519::Public>("Alice")
+            ],
+            // Sudo account
+            sudo_key.clone(), 
+            para_id.into()
         ),
         vec![],
         None,
-        // Protocol ID
-		Some("arctic"),
+        None,
         None,
         serde_json::from_str(ARCTIC_PROPERTIES).unwrap(),
         Extensions {
@@ -124,7 +131,7 @@ fn session_keys(aura: AuraId) -> SessionKeys {
 /// Helper function to create Arctic GenesisConfig.
 fn make_genesis(
     endowed_accounts: Vec<AccountId>,
-    initial_authorities: Vec<(AuraId, AccountId)>,
+    authorities: Vec<(AccountId, AuraId)>,
     council_members: Vec<AccountId>,
     root_key: AccountId,
     parachain_id: ParaId,
@@ -147,18 +154,18 @@ fn make_genesis(
 		},
         vesting: VestingConfig { vesting: vec![] },
         aura: AuraConfig {
-            authorities: initial_authorities.iter().map(|x| (x.0.clone())).collect(),
+            authorities: vec![],
         },
         aura_ext: Default::default(),
         collator_selection: CollatorSelectionConfig {
             desired_candidates: 200,
             candidacy_bond: 32_000 * ICY,
-            invulnerables: initial_authorities.iter().map(|x| x.1.clone()).collect::<Vec<_>>(),
+            invulnerables: authorities.iter().map(|x| x.0.clone()).collect::<Vec<_>>(),
         },
         session: SessionConfig {
-            keys: initial_authorities
+            keys: authorities
                 .iter()
-                .map(|x| (x.1.clone(), x.1.clone(), session_keys(x.0.clone())))
+                .map(|x| (x.0.clone(), x.0.clone(), session_keys(x.1.clone())))
                 .collect::<Vec<_>>(),
         },
         evm: EVMConfig {
@@ -189,9 +196,4 @@ where
     AccountPublic: From<<TPublic::Pair as Pair>::Public>,
 {
     AccountPublic::from(get_from_seed::<TPublic>(seed)).into_account()
-}
-
-/// Generate an Aura authority key.
-pub fn authority_keys_from_seed(s: &str) -> (AuraId, AccountId) {
-	(get_from_seed::<AuraId>(s), get_account_id_from_seed::<sr25519::Public>(s))
 }

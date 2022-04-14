@@ -52,7 +52,7 @@ fn load_spec(
 		"dev" => Box::new(development_config()?),
 		"frost" => Box::new(testnet_config()?),
         "" | "frost-local-testnet" => Box::new(local_testnet_config()?),
-        "dev-arctic" => Box::new(get_dev_chain_spec(para_id)),
+        "arctic-dev" => Box::new(get_dev_chain_spec(para_id)),
         "arctic" => Box::new(get_chain_spec(para_id)),
  
         path => {
