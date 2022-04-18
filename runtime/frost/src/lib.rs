@@ -15,6 +15,9 @@ use pallet_grandpa::{
 };
 
 use frame_system::limits::{BlockLength, BlockWeights};
+use frame_support::{pallet_prelude::{Get, ConstU32},
+  weights::{WeightToFeeCoefficients, WeightToFeeCoefficient, WeightToFeePolynomial}
+};
 
 use sp_api::impl_runtime_apis;
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
@@ -26,7 +29,7 @@ use sp_runtime::{
 	create_runtime_str, generic, impl_opaque_keys,
 	traits::{
 		AccountIdLookup, BlakeTwo256, Block as BlockT, Dispatchable, IdentifyAccount, NumberFor,
-		PostDispatchInfoOf, Verify, ConvertInto
+		PostDispatchInfoOf, Verify, ConvertInto, OpaqueKeys
 	},
 	transaction_validity::{TransactionSource, TransactionValidity, TransactionValidityError},
 	ApplyExtrinsicResult, MultiSignature,
@@ -39,14 +42,21 @@ use sp_version::RuntimeVersion;
 
 use frame_support::inherent::Vec;
 use sp_std::boxed::Box;
+use smallvec::smallvec;
 
 use crate::currency::{ICY};
+
+pub mod impls;
+pub use impls::DealWithFees;
+
+pub type NegativeImbalance = <Balances as Currency<AccountId>>::NegativeImbalance;
+// A few exports that help ease life for downstream crates.
 
 // A few exports that help ease life for downstream crates.
 use fp_rpc::TransactionStatus;
 pub use frame_support::{
 	construct_runtime, parameter_types,
-	traits::{FindAuthor, KeyOwnerProofSystem, Randomness},
+	traits::{FindAuthor, KeyOwnerProofSystem, Randomness, Currency},
 	weights::{
 		constants::{BlockExecutionWeight, ExtrinsicBaseWeight, RocksDbWeight, WEIGHT_PER_SECOND},
 		IdentityFee, Weight,
@@ -293,8 +303,6 @@ parameter_types! {
 	};
 }
 
-
-
 impl pallet_contracts::Config for Runtime {
 	type Time = Timestamp;
 	type Randomness = RandomnessCollectiveFlip;
@@ -324,17 +332,15 @@ parameter_types! {
 	pub const MinimumPeriod: u64 = SLOT_DURATION / 2;
 }
 
-
 impl pallet_timestamp::Config for Runtime {
 	/// A timestamp: milliseconds since the unix epoch.
 	type Moment = u64;
 	type MinimumPeriod = MinimumPeriod;
-	type OnTimestampSet = SimpleInflation;
 	type WeightInfo = ();
-	// #[cfg(feature = "aura")]
-	// type OnTimestampSet = Aura;
-	// #[cfg(feature = "manual-seal")]
-	// type OnTimestampSet = ();
+	#[cfg(feature = "aura")]
+	type OnTimestampSet = (Aura,);
+	#[cfg(feature = "manual-seal")]
+	type OnTimestampSet = ();
 }
 
 parameter_types! {
@@ -359,15 +365,64 @@ impl pallet_balances::Config for Runtime {
 }
 
 parameter_types! {
-	pub const TransactionByteFee: Balance = 1;
+	// Rotate collator's spot each 6 hours.
+	pub Period: u32 = 6 * HOURS;
+	pub const Offset: u32 = 0;
+}
+
+impl pallet_session::Config for Runtime {
+	type Event = Event;
+	type ValidatorId = AccountId;
+	type ValidatorIdOf = ();
+	type ShouldEndSession = pallet_session::PeriodicSessions<Period, Offset>;
+	type NextSessionRotation = ();
+	type SessionManager = ();
+	type SessionHandler = <opaque::SessionKeys as OpaqueKeys>::KeyTypeIdProviders;
+	type Keys = opaque::SessionKeys;
+	type WeightInfo = ();
+}
+
+impl pallet_authorship::Config for Runtime {
+	type FindAuthor = pallet_session::FindAccountFromAuthorIndex<Self, Aura>;
+	type UncleGenerations = ConstU32<0>;
+	type FilterUncle = ();
+	type EventHandler = ();
+}
+
+pub struct LinearWeightToFee<C>(sp_std::marker::PhantomData<C>);
+
+impl<C> WeightToFeePolynomial for LinearWeightToFee<C>
+where
+    C: Get<Balance>,
+{
+    type Balance = Balance;
+
+    fn polynomial() -> WeightToFeeCoefficients<Self::Balance> {
+        let coefficient = WeightToFeeCoefficient {
+            coeff_integer: C::get(),
+            coeff_frac: Perbill::zero(),
+            negative: false,
+            degree: 1,
+        };
+
+        smallvec!(coefficient)
+    }
+}
+
+parameter_types! {
+	pub const TransactionByteFee: Balance = 1 * ICY;
 	pub OperationalFeeMultiplier: u8 = 5;
+	// Used with LinearWeightToFee conversion.
+    pub const FeeWeightRatio: u128 = 1_000;
 }
 
 impl pallet_transaction_payment::Config for Runtime {
-	type OnChargeTransaction = CurrencyAdapter<Balances, ()>;
+	type OnChargeTransaction = CurrencyAdapter<Balances, DealWithFees>;
 	type TransactionByteFee = TransactionByteFee;
 	type OperationalFeeMultiplier = OperationalFeeMultiplier;
 	type WeightToFee = IdentityFee<Balance>;
+	// Convert dispatch weight to a chargeable fee.
+    // type WeightToFee = LinearWeightToFee<FeeWeightRatio>;
 	type FeeMultiplierUpdate = ();
 }
 
@@ -514,9 +569,7 @@ impl pallet_treasury::Config for Runtime {
 }
 
 impl pallet_simple_inflation::Config for Runtime {
-
 }
-
 
 frame_support::parameter_types! {
 	pub BoundDivision: U256 = U256::from(1024);
@@ -578,7 +631,8 @@ construct_runtime!(
 	    Council: pallet_collective::<Instance1>::{Pallet, Call, Storage, Origin<T>, Event<T>, Config<T>},
         Treasury: pallet_treasury::{Pallet, Call, Storage, Config, Event<T>},
 		SimpleInflation: pallet_simple_inflation::{Pallet},
-
+		Session: pallet_session::{Pallet, Call, Storage, Event, Config<T>},
+		Authorship: pallet_authorship::{Pallet, Call, Storage, Inherent},
 	}
 );
 
