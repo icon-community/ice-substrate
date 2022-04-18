@@ -43,11 +43,11 @@ pub fn get_chain_spec(para_id: u32) -> ArcticChainSpec {
 			vec![
 					(
 						hex!["62687296bffd79f12178c4278b9439d5eeb8ed7cc0b1f2ae29307e806a019659"].into(),
-						hex!["27c6da25d03bb6b3c751da3e8c5265b0bb357c15240602443cc286c0658b47f9"].unchecked_into(),
+						hex!["62687296bffd79f12178c4278b9439d5eeb8ed7cc0b1f2ae29307e806a019659"].unchecked_into(),
 					),
 					(
 						hex!["d893ef775b5689473b2e9fa32c1f15c72a7c4c86f05f03ee32b8aca6ce61b92c"].into(),
-						hex!["85ec524aeacb6e558619a10da82cdf787026209211d1b7462cb176d58f2add86"].unchecked_into()
+						hex!["d893ef775b5689473b2e9fa32c1f15c72a7c4c86f05f03ee32b8aca6ce61b92c"].unchecked_into()
 					)
 			],
             // Council members
