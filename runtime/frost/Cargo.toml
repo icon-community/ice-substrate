@@ -7,7 +7,7 @@ homepage = 'https://substrate.dev'
 license = 'Apache-2.0'
 name = 'frost-runtime'
 repository = 'https://github.com/web3labs/ice-substrate/'
-version = '0.4.2'
+version = '0.4.3'
 publish = false
 
 [package.metadata.docs.rs]
@@ -17,14 +17,13 @@ targets = ["x86_64-unknown-linux-gnu"]
 codec = { package = "parity-scale-codec", version = "3.0.0", default-features = false, features = ["derive"] }
 serde = { version = "1.0.101", optional = true, features = ["derive"] }
 scale-info = { version = "2.0.1", default-features = false, features = ["derive"] }
-
+smallvec = "1.0.0"
 
 # frame dependencies
 frame-executive = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.18" }
 frame-support = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.18" }
 frame-system = { default-features = false, package = "frame-system", git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.18" }
 frame-system-rpc-runtime-api = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.18" }
-
 
 # pallets dependencies from substrate 
 pallet-aura = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.18" }
@@ -40,6 +39,8 @@ pallet-collective = { default-features = false, git = "https://github.com/parity
 pallet-treasury = {  default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.18" }
 pallet-vesting = {  default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.18" }
 pallet-staking = {  default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.18" }
+pallet-authorship = {  default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.18" }
+pallet-session = {  default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.18" }
 
 # Contracts specific packages
 pallet-contracts = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.18", default-features = false }
@@ -129,6 +130,8 @@ std = [
 	"pallet-contracts-primitives/std",
 	"pallet-contracts-rpc-runtime-api/std",
 	"pallet-staking/std",
+	"pallet-authorship/std",
+	"pallet-session/std",
 
 	"sp-api/std",
 	"sp-block-builder/std",
