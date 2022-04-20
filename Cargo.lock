@@ -114,7 +114,7 @@ dependencies = [
 
 [[package]]
 name = "arctic-runtime"
-version = "0.4.2"
+version = "0.4.3"
 dependencies = [
  "cumulus-pallet-aura-ext",
  "cumulus-pallet-dmp-queue",
@@ -3023,7 +3023,7 @@ dependencies = [
 
 [[package]]
 name = "frost-runtime"
-version = "0.4.2"
+version = "0.4.3"
 dependencies = [
  "fp-rpc",
  "fp-self-contained",
@@ -3036,6 +3036,7 @@ dependencies = [
  "frame-try-runtime",
  "pallet-assets",
  "pallet-aura",
+ "pallet-authorship",
  "pallet-balances",
  "pallet-base-fee",
  "pallet-collective",
@@ -3050,6 +3051,7 @@ dependencies = [
  "pallet-evm-precompile-simple",
  "pallet-grandpa",
  "pallet-randomness-collective-flip",
+ "pallet-session",
  "pallet-simple-inflation",
  "pallet-staking",
  "pallet-sudo",
@@ -3061,6 +3063,7 @@ dependencies = [
  "parity-scale-codec",
  "scale-info",
  "serde",
+ "smallvec",
  "sp-api",
  "sp-block-builder",
  "sp-consensus-aura",
@@ -3617,7 +3620,7 @@ dependencies = [
 
 [[package]]
 name = "ice-node"
-version = "0.4.2"
+version = "0.4.3"
 dependencies = [
  "arctic-runtime",
  "async-trait",
