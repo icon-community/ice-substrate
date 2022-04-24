@@ -14,9 +14,16 @@ targets = ["x86_64-unknown-linux-gnu"]
 [dependencies]
 codec = { package = "parity-scale-codec", version = "3.0.0", default-features = false, features = ["derive"] }
 scale-info = { version = "2.0.1", default-features = false, features = ["derive"] }
+log = "0.4"
+hex-literal = "0.3.4"
+
 frame-support = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.18" }
 frame-system = { default-features = false, package = "frame-system", git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.18" }
-log = "0.4"
+
+sp-runtime = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v0.9.18" }
+pallet-balances = { branch = "polkadot-v0.9.18", default-features = false, git = "https://github.com/paritytech/substrate" }
+pallet-treasury = { branch = "polkadot-v0.9.18", default-features = false, git = "https://github.com/paritytech/substrate" }
+pallet-authorship = {  default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.18" }
 
 [features]
 default = ["std"]
@@ -25,6 +32,7 @@ std = [
     "scale-info/std",
 	"frame-support/std",
 	"frame-system/std",
+	"pallet-treasury/std",
 	"log/std"
 ]
 try-runtime = ["frame-support/try-runtime"]
