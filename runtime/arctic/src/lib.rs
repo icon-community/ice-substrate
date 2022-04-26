@@ -415,12 +415,11 @@ impl pallet_timestamp::Config for Runtime {
 	/// A timestamp: milliseconds since the unix epoch.
 	type Moment = u64;
 	type MinimumPeriod = MinimumPeriod;
-	type OnTimestampSet = SimpleInflation;
 	type WeightInfo = ();
-	// #[cfg(feature = "aura")]
-	// type OnTimestampSet = Aura;
-	// #[cfg(feature = "manual-seal")]
-	// type OnTimestampSet = ();
+	#[cfg(feature = "aura")]
+	type OnTimestampSet = Aura;
+	#[cfg(feature = "manual-seal")]
+	type OnTimestampSet = ();
 }
 
 parameter_types! {
@@ -610,11 +609,6 @@ impl pallet_treasury::Config for Runtime {
 	type ProposalBondMaximum = ();
 }
 
-impl pallet_simple_inflation::Config for Runtime {
-
-}
-
-
 frame_support::parameter_types! {
 	pub BoundDivision: U256 = U256::from(1024);
 }
@@ -690,8 +684,7 @@ construct_runtime!(
 		Assets: pallet_assets::{Pallet, Call, Storage, Config<T>, Event<T>},
 	    Council: pallet_collective::<Instance1>::{Pallet, Call, Storage, Origin<T>, Event<T>, Config<T>},
         Treasury: pallet_treasury::{Pallet, Call, Storage, Event<T>, Config},
-		SimpleInflation: pallet_simple_inflation::{Pallet},
-
+		//SimpleInflation: pallet_simple_inflation::{Pallet},
 	}
 );
 

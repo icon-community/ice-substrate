@@ -75,7 +75,7 @@ fp-rpc  = { default-features = false, git = "https://github.com/web3labs/frontie
 fp-self-contained = {default-features = false, git = "https://github.com/web3labs/frontier", branch = "polkadot-v0.9.18" }
 
 # local pallet
-pallet-simple-inflation = { path = '../../frame/simple-inflation', default-features = false, version = '0.0.1' }
+pallet-simple-inflation = { path = '../../pallets/simple-inflation', default-features = false, version = '0.0.1' }
 
 # ice-runtime-common = { default-features = false, path = "../common", optional = true }
 

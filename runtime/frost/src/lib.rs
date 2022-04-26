@@ -29,7 +29,7 @@ use sp_runtime::{
 	create_runtime_str, generic, impl_opaque_keys,
 	traits::{
 		AccountIdLookup, BlakeTwo256, Block as BlockT, Dispatchable, IdentifyAccount, NumberFor,
-		PostDispatchInfoOf, Verify, ConvertInto, OpaqueKeys
+		PostDispatchInfoOf, Verify, ConvertInto, OpaqueKeys, AccountIdConversion
 	},
 	transaction_validity::{TransactionSource, TransactionValidity, TransactionValidityError},
 	ApplyExtrinsicResult, MultiSignature,
@@ -568,7 +568,21 @@ impl pallet_treasury::Config for Runtime {
 	type ProposalBondMaximum = ();
 }
 
+pub struct Beneficiary();
+impl pallet_simple_inflation::Beneficiary<NegativeImbalance> for Beneficiary {
+    fn treasury(reward: NegativeImbalance) {
+        Balances::resolve_creating(&TreasuryPalletId::get().into_account(), reward);
+    }
+}
+
+parameter_types! {
+    pub const IssuingAmount: Balance = 10 * ICY;
+}
+
 impl pallet_simple_inflation::Config for Runtime {
+	type Currency = Balances;
+	type Beneficiary = Beneficiary;
+	type IssuingAmount = IssuingAmount;
 }
 
 frame_support::parameter_types! {

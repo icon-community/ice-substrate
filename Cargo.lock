@@ -6679,9 +6679,14 @@ version = "0.0.1"
 dependencies = [
  "frame-support",
  "frame-system",
+ "hex-literal",
  "log",
+ "pallet-authorship",
+ "pallet-balances",
+ "pallet-treasury",
  "parity-scale-codec",
  "scale-info",
+ "sp-runtime",
 ]
 
 [[package]]
