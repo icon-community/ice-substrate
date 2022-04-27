@@ -31,7 +31,7 @@ pub fn get_chain_spec(para_id: u32) -> ArcticChainSpec {
     ArcticChainSpec::from_genesis(
         "Arctic Testnet",
         "arctic",
-        ChainType::Custom(String::from("arctic")),
+        ChainType::Live,
         move || make_genesis(
              // Endowed accounts
             vec![
