@@ -174,6 +174,7 @@ where
     let max_stored_filters: usize = 500;
 
 	let signers = Vec::new();
+
 	io.extend_with(EthApiServer::to_delegate(EthApi::new(
 		client.clone(),
 		pool.clone(),
@@ -184,11 +185,11 @@ where
 		overrides.clone(),
 		frontier_backend.clone(),
 		is_authority,
-		max_past_logs,
 		block_data_cache.clone(),
 		fee_history_limit,
 		fee_history_cache,
 	)));
+
 
     io.extend_with(EthFilterApiServer::to_delegate(EthFilterApi::new(
         client.clone(),
@@ -322,6 +323,7 @@ where
 	if enable_dev_signer {
 		signers.push(Box::new(EthDevSigner::new()) as Box<dyn EthSigner>);
 	}
+	
 
 	io.extend_with(EthApiServer::to_delegate(EthApi::new(
 		client.clone(),
@@ -333,7 +335,6 @@ where
 		overrides.clone(),
 		backend.clone(),
 		is_authority,
-		max_past_logs,
 		block_data_cache.clone(),
 		fee_history_limit,
 		fee_history_cache,
