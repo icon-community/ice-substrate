@@ -46,6 +46,7 @@ use smallvec::smallvec;
 
 use crate::currency::{ICY};
 
+pub mod constants;
 pub mod impls;
 pub use impls::DealWithFees;
 
