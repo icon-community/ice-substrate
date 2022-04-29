@@ -31,8 +31,4 @@ jobs:
         rustc --version
         cargo test --all
         cargo clean
-        cargo build --release
-    - uses: actions/upload-artifact@v2
-      with:
-        name: ice-node
-        path: target/release/ice-node
+        cargo build

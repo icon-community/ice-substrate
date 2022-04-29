@@ -54,9 +54,6 @@ use sp_std::boxed::Box;
 // Cumulus
 use xcm_config::{XcmConfig, XcmOriginToTransactDispatchOrigin};
 
-// Polkadot Imports
-use polkadot_runtime_common::{RocksDbWeight};
-
 // XCM Imports
 use xcm::latest::prelude::BodyId;
 use xcm_executor::XcmExecutor;
@@ -70,9 +67,9 @@ pub use frame_support::{
 	construct_runtime, parameter_types,
 	traits::{FindAuthor, KeyOwnerProofSystem, Randomness},
 	weights::{
-		constants::{BlockExecutionWeight, ExtrinsicBaseWeight, WEIGHT_PER_SECOND},
-		IdentityFee, Weight,
-	},
+        constants::{BlockExecutionWeight, ExtrinsicBaseWeight, RocksDbWeight, WEIGHT_PER_SECOND},
+        IdentityFee, ConstantMultiplier, DispatchClass, Weight,
+    },
 	ConsensusEngineId, PalletId, StorageValue,
 };
 
@@ -444,10 +441,10 @@ parameter_types! {
 
 impl pallet_transaction_payment::Config for Runtime {
 	type OnChargeTransaction = CurrencyAdapter<Balances, ()>;
-	type TransactionByteFee = TransactionByteFee;
 	type OperationalFeeMultiplier = OperationalFeeMultiplier;
 	type WeightToFee = IdentityFee<Balance>;
 	type FeeMultiplierUpdate = ();
+	type LengthToFee = ConstantMultiplier<Balance, TransactionByteFee>;
 }
 
 impl pallet_sudo::Config for Runtime {
@@ -903,6 +900,7 @@ impl_runtime_apis! {
 				None
 			};
 
+			let is_transactional = false;
 			<Runtime as pallet_evm::Config>::Runner::call(
 				from,
 				to,
@@ -913,10 +911,10 @@ impl_runtime_apis! {
 				max_priority_fee_per_gas,
 				nonce,
 				access_list.unwrap_or_default(),
+				is_transactional,
 				config.as_ref().unwrap_or(<Runtime as pallet_evm::Config>::config()),
 			).map_err(|err| err.into())
 		}
-
 		fn create(
 			from: H160,
 			data: Vec<u8>,
@@ -936,6 +934,7 @@ impl_runtime_apis! {
 				None
 			};
 
+			let is_transactional = false;
 			<Runtime as pallet_evm::Config>::Runner::create(
 				from,
 				data,
@@ -945,6 +944,7 @@ impl_runtime_apis! {
 				max_priority_fee_per_gas,
 				nonce,
 				access_list.unwrap_or_default(),
+				is_transactional,
 				config.as_ref().unwrap_or(<Runtime as pallet_evm::Config>::config()),
 			).map_err(|err| err.into())
 		}

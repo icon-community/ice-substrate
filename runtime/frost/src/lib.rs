@@ -59,7 +59,7 @@ pub use frame_support::{
 	traits::{FindAuthor, KeyOwnerProofSystem, Randomness, Currency},
 	weights::{
 		constants::{BlockExecutionWeight, ExtrinsicBaseWeight, RocksDbWeight, WEIGHT_PER_SECOND},
-		IdentityFee, Weight,
+		IdentityFee, Weight, ConstantMultiplier
 	},
 	ConsensusEngineId, PalletId, StorageValue,
 };
@@ -418,12 +418,10 @@ parameter_types! {
 
 impl pallet_transaction_payment::Config for Runtime {
 	type OnChargeTransaction = CurrencyAdapter<Balances, DealWithFees>;
-	type TransactionByteFee = TransactionByteFee;
 	type OperationalFeeMultiplier = OperationalFeeMultiplier;
 	type WeightToFee = IdentityFee<Balance>;
-	// Convert dispatch weight to a chargeable fee.
-    // type WeightToFee = LinearWeightToFee<FeeWeightRatio>;
 	type FeeMultiplierUpdate = ();
+	type LengthToFee = ConstantMultiplier<Balance, TransactionByteFee>;
 }
 
 impl pallet_sudo::Config for Runtime {
@@ -876,6 +874,7 @@ impl_runtime_apis! {
 				None
 			};
 
+			let is_transactional = false;
 			<Runtime as pallet_evm::Config>::Runner::call(
 				from,
 				to,
@@ -886,9 +885,11 @@ impl_runtime_apis! {
 				max_priority_fee_per_gas,
 				nonce,
 				access_list.unwrap_or_default(),
+				is_transactional,
 				config.as_ref().unwrap_or(<Runtime as pallet_evm::Config>::config()),
 			).map_err(|err| err.into())
 		}
+
 
 		fn create(
 			from: H160,
@@ -909,6 +910,7 @@ impl_runtime_apis! {
 				None
 			};
 
+			let is_transactional = false;
 			<Runtime as pallet_evm::Config>::Runner::create(
 				from,
 				data,
@@ -918,6 +920,7 @@ impl_runtime_apis! {
 				max_priority_fee_per_gas,
 				nonce,
 				access_list.unwrap_or_default(),
+				is_transactional,
 				config.as_ref().unwrap_or(<Runtime as pallet_evm::Config>::config()),
 			).map_err(|err| err.into())
 		}
