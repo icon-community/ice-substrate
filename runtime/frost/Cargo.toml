@@ -42,6 +42,8 @@ pallet-staking = {  default-features = false, git = "https://github.com/parityte
 pallet-authorship = {  default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.19" }
 pallet-session = {  default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.19" }
 
+log = "0.4.8"
+
 # Contracts specific packages
 pallet-contracts = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.19", default-features = false }
 pallet-contracts-primitives = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.19", default-features = false }
@@ -99,7 +101,6 @@ manual-seal = []
 std = [
 	"codec/std",
 	"serde",
-
 	"frame-executive/std",
 	"frame-support/std",
 	"frame-system-rpc-runtime-api/std",
@@ -153,9 +154,13 @@ std = [
 	# "ice-runtime-common",
 ]
 runtime-benchmarks = [
+	'sp-runtime/runtime-benchmarks',
+	'frame-support/runtime-benchmarks',
 	"frame-benchmarking",
 	"frame-system-benchmarking",
 	"frame-system/runtime-benchmarks",
+	'pallet-balances/runtime-benchmarks',
+	'pallet-timestamp/runtime-benchmarks',
 	"pallet-ethereum/runtime-benchmarks",
 	"pallet-evm/runtime-benchmarks",
 	"pallet-vesting/runtime-benchmarks",
