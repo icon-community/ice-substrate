@@ -202,15 +202,21 @@ pub fn run() -> Result<()> {
 			let runner = cli.create_runner(cmd)?;
 			let chain_spec = &runner.config().chain_spec;
             let is_arctic = chain_spec.is_arctic();
+            info!("Starting benchmarking");
             match cmd {
                 BenchmarkCmd::Pallet(cmd) => {
+                    info!("Benchmarking for pallet");
                     if cfg!(feature = "runtime-benchmarks") {
+                        info!("Runtime benchmarking enabled");
                         if  is_arctic {
+                            info!("running pallet benchmarking for arctic");
                             runner.sync_run(|config| cmd.run::<arctic_runtime::Block, arctic_service::Executor>(config))
                         } else {
+                            info!("running pallet benchmarking for frost");
                             runner.sync_run(|config| cmd.run::<frost_runtime::Block, frost::ExecutorDispatch>(config))
                         } 
                     } else {
+                        info!("error no benchmarking enabled");
                         Err("Benchmarking wasn't enabled when building the node. \
                 You can enable it with `--features runtime-benchmarks`."
                             .into())
