@@ -15,9 +15,7 @@ use pallet_grandpa::{
 };
 
 use frame_system::limits::{BlockLength, BlockWeights};
-use frame_support::{pallet_prelude::{Get, ConstU32},
-  weights::{WeightToFeeCoefficients, WeightToFeeCoefficient, WeightToFeePolynomial}
-};
+use frame_support::{pallet_prelude::{ConstU32},};
 
 use sp_api::impl_runtime_apis;
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
@@ -25,7 +23,6 @@ use sp_core::{
 	crypto::{KeyTypeId},
 	OpaqueMetadata, H160, H256, U256,
 };
-use log::info;
 
 use sp_runtime::{
 	create_runtime_str, generic, impl_opaque_keys,
@@ -34,7 +31,7 @@ use sp_runtime::{
 		PostDispatchInfoOf, Verify, ConvertInto, OpaqueKeys, AccountIdConversion
 	},
 	transaction_validity::{TransactionSource, TransactionValidity, TransactionValidityError},
-	ApplyExtrinsicResult, MultiSignature,
+	ApplyExtrinsicResult, MultiSignature, FixedPointNumber, Perquintill
 };
 
 use sp_std::{marker::PhantomData, prelude::*};
@@ -44,12 +41,10 @@ use sp_version::RuntimeVersion;
 
 use frame_support::inherent::Vec;
 use sp_std::boxed::Box;
-use smallvec::smallvec;
-
-use crate::currency::{ICY};
 
 pub mod constants;
 pub mod impls;
+pub use constants::{currency, time::*};
 pub use impls::DealWithFees;
 
 pub type NegativeImbalance = <Balances as Currency<AccountId>>::NegativeImbalance;
@@ -61,8 +56,8 @@ pub use frame_support::{
 	construct_runtime, parameter_types,
 	traits::{FindAuthor, KeyOwnerProofSystem, Randomness, Currency},
 	weights::{
-		constants::{BlockExecutionWeight, ExtrinsicBaseWeight, RocksDbWeight, WEIGHT_PER_SECOND},
-		IdentityFee, Weight, ConstantMultiplier
+		constants::{BlockExecutionWeight, ExtrinsicBaseWeight, RocksDbWeight, WEIGHT_PER_SECOND}, Weight, ConstantMultiplier,
+		IdentityFee
 	},
 	ConsensusEngineId, PalletId, StorageValue,
 };
@@ -73,7 +68,7 @@ pub use pallet_balances::Call as BalancesCall;
 use pallet_ethereum::{Call::transact, Transaction as EthereumTransaction};
 use pallet_evm::{Account as EVMAccount, EnsureAddressTruncated, HashedAddressMapping, Runner};
 pub use pallet_timestamp::Call as TimestampCall;
-use pallet_transaction_payment::CurrencyAdapter;
+use pallet_transaction_payment::{CurrencyAdapter, Multiplier, TargetedFeeAdjustment};
 #[cfg(any(feature = "std", test))]
 pub use sp_runtime::BuildStorage;
 pub use sp_runtime::{Perbill, Permill};
@@ -153,23 +148,6 @@ pub const SLOT_DURATION: u64 = MILLISECS_PER_BLOCK;
 // Prints debug output of the `contracts` pallet to stdout if the node is
 // started with `-lruntime::contracts=debug`.
 const CONTRACTS_DEBUG_OUTPUT: bool = true;
-
-// Time is measured by number of blocks.
-pub const MINUTES: BlockNumber = 60_000 / (MILLISECS_PER_BLOCK as BlockNumber);
-pub const HOURS: BlockNumber = MINUTES * 60;
-pub const DAYS: BlockNumber = HOURS * 24;
-
-pub mod currency {
-	use crate::Balance;
-
-	/// Constant values for the base number of indivisible units for balances
-	pub const MILLIICY: Balance = 1_000_000_000_000_000;
-	pub const ICY: Balance = 1_000 * MILLIICY;
-
-	pub const fn deposit(items: u32, bytes: u32) -> Balance {
-		(items as Balance + bytes as Balance) * MILLIICY / 1_000_000
-	}
-}
 
 /// The version information used to identify this runtime when compiled natively.
 #[cfg(feature = "std")]
@@ -347,7 +325,7 @@ impl pallet_timestamp::Config for Runtime {
 }
 
 parameter_types! {
-	pub const ExistentialDeposit: u128 = 500;
+	pub const ExistentialDeposit: u128 = currency::EXISTENTIAL_DEPOSIT; // 0.0001 ICY 
 	// For weight estimation, we assume that the most locks on an individual account will be 50.
 	// This number may need to be adjusted in the future if this assumption no longer holds true.
 	pub const MaxLocks: u32 = 50;
@@ -392,38 +370,19 @@ impl pallet_authorship::Config for Runtime {
 	type EventHandler = ();
 }
 
-pub struct LinearWeightToFee<C>(sp_std::marker::PhantomData<C>);
-
-impl<C> WeightToFeePolynomial for LinearWeightToFee<C>
-where
-    C: Get<Balance>,
-{
-    type Balance = Balance;
-
-    fn polynomial() -> WeightToFeeCoefficients<Self::Balance> {
-        let coefficient = WeightToFeeCoefficient {
-            coeff_integer: C::get(),
-            coeff_frac: Perbill::zero(),
-            negative: false,
-            degree: 1,
-        };
-
-        smallvec!(coefficient)
-    }
-}
-
 parameter_types! {
-	pub const TransactionByteFee: Balance = 1 * ICY;
-	pub OperationalFeeMultiplier: u8 = 5;
-	// Used with LinearWeightToFee conversion.
-    pub const FeeWeightRatio: u128 = 1_000;
+	pub const TransactionByteFee: Balance = 10 * currency::MILLICENTS;
+	pub const OperationalFeeMultiplier: u8 = 5;
+	pub const TargetBlockFullness: Perquintill = Perquintill::from_percent(25);
+	pub AdjustmentVariable: Multiplier = Multiplier::saturating_from_rational(1, 100_000);
+	pub MinimumMultiplier: Multiplier = Multiplier::saturating_from_rational(1, 1_000_000_000u128);
 }
 
 impl pallet_transaction_payment::Config for Runtime {
 	type OnChargeTransaction = CurrencyAdapter<Balances, DealWithFees>;
 	type OperationalFeeMultiplier = OperationalFeeMultiplier;
-	type WeightToFee = IdentityFee<Balance>;
-	type FeeMultiplierUpdate = ();
+	type WeightToFee = constants::fee::WeightToFee;
+	type FeeMultiplierUpdate = TargetedFeeAdjustment<Self, TargetBlockFullness, AdjustmentVariable, MinimumMultiplier>;
 	type LengthToFee = ConstantMultiplier<Balance, TransactionByteFee>;
 }
 
@@ -475,12 +434,6 @@ impl pallet_ethereum::Config for Runtime {
 	type StateRoot = pallet_ethereum::IntermediateStateRoot<Self>;
 }
 
-
-pub const MILLICENTS: Balance = 1_000_000_000;
-pub const CENTS: Balance = 1_000 * MILLICENTS; // assume this is worth about a cent.
-pub const DOLLARS: Balance = 100 * CENTS;
-
-
 frame_support::parameter_types! {
     pub const AssetDeposit: Balance = 500 ;
 	pub const AssetAccountDeposit: Balance = 500 ;
@@ -508,7 +461,7 @@ impl pallet_assets::Config for Runtime {
 }
 
 parameter_types! {
-	pub const MinVestedTransfer: Balance = 100 * DOLLARS;
+	pub const MinVestedTransfer: Balance = 1 * currency::DOLLARS;
 }
 
 impl pallet_vesting::Config for Runtime {
@@ -543,7 +496,7 @@ impl pallet_collective::Config<CouncilCollective> for Runtime {
 
 parameter_types! {
 	pub const ProposalBond: Permill = Permill::from_percent(5);
-	pub const ProposalBondMinimum: Balance = 1 * ICY;
+	pub const ProposalBondMinimum: Balance = 10 * currency::DOLLARS;
 	pub const SpendPeriod: BlockNumber = 1 * DAYS;
 	pub const Burn: Permill = Permill::from_percent(1);
 	pub const TreasuryPalletId: PalletId = PalletId(*b"py/trsry");
@@ -577,7 +530,7 @@ impl pallet_simple_inflation::Beneficiary<NegativeImbalance> for Beneficiary {
 }
 
 parameter_types! {
-    pub const IssuingAmount: Balance = 10 * ICY;
+    pub const IssuingAmount: Balance = 10 * currency::DOLLARS;
 }
 
 impl pallet_simple_inflation::Config for Runtime {
