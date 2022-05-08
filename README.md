@@ -1,10 +1,15 @@
+<div align="center">
 
+![ice.png](docs/media/ice.png)
+
+[![GitHub last commit](https://img.shields.io/github/last-commit/web3labs/ice-substrate)](https://github.com/web3labs/ice-substrate/commits/main)
+[![GitHub tag (latest by date)](https://img.shields.io/github/v/tag/web3labs/ice-substrate)](https://github.com/web3labs/ice-substrate/tags)
 ![license](https://img.shields.io/badge/License-Apache%202.0-blue?logo=apache&style=flat-square)
-
 [![Twitter URL](https://img.shields.io/twitter/follow/icenetwork_io?style=social)](https://twitter.com/icenetwork_io)
 [![Medium](https://img.shields.io/badge/Medium-gray?logo=medium)](https://medium.com/@helloiconworld)
 [![Telegram](https://img.shields.io/badge/Telegram-gray?logo=telegram)](https://t.me/joinchat/UG3uX-USLBwxYWRh)
 
+</div>
 ICE Network is an EVM compatible network built with Parity’s Substrate framework. ICE is the first network to use the Substrate SDK to extend the feature-set of an existing layer one blockchain protocol. In addition, ICE will provide the much-needed addition of EVM compatibility to the ICON ecosystem
 
 ## Setup
@@ -24,7 +29,7 @@ rustup update nightly
 rustup target add wasm32-unknown-unknown --toolchain nightly
 ```
 
-This should be sufficient to get started, refer to [Substrate installation](https://docs.substrate.io/v3/getting-started/installation/) guide for more details if needed.
+This should be sufficient to get started, refer to [Substrate installation](https://docs.substrate.io/v3/getting-started/installation/) guide for more details if needed
 
 ## Build
 
@@ -33,9 +38,6 @@ To build the chain, execute the following commands from the project root:
 ```
 $ cargo build --release
 ```
-
-## Build
-
 ### Start Frost Node (Development)
 
 To execute the chain, run:
