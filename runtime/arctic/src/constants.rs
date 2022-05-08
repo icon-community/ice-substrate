@@ -24,7 +24,7 @@ pub mod time {
     type Moment = u64;
 	use crate::{BlockNumber};
 	
-	pub const MILLISECS_PER_BLOCK: Moment = 6000;
+	pub const MILLISECS_PER_BLOCK: Moment = 12000;
 	pub const SLOT_DURATION: Moment = MILLISECS_PER_BLOCK;
 	//pub const EPOCH_DURATION_IN_SLOTS: BlockNumber = SLOT_DURATION;//prod_or_fast!(1 * HOURS, 1 * MINUTES);
 
