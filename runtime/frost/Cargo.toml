@@ -7,7 +7,7 @@ homepage = 'https://substrate.dev'
 license = 'Apache-2.0'
 name = 'frost-runtime'
 repository = 'https://github.com/web3labs/ice-substrate/'
-version = '0.4.3'
+version = '0.4.31'
 publish = false
 
 [package.metadata.docs.rs]
@@ -170,7 +170,6 @@ runtime-benchmarks = [
 	"pallet-collective/runtime-benchmarks",
     "pallet-treasury/runtime-benchmarks",
 ]
-
 
 try-runtime = [
     "frame-try-runtime",
