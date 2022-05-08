@@ -166,13 +166,17 @@ dependencies = [
  "polkadot-parachain",
  "polkadot-runtime-common",
  "scale-info",
+ "separator",
  "serde",
+ "smallvec",
  "sp-api 4.0.0-dev (git+https://github.com/paritytech/substrate?branch=polkadot-v0.9.19)",
+ "sp-arithmetic 5.0.0 (git+https://github.com/paritytech/substrate?branch=polkadot-v0.9.19)",
  "sp-block-builder",
  "sp-consensus-aura",
  "sp-core 6.0.0 (git+https://github.com/paritytech/substrate?branch=polkadot-v0.9.19)",
  "sp-inherents 4.0.0-dev (git+https://github.com/paritytech/substrate?branch=polkadot-v0.9.19)",
  "sp-io 6.0.0 (git+https://github.com/paritytech/substrate?branch=polkadot-v0.9.19)",
+ "sp-keyring",
  "sp-offchain",
  "sp-runtime 6.0.0 (git+https://github.com/paritytech/substrate?branch=polkadot-v0.9.19)",
  "sp-session",
@@ -3172,7 +3176,7 @@ dependencies = [
 
 [[package]]
 name = "frost-runtime"
-version = "0.4.3"
+version = "0.4.31"
 dependencies = [
  "fp-rpc",
  "fp-self-contained",
