@@ -1,0 +1,55 @@
+{
+  "relaychain": {
+    "bin": "./polkadot/target/release/polkadot",
+    "chain": "rococo-local",
+    "nodes": [
+      {
+        "name": "alice",
+        "wsPort": 9988,
+        "port": 30488
+      },
+      {
+        "name": "bob",
+        "wsPort": 9955,
+        "port": 30555
+      },
+      {
+        "name": "charlie",
+        "wsPort": 9966,
+        "port": 30666
+      },
+      {
+        "name": "dave",
+        "wsPort": 9977,
+        "port": 30777
+      }
+    ]
+  },
+  "parachains": [
+    {
+      "bin": "./ice-substrate/target/release/ice-node",
+      "chain": "arctic-dev",
+      "id": "2000",
+      "balance": "1000000000000000000000",
+      "nodes": [
+        {
+          "wsPort": 9944,
+          "rpcPort": 9933,
+          "port": 31200,
+          "name": "alice",
+          "flags": [
+            "--unsafe-ws-external",
+            "--unsafe-rpc-external",
+            "--rpc-cors=all",
+            "--rpc-methods=Unsafe",
+            "--",
+            "--execution=wasm"
+          ]
+        }
+      ]
+    }
+  ],
+  "hrmpChannels": [],
+  "types": {},
+  "finalization": false
+}
