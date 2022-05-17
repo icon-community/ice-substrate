@@ -75,8 +75,8 @@ pub mod arctic {
 
 /// build relay chain interface
 async fn build_relay_chain_interface(
-	polkadot_config: Configuration,
-	parachain_config: &Configuration,
+			polkadot_config: Configuration,
+			parachain_config: &Configuration,
 	telemetry_worker_handle: Option<TelemetryWorkerHandle>,
 	task_manager: &mut TaskManager,
 	collator_options: CollatorOptions,
