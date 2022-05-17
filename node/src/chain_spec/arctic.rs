@@ -1,7 +1,24 @@
+// This file is part of ICE.
+
+// Copyright (C) 2021-2022 ICE Network.
+// SPDX-License-Identifier: GPL-3.0-or-later WITH Classpath-exception-2.0
+
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
 use super::{get_from_seed, Extensions};
-use arctic_runtime::currency::ICY;
 use arctic_runtime::{
-	wasm_binary_unwrap, AccountId, AuraConfig, AuraId, Balance, BalancesConfig,
+	currency::ICY, wasm_binary_unwrap, AccountId, AuraConfig, AuraId, Balance, BalancesConfig,
 	CollatorSelectionConfig, CouncilConfig, EVMConfig, GenesisConfig, ParachainInfoConfig,
 	SessionConfig, SessionKeys, Signature, SudoConfig, SystemConfig, VestingConfig,
 };
@@ -10,8 +27,7 @@ use hex_literal::hex;
 use sc_service::ChainType;
 use sp_core::{crypto::UncheckedInto, sr25519, Pair, Public};
 use sp_runtime::traits::{IdentifyAccount, Verify};
-use std::collections::BTreeMap;
-use std::marker::PhantomData;
+use std::{collections::BTreeMap, marker::PhantomData};
 
 /// Publicly expose ArcticChainSpec for sc service
 pub type ArcticChainSpec = sc_service::GenericChainSpec<GenesisConfig, Extensions>;
@@ -54,7 +70,7 @@ pub fn get_chain_spec(para_id: u32) -> ArcticChainSpec {
 				],
 				// Council members
 				vec![
-					hex!["62687296bffd79f12178c4278b9439d5eeb8ed7cc0b1f2ae29307e806a019659"].into(),
+					hex!["62687296bffd79f12178c4278b9439d5eeb8ed7cc0b1f2ae29307e806a019659"].into()
 				],
 				// Sudo account
 				hex!["62687296bffd79f12178c4278b9439d5eeb8ed7cc0b1f2ae29307e806a019659"].into(),
@@ -66,11 +82,7 @@ pub fn get_chain_spec(para_id: u32) -> ArcticChainSpec {
 		None,
 		None,
 		serde_json::from_str(ARCTIC_PROPERTIES).unwrap(),
-		Extensions {
-			bad_blocks: Default::default(),
-			relay_chain: "arctic".into(),
-			para_id,
-		},
+		Extensions { bad_blocks: Default::default(), relay_chain: "arctic".into(), para_id },
 	)
 }
 
@@ -114,11 +126,7 @@ pub fn get_dev_chain_spec(para_id: u32) -> ArcticChainSpec {
 		None,
 		None,
 		serde_json::from_str(ARCTIC_PROPERTIES).unwrap(),
-		Extensions {
-			bad_blocks: Default::default(),
-			relay_chain: "arctic".into(),
-			para_id,
-		},
+		Extensions { bad_blocks: Default::default(), relay_chain: "arctic".into(), para_id },
 	)
 }
 
@@ -136,24 +144,14 @@ fn make_genesis(
 	parachain_id: ParaId,
 ) -> GenesisConfig {
 	GenesisConfig {
-		system: SystemConfig {
-			code: wasm_binary_unwrap().to_vec(),
-		},
-		sudo: SudoConfig {
-			key: Some(root_key),
-		},
+		system: SystemConfig { code: wasm_binary_unwrap().to_vec() },
+		sudo: SudoConfig { key: Some(root_key) },
 		parachain_info: ParachainInfoConfig { parachain_id },
 		balances: BalancesConfig {
-			balances: endowed_accounts
-				.iter()
-				.cloned()
-				.map(|k| (k, ICY * 300_000_000))
-				.collect(),
+			balances: endowed_accounts.iter().cloned().map(|k| (k, ICY * 300_000_000)).collect(),
 		},
 		vesting: VestingConfig { vesting: vec![] },
-		aura: AuraConfig {
-			authorities: vec![],
-		},
+		aura: AuraConfig { authorities: vec![] },
 		aura_ext: Default::default(),
 		collator_selection: CollatorSelectionConfig {
 			desired_candidates: 200,
@@ -175,10 +173,7 @@ fn make_genesis(
 		dynamic_fee: Default::default(),
 		base_fee: Default::default(),
 		assets: Default::default(),
-		council: CouncilConfig {
-			members: council_members,
-			phantom: PhantomData,
-		},
+		council: CouncilConfig { members: council_members, phantom: PhantomData },
 		ethereum: Default::default(),
 		treasury: Default::default(),
 		polkadot_xcm: Default::default(),

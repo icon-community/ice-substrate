@@ -1,3 +1,21 @@
+// This file is part of ICE.
+
+// Copyright (C) 2021-2022 ICE Network.
+// SPDX-License-Identifier: GPL-3.0-or-later WITH Classpath-exception-2.0
+
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
 use crate::{Authorship, Balances, NegativeImbalance, Treasury};
 use frame_support::traits::{Currency, Imbalance, OnUnbalanced};
 
@@ -16,7 +34,8 @@ impl OnUnbalanced<NegativeImbalance> for DealWithFees {
 		if let Some(fees) = fees_then_tips.next() {
 			let mut split = fees.ration(80, 20);
 			if let Some(tips) = fees_then_tips.next() {
-				// for tips, if any, 80% to treasury, 20% to block author (though this can be anything)
+				// for tips, if any, 80% to treasury, 20% to block author (though this can be
+				// anything)
 				tips.ration_merge_into(80, 20, &mut split);
 			}
 			Treasury::on_unbalanced(split.0);
@@ -181,12 +200,7 @@ mod tests {
 		// the weight is 1/100th bigger than target.
 		run_with_system_weight(target() * 101 / 100, || {
 			let next = runtime_multiplier_update(min_multiplier());
-			assert!(
-				next > min_multiplier(),
-				"{:?} !>= {:?}",
-				next,
-				min_multiplier()
-			);
+			assert!(next > min_multiplier(), "{:?} !>= {:?}", next, min_multiplier());
 		})
 	}
 
@@ -234,10 +248,8 @@ mod tests {
 		// `cargo test congested_chain_simulation -- --nocapture` to get some insight.
 
 		// almost full. The entire quota of normal transactions is taken.
-		let block_weight = RuntimeBlockWeights::get()
-			.get(DispatchClass::Normal)
-			.max_total
-			.unwrap() - 100;
+		let block_weight =
+			RuntimeBlockWeights::get().get(DispatchClass::Normal).max_total.unwrap() - 100;
 
 		// Default substrate weight.
 		let tx_weight = frame_support::weights::constants::ExtrinsicBaseWeight::get();

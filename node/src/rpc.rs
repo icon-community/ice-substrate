@@ -1,3 +1,21 @@
+// This file is part of ICE.
+
+// Copyright (C) 2021-2022 ICE Network.
+// SPDX-License-Identifier: GPL-3.0-or-later WITH Classpath-exception-2.0
+
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
 //! Ice RPCs implementation.
 
 use fc_rpc::{
@@ -22,8 +40,7 @@ use sp_blockchain::{
 	Backend as BlockchainBackend, Error as BlockChainError, HeaderBackend, HeaderMetadata,
 };
 use sp_runtime::traits::BlakeTwo256;
-use std::collections::BTreeMap;
-use std::sync::Arc;
+use std::{collections::BTreeMap, sync::Arc};
 
 use crate::primitives::*;
 
@@ -43,14 +60,9 @@ pub fn open_frontier_backend(
 		});
 	let path = config_dir.join("frontier").join("db");
 
-	Ok(Arc::new(fc_db::Backend::<Block>::new(
-		&fc_db::DatabaseSettings {
-			source: fc_db::DatabaseSettingsSrc::RocksDb {
-				path,
-				cache_size: 0,
-			},
-		},
-	)?))
+	Ok(Arc::new(fc_db::Backend::<Block>::new(&fc_db::DatabaseSettings {
+		source: fc_db::DatabaseSettingsSrc::RocksDb { path, cache_size: 0 },
+	})?))
 }
 
 pub fn overrides_handle<C, BE>(client: Arc<C>) -> Arc<OverrideHandle<Block>>
@@ -103,7 +115,7 @@ pub struct FullDeps<C, P, A: ChainApi> {
 	pub frontier_backend: Arc<fc_db::Backend<Block>>,
 	/// EthFilterApi pool.
 	pub filter_pool: FilterPool,
-	/// Maximum fee history cache size.                                                                                    
+	/// Maximum fee history cache size.
 	pub fee_history_limit: u64,
 	/// Fee history cache.
 	pub fee_history_cache: FeeHistoryCache,
@@ -161,9 +173,7 @@ where
 		deny_unsafe,
 	)));
 
-	io.extend_with(TransactionPaymentApi::to_delegate(TransactionPayment::new(
-		client.clone(),
-	)));
+	io.extend_with(TransactionPaymentApi::to_delegate(TransactionPayment::new(client.clone())));
 
 	let max_past_logs: u32 = 10_000;
 	let max_stored_filters: usize = 500;
@@ -194,11 +204,7 @@ where
 		block_data_cache.clone(),
 	)));
 
-	io.extend_with(NetApiServer::to_delegate(NetApi::new(
-		client.clone(),
-		network.clone(),
-		true,
-	)));
+	io.extend_with(NetApiServer::to_delegate(NetApi::new(client.clone(), network.clone(), true)));
 
 	io.extend_with(Web3ApiServer::to_delegate(Web3Api::new(client.clone())));
 
@@ -299,9 +305,7 @@ where
 		pool.clone(),
 		deny_unsafe,
 	)));
-	io.extend_with(TransactionPaymentApi::to_delegate(TransactionPayment::new(
-		client.clone(),
-	)));
+	io.extend_with(TransactionPaymentApi::to_delegate(TransactionPayment::new(client.clone())));
 
 	// Contracts RPC API extension
 	io.extend_with(ContractsApi::to_delegate(Contracts::new(client.clone())));
@@ -364,8 +368,8 @@ where
 				// send EngineCommands to the background block authorship task.
 				ManualSealApi::to_delegate(ManualSeal::new(command_sink)),
 			);
-		}
-		_ => {}
+		},
+		_ => {},
 	}
 
 	io

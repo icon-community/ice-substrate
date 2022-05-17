@@ -1,3 +1,21 @@
+// This file is part of ICE.
+
+// Copyright (C) 2021-2022 ICE Network.
+// SPDX-License-Identifier: GPL-3.0-or-later WITH Classpath-exception-2.0
+
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
 use frost_runtime::{
 	currency::ICY, opaque::SessionKeys, AccountId, AuraConfig, BalancesConfig, CouncilConfig,
 	EVMConfig, EthereumConfig, GenesisConfig, GrandpaConfig, PalletId, SessionConfig, Signature,
@@ -9,8 +27,7 @@ use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 use sp_core::{crypto::UncheckedInto, sr25519, Pair, Public};
 use sp_finality_grandpa::AuthorityId as GrandpaId;
 use sp_runtime::traits::{AccountIdConversion, IdentifyAccount, Verify};
-use std::collections::BTreeMap;
-use std::marker::PhantomData;
+use std::{collections::BTreeMap, marker::PhantomData};
 
 // The URL for the telemetry server.
 // const STAGING_TELEMETRY_URL: &str = "wss://telemetry.polkadot.io/submit/";
@@ -81,7 +98,7 @@ pub fn testnet_config() -> Result<FrostChainSpec, String> {
 				],
 				// Council members
 				vec![
-					hex!["62687296bffd79f12178c4278b9439d5eeb8ed7cc0b1f2ae29307e806a019659"].into(),
+					hex!["62687296bffd79f12178c4278b9439d5eeb8ed7cc0b1f2ae29307e806a019659"].into()
 				],
 				// Sudo account
 				hex!["62687296bffd79f12178c4278b9439d5eeb8ed7cc0b1f2ae29307e806a019659"].into(),
@@ -166,10 +183,7 @@ pub fn local_testnet_config() -> Result<FrostChainSpec, String> {
 			testnet_genesis(
 				wasm_binary,
 				// Initial PoA authorities
-				vec![
-					authority_keys_from_seed("Alice"),
-					authority_keys_from_seed("Bob"),
-				],
+				vec![authority_keys_from_seed("Alice"), authority_keys_from_seed("Bob")],
 				// Council members
 				vec![get_account_id_from_seed::<sr25519::Public>("Alice")],
 				// Sudo account
@@ -238,18 +252,10 @@ fn testnet_genesis(
 			code: wasm_binary.to_vec(),
 		},
 		balances: BalancesConfig {
-			balances: endowed_accounts
-				.iter()
-				.cloned()
-				.map(|k| (k, ICY * 40_000))
-				.collect(),
+			balances: endowed_accounts.iter().cloned().map(|k| (k, ICY * 40_000)).collect(),
 		},
-		aura: AuraConfig {
-			authorities: vec![],
-		},
-		grandpa: GrandpaConfig {
-			authorities: vec![],
-		},
+		aura: AuraConfig { authorities: vec![] },
+		grandpa: GrandpaConfig { authorities: vec![] },
 		sudo: SudoConfig {
 			// Assign network admin rights.
 			key: Some(root_key),
@@ -257,13 +263,7 @@ fn testnet_genesis(
 		session: SessionConfig {
 			keys: authorities
 				.iter()
-				.map(|x| {
-					(
-						x.0.clone(),
-						x.0.clone(),
-						session_keys(x.1.clone(), x.2.clone()),
-					)
-				})
+				.map(|x| (x.0.clone(), x.0.clone(), session_keys(x.1.clone(), x.2.clone())))
 				.collect::<Vec<_>>(),
 		},
 		evm: EVMConfig {
@@ -277,10 +277,7 @@ fn testnet_genesis(
 		base_fee: Default::default(),
 		vesting: Default::default(),
 		assets: Default::default(),
-		council: CouncilConfig {
-			members: council_members,
-			phantom: PhantomData,
-		},
+		council: CouncilConfig { members: council_members, phantom: PhantomData },
 		treasury: Default::default(),
 	}
 }

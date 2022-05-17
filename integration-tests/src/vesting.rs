@@ -1,3 +1,21 @@
+// This file is part of ICE.
+
+// Copyright (C) 2021-2022 ICE Network.
+// SPDX-License-Identifier: GPL-3.0-or-later WITH Classpath-exception-2.0
+
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
 use frame_support::dispatch::EncodeLike;
 
 use frame_support::{
@@ -25,44 +43,37 @@ where
 
 #[test]
 fn usable_balance_for_fees_during_vesting() {
-	ExtBuilder::default()
-		.existential_deposit(ED)
-		.build()
-		.execute_with(|| {
-			vest_and_assert_no_vesting::<Test>(5);
+	ExtBuilder::default().existential_deposit(ED).build().execute_with(|| {
+		vest_and_assert_no_vesting::<Test>(5);
 
-			// Make the schedule for the new transfer.
-			let vesting_schedule = VestingInfo::new(
-				ED * 10, // 256 * 10
-				20,
-				5,
-			);
+		// Make the schedule for the new transfer.
+		let vesting_schedule = VestingInfo::new(
+			ED * 10, // 256 * 10
+			20,
+			5,
+		);
 
-			// Account 5 should not have any vesting yet.
-			assert_eq!(Vesting::vesting(&5), None);
-			assert_eq!(Balances::usable_balance_for_fees(&5), 0);
+		// Account 5 should not have any vesting yet.
+		assert_eq!(Vesting::vesting(&5), None);
+		assert_eq!(Balances::usable_balance_for_fees(&5), 0);
 
-			//transfer vesting balance
-			assert_ok!(Vesting::vested_transfer(
-				Some(3).into(),
-				5,
-				vesting_schedule
-			));
-			assert_eq!(Vesting::vesting_balance(&5), Some(2560));
+		//transfer vesting balance
+		assert_ok!(Vesting::vested_transfer(Some(3).into(), 5, vesting_schedule));
+		assert_eq!(Vesting::vesting_balance(&5), Some(2560));
 
-			System::set_block_number(2);
+		System::set_block_number(2);
 
-			assert_eq!(Balances::usable_balance(&5), 0);
-			assert_eq!(Balances::free_balance(&5), 2560);
+		assert_eq!(Balances::usable_balance(&5), 0);
+		assert_eq!(Balances::free_balance(&5), 2560);
 
-			// Account 5 cannot send more than vested amount, nothing has been vested yet
-			assert_noop!(
-				Balances::transfer(Some(5).into(), 3, 10),
-				pallet_balances::Error::<Test, _>::LiquidityRestrictions,
-			);
+		// Account 5 cannot send more than vested amount, nothing has been vested yet
+		assert_noop!(
+			Balances::transfer(Some(5).into(), 3, 10),
+			pallet_balances::Error::<Test, _>::LiquidityRestrictions,
+		);
 
-			System::set_block_number(6); // first vesting schedule starts after block 5
-			assert_ok!(Vesting::vest(Some(5).into())); // vest 20 units
-			assert_ok!(Balances::transfer(Some(5).into(), 3, 20));
-		});
+		System::set_block_number(6); // first vesting schedule starts after block 5
+		assert_ok!(Vesting::vest(Some(5).into())); // vest 20 units
+		assert_ok!(Balances::transfer(Some(5).into(), 3, 20));
+	});
 }

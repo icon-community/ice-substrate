@@ -1,3 +1,21 @@
+// This file is part of ICE.
+
+// Copyright (C) 2021-2022 ICE Network.
+// SPDX-License-Identifier: GPL-3.0-or-later WITH Classpath-exception-2.0
+
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
 use pallet_evm::{Context, Precompile, PrecompileResult, PrecompileSet};
 use sp_core::H160;
 use sp_std::marker::PhantomData;
@@ -16,10 +34,7 @@ where
 		Self(Default::default())
 	}
 	pub fn used_addresses() -> sp_std::vec::Vec<H160> {
-		sp_std::vec![1, 2, 3, 4, 5, 1024, 1025]
-			.into_iter()
-			.map(|x| hash(x))
-			.collect()
+		sp_std::vec![1, 2, 3, 4, 5, 1024, 1025].into_iter().map(|x| hash(x)).collect()
 	}
 }
 impl<R> PrecompileSet for FrontierPrecompiles<R>
@@ -42,12 +57,10 @@ where
 			a if a == hash(4) => Some(Identity::execute(input, target_gas, context, is_static)),
 			a if a == hash(5) => Some(Modexp::execute(input, target_gas, context, is_static)),
 			// Non-Frontier specific nor Ethereum precompiles :
-			a if a == hash(1024) => {
-				Some(Sha3FIPS256::execute(input, target_gas, context, is_static))
-			}
-			a if a == hash(1025) => Some(ECRecoverPublicKey::execute(
-				input, target_gas, context, is_static,
-			)),
+			a if a == hash(1024) =>
+				Some(Sha3FIPS256::execute(input, target_gas, context, is_static)),
+			a if a == hash(1025) =>
+				Some(ECRecoverPublicKey::execute(input, target_gas, context, is_static)),
 			_ => None,
 		}
 	}
