@@ -26,7 +26,7 @@ use sp_core::hexdisplay::HexDisplay;
 use sp_runtime::traits::Block as BlockT;
 use std::{io::Write, net::SocketAddr};
 
-const PARA_ID: u32 = 3000;
+const PARA_ID: u32 = 2000;
 
 trait IdentifyChain {
     fn is_arctic(&self) -> bool;
@@ -45,8 +45,8 @@ impl<T: sc_service::ChainSpec + 'static> IdentifyChain for T {
 }
 
 fn load_spec(
-        id: &str,
-        para_id: u32,
+    id: &str,
+    para_id: u32,
 ) -> std::result::Result<Box<dyn sc_service::ChainSpec>, String> {
     Ok(match id {
 		"dev" => Box::new(development_config()?),
@@ -476,7 +476,7 @@ pub fn run() -> Result<()> {
                 );
 
                 info!("Relaychain Args: {}", cli.relaychain_args.join(" "));
-                let id = ParaId::from(PARA_ID);
+                let id = ParaId::from(para_id);
 
                 let state_version = Cli::native_runtime_version(&config.chain_spec).state_version();
                 let block: Block = generate_genesis_block(&config.chain_spec, state_version)
