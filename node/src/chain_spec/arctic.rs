@@ -14,11 +14,13 @@ use std::collections::BTreeMap;
 use std::marker::PhantomData;
 
 /// Publicly expose ArcticChainSpec for sc service
-	pub type ArcticChainSpec = sc_service::GenericChainSpec<GenesisConfig, Extensions>;
+pub type ArcticChainSpec = sc_service::GenericChainSpec<GenesisConfig, Extensions>;
 
 const ARCTIC_PROPERTIES: &str = r#"
         {
-            "ss58Format": 42,"tokenDecimals": 18,"tokenSymbol": "ICZ"
+            "ss58Format": 42,
+            "tokenDecimals": 18,
+            "tokenSymbol": "ICZ"
         }"#;
 
 /// Gen Arctic chain specification for given parachain id.
