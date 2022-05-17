@@ -45,8 +45,8 @@ impl<T: sc_service::ChainSpec + 'static> IdentifyChain for T {
 }
 
 fn load_spec(
-    id: &str,
-    para_id: u32,
+        id: &str,
+        para_id: u32,
 ) -> std::result::Result<Box<dyn sc_service::ChainSpec>, String> {
     Ok(match id {
 		"dev" => Box::new(development_config()?),
