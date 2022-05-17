@@ -1,4 +1,7 @@
 pub mod currency {
+	use frame_support::weights::{
+		constants::{ExtrinsicBaseWeight, WEIGHT_PER_SECOND}
+	};
     use crate::Balance;
 
     /// The existential deposit.
@@ -17,7 +20,21 @@ pub mod currency {
 	pub const fn deposit(items: u32, bytes: u32) -> Balance {
         items as Balance * 10 * CENTS + (bytes as Balance) * 10 * MILLICENTS
 	}
+
+	fn base_tx_fee() -> Balance {
+		CENTS / 10
+	}
+
+	// 1 KSM = 10 DOT
+	// DOT precision is 1/100 of KSM and BNC
+	pub fn dot_per_second() -> u128 {
+		let base_weight = Balance::from(ExtrinsicBaseWeight::get());
+		let base_tx_per_second = (WEIGHT_PER_SECOND as u128) / base_weight;
+		let fee_per_second = base_tx_per_second * base_tx_fee();
+		fee_per_second / 100 * 10 / 100
+	}
 }
+
 
 /// Time and blocks.
 pub mod time {
