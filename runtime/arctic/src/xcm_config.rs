@@ -8,8 +8,8 @@ use frame_support::{
 	weights::{IdentityFee, Weight},
 };
 
-use cumulus_primitives_core::ParaId as CumulusParaId;
 use crate::currency::dot_per_second;
+use cumulus_primitives_core::ParaId as CumulusParaId;
 
 // XCM imports
 use pallet_xcm::XcmPassthrough;
@@ -83,7 +83,6 @@ pub type XcmOriginToTransactDispatchOrigin = (
 	XcmPassthrough<Origin>,
 );
 
-
 parameter_types! {
 	// One XCM operation is 200_000_000 weight, cross-chain transfer ~= 2x of transfer = 3_000_000_000
 	pub UnitWeightCost: Weight = 200_000_000;
@@ -108,7 +107,6 @@ parameter_types! {
 	pub DotPerSecond: (AssetId, u128) = (MultiLocation::parent().into(), dot_per_second());
 }
 
-
 pub struct XcmConfig;
 impl Config for XcmConfig {
 	type AssetClaims = PolkadotXcm;
@@ -127,7 +125,6 @@ impl Config for XcmConfig {
 	type XcmSender = XcmRouter;
 }
 
-
 /// Local origins on this chain are allowed to dispatch XCM sends/executions.
 pub type LocalOriginToLocation = SignedToAccountId32<Origin, AccountId, RelayNetwork>;
 
@@ -139,7 +136,6 @@ pub type XcmRouter = (
 	// ..and XCMP to communicate with the sibling chains.
 	XcmpQueue,
 );
-
 
 impl pallet_xcm::Config for Runtime {
 	type Event = Event;
@@ -157,7 +153,6 @@ impl pallet_xcm::Config for Runtime {
 	const VERSION_DISCOVERY_QUEUE_SIZE: u32 = 100;
 	type AdvertisedXcmVersion = pallet_xcm::CurrentXcmVersion;
 }
-
 
 impl cumulus_pallet_xcm::Config for Runtime {
 	type Event = Event;

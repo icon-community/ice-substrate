@@ -8,15 +8,14 @@
 #[cfg(feature = "std")]
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
-
 #[cfg(feature = "std")]
 /// Wasm binary unwrapped. If built with `BUILD_DUMMY_WASM_BINARY`, the function panics.
 pub fn wasm_binary_unwrap() -> &'static [u8] {
-    WASM_BINARY.expect(
-        "Development wasm binary is not available. This means the client is \
+	WASM_BINARY.expect(
+		"Development wasm binary is not available. This means the client is \
                         built with `BUILD_DUMMY_WASM_BINARY` flag and it is only usable for \
                         production chains. Please rebuild with the flag disabled.",
-    )
+	)
 }
 
 pub mod xcm_config;
@@ -27,18 +26,15 @@ use frame_system::limits::{BlockLength, BlockWeights};
 use frame_system::EnsureRoot;
 use sp_api::impl_runtime_apis;
 pub use sp_consensus_aura::sr25519::AuthorityId as AuraId;
-use sp_core::{
-	crypto::{KeyTypeId},
-	OpaqueMetadata, H160, H256, U256,
-};
+use sp_core::{crypto::KeyTypeId, OpaqueMetadata, H160, H256, U256};
 use sp_runtime::{
 	create_runtime_str, generic, impl_opaque_keys,
 	traits::{
-		AccountIdLookup, BlakeTwo256, Block as BlockT, Dispatchable, IdentifyAccount,
-		PostDispatchInfoOf, Verify, ConvertInto
+		AccountIdLookup, BlakeTwo256, Block as BlockT, ConvertInto, Dispatchable, IdentifyAccount,
+		PostDispatchInfoOf, Verify,
 	},
 	transaction_validity::{TransactionSource, TransactionValidity, TransactionValidityError},
-	ApplyExtrinsicResult, MultiSignature, FixedPointNumber, Perquintill
+	ApplyExtrinsicResult, FixedPointNumber, MultiSignature, Perquintill,
 };
 
 use sp_std::{marker::PhantomData, prelude::*};
@@ -67,16 +63,16 @@ use xcm_executor::XcmExecutor;
 use fp_rpc::TransactionStatus;
 pub use frame_support::{
 	construct_runtime, parameter_types,
-	traits::{FindAuthor, KeyOwnerProofSystem, Randomness, Currency},
+	traits::{Currency, FindAuthor, KeyOwnerProofSystem, Randomness},
 	weights::{
-        constants::{BlockExecutionWeight, ExtrinsicBaseWeight, RocksDbWeight, WEIGHT_PER_SECOND},
-        ConstantMultiplier, DispatchClass, Weight,
-    },
+		constants::{BlockExecutionWeight, ExtrinsicBaseWeight, RocksDbWeight, WEIGHT_PER_SECOND},
+		ConstantMultiplier, DispatchClass, Weight,
+	},
 	ConsensusEngineId, PalletId, StorageValue,
 };
 
-use pallet_contracts::weights::WeightInfo;
 pub use pallet_balances::Call as BalancesCall;
+use pallet_contracts::weights::WeightInfo;
 use pallet_ethereum::{Call::transact, Transaction as EthereumTransaction};
 use pallet_evm::{Account as EVMAccount, EnsureAddressTruncated, HashedAddressMapping, Runner};
 pub use pallet_timestamp::Call as TimestampCall;
@@ -171,14 +167,14 @@ pub fn native_version() -> NativeVersion {
 const NORMAL_DISPATCH_RATIO: Perbill = Perbill::from_percent(75);
 
 parameter_types! {
-    pub const Version: RuntimeVersion = VERSION;
-    pub const BlockHashCount: BlockNumber = 256;
-    /// We allow for 2 seconds of compute with a 6 second average block time.
-    pub RuntimeBlockWeights: BlockWeights = BlockWeights
+	pub const Version: RuntimeVersion = VERSION;
+	pub const BlockHashCount: BlockNumber = 256;
+	/// We allow for 2 seconds of compute with a 6 second average block time.
+	pub RuntimeBlockWeights: BlockWeights = BlockWeights
 			::with_sensible_defaults(2 * WEIGHT_PER_SECOND, NORMAL_DISPATCH_RATIO);
-    pub RuntimeBlockLength: BlockLength = BlockLength
+	pub RuntimeBlockLength: BlockLength = BlockLength
 			::max_with_normal_ratio(5 * 1024 * 1024, NORMAL_DISPATCH_RATIO);
-    pub const SS58Prefix: u8 = 42;
+	pub const SS58Prefix: u8 = 42;
 }
 
 // Configure FRAME pallets to include in runtime.
@@ -231,7 +227,7 @@ impl frame_system::Config for Runtime {
 	type SystemWeightInfo = ();
 	/// This is used as an identifier of the chain. 42 is the generic substrate prefix.
 	type SS58Prefix = SS58Prefix;
-	
+
 	type OnSetCode = cumulus_pallet_parachain_system::ParachainSetCode<Self>;
 	type MaxConsumers = frame_support::traits::ConstU32<16>;
 }
@@ -272,7 +268,6 @@ impl cumulus_pallet_dmp_queue::Config for Runtime {
 	type ExecuteOverweightOrigin = frame_system::EnsureRoot<AccountId>;
 	type XcmExecutor = XcmExecutor<XcmConfig>;
 }
-
 
 parameter_types! {
 	pub const Period: u32 = 6 * HOURS;
@@ -327,7 +322,6 @@ impl pallet_collator_selection::Config for Runtime {
 	type ValidatorRegistration = Session;
 	type WeightInfo = ();
 }
-
 
 parameter_types! {
 	pub const DepositPerItem: Balance = currency::deposit(1, 0);
@@ -406,8 +400,8 @@ impl pallet_authorship::Config for Runtime {
 	type EventHandler = (CollatorSelection,);
 }
 
-parameter_types! {	
-	pub const ExistentialDeposit: u128 = currency::EXISTENTIAL_DEPOSIT; // 0.0001 ICY 
+parameter_types! {
+	pub const ExistentialDeposit: u128 = currency::EXISTENTIAL_DEPOSIT; // 0.0001 ICY
 	// For weight estimation, we assume that the most locks on an individual account will be 50.
 	// This number may need to be adjusted in the future if this assumption no longer holds true.
 	pub const MaxLocks: u32 = 50;
@@ -439,7 +433,8 @@ impl pallet_transaction_payment::Config for Runtime {
 	type OnChargeTransaction = CurrencyAdapter<Balances, DealWithFees>;
 	type OperationalFeeMultiplier = OperationalFeeMultiplier;
 	type WeightToFee = constants::fee::WeightToFee;
-	type FeeMultiplierUpdate = TargetedFeeAdjustment<Self, TargetBlockFullness, AdjustmentVariable, MinimumMultiplier>;
+	type FeeMultiplierUpdate =
+		TargetedFeeAdjustment<Self, TargetBlockFullness, AdjustmentVariable, MinimumMultiplier>;
 	type LengthToFee = ConstantMultiplier<Balance, TransactionByteFee>;
 }
 
@@ -492,11 +487,11 @@ impl pallet_ethereum::Config for Runtime {
 }
 
 frame_support::parameter_types! {
-    pub const AssetDeposit: Balance = 500 ;
+	pub const AssetDeposit: Balance = 500 ;
 	pub const AssetAccountDeposit: Balance = 500 ;
 	pub const MetadataDepositBase: Balance = 500 ;
-    pub const MetaDataDepositPerByte: Balance = 500 ;
-    pub const ApprovalDeposit: Balance = 500 ;
+	pub const MetaDataDepositPerByte: Balance = 500 ;
+	pub const ApprovalDeposit: Balance = 500 ;
 	pub const StringLimit: u32 = 50;
 }
 
@@ -563,8 +558,10 @@ parameter_types! {
 
 impl pallet_treasury::Config for Runtime {
 	type Currency = Balances;
-	type ApproveOrigin = pallet_collective::EnsureProportionAtLeast<AccountId, CouncilCollective, 1, 2>;
-	type RejectOrigin = pallet_collective::EnsureProportionAtLeast<AccountId, CouncilCollective, 1, 5>;
+	type ApproveOrigin =
+		pallet_collective::EnsureProportionAtLeast<AccountId, CouncilCollective, 1, 2>;
+	type RejectOrigin =
+		pallet_collective::EnsureProportionAtLeast<AccountId, CouncilCollective, 1, 5>;
 	type Event = Event;
 	type OnSlash = ();
 	type ProposalBond = ProposalBond;
@@ -635,7 +632,7 @@ construct_runtime!(
 		Ethereum: pallet_ethereum::{Pallet, Call, Storage, Event, Config, Origin},
 		EVM: pallet_evm::{Pallet, Config, Call, Storage, Event<T>},
 		DynamicFee: pallet_dynamic_fee::{Pallet, Call, Storage, Config, Inherent},
-		
+
 		// Collator support. The order of these 4 are important and shall not change.
 		Authorship: pallet_authorship::{Pallet, Call, Storage},
 		CollatorSelection: pallet_collator_selection::{Pallet, Call, Storage, Event<T>, Config<T>},
@@ -648,12 +645,12 @@ construct_runtime!(
 		PolkadotXcm: pallet_xcm::{Pallet, Call, Event<T>, Origin, Config},
 		CumulusXcm: cumulus_pallet_xcm::{Pallet, Event<T>, Origin},
 		DmpQueue: cumulus_pallet_dmp_queue::{Pallet, Call, Storage, Event<T>},
-	
+
 		BaseFee: pallet_base_fee::{Pallet, Call, Storage, Config<T>, Event},
 		Vesting: pallet_vesting::{Pallet, Call, Storage, Config<T>, Event<T>} = 32,
 		Assets: pallet_assets::{Pallet, Call, Storage, Config<T>, Event<T>},
-	    Council: pallet_collective::<Instance1>::{Pallet, Call, Storage, Origin<T>, Event<T>, Config<T>},
-        Treasury: pallet_treasury::{Pallet, Call, Storage, Event<T>, Config},
+		Council: pallet_collective::<Instance1>::{Pallet, Call, Storage, Origin<T>, Event<T>, Config<T>},
+		Treasury: pallet_treasury::{Pallet, Call, Storage, Event<T>, Config},
 		//SimpleInflation: pallet_simple_inflation::{Pallet},
 	}
 );
@@ -806,10 +803,10 @@ impl_runtime_apis! {
 	}
 
 	impl cumulus_primitives_core::CollectCollationInfo<Block> for Runtime {
-        fn collect_collation_info(header: &<Block as BlockT>::Header) -> cumulus_primitives_core::CollationInfo {
-            ParachainSystem::collect_collation_info(header)
-        }
-    }
+		fn collect_collation_info(header: &<Block as BlockT>::Header) -> cumulus_primitives_core::CollationInfo {
+			ParachainSystem::collect_collation_info(header)
+		}
+	}
 
 	impl sp_transaction_pool::runtime_api::TaggedTransactionQueue<Block> for Runtime {
 		fn validate_transaction(
@@ -1023,7 +1020,7 @@ impl_runtime_apis! {
 		) -> Result<Vec<frame_benchmarking::BenchmarkBatch>, sp_runtime::RuntimeString> {
 			use frame_benchmarking::{Benchmarking, BenchmarkBatch, add_benchmark, TrackedStorageKey};
 			use frame_system_benchmarking::Pallet as SystemBench;
-			
+
 			impl frame_system_benchmarking::Config for Runtime {}
 			let whitelist: Vec<TrackedStorageKey> = vec![];
 
@@ -1032,33 +1029,33 @@ impl_runtime_apis! {
 
 			add_benchmark!(params, batches, frame_system, SystemBench::<Runtime>);
 			add_benchmark!(params, batches, pallet_balances, Balances);
-            add_benchmark!(params, batches, pallet_timestamp, Timestamp);
+			add_benchmark!(params, batches, pallet_timestamp, Timestamp);
 			add_benchmark!(params, batches, pallet_evm, EVM);
 			add_benchmark!(params, batches, pallet_vesting, Vesting);
 
 			if batches.is_empty() { return Err("Benchmark not found for this pallet.".into()) }
 			Ok(batches)
 		}
-	    fn benchmark_metadata(extra: bool) -> (
-            Vec<frame_benchmarking::BenchmarkList>,
-            Vec<frame_support::traits::StorageInfo>,
-        ) {
-            use frame_benchmarking::{list_benchmark, Benchmarking, BenchmarkList};
-            use frame_support::traits::StorageInfoTrait;
-			use frame_system_benchmarking::Pallet as SystemBench;			
+		fn benchmark_metadata(extra: bool) -> (
+			Vec<frame_benchmarking::BenchmarkList>,
+			Vec<frame_support::traits::StorageInfo>,
+		) {
+			use frame_benchmarking::{list_benchmark, Benchmarking, BenchmarkList};
+			use frame_support::traits::StorageInfoTrait;
+			use frame_system_benchmarking::Pallet as SystemBench;
 
-            let mut list = Vec::<BenchmarkList>::new();
+			let mut list = Vec::<BenchmarkList>::new();
 
 			list_benchmark!(list, extra, frame_system, SystemBench::<Runtime>);
 			list_benchmark!(list, extra, pallet_balances, Balances);
-            list_benchmark!(list, extra, pallet_timestamp, Timestamp);
+			list_benchmark!(list, extra, pallet_timestamp, Timestamp);
 			list_benchmark!(list, extra, pallet_evm, EVM);
 			list_benchmark!(list, extra, pallet_vesting, Vesting);
 
-            let storage_info = AllPalletsWithSystem::storage_info();
+			let storage_info = AllPalletsWithSystem::storage_info();
 
-            return (list, storage_info)
-        }
+			return (list, storage_info)
+		}
 	}
 
 	#[cfg(feature = "try-runtime")]

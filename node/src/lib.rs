@@ -1,8 +1,8 @@
+mod chain_spec;
 mod cli;
 mod command;
 mod primitives;
 mod rpc;
-mod chain_spec;
 mod service;
 mod shell_upgrade;
 
@@ -23,6 +23,3 @@ pub use primitives::*;
 
 /// shell_upgrade
 pub use shell_upgrade::*;
-
-
-

@@ -27,7 +27,6 @@ use std::{
 	time::Duration,
 };
 
-
 use crate::cli::Cli;
 #[cfg(feature = "manual-seal")]
 use crate::cli::Sealing;
@@ -387,7 +386,6 @@ pub fn start_frost_node(mut config: Configuration, cli: &Cli) -> Result<TaskMana
 		);
 	}
 
-
 	let role = config.role.clone();
 	let force_authoring = config.force_authoring;
 	let backoff_authoring_blocks: Option<()> = None;
@@ -407,7 +405,6 @@ pub fn start_frost_node(mut config: Configuration, cli: &Cli) -> Result<TaskMana
 		50,
 		50,
 	));
-
 
 	let rpc_extensions_builder = {
 		let client = client.clone();
@@ -445,7 +442,6 @@ pub fn start_frost_node(mut config: Configuration, cli: &Cli) -> Result<TaskMana
 		})
 	};
 
-
 	let _rpc_handlers = sc_service::spawn_tasks(sc_service::SpawnTasksParams {
 		network: network.clone(),
 		client: client.clone(),
@@ -468,12 +464,12 @@ pub fn start_frost_node(mut config: Configuration, cli: &Cli) -> Result<TaskMana
 			client.clone(),
 			backend.clone(),
 			frontier_backend.clone(),
-			10,10,
+			10,
+			10,
 			SyncStrategy::Normal,
 		)
 		.for_each(|()| futures::future::ready(())),
 	);
-
 
 	// Spawn Frontier EthFilterApi maintenance task.
 	if let Some(filter_pool) = filter_pool {

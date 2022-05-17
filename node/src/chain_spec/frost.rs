@@ -1,14 +1,15 @@
 use frost_runtime::{
-	AccountId, AuraConfig, BalancesConfig, CouncilConfig, EVMConfig, EthereumConfig, GenesisConfig, GrandpaConfig,
-	Signature, SudoConfig, SystemConfig, WASM_BINARY, currency::ICY, SessionConfig, opaque::SessionKeys, PalletId
+	currency::ICY, opaque::SessionKeys, AccountId, AuraConfig, BalancesConfig, CouncilConfig,
+	EVMConfig, EthereumConfig, GenesisConfig, GrandpaConfig, PalletId, SessionConfig, Signature,
+	SudoConfig, SystemConfig, WASM_BINARY,
 };
+use hex_literal::hex;
 use sc_service::ChainType;
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 use sp_core::{crypto::UncheckedInto, sr25519, Pair, Public};
 use sp_finality_grandpa::AuthorityId as GrandpaId;
-use sp_runtime::traits::{IdentifyAccount, Verify, AccountIdConversion};
-use std::{collections::BTreeMap};
-use hex_literal::hex;
+use sp_runtime::traits::{AccountIdConversion, IdentifyAccount, Verify};
+use std::collections::BTreeMap;
 use std::marker::PhantomData;
 
 // The URL for the telemetry server.
@@ -65,19 +66,23 @@ pub fn testnet_config() -> Result<FrostChainSpec, String> {
 				vec![
 					(
 						// AuraId
-						hex!["62687296bffd79f12178c4278b9439d5eeb8ed7cc0b1f2ae29307e806a019659"].unchecked_into(),
+						hex!["62687296bffd79f12178c4278b9439d5eeb8ed7cc0b1f2ae29307e806a019659"]
+							.unchecked_into(),
 						// GrandpaId
-						hex!["27c6da25d03bb6b3c751da3e8c5265b0bb357c15240602443cc286c0658b47f9"].unchecked_into(),
+						hex!["27c6da25d03bb6b3c751da3e8c5265b0bb357c15240602443cc286c0658b47f9"]
+							.unchecked_into(),
 					),
 					(
-						hex!["d893ef775b5689473b2e9fa32c1f15c72a7c4c86f05f03ee32b8aca6ce61b92c"].unchecked_into(),
-						hex!["85ec524aeacb6e558619a10da82cdf787026209211d1b7462cb176d58f2add86"].unchecked_into()
-					)
+						hex!["d893ef775b5689473b2e9fa32c1f15c72a7c4c86f05f03ee32b8aca6ce61b92c"]
+							.unchecked_into(),
+						hex!["85ec524aeacb6e558619a10da82cdf787026209211d1b7462cb176d58f2add86"]
+							.unchecked_into(),
+					),
 				],
 				// Council members
-                vec![
-                    hex!["62687296bffd79f12178c4278b9439d5eeb8ed7cc0b1f2ae29307e806a019659"].into()
-                ],
+				vec![
+					hex!["62687296bffd79f12178c4278b9439d5eeb8ed7cc0b1f2ae29307e806a019659"].into(),
+				],
 				// Sudo account
 				hex!["62687296bffd79f12178c4278b9439d5eeb8ed7cc0b1f2ae29307e806a019659"].into(),
 				// Pre-funded accounts
@@ -118,10 +123,8 @@ pub fn development_config() -> Result<FrostChainSpec, String> {
 				wasm_binary,
 				// Initial PoA authorities
 				vec![authority_keys_from_seed("Alice")],
-                // Council members
-				vec![
-					get_account_id_from_seed::<sr25519::Public>("Alice")
-				],
+				// Council members
+				vec![get_account_id_from_seed::<sr25519::Public>("Alice")],
 				// Sudo account
 				get_account_id_from_seed::<sr25519::Public>("Alice"),
 				// Pre-funded accounts
@@ -168,9 +171,7 @@ pub fn local_testnet_config() -> Result<FrostChainSpec, String> {
 					authority_keys_from_seed("Bob"),
 				],
 				// Council members
-                vec![
-                    get_account_id_from_seed::<sr25519::Public>("Alice")
-                ],
+				vec![get_account_id_from_seed::<sr25519::Public>("Alice")],
 				// Sudo account
 				get_account_id_from_seed::<sr25519::Public>("Alice"),
 				// Pre-funded accounts
@@ -207,7 +208,7 @@ pub fn local_testnet_config() -> Result<FrostChainSpec, String> {
 
 /// Helper for session keys to map aura id
 fn session_keys(aura: AuraId, grandpa: GrandpaId) -> SessionKeys {
-    SessionKeys {aura, grandpa}
+	SessionKeys { aura, grandpa }
 }
 
 /// Configure initial storage state for FRAME modules.
@@ -220,17 +221,17 @@ fn testnet_genesis(
 	_enable_println: bool,
 ) -> GenesisConfig {
 	let authorities = vec![
-        (
-            get_account_id_from_seed::<sr25519::Public>("Alice"),
-            authority_keys_from_seed("Alice").0,
+		(
+			get_account_id_from_seed::<sr25519::Public>("Alice"),
+			authority_keys_from_seed("Alice").0,
 			authority_keys_from_seed("Alice").1,
-        ),
-        (
-            get_account_id_from_seed::<sr25519::Public>("Bob"),
+		),
+		(
+			get_account_id_from_seed::<sr25519::Public>("Bob"),
 			authority_keys_from_seed("Bob").0,
 			authority_keys_from_seed("Bob").1,
-        ),
-    ];
+		),
+	];
 	GenesisConfig {
 		system: SystemConfig {
 			// Add Wasm runtime to storage.
@@ -241,7 +242,7 @@ fn testnet_genesis(
 				.iter()
 				.cloned()
 				.map(|k| (k, ICY * 40_000))
-				.collect()
+				.collect(),
 		},
 		aura: AuraConfig {
 			authorities: vec![],
@@ -255,10 +256,16 @@ fn testnet_genesis(
 		},
 		session: SessionConfig {
 			keys: authorities
-			.iter()
-			.map(|x| (x.0.clone(), x.0.clone(), session_keys(x.1.clone(), x.2.clone())))
-			.collect::<Vec<_>>(),
-	      },
+				.iter()
+				.map(|x| {
+					(
+						x.0.clone(),
+						x.0.clone(),
+						session_keys(x.1.clone(), x.2.clone()),
+					)
+				})
+				.collect::<Vec<_>>(),
+		},
 		evm: EVMConfig {
 			accounts: {
 				let map = BTreeMap::new();
@@ -268,12 +275,12 @@ fn testnet_genesis(
 		ethereum: EthereumConfig {},
 		dynamic_fee: Default::default(),
 		base_fee: Default::default(),
-		vesting:Default::default(),
+		vesting: Default::default(),
 		assets: Default::default(),
-        council: CouncilConfig {
-            members: council_members,
-            phantom: PhantomData,
-        },
-        treasury: Default::default(),
+		council: CouncilConfig {
+			members: council_members,
+			phantom: PhantomData,
+		},
+		treasury: Default::default(),
 	}
 }
