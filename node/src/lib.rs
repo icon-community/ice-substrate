@@ -1,6 +1,6 @@
 mod cli;
 mod command;
-mod primitives;
+mod nodeprimitives;
 mod rpc;
 mod chain_spec;
 mod service;
@@ -19,7 +19,7 @@ pub use cli::*;
 pub use command::*;
 
 /// primitives
-pub use primitives::*;
+pub use nodeprimitives::*;
 
 /// shell_upgrade
 pub use shell_upgrade::*;

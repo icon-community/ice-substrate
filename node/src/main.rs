@@ -6,7 +6,7 @@ mod chain_spec;
 mod service;
 mod cli;
 mod command;
-mod primitives;
+mod nodeprimitives;
 mod rpc;
 mod shell_upgrade;
 

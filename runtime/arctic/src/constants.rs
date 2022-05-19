@@ -93,3 +93,19 @@ pub mod fee {
 		}
 	}
 }
+
+/// Parachains-related
+pub mod paras {
+    pub mod statemint {
+        pub const ID: u32 = 1000;
+    }
+
+    pub mod acala {
+        pub const ID: u32 = 2002;
+        pub const ACA_KEY: &[u8] = &[0, 0];
+        pub const AUSD_KEY: &[u8] = &[0, 1];
+		pub const KAR_KEY: &[u8] = &[0, 2];
+        pub const LDOT_KEY: &[u8] = &[0, 3];
+        pub const LCDOT_KEY: &[u8] = &[2, 13];
+    }
+}

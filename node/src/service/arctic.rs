@@ -27,7 +27,7 @@ use sp_runtime::traits::BlakeTwo256;
 use polkadot_service::CollatorPair;
 use std::{collections::BTreeMap, sync::Arc, time::Duration};
 use substrate_prometheus_endpoint::Registry;
-use crate::primitives::*;
+use crate::nodeprimitives::*;
 use crate::shell_upgrade::{
     BuildOnAccess,
     Verifier

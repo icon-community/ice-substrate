@@ -25,7 +25,7 @@ use sp_runtime::traits::BlakeTwo256;
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
-use crate::primitives::*;
+use crate::nodeprimitives::*;
 
 
 use frost_runtime::{opaque::Block, AccountId, Balance, Hash, BlockNumber, Index};

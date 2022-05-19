@@ -1,11 +1,14 @@
 use cumulus_primitives_core::ParaId;
 use sc_service::ChainType;
 use arctic_runtime::{
-    wasm_binary_unwrap, AccountId, AuraConfig, AuraId, Balance, BalancesConfig,
+    wasm_binary_unwrap, AuraConfig, BalancesConfig,
     CollatorSelectionConfig, EVMConfig, GenesisConfig, ParachainInfoConfig, CouncilConfig,
-    SessionConfig, Signature, SudoConfig, SystemConfig, VestingConfig, SessionKeys
+    SessionConfig, SudoConfig, SystemConfig, VestingConfig, SessionKeys
 };
-use arctic_runtime::currency::{ICY};
+use primitives:: {
+    AccountId, AuraId, Balance, Signature
+};
+use arctic_runtime::constants::currency::{ICY};
 use sp_core::{crypto::UncheckedInto, sr25519, Pair, Public};
 use std::{collections::BTreeMap};
 use hex_literal::hex;

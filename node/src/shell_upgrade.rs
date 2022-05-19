@@ -9,9 +9,8 @@ use sp_consensus::CacheKeyId;
 use sp_consensus_aura::{sr25519::AuthorityId as AuraId, AuraApi};
 use sp_runtime::{generic::BlockId, traits::Header as HeaderT};
 use std::sync::Arc;
-use crate::primitives::Block;
 
-use crate::primitives::*;
+use crate::nodeprimitives::*;
 
 /// Enum for BuildOnAccess
 pub enum BuildOnAccess<R> {

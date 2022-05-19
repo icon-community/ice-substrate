@@ -7,7 +7,7 @@ use crate::{
     chain_spec::Extensions,
     chain_spec::arctic::*,
     chain_spec::frost::*,
-    primitives::Block
+    nodeprimitives::Block
 };
 use codec::Encode;
 use cumulus_client_service::genesis::generate_genesis_block;
@@ -26,7 +26,7 @@ use sp_core::hexdisplay::HexDisplay;
 use sp_runtime::traits::Block as BlockT;
 use std::{io::Write, net::SocketAddr};
 
-const PARA_ID: u32 = 2000;
+const PARA_ID: u32 = 3000;
 
 trait IdentifyChain {
     fn is_arctic(&self) -> bool;
@@ -476,7 +476,7 @@ pub fn run() -> Result<()> {
                 );
 
                 info!("Relaychain Args: {}", cli.relaychain_args.join(" "));
-                let id = ParaId::from(para_id);
+                let id = ParaId::from(PARA_ID);
 
                 let state_version = Cli::native_runtime_version(&config.chain_spec).state_version();
                 let block: Block = generate_genesis_block(&config.chain_spec, state_version)

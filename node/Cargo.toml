@@ -124,6 +124,8 @@ arctic-runtime = { path = "../runtime/arctic", default-features = false, feature
 
 frost-runtime = { path = "../runtime/frost", default-features = false, features = ["std"] }
 
+primitives = { package = 'ice-primitives', path = '../primitives', default-features = false }
+
 # try-runtime
 frame-try-runtime = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.19", optional = true }
 try-runtime-cli = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.19", optional = true }

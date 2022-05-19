@@ -1,0 +1,41 @@
+[package]
+authors = ['ICE Team <https://icenetwork.io>']
+edition = '2021'
+name    = 'ice-primitives'
+repository = 'https://github.com/web3labs/ice-substrate/'
+version = '1.8.5'
+
+[dependencies]
+codec                   = { package = 'parity-scale-codec', version = '3.0.0', default-features = false }
+cumulus-primitives-core = { git = 'https://github.com/paritytech/cumulus.git', branch = 'polkadot-v0.9.19', default-features = false }
+frame-support           = { git = 'https://github.com/paritytech/substrate.git', branch = 'polkadot-v0.9.19', default-features = false }
+frame-system            = { git = 'https://github.com/paritytech/substrate.git', branch = 'polkadot-v0.9.19', default-features = false }
+log                     = { version = "0.4", default-features = false }
+orml-oracle             = { git = 'https://github.com/open-web3-stack/open-runtime-module-library.git', branch = 'polkadot-v0.9.19', default-features = false }
+scale-info              = { version = '2.1', default-features = false, features = ['derive'] }
+serde                   = { version = '1.0.136', optional = true }
+sp-consensus-aura       = { git = 'https://github.com/paritytech/substrate.git', branch = 'polkadot-v0.9.19', default-features = false }
+sp-core                 = { git = 'https://github.com/paritytech/substrate.git', branch = 'polkadot-v0.9.19', default-features = false }
+sp-io                   = { git = 'https://github.com/paritytech/substrate.git', branch = 'polkadot-v0.9.19', default-features = false }
+sp-runtime              = { git = 'https://github.com/paritytech/substrate.git', branch = 'polkadot-v0.9.19', default-features = false }
+sp-std                  = { git = 'https://github.com/paritytech/substrate.git', branch = 'polkadot-v0.9.19', default-features = false }
+
+[features]
+default = ['std']
+std     = [
+  'serde',
+  'codec/std',
+  'sp-runtime/std',
+  'sp-core/std',
+  'sp-std/std',
+  'sp-io/std',
+  'orml-oracle/std',
+  'sp-consensus-aura/std',
+  'frame-system/std',
+  'frame-support/std',
+  'scale-info/std',
+  'cumulus-primitives-core/std',
+]
+
+[lib]
+doctest = false

@@ -2,7 +2,7 @@ use sc_chain_spec::ChainSpecExtension;
 use serde::{Deserialize, Serialize};
 use sp_core::{Pair, Public};
 
-use crate::primitives::Block;
+use crate::nodeprimitives::Block;
 
 pub mod arctic;
 pub mod frost;
