@@ -71,7 +71,7 @@ fn load_spec(
 
 impl SubstrateCli for Cli {
     fn impl_name() -> String {
-        "Ice Collator".into()
+        "Arctic Collator".into()
     }
 
     fn impl_version() -> String {
@@ -80,7 +80,7 @@ impl SubstrateCli for Cli {
 
     fn description() -> String {
         format!(
-            "Ice Collator\n\nThe command-line arguments provided first will be \
+            "Arctic Collator\n\nThe command-line arguments provided first will be \
         passed to the parachain node, while the arguments provided after -- will be passed \
         to the relaychain node.\n\n\
         {} [parachain-args] -- [relaychain-args]",
@@ -116,7 +116,7 @@ impl SubstrateCli for Cli {
 
 impl SubstrateCli for RelayChainCli {
     fn impl_name() -> String {
-        "Ice Collator".into()
+        "Arctic Collator".into()
     }
 
     fn impl_version() -> String {
@@ -124,10 +124,10 @@ impl SubstrateCli for RelayChainCli {
     }
 
     fn description() -> String {
-        "Ice Collator\n\nThe command-line arguments provided first will be \
+        "Arctic Collator\n\nThe command-line arguments provided first will be \
         passed to the parachain node, while the arguments provided after -- will be passed \
         to the relaychain node.\n\n\
-        ice-collator [parachain-args] -- [relaychain-args]"
+        ice-node [parachain-args] -- [relaychain-args]"
             .into()
     }
 
