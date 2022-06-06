@@ -32,6 +32,11 @@ rustup target add wasm32-unknown-unknown --toolchain nightly
 This should be sufficient to get started, refer to [Substrate installation](https://docs.substrate.io/v3/getting-started/installation/) guide for more details if needed
 
 ## Build
+Prerequisites (Ubuntu 20.04)
+
+1. rust toolchain
+2. `build-essential`
+3. `libclang-dev`
 
 To build the chain, execute the following commands from the project root:
 
