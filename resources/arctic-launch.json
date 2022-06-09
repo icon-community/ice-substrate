@@ -40,8 +40,11 @@
           "flags": [
             "--unsafe-ws-external",
             "--unsafe-rpc-external",
+            "--rpc-external",
+            "--ws-external",
             "--rpc-cors=all",
             "--rpc-methods=Unsafe",
+            "--force-authoring",
             "--",
             "--execution=wasm"
           ]
