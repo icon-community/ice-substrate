@@ -1,6 +1,5 @@
 use super::{
-	AccountId, Balances, Call, Event, Origin, ParachainInfo, ParachainSystem, PolkadotXcm, Runtime,
-	WeightToFee, XcmpQueue,
+	AccountId, Balances, Call, Event, Origin, ParachainInfo, ParachainSystem, PolkadotXcm, Runtime, XcmpQueue,
 };
 use core::marker::PhantomData;
 use frame_support::{
@@ -27,6 +26,7 @@ parameter_types! {
 	pub RelayChainOrigin: Origin = cumulus_pallet_xcm::Origin::Relay.into();
 	pub Ancestry: MultiLocation = Parachain(ParachainInfo::parachain_id().into()).into();
 }
+pub type WeightToFee = constants::fee::WeightToFee;
 
 /// Type for specifying how a `MultiLocation` can be converted into an `AccountId`. This is used
 /// when determining ownership of accounts for asset transacting and when attempting to use XCM
