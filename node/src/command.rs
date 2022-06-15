@@ -12,7 +12,6 @@ use crate::{
 use codec::Encode;
 use cumulus_client_service::genesis::generate_genesis_block;
 use cumulus_primitives_core::ParaId;
-use frame_benchmarking_cli::BenchmarkCmd;
 use log::info;
 use sc_cli::{
     ChainSpec, CliConfiguration, DefaultConfigurationValues, ImportParams, KeystoreParams,
@@ -25,6 +24,8 @@ use sc_service::{
 use sp_core::hexdisplay::HexDisplay;
 use sp_runtime::traits::Block as BlockT;
 use std::{io::Write, net::SocketAddr};
+
+use frame_benchmarking_cli::{BenchmarkCmd, SUBSTRATE_REFERENCE_HARDWARE};
 
 const PARA_ID: u32 = 2000;
 
@@ -192,7 +193,7 @@ pub fn run() -> Result<()> {
                         task_manager,
                         import_queue,
                         ..
-                    } = frost::new_partial(&config, &cli)?;
+                    } = frost::new_partial(&config)?;
                     Ok((cmd.run(client, import_queue), task_manager))
                 })
             }
@@ -230,7 +231,7 @@ pub fn run() -> Result<()> {
                         )?;
                         cmd.run(partials.client)
                     } else {
-                        let partials = frost::new_partial(&config, &cli)?;
+                        let partials = frost::new_partial(&config)?;
                         cmd.run(partials.client) 
                     }
                 }),
@@ -244,7 +245,7 @@ pub fn run() -> Result<()> {
                         let storage = partials.backend.expose_storage();
                         cmd.run(config, partials.client.clone(), db, storage)
                     } else {
-                        let partials = frost::new_partial(&config, &cli)?;
+                        let partials = frost::new_partial(&config)?;
                         let db = partials.backend.expose_db();
                         let storage = partials.backend.expose_storage();
                         cmd.run(config, partials.client.clone(), db, storage)
@@ -252,6 +253,10 @@ pub fn run() -> Result<()> {
 
                 }),
                 BenchmarkCmd::Overhead(_) => Err("Unsupported benchmarking command".into()),
+                BenchmarkCmd::Machine(cmd) => {
+                    return runner
+                        .sync_run(|config| cmd.run(&config, SUBSTRATE_REFERENCE_HARDWARE.clone()));
+                },
             }
 		}
         Some(Subcommand::ExportBlocks(cmd)) => {
@@ -274,7 +279,7 @@ pub fn run() -> Result<()> {
                         client,
                         task_manager,
                         ..
-                    } = frost::new_partial(&config, &cli)?;
+                    } = frost::new_partial(&config)?;
                     Ok((cmd.run(client, config.database), task_manager))
                 })
             }
@@ -299,7 +304,7 @@ pub fn run() -> Result<()> {
                         client,
                         task_manager,
                         ..
-                    } = frost::new_partial(&config, &cli)?;
+                    } = frost::new_partial(&config)?;
                     Ok((cmd.run(client, config.chain_spec), task_manager))
                 })
             }
@@ -326,7 +331,7 @@ pub fn run() -> Result<()> {
                         task_manager,
                         import_queue,
                         ..
-                    } = frost::new_partial(&config, &cli)?;
+                    } = frost::new_partial(&config)?;
                     Ok((cmd.run(client, import_queue), task_manager))
                 })
             }
@@ -372,7 +377,7 @@ pub fn run() -> Result<()> {
                         task_manager,
                         backend,
                         ..
-                    } = frost::new_partial(&config, &cli)?;
+                    } = frost::new_partial(&config)?;
                     Ok((cmd.run(client, backend, None), task_manager))
                 })
             }
@@ -462,7 +467,7 @@ pub fn run() -> Result<()> {
             runner.run_node_until_exit(|config| async move {
                 if !config.chain_spec.is_arctic() {
                     info!("Starting Frost Node");
-                    return frost::start_frost_node(config, &cli).map_err(Into::into);
+                    return frost::start_frost_node(config).map_err(Into::into);
                 }
                 let para_id = Extensions::try_get(&*config.chain_spec)
 					.map(|e| e.para_id)
@@ -501,7 +506,7 @@ pub fn run() -> Result<()> {
                     }
                 );
 
-                arctic::start_arctic_node(config, polkadot_config, id, collator_options)
+                arctic::start_arctic_node(config, polkadot_config, collator_options, id)
                 .await
                 .map(|r| r.0)
                 .map_err(Into::into)

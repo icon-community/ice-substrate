@@ -1,4 +1,7 @@
 //! Parachain Service and ServiceFactory implementation.
+
+//! Parachain Service and ServiceFactory implementation.
+use cumulus_client_cli::CollatorOptions;
 use cumulus_client_consensus_aura::{AuraConsensus, BuildAuraConsensusParams, SlotProportion};
 use cumulus_client_consensus_common::{ParachainBlockImport, ParachainConsensus};
 use cumulus_client_consensus_relay_chain::Verifier as RelayChainVerifier;
@@ -6,14 +9,15 @@ use cumulus_client_network::BlockAnnounceValidator;
 use cumulus_client_service::{
     prepare_node_config, start_collator, start_full_node, StartCollatorParams, StartFullNodeParams,
 };
-use cumulus_relay_chain_interface::{RelayChainError, RelayChainInterface, RelayChainResult};
-use cumulus_client_cli::CollatorOptions;
 use cumulus_primitives_core::ParaId;
-use cumulus_relay_chain_rpc_interface::RelayChainRPCInterface;
 use cumulus_relay_chain_inprocess_interface::build_inprocess_relay_chain;
+use cumulus_relay_chain_interface::{RelayChainError, RelayChainInterface, RelayChainResult};
+use cumulus_relay_chain_rpc_interface::RelayChainRPCInterface;
 use fc_consensus::FrontierBlockImport;
 use fc_rpc_core::types::{FeeHistoryCache, FilterPool};
 use futures::{StreamExt};
+use pallet_contracts_rpc::ContractsApiServer;
+use polkadot_service::CollatorPair;
 use sc_client_api::{BlockchainEvents, ExecutorProvider};
 use sc_consensus::import_queue::BasicQueue;
 use sc_executor::NativeElseWasmExecutor;
@@ -24,19 +28,19 @@ use sp_api::ConstructRuntimeApi;
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 use sp_keystore::SyncCryptoStorePtr;
 use sp_runtime::traits::BlakeTwo256;
-use polkadot_service::CollatorPair;
 use std::{collections::BTreeMap, sync::Arc, time::Duration};
 use substrate_prometheus_endpoint::Registry;
+
 use crate::primitives::*;
 use crate::shell_upgrade::{
     BuildOnAccess,
     Verifier
 };
 
+
 /// Arctic network runtime executor.
 pub mod arctic {
     pub use arctic_runtime::RuntimeApi;
-
     /// arctic runtime executor.
     pub struct Executor;
     impl sc_executor::NativeExecutionDispatch for Executor {
@@ -57,22 +61,6 @@ pub mod arctic {
 }
 
 
-/// build relay chain interface
-async fn build_relay_chain_interface(
-	polkadot_config: Configuration,
-	parachain_config: &Configuration,
-	telemetry_worker_handle: Option<TelemetryWorkerHandle>,
-	task_manager: &mut TaskManager,
-	collator_options: CollatorOptions,
-) -> RelayChainResult<(Arc<(dyn RelayChainInterface + 'static)>, Option<CollatorPair>)> {
-	match collator_options.relay_chain_rpc_url {
-		Some(relay_chain_url) => Ok((
-			Arc::new(RelayChainRPCInterface::new(relay_chain_url).await?) as Arc<_>,
-			None,
-		)),
-		None => build_inprocess_relay_chain(polkadot_config, parachain_config, telemetry_worker_handle, task_manager),
-	}
-}
 
 
 /// Starts a `ServiceBuilder` for a full service.
@@ -206,6 +194,32 @@ where
     Ok(params)
 }
 
+async fn build_relay_chain_interface(
+    polkadot_config: Configuration,
+    parachain_config: &Configuration,
+    telemetry_worker_handle: Option<TelemetryWorkerHandle>,
+    task_manager: &mut TaskManager,
+    collator_options: CollatorOptions,
+) -> RelayChainResult<(
+    Arc<(dyn RelayChainInterface + 'static)>,
+    Option<CollatorPair>,
+)> {
+    match collator_options.relay_chain_rpc_url {
+        Some(relay_chain_url) => Ok((
+            Arc::new(RelayChainRPCInterface::new(relay_chain_url).await?) as Arc<_>,
+            None,
+        )),
+        None => build_inprocess_relay_chain(
+            polkadot_config,
+            parachain_config,
+            telemetry_worker_handle,
+            task_manager,
+            None,
+        ),
+    }
+}
+
+
 /// Start a node with the given parachain `Configuration` and relay chain `Configuration`.
 ///
 /// This is the actual implementation that is abstract over the executor and the runtime api.
@@ -213,8 +227,8 @@ where
 async fn start_node_impl<RuntimeApi, Executor, BIQ, BIC>(
     parachain_config: Configuration,
     polkadot_config: Configuration,
-    id: ParaId,
     collator_options: CollatorOptions,
+    id: ParaId,
     build_import_queue: BIQ,
     build_consensus: BIC,
 ) -> sc_service::error::Result<(
@@ -234,7 +248,7 @@ where
             StateBackend = sc_client_api::StateBackendFor<TFullBackend<Block>, Block>,
         > + sp_offchain::OffchainWorkerApi<Block>
         + sp_block_builder::BlockBuilder<Block>
-        + frame_rpc_system::AccountNonceApi<Block, AccountId, Nonce>
+        + substrate_frame_rpc_system::AccountNonceApi<Block, AccountId, Nonce>
         + pallet_transaction_payment_rpc::TransactionPaymentRuntimeApi<Block, Balance>
         + fp_rpc::EthereumRuntimeRPCApi<Block>
         + fp_rpc::ConvertTransactionRuntimeApi<Block>
@@ -286,14 +300,20 @@ where
 
     let client = params.client.clone();
     let backend = params.backend.clone();
+
     let mut task_manager = params.task_manager;
-    let (relay_chain_interface, collator_key) =
-        build_relay_chain_interface(polkadot_config, &parachain_config, telemetry_worker_handle, &mut task_manager, collator_options.clone())
-        .await
-        .map_err(|e| match e {
-            RelayChainError::ServiceError(polkadot_service::Error::Sub(x)) => x,
-            s => s.to_string().into(),
-        })?;
+    let (relay_chain_interface, collator_key) = build_relay_chain_interface(
+        polkadot_config,
+        &parachain_config,
+        telemetry_worker_handle,
+        &mut task_manager,
+        collator_options.clone(),
+    )
+    .await
+    .map_err(|e| match e {
+        RelayChainError::ServiceError(polkadot_service::Error::Sub(x)) => x,
+        s => format!("{}", s).into(),
+    })?;
     let block_announce_validator = BlockAnnounceValidator::new(relay_chain_interface.clone(), id);
 
     let force_authoring = parachain_config.force_authoring;
@@ -329,8 +349,8 @@ where
             client.clone(),
             backend.clone(),
             frontier_backend.clone(),
-            10,
-            10,
+            3,
+            0,
             fc_mapping_sync::SyncStrategy::Parachain,
         )
         .for_each(|()| futures::future::ready(())),
@@ -367,11 +387,12 @@ where
         ),
     );
 
-    let block_data_cache = Arc::new(fc_rpc::EthBlockDataCache::new(
+    let block_data_cache = Arc::new(fc_rpc::EthBlockDataCacheTask::new(
         task_manager.spawn_handle(),
         overrides.clone(),
         50,
         50,
+        prometheus_registry.clone(),
     ));
 
     let rpc_extensions_builder = {
@@ -395,13 +416,13 @@ where
                 overrides: overrides.clone(),
             };
 
-            Ok(crate::rpc::create_full(deps, subscription))
+            crate::rpc::create_full(deps, subscription).map_err(Into::into)
         })
     };
 
     // Spawn basic services.
     sc_service::spawn_tasks(sc_service::SpawnTasksParams {
-        rpc_extensions_builder,
+        rpc_builder: rpc_extensions_builder,
         client: client.clone(),
         transaction_pool: transaction_pool.clone(),
         task_manager: &mut task_manager,
@@ -457,8 +478,8 @@ where
             task_manager: &mut task_manager,
             para_id: id,
             relay_chain_interface,
-            import_queue,
             relay_chain_slot_duration,
+            import_queue,
             collator_options,
         };
 
@@ -479,8 +500,8 @@ where
 async fn start_contracts_node_impl<RuntimeApi, Executor, BIQ, BIC>(
     parachain_config: Configuration,
     polkadot_config: Configuration,
-    id: ParaId,
     collator_options: CollatorOptions,
+    id: ParaId,
     build_import_queue: BIQ,
     build_consensus: BIC,
 ) -> sc_service::error::Result<(
@@ -500,7 +521,7 @@ where
             StateBackend = sc_client_api::StateBackendFor<TFullBackend<Block>, Block>,
         > + sp_offchain::OffchainWorkerApi<Block>
         + sp_block_builder::BlockBuilder<Block>
-        + frame_rpc_system::AccountNonceApi<Block, AccountId, Nonce>
+        + substrate_frame_rpc_system::AccountNonceApi<Block, AccountId, Nonce>
         + pallet_transaction_payment_rpc::TransactionPaymentRuntimeApi<Block, Balance>
         + fp_rpc::EthereumRuntimeRPCApi<Block>
         + fp_rpc::ConvertTransactionRuntimeApi<Block>
@@ -554,12 +575,17 @@ where
     let backend = params.backend.clone();
 
     let mut task_manager = params.task_manager;
-    let (relay_chain_interface, collator_key) =
-    build_relay_chain_interface(polkadot_config, &parachain_config, telemetry_worker_handle, &mut task_manager, collator_options.clone())
-        .await
-        .map_err(|e| match e {
-            RelayChainError::ServiceError(polkadot_service::Error::Sub(x)) => x,
-            s => s.to_string().into(),
+    let (relay_chain_interface, collator_key) = build_relay_chain_interface(
+        polkadot_config,
+        &parachain_config,
+        telemetry_worker_handle,
+        &mut task_manager,
+        collator_options.clone(),
+    )
+    .await
+    .map_err(|e| match e {
+        RelayChainError::ServiceError(polkadot_service::Error::Sub(x)) => x,
+        s => format!("{}", s).into(),
     })?;
     let block_announce_validator = BlockAnnounceValidator::new(relay_chain_interface.clone(), id);
 
@@ -596,7 +622,8 @@ where
             client.clone(),
             backend.clone(),
             frontier_backend.clone(),
-            10,10,
+            3,
+            0,
             fc_mapping_sync::SyncStrategy::Parachain,
         )
         .for_each(|()| futures::future::ready(())),
@@ -633,11 +660,12 @@ where
         ),
     );
 
-    let block_data_cache = Arc::new(fc_rpc::EthBlockDataCache::new(
+    let block_data_cache = Arc::new(fc_rpc::EthBlockDataCacheTask::new(
         task_manager.spawn_handle(),
         overrides.clone(),
         50,
         50,
+        prometheus_registry.clone(),
     ));
 
     let rpc_extensions_builder = {
@@ -661,18 +689,23 @@ where
                 overrides: overrides.clone(),
             };
 
-            let mut io = crate::rpc::create_full(deps, subscription);
+            let mut io = crate::rpc::create_full(deps, subscription)?;
+
             // This node support WASM contracts
-            io.extend_with(pallet_contracts_rpc::ContractsApi::to_delegate(
-                pallet_contracts_rpc::Contracts::new(client.clone()),
-            ));
+            io.merge(pallet_contracts_rpc::Contracts::new(Arc::clone(&client)).into_rpc())
+                .map_err(|_| {
+                    sc_service::Error::Other(
+                        "Failed to register pallet-contracts RPC methods.".into(),
+                    )
+                })?;
+
             Ok(io)
         })
     };
 
     // Spawn basic services.
     sc_service::spawn_tasks(sc_service::SpawnTasksParams {
-        rpc_extensions_builder,
+        rpc_builder: rpc_extensions_builder,
         client: client.clone(),
         transaction_pool: transaction_pool.clone(),
         task_manager: &mut task_manager,
@@ -728,9 +761,9 @@ where
             task_manager: &mut task_manager,
             para_id: id,
             relay_chain_interface,
-            import_queue,
             relay_chain_slot_duration,
-            collator_options
+            import_queue,
+            collator_options,
         };
 
         start_full_node(params)?;
@@ -740,6 +773,7 @@ where
 
     Ok((task_manager, client))
 }
+
 
 /// Build the import queue.
 pub fn build_import_queue<RuntimeApi, Executor>(
@@ -832,21 +866,21 @@ where
 }
 
 
-/// Start a parachain node for Arctic.
+/// Start a parachain node for Astar.
 pub async fn start_arctic_node(
     parachain_config: Configuration,
     polkadot_config: Configuration,
+    collator_options: CollatorOptions,
     id: ParaId,
-    collator_options: CollatorOptions
 ) -> sc_service::error::Result<(
     TaskManager,
-    Arc<TFullClient<Block, arctic::RuntimeApi, NativeElseWasmExecutor<arctic::Executor>>>,
+    Arc<TFullClient<Block, arctic_runtime::RuntimeApi, NativeElseWasmExecutor<arctic::Executor>>>,
 )> {
-    start_contracts_node_impl::<arctic::RuntimeApi, arctic::Executor, _, _>(
+    start_node_impl::<arctic_runtime::RuntimeApi, arctic::Executor, _, _>(
         parachain_config,
         polkadot_config,
-        id,
         collator_options,
+        id,
         |client,
          block_import,
          config,
@@ -907,6 +941,8 @@ pub async fn start_arctic_node(
                     telemetry.clone(),
                 );
 
+            let relay_chain_for_aura = relay_chain_interface.clone();
+
             Ok(AuraConsensus::build::<
                 sp_consensus_aura::sr25519::AuthorityPair,
                 _,
@@ -919,7 +955,7 @@ pub async fn start_arctic_node(
                 proposer_factory,
                 create_inherent_data_providers:
                     move |_, (relay_parent, validation_data)| {
-                        let relay_chain_for_aura = relay_chain_interface.clone();
+                        let relay_chain_for_aura = relay_chain_for_aura.clone();
                         async move {
                             let parachain_inherent =
                                 cumulus_primitives_parachain_inherent::ParachainInherentData::create_at(

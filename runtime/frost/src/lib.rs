@@ -27,7 +27,7 @@ use sp_core::{
 use sp_runtime::{
 	create_runtime_str, generic, impl_opaque_keys,
 	traits::{
-		AccountIdLookup, BlakeTwo256, Block as BlockT, Dispatchable, IdentifyAccount, NumberFor,
+		AccountIdLookup, BlakeTwo256, Block as BlockT, Dispatchable, IdentifyAccount, DispatchInfoOf, NumberFor,
 		PostDispatchInfoOf, Verify, ConvertInto, OpaqueKeys, AccountIdConversion
 	},
 	transaction_validity::{TransactionSource, TransactionValidity, TransactionValidityError},
@@ -57,7 +57,7 @@ pub use frame_support::{
 	traits::{FindAuthor, KeyOwnerProofSystem, Randomness, Currency},
 	weights::{
 		constants::{BlockExecutionWeight, ExtrinsicBaseWeight, RocksDbWeight, WEIGHT_PER_SECOND}, Weight, ConstantMultiplier,
-		IdentityFee
+		IdentityFee, DispatchClass
 	},
 	ConsensusEngineId, PalletId, StorageValue,
 };
@@ -261,28 +261,22 @@ impl pallet_grandpa::Config for Runtime {
 parameter_types! {
 	pub const DepositPerItem: Balance = currency::deposit(1, 0);
 	pub const DepositPerByte: Balance = currency::deposit(0, 1);
+	pub const MaxValueSize: u32 = 16 * 1024;
 	// The lazy deletion runs inside on_initialize.
-	pub DeletionWeightLimit: Weight = AVERAGE_ON_INITIALIZE_RATIO *
-		RuntimeBlockWeights::get().max_block;
+	pub DeletionWeightLimit: Weight = RuntimeBlockWeights::get()
+		.per_class
+		.get(DispatchClass::Normal)
+		.max_total
+		.unwrap_or(RuntimeBlockWeights::get().max_block);
 	// The weight needed for decoding the queue should be less or equal than a fifth
 	// of the overall weight dedicated to the lazy deletion.
 	pub DeletionQueueDepth: u32 = ((DeletionWeightLimit::get() / (
 			<Runtime as pallet_contracts::Config>::WeightInfo::on_initialize_per_queue_item(1) -
 			<Runtime as pallet_contracts::Config>::WeightInfo::on_initialize_per_queue_item(0)
 		)) / 5) as u32;
-	pub Schedule: pallet_contracts::Schedule<Runtime> = {
-		let mut schedule = pallet_contracts::Schedule::<Runtime>::default();
-		// We decided to **temporarily* increase the default allowed contract size here
-		// (the default is `128 * 1024`).
-		//
-		// Our reasoning is that a number of people ran into `CodeTooLarge` when trying
-		// to deploy their contracts. We are currently introducing a number of optimizations
-		// into ink! which should bring the contract sizes lower. In the meantime we don't
-		// want to pose additional friction on developers.
-		schedule.limits.code_len = 256 * 1024;
-		schedule
-	};
+	pub Schedule: pallet_contracts::Schedule<Runtime> = Default::default();
 }
+
 
 impl pallet_contracts::Config for Runtime {
 	type Time = Timestamp;
@@ -305,6 +299,9 @@ impl pallet_contracts::Config for Runtime {
 	type DeletionQueueDepth = DeletionQueueDepth;
 	type DeletionWeightLimit = DeletionWeightLimit;
 	type Schedule = Schedule;
+	type ContractAccessWeight = ();
+	type MaxCodeLen = ();
+	type RelaxedMaxCodeLen = ();
 	type CallStack = [pallet_contracts::Frame<Self>; 31];
 	type AddressGenerator = pallet_contracts::DefaultAddressGenerator;
 }
@@ -525,7 +522,7 @@ impl pallet_treasury::Config for Runtime {
 pub struct Beneficiary();
 impl pallet_simple_inflation::Beneficiary<NegativeImbalance> for Beneficiary {
     fn treasury(reward: NegativeImbalance) {
-        Balances::resolve_creating(&TreasuryPalletId::get().into_account(), reward);
+        Balances::resolve_creating(&TreasuryPalletId::get().into_account_truncating(), reward);
     }
 }
 
@@ -679,9 +676,15 @@ impl fp_self_contained::SelfContainedCall for Call {
 		}
 	}
 
-	fn validate_self_contained(&self, info: &Self::SignedInfo) -> Option<TransactionValidity> {
+	
+	fn validate_self_contained(
+		&self,
+		info: &Self::SignedInfo,
+		dispatch_info: &DispatchInfoOf<Call>,
+		len: usize,
+	) -> Option<TransactionValidity> {
 		match self {
-			Call::Ethereum(call) => call.validate_self_contained(info),
+			Call::Ethereum(call) => call.validate_self_contained(info, dispatch_info, len),
 			_ => None,
 		}
 	}
@@ -789,11 +792,13 @@ impl_runtime_apis! {
 		}
 
 		fn account_basic(address: H160) -> EVMAccount {
-			EVM::account_basic(&address)
+			let (account, _) = EVM::account_basic(&address);
+			account
 		}
 
 		fn gas_price() -> U256 {
-			<Runtime as pallet_evm::Config>::FeeCalculator::min_gas_price()
+			let (gas_price, _) = <Runtime as pallet_evm::Config>::FeeCalculator::min_gas_price();
+			gas_price
 		}
 
 		fn account_code_at(address: H160) -> Vec<u8> {
@@ -831,6 +836,8 @@ impl_runtime_apis! {
 			};
 
 			let is_transactional = false;
+			let validate = true;
+			let evm_config = config.as_ref().unwrap_or(<Runtime as pallet_evm::Config>::config());
 			<Runtime as pallet_evm::Config>::Runner::call(
 				from,
 				to,
@@ -842,8 +849,9 @@ impl_runtime_apis! {
 				nonce,
 				access_list.unwrap_or_default(),
 				is_transactional,
-				config.as_ref().unwrap_or(<Runtime as pallet_evm::Config>::config()),
-			).map_err(|err| err.into())
+				validate,
+				evm_config,
+			).map_err(|err| err.error.into())
 		}
 
 
@@ -867,6 +875,8 @@ impl_runtime_apis! {
 			};
 
 			let is_transactional = false;
+			let validate = true;
+			let evm_config = config.as_ref().unwrap_or(<Runtime as pallet_evm::Config>::config());
 			<Runtime as pallet_evm::Config>::Runner::create(
 				from,
 				data,
@@ -877,8 +887,9 @@ impl_runtime_apis! {
 				nonce,
 				access_list.unwrap_or_default(),
 				is_transactional,
-				config.as_ref().unwrap_or(<Runtime as pallet_evm::Config>::config()),
-			).map_err(|err| err.into())
+				validate,
+				evm_config,
+			).map_err(|err| err.error.into())
 		}
 
 		fn current_transaction_statuses() -> Option<Vec<TransactionStatus>> {
