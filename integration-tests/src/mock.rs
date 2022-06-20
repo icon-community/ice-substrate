@@ -1,8 +1,6 @@
-use crate as integration_tests;
-
-use frame_support::{	
+use frame_support::{
 	parameter_types,
-	traits::{ConstU32, ConstU64, GenesisBuild, Everything,},
+	traits::{ConstU32, ConstU64, GenesisBuild},
 };
 
 use sp_core::H256;
@@ -10,7 +8,6 @@ use sp_runtime::{
 	testing::Header,
 	traits::{BlakeTwo256, Identity, IdentityLookup},
 };
-
 
 //use crate::mock::sp_api_hidden_includes_construct_runtime::hidden_include::traits::GenesisBuild;
 
@@ -125,7 +122,10 @@ pub struct ExtBuilder {
 
 impl Default for ExtBuilder {
 	fn default() -> Self {
-		Self { existential_deposit: 1, vesting_genesis_config: None }
+		Self {
+			existential_deposit: 1,
+			vesting_genesis_config: None,
+		}
 	}
 }
 
@@ -142,7 +142,9 @@ impl ExtBuilder {
 
 	pub fn build(self) -> sp_io::TestExternalities {
 		EXISTENTIAL_DEPOSIT.with(|v| *v.borrow_mut() = self.existential_deposit);
-		let mut t = frame_system::GenesisConfig::default().build_storage::<Test>().unwrap();
+		let mut t = frame_system::GenesisConfig::default()
+			.build_storage::<Test>()
+			.unwrap();
 		pallet_balances::GenesisConfig::<Test> {
 			balances: vec![
 				(1, 10 * self.existential_deposit),
