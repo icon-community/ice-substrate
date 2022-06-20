@@ -4,11 +4,11 @@ on:
      inputs:
       srtool_tag:
         description: The SRTOOL tag to use
-        default: 1.57.0
+        default: 1.60.0
         required: true
       release-version:
         description: 'Release version tag'
-        default: 'v0.4.3'
+        default: 'v0.4.32'
         required: true
       ref:
         description: The ref to be used for the repo
