@@ -172,7 +172,7 @@ std = [
 	# "ice-runtime-common",
 
 	"frame-benchmarking/std",
-	"frame-system-benchmarking/std",
+	# "frame-system-benchmarking/std",
 
 	"scale-info/std",
 	"pallet-xcm/std",

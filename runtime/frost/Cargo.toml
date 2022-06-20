@@ -151,7 +151,7 @@ std = [
 	"sp-version/std",
 
 	"frame-benchmarking/std",
-	"frame-system-benchmarking/std",
+	# "frame-system-benchmarking/std",
 
 	"scale-info/std",
 	# "ice-runtime-common",

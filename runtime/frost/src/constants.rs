@@ -1,29 +1,29 @@
 pub mod currency {
-    use crate::Balance;
+	use crate::Balance;
 
-    /// The existential deposit.
+	/// The existential deposit.
 	pub const EXISTENTIAL_DEPOSIT: Balance = 1_000_000;
 
-    pub const UNITS: Balance = 1_000_000_000_000_000_000; // 1.0 ICY = 10e18 Planck
-    pub const DOLLARS: Balance = UNITS;
-    pub const CENTS: Balance = DOLLARS / 100; // 0.01 ICY = 10e16 Planck
-    pub const MILLICENTS: Balance = CENTS / 1000; // 0.001 ICY = 10e15 Planck
-    pub const MICROCENTS: Balance = MILLICENTS / 1000; // 0.0001 ICY = 10e13 Planck
+	pub const UNITS: Balance = 1_000_000_000_000_000_000; // 1.0 ICY = 10e18 Planck
+	pub const DOLLARS: Balance = UNITS;
+	pub const CENTS: Balance = DOLLARS / 100; // 0.01 ICY = 10e16 Planck
+	pub const MILLICENTS: Balance = CENTS / 1000; // 0.001 ICY = 10e15 Planck
+	pub const MICROCENTS: Balance = MILLICENTS / 1000; // 0.0001 ICY = 10e13 Planck
 
-    /// Constant values for the base number of indivisible units for balances
+	/// Constant values for the base number of indivisible units for balances
 	pub const MILLIICY: Balance = MILLICENTS;
 	pub const ICY: Balance = UNITS;
 
 	pub const fn deposit(items: u32, bytes: u32) -> Balance {
-        items as Balance * 10 * CENTS + (bytes as Balance) * 10 * MILLICENTS
+		items as Balance * 10 * CENTS + (bytes as Balance) * 10 * MILLICENTS
 	}
 }
 
 /// Time and blocks.
 pub mod time {
-    type Moment = u64;
-	use crate::{BlockNumber};
-	
+	type Moment = u64;
+	use crate::BlockNumber;
+
 	pub const MILLISECS_PER_BLOCK: Moment = 6000;
 	pub const SLOT_DURATION: Moment = MILLISECS_PER_BLOCK;
 	//pub const EPOCH_DURATION_IN_SLOTS: BlockNumber = SLOT_DURATION;//prod_or_fast!(1 * HOURS, 1 * MINUTES);
@@ -40,10 +40,10 @@ pub mod time {
 
 /// Fee-related.
 pub mod fee {
+	use crate::{Balance, ExtrinsicBaseWeight};
 	use frame_support::weights::{
 		WeightToFeeCoefficient, WeightToFeeCoefficients, WeightToFeePolynomial,
 	};
-	use crate::{Balance, ExtrinsicBaseWeight};
 	use smallvec::smallvec;
 	pub use sp_runtime::Perbill;
 
@@ -66,8 +66,8 @@ pub mod fee {
 		fn polynomial() -> WeightToFeeCoefficients<Self::Balance> {
 			// extrinsic base weight (smallest non-zero weight) is mapped to 1/10 CENT (reference Kusama fee)
 			let p = super::currency::MILLICENTS;
-	    	let q = 10 * Balance::from(ExtrinsicBaseWeight::get());	
-	    	smallvec![WeightToFeeCoefficient {
+			let q = 10 * Balance::from(ExtrinsicBaseWeight::get());
+			smallvec![WeightToFeeCoefficient {
 				degree: 1,
 				negative: false,
 				coeff_frac: Perbill::from_rational(p % q, q),

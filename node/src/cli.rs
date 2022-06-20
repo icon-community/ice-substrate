@@ -10,19 +10,18 @@ use std::path::PathBuf;
 	subcommand_negates_reqs = true
 )]
 pub struct Cli {
-    /// Possible subcommand with parameters.
-    #[clap(subcommand)]
-    pub subcommand: Option<Subcommand>,
+	/// Possible subcommand with parameters.
+	#[clap(subcommand)]
+	pub subcommand: Option<Subcommand>,
 
-    #[allow(missing_docs)]
-    #[clap(flatten)]
-    pub run: cumulus_client_cli::RunCmd,
+	#[allow(missing_docs)]
+	#[clap(flatten)]
+	pub run: cumulus_client_cli::RunCmd,
 
-    /// Relaychain arguments
-    #[clap(raw = true)]
-    pub relaychain_args: Vec<String>,
+	/// Relaychain arguments
+	#[clap(raw = true)]
+	pub relaychain_args: Vec<String>,
 }
-
 
 /// Possible subcommands of the main binary.
 #[derive(Debug, Parser)]
@@ -83,72 +82,70 @@ pub enum Subcommand {
 /// Command for exporting the genesis state of the parachain
 #[derive(Debug, clap::Parser)]
 pub struct ExportGenesisStateCommand {
-    /// Output file name or stdout if unspecified.
-    #[clap(parse(from_os_str))]
-    pub output: Option<PathBuf>,
+	/// Output file name or stdout if unspecified.
+	#[clap(parse(from_os_str))]
+	pub output: Option<PathBuf>,
 
-    /// Write output in binary. Default is to write in hex.
-    #[clap(short, long)]
-    pub raw: bool,
+	/// Write output in binary. Default is to write in hex.
+	#[clap(short, long)]
+	pub raw: bool,
 
-    /// Id of the parachain this state is for.
-    ///
-    /// Default: 2000
-    #[clap(long, default_value = "2000")]
-    pub parachain_id: u32,
+	/// Id of the parachain this state is for.
+	///
+	/// Default: 2000
+	#[clap(long, default_value = "2000")]
+	pub parachain_id: u32,
 
-    /// The name of the chain for that the genesis state should be exported.
-    #[clap(long)]
-    pub chain: Option<String>,
+	/// The name of the chain for that the genesis state should be exported.
+	#[clap(long)]
+	pub chain: Option<String>,
 }
 
 /// Command for exporting the genesis wasm file.
 #[derive(Debug, clap::Parser)]
 pub struct ExportGenesisWasmCommand {
-    /// Output file name or stdout if unspecified.
-    #[clap(parse(from_os_str))]
-    pub output: Option<PathBuf>,
+	/// Output file name or stdout if unspecified.
+	#[clap(parse(from_os_str))]
+	pub output: Option<PathBuf>,
 
-    /// Write output in binary. Default is to write in hex.
-    #[clap(short, long)]
-    pub raw: bool,
+	/// Write output in binary. Default is to write in hex.
+	#[clap(short, long)]
+	pub raw: bool,
 
-    /// The name of the chain for that the genesis wasm file should be exported.
-    #[clap(long)]
-    pub chain: Option<String>,
+	/// The name of the chain for that the genesis wasm file should be exported.
+	#[clap(long)]
+	pub chain: Option<String>,
 }
-
 
 #[derive(Debug)]
 #[allow(missing_docs)]
 pub struct RelayChainCli {
-    /// The actual relay chain cli object.
-    pub base: polkadot_cli::RunCmd,
+	/// The actual relay chain cli object.
+	pub base: polkadot_cli::RunCmd,
 
-    /// Optional chain id that should be passed to the relay chain.
-    pub chain_id: Option<String>,
+	/// Optional chain id that should be passed to the relay chain.
+	pub chain_id: Option<String>,
 
-    /// The base path that should be used by the relay chain.
-    pub base_path: Option<PathBuf>,
+	/// The base path that should be used by the relay chain.
+	pub base_path: Option<PathBuf>,
 }
 
-
 impl RelayChainCli {
-    /// Parse the relay chain CLI parameters using the para chain `Configuration`.
-    pub fn new<'a>(
-        para_config: &sc_service::Configuration,
-        relay_chain_args: impl Iterator<Item = &'a String>,
-    ) -> Self {
-        let extension = crate::chain_spec::Extensions::try_get(&*para_config.chain_spec);
-        let chain_id = extension.map(|e| e.relay_chain.clone());
-        let base_path = para_config
-            .base_path
-            .as_ref()
-            .map(|x| x.path().join("polkadot"));
-        Self {
-            base_path,
-            chain_id,
-            base: polkadot_cli::RunCmd::parse_from(relay_chain_args),
-        }
-    }
+	/// Parse the relay chain CLI parameters using the para chain `Configuration`.
+	pub fn new<'a>(
+		para_config: &sc_service::Configuration,
+		relay_chain_args: impl Iterator<Item = &'a String>,
+	) -> Self {
+		let extension = crate::chain_spec::Extensions::try_get(&*para_config.chain_spec);
+		let chain_id = extension.map(|e| e.relay_chain.clone());
+		let base_path = para_config
+			.base_path
+			.as_ref()
+			.map(|x| x.path().join("polkadot"));
+		Self {
+			base_path,
+			chain_id,
+			base: polkadot_cli::RunCmd::parse_from(relay_chain_args),
+		}
+	}
 }
