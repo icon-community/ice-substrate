@@ -74,6 +74,14 @@ pallet-evm-precompile-simple   = {  default-features = false,  git = "https://gi
 fp-rpc  = { default-features = false, git = "https://github.com/web3labs/frontier", branch = "polkadot-v0.9.23"}
 fp-self-contained = { default-features = false, git = "https://github.com/web3labs/frontier", branch = "polkadot-v0.9.23" }
 
+# orml pallets
+pallet-xcm-helper             = { path = '../../pallets/xcm-helper', default-features = false }
+pallet-traits                 = { path = '../../pallets/traits', default-features = false }
+primitives                    = { package = 'ice-primitives', path = '../../primitives', default-features = false }
+orml-asset-registry         = { default-features = false, git = "https://github.com/open-web3-stack/open-runtime-module-library", branch = "polkadot-v0.9.23" }
+orml-xcm-support    = { default-features = false, git = "https://github.com/open-web3-stack/open-runtime-module-library", branch = "polkadot-v0.9.23"}
+
+
 # local pallet
 pallet-simple-inflation = { path = '../../pallets/simple-inflation', default-features = false, version = '0.0.1' }
 
