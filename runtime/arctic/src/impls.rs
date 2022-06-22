@@ -79,21 +79,21 @@ mod tests {
 			<Runtime as pallet_transaction_payment::Config>::WeightToFee::weight_to_fee(
 				&max_block_weight,
 			);
-		assert_eq!(full_block, 16000000000000000); // 0.16 ICY
 
-		//assert!(full_block >= 1_000 * MILLICENTS);
-		//assert!(full_block <= 10_000 * CENTS);
+		assert!(full_block >= 10 * DOLLARS);
+		assert!(full_block <= 100 * DOLLARS);
 	}
 
 	#[test]
-	fn base_fee_is_within_bounds() {
+	fn base_fee_is_correct() {
 		let extrinsic_base_weight = frame_support::weights::constants::ExtrinsicBaseWeight::get();
+
 		let x: u128 = <Runtime as pallet_transaction_payment::Config>::WeightToFee::weight_to_fee(
 			&extrinsic_base_weight,
 		);
+
 		let y = CENTS / 10;
-		assert_eq!(x.max(y) - x.min(y), 999000000000000);
-		assert!(x.max(y) - x.min(y) < CENTS);
+		assert!(x.max(y) - x.min(y) < MILLICENTS);
 	}
 
 	fn max_normal() -> Weight {

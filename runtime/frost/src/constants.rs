@@ -2,7 +2,7 @@ pub mod currency {
 	use crate::Balance;
 
 	/// The existential deposit.
-	pub const EXISTENTIAL_DEPOSIT: Balance = 1_000_000;
+	pub const EXISTENTIAL_DEPOSIT: Balance = 1 * CENTS;
 
 	pub const UNITS: Balance = 1_000_000_000_000_000_000; // 1.0 ICY = 10e18 Planck
 	pub const DOLLARS: Balance = UNITS;
@@ -15,7 +15,7 @@ pub mod currency {
 	pub const ICY: Balance = UNITS;
 
 	pub const fn deposit(items: u32, bytes: u32) -> Balance {
-		items as Balance * 10 * CENTS + (bytes as Balance) * 10 * MILLICENTS
+		items as Balance * 1 * DOLLARS + (bytes as Balance) * 5 * MILLICENTS
 	}
 }
 
@@ -64,8 +64,8 @@ pub mod fee {
 	impl WeightToFeePolynomial for WeightToFee {
 		type Balance = Balance;
 		fn polynomial() -> WeightToFeeCoefficients<Self::Balance> {
-			// extrinsic base weight (smallest non-zero weight) is mapped to 1/10 CENT (reference Kusama fee)
-			let p = super::currency::MILLICENTS;
+			// in Frost, extrinsic base weight (smallest non-zero weight) is mapped to 1/10 CENT:
+			let p = super::currency::CENTS;
 			let q = 10 * Balance::from(ExtrinsicBaseWeight::get());
 			smallvec![WeightToFeeCoefficient {
 				degree: 1,
