@@ -393,7 +393,7 @@ impl pallet_authorship::Config for Runtime {
 }
 
 parameter_types! {
-	pub const ExistentialDeposit: u128 = currency::EXISTENTIAL_DEPOSIT; // 0.0001 ICY
+	pub const ExistentialDeposit: u128 = currency::EXISTENTIAL_DEPOSIT; // 0.01 ICY
 	// For weight estimation, we assume that the most locks on an individual account will be 50.
 	// This number may need to be adjusted in the future if this assumption no longer holds true.
 	pub const MaxLocks: u32 = 50;
@@ -417,8 +417,8 @@ parameter_types! {
 	pub const TransactionByteFee: Balance = 10 * currency::MILLICENTS;
 	pub const OperationalFeeMultiplier: u8 = 5;
 	pub const TargetBlockFullness: Perquintill = Perquintill::from_percent(25);
-	pub AdjustmentVariable: Multiplier = Multiplier::saturating_from_rational(1, 100_000);
-	pub MinimumMultiplier: Multiplier = Multiplier::saturating_from_rational(1, 1_000_000_000u128);
+	pub AdjustmentVariable: Multiplier = Multiplier::saturating_from_rational(3, 100_000);
+	pub MinimumMultiplier: Multiplier = Multiplier::saturating_from_rational(1, 1_000_000u128);
 }
 
 pub type WeightToFee = constants::fee::WeightToFee;
