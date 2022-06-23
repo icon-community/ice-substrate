@@ -483,8 +483,8 @@ impl pallet_ethereum::Config for Runtime {
 pub type AssetId = u128;
 
 parameter_types! {
-	pub const AssetDeposit: Balance = 1_000_000;
-	pub const ApprovalDeposit: Balance = 1_000_000;
+	pub const AssetDeposit: Balance = 100 * currency::DOLLARS;
+	pub const ApprovalDeposit: Balance = 1 * currency::DOLLARS;
 	pub const AssetsStringLimit: u32 = 50;
 	/// Key = 32 bytes, Value = 36 bytes (32+1+1+1+1)
 	// https://github.com/paritytech/substrate/blob/069917b/frame/assets/src/lib.rs#L257L271

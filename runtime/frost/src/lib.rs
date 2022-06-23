@@ -426,13 +426,15 @@ impl pallet_ethereum::Config for Runtime {
 	type StateRoot = pallet_ethereum::IntermediateStateRoot<Self>;
 }
 
-frame_support::parameter_types! {
-	pub const AssetDeposit: Balance = 500 ;
-	pub const AssetAccountDeposit: Balance = 500 ;
-	pub const MetadataDepositBase: Balance = 500 ;
-	pub const MetaDataDepositPerByte: Balance = 500 ;
-	pub const ApprovalDeposit: Balance = 500 ;
-	pub const StringLimit: u32 = 50;
+parameter_types! {
+	pub const AssetDeposit: Balance = 100 * currency::DOLLARS;
+	pub const ApprovalDeposit: Balance = 1 * currency::DOLLARS;
+	pub const AssetsStringLimit: u32 = 50;
+	/// Key = 32 bytes, Value = 36 bytes (32+1+1+1+1)
+	// https://github.com/paritytech/substrate/blob/069917b/frame/assets/src/lib.rs#L257L271
+	pub const MetadataDepositBase: Balance = currency::deposit(1, 68);
+	pub const MetadataDepositPerByte: Balance = currency::deposit(0, 1);
+	pub const AssetAccountDeposit: Balance = currency::deposit(1, 18);
 }
 
 impl pallet_assets::Config for Runtime {
@@ -443,13 +445,13 @@ impl pallet_assets::Config for Runtime {
 	type ForceOrigin = frame_system::EnsureRoot<AccountId>;
 	type AssetDeposit = AssetDeposit;
 	type MetadataDepositBase = MetadataDepositBase;
-	type MetadataDepositPerByte = MetaDataDepositPerByte;
+	type MetadataDepositPerByte = MetadataDepositPerByte;
 	type ApprovalDeposit = ApprovalDeposit;
-	type StringLimit = StringLimit;
+	type StringLimit = AssetsStringLimit;
 	type Freezer = ();
 	type Extra = ();
 	type WeightInfo = pallet_assets::weights::SubstrateWeight<Runtime>;
-	type AssetAccountDeposit = ();
+	type AssetAccountDeposit = AssetAccountDeposit;
 }
 
 parameter_types! {
