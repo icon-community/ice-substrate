@@ -3655,6 +3655,8 @@ dependencies = [
  "pallet-dynamic-fee",
  "pallet-ethereum",
  "pallet-evm",
+ "pallet-runtime-common",
+ "pallet-simple-inflation",
  "pallet-transaction-payment-rpc",
  "parity-scale-codec",
  "polkadot-cli",

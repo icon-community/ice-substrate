@@ -23,6 +23,11 @@ pub mod pallet {
 	#[pallet::generate_store(pub(super) trait Store)]
 	pub struct Pallet<T>(PhantomData<T>);
 
+	#[pallet::genesis_config]
+	pub struct GenesisConfig<T: Config> {
+		pub issuing_amount: BalanceOf<T>,
+	}
+
 	pub type AccountIdOf<T> = <T as frame_system::Config>::AccountId;
 
 	pub type BalanceOf<T> = <<T as Config>::Currency as Currency<AccountIdOf<T>>>::Balance;
@@ -39,6 +44,27 @@ pub mod pallet {
 	#[pallet::storage]
 	#[pallet::getter(fn issuing_amount)]
 	pub type IssuingAmount<T> = StorageValue<_, BalanceOf<T>, ValueQuery, DefaultIssuingAmount<T>>;
+
+	#[cfg(feature = "std")]
+	impl<T: Config> GenesisConfig<T> {
+		pub fn new(issuing_amount: BalanceOf<T>) -> Self {
+			Self { issuing_amount }
+		}
+	}
+
+	#[cfg(feature = "std")]
+	impl<T: Config> Default for GenesisConfig<T> {
+		fn default() -> Self {
+			Self {
+				issuing_amount: T::IssuingAmount::get(),
+			}
+		}
+	}
+
+	#[pallet::genesis_build]
+	impl<T: Config> GenesisBuild<T> for GenesisConfig<T> {
+		fn build(&self) {}
+	}
 
 	#[pallet::config]
 	pub trait Config: frame_system::Config {
