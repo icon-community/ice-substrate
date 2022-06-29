@@ -151,6 +151,7 @@ dependencies = [
  "pallet-evm-precompile-simple",
  "pallet-grandpa",
  "pallet-randomness-collective-flip",
+ "pallet-runtime-common",
  "pallet-session",
  "pallet-simple-inflation",
  "pallet-staking",

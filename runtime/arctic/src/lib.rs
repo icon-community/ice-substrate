@@ -77,6 +77,7 @@ use pallet_ethereum::{Call::transact, Transaction as EthereumTransaction};
 use pallet_evm::{Account as EVMAccount, EnsureAddressTruncated, HashedAddressMapping, Runner};
 pub use pallet_timestamp::Call as TimestampCall;
 use pallet_transaction_payment::{CurrencyAdapter, Multiplier, TargetedFeeAdjustment};
+use sp_runtime::traits::AccountIdConversion;
 #[cfg(any(feature = "std", test))]
 pub use sp_runtime::BuildStorage;
 pub use sp_runtime::{Perbill, Permill};
@@ -573,6 +574,25 @@ impl pallet_treasury::Config for Runtime {
 	type ProposalBondMaximum = ();
 }
 
+pub struct Beneficiary();
+impl pallet_simple_inflation::Beneficiary<NegativeImbalance> for Beneficiary {
+	fn treasury(reward: NegativeImbalance) {
+		Balances::resolve_creating(&TreasuryPalletId::get().into_account_truncating(), reward);
+	}
+}
+
+parameter_types! {
+	pub const IssuingAmount: Balance = 10 * currency::DOLLARS;
+}
+
+impl pallet_simple_inflation::Config for Runtime {
+	type Currency = Balances;
+	type Beneficiary = Beneficiary;
+	type IssuingAmount = IssuingAmount;
+}
+
+impl pallet_runtime_common::Config for Runtime {}
+
 frame_support::parameter_types! {
 	pub BoundDivision: U256 = U256::from(1024);
 }
@@ -648,7 +668,8 @@ construct_runtime!(
 		Assets: pallet_assets::{Pallet, Call, Storage, Config<T>, Event<T>},
 		Council: pallet_collective::<Instance1>::{Pallet, Call, Storage, Origin<T>, Event<T>, Config<T>},
 		Treasury: pallet_treasury::{Pallet, Call, Storage, Event<T>, Config},
-		//SimpleInflation: pallet_simple_inflation::{Pallet},
+		SimpleInflation: pallet_simple_inflation::{Pallet, Call, Storage, Config<T>},
+		RuntimeCommon: pallet_runtime_common::{Pallet, Call, Storage, Config<T>},
 	}
 );
 

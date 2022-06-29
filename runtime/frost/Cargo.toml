@@ -19,9 +19,6 @@ serde = { version = "1.0.101", optional = true, features = ["derive"] }
 scale-info = { version = "2.0.1", default-features = false, features = ["derive"] }
 smallvec = "1.0.0"
 
-# local dependencies
-pallet-runtime-common = { path = "../common", default-features = false, version = '0.4.34' }
-
 # frame dependencies
 frame-executive = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.23" }
 frame-support = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.23" }
@@ -81,6 +78,7 @@ fp-self-contained = {default-features = false, git = "https://github.com/web3lab
 
 # local pallet
 pallet-simple-inflation = { path = '../../pallets/simple-inflation', default-features = false, version = '0.0.1' }
+pallet-runtime-common = { path = "../common", default-features = false, version = '0.4.34' }
 
 # ice-runtime-common = { default-features = false, path = "../common", optional = true }
 
