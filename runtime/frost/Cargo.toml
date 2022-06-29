@@ -19,6 +19,9 @@ serde = { version = "1.0.101", optional = true, features = ["derive"] }
 scale-info = { version = "2.0.1", default-features = false, features = ["derive"] }
 smallvec = "1.0.0"
 
+# local dependencies
+pallet-runtime-common = { path = "../common", default-features = false, version = '0.4.34' }
+
 # frame dependencies
 frame-executive = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.23" }
 frame-support = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.23" }
@@ -155,6 +158,8 @@ std = [
 
 	"scale-info/std",
 	# "ice-runtime-common",
+
+	"pallet-runtime-common/std",
 ]
 runtime-benchmarks = [
 	'sp-runtime/runtime-benchmarks',

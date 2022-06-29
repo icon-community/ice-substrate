@@ -70,6 +70,8 @@ use pallet_transaction_payment::{CurrencyAdapter, Multiplier, TargetedFeeAdjustm
 pub use sp_runtime::BuildStorage;
 pub use sp_runtime::{Perbill, Permill};
 
+use pallet_runtime_common::HostConfiguration;
+
 /// We assume that ~10% of the block weight is consumed by `on_initialize` handlers.
 /// This is used to limit the maximal weight of a single extrinsic.
 /// const AVERAGE_ON_INITIALIZE_RATIO: Perbill = Perbill::from_percent(10);
@@ -535,6 +537,16 @@ impl pallet_simple_inflation::Config for Runtime {
 	type IssuingAmount = IssuingAmount;
 }
 
+parameter_types! {
+	pub const HostConfig: HostConfiguration = HostConfiguration{
+		treasury_fee_cut_percent: 80,
+	};
+}
+
+impl pallet_runtime_common::Config for Runtime {
+	type HostConfig = HostConfig;
+}
+
 frame_support::parameter_types! {
 	pub BoundDivision: U256 = U256::from(1024);
 }
@@ -597,6 +609,7 @@ construct_runtime!(
 		SimpleInflation: pallet_simple_inflation::{Pallet},
 		Session: pallet_session::{Pallet, Call, Storage, Event, Config<T>},
 		Authorship: pallet_authorship::{Pallet, Call, Storage, Inherent},
+		RuntimeCommon: pallet_runtime_common::{Pallet},
 	}
 );
 
