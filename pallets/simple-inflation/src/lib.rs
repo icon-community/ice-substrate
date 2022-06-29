@@ -2,7 +2,11 @@
 
 pub use pallet::*;
 
-use frame_support::traits::Currency;
+use frame_support::{
+	traits::{Currency, Get},
+	weights::Weight,
+};
+use sp_std::marker::PhantomData;
 
 /// We only need to issue inflation to treasury, this will be always set to TreasuryPalletId
 pub trait Beneficiary<Imbalance> {
@@ -26,11 +30,19 @@ pub mod pallet {
 		<T as frame_system::Config>::AccountId,
 	>>::NegativeImbalance;
 
+	#[pallet::type_value]
+	pub fn DefaultIssuingAmount<T: Config>() -> BalanceOf<T> {
+		T::IssuingAmount::get()
+	}
+
+	#[pallet::storage]
+	#[pallet::getter(fn issuing_amount)]
+	pub type IssuingAmount<T> = StorageValue<_, BalanceOf<T>, ValueQuery, DefaultIssuingAmount<T>>;
+
 	#[pallet::config]
 	pub trait Config: frame_system::Config {
 		type Currency: Currency<Self::AccountId>;
 
-		#[pallet::constant]
 		type IssuingAmount: Get<BalanceOf<Self>>;
 
 		type Beneficiary: Beneficiary<NegativeImbalanceOf<Self>>;
@@ -39,9 +51,29 @@ pub mod pallet {
 	#[pallet::hooks]
 	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
 		fn on_initialize(_now: T::BlockNumber) -> Weight {
-			let inflation = T::Currency::issue(T::IssuingAmount::get());
+			let inflation = T::Currency::issue(<IssuingAmount<T>>::get());
 			T::Beneficiary::treasury(inflation);
 			0
 		}
+	}
+
+	#[pallet::call]
+	impl<T: Config> Pallet<T> {
+		#[pallet::weight((
+		WeightInfo::<T>::set_config_with_balance(),
+		DispatchClass::Operational,
+		))]
+		pub fn sudo_set_issuing_amount(origin: OriginFor<T>, new: BalanceOf<T>) -> DispatchResult {
+			ensure_root(origin)?;
+			<IssuingAmount<T>>::put(new);
+			Ok(())
+		}
+	}
+}
+
+pub struct WeightInfo<T>(PhantomData<T>);
+impl<T: frame_system::Config> WeightInfo<T> {
+	pub fn set_config_with_balance() -> Weight {
+		(10_000_000 as Weight).saturating_add(T::DbWeight::get().writes(1 as Weight))
 	}
 }

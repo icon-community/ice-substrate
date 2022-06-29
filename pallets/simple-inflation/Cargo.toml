@@ -20,6 +20,7 @@ hex-literal = "0.3.4"
 frame-support = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.23" }
 frame-system = { default-features = false, package = "frame-system", git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.23" }
 
+sp-std = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v0.9.23" }
 sp-runtime = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v0.9.23" }
 pallet-balances = { branch = "polkadot-v0.9.23", default-features = false, git = "https://github.com/paritytech/substrate" }
 pallet-treasury = { branch = "polkadot-v0.9.23", default-features = false, git = "https://github.com/paritytech/substrate" }
