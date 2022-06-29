@@ -3,7 +3,7 @@ use arctic_runtime::currency::ICY;
 use arctic_runtime::{
 	wasm_binary_unwrap, AccountId, AuraConfig, AuraId, BalancesConfig, CollatorSelectionConfig,
 	CouncilConfig, EVMConfig, GenesisConfig, ParachainInfoConfig, SessionConfig, SessionKeys,
-	Signature, SudoConfig, SystemConfig, VestingConfig,
+	Signature, SudoConfig, SystemConfig, VestingConfig, TechnicalCommitteeConfig,
 };
 use cumulus_primitives_core::ParaId;
 use hex_literal::hex;
@@ -56,6 +56,9 @@ pub fn get_chain_spec(para_id: u32) -> ArcticChainSpec {
 				vec![
 					hex!["62687296bffd79f12178c4278b9439d5eeb8ed7cc0b1f2ae29307e806a019659"].into(),
 				],
+				vec![
+					hex!["62687296bffd79f12178c4278b9439d5eeb8ed7cc0b1f2ae29307e806a019659"].into(),
+				],
 				// Sudo account
 				hex!["62687296bffd79f12178c4278b9439d5eeb8ed7cc0b1f2ae29307e806a019659"].into(),
 				para_id.into(),
@@ -104,6 +107,7 @@ pub fn get_dev_chain_spec(para_id: u32) -> ArcticChainSpec {
 				],
 				// Council members
 				vec![get_account_id_from_seed::<sr25519::Public>("Alice")],
+				vec![get_account_id_from_seed::<sr25519::Public>("Alice")],
 				// Sudo account
 				sudo_key.clone(),
 				para_id.into(),
@@ -132,6 +136,7 @@ fn make_genesis(
 	endowed_accounts: Vec<AccountId>,
 	authorities: Vec<(AccountId, AuraId)>,
 	council_members: Vec<AccountId>,
+	technical_committee: Vec<AccountId>,
 	root_key: AccountId,
 	parachain_id: ParaId,
 ) -> GenesisConfig {
@@ -175,6 +180,10 @@ fn make_genesis(
 		council: CouncilConfig {
 			members: council_members,
 			phantom: PhantomData,
+		},
+		technical_committee: TechnicalCommitteeConfig {
+			members: technical_committee,
+			phantom: Default::default(),
 		},
 		ethereum: Default::default(),
 		treasury: Default::default(),
