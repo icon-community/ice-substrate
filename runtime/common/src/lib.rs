@@ -20,6 +20,7 @@ pub mod pallet {
 	use super::*;
 
 	#[pallet::pallet]
+	#[pallet::generate_store(pub(super) trait Store)]
 	pub struct Pallet<T>(_);
 
 	#[pallet::error]
@@ -42,9 +43,9 @@ pub mod pallet {
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
 		#[pallet::weight((
-        WeightInfo::<T>::set_config_with_u32(),
-        DispatchClass::Operational,
-        ))]
+		WeightInfo::<T>::set_config_with_u32(),
+		DispatchClass::Operational,
+		))]
 		pub fn set_treasury_fee_cut_percent(origin: OriginFor<T>, new: u32) -> DispatchResult {
 			ensure_root(origin)?;
 			let mut config = <ActiveConfig<T>>::get();

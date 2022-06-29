@@ -606,10 +606,10 @@ construct_runtime!(
 		Assets: pallet_assets::{Pallet, Call, Storage, Config<T>, Event<T>},
 		Council: pallet_collective::<Instance1>::{Pallet, Call, Storage, Origin<T>, Event<T>, Config<T>},
 		Treasury: pallet_treasury::{Pallet, Call, Storage, Config, Event<T>},
-		SimpleInflation: pallet_simple_inflation::{Pallet},
+		SimpleInflation: pallet_simple_inflation::{Pallet, Call, Storage},
 		Session: pallet_session::{Pallet, Call, Storage, Event, Config<T>},
 		Authorship: pallet_authorship::{Pallet, Call, Storage, Inherent},
-		RuntimeCommon: pallet_runtime_common::{Pallet},
+		RuntimeCommon: pallet_runtime_common::{Pallet, Call, Storage},
 	}
 );
 

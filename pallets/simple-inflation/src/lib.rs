@@ -20,6 +20,7 @@ pub mod pallet {
 	use frame_system::pallet_prelude::*;
 
 	#[pallet::pallet]
+	#[pallet::generate_store(pub(super) trait Store)]
 	pub struct Pallet<T>(PhantomData<T>);
 
 	pub type AccountIdOf<T> = <T as frame_system::Config>::AccountId;
@@ -63,7 +64,7 @@ pub mod pallet {
 		WeightInfo::<T>::set_config_with_balance(),
 		DispatchClass::Operational,
 		))]
-		pub fn sudo_set_issuing_amount(origin: OriginFor<T>, new: BalanceOf<T>) -> DispatchResult {
+		pub fn set_issuing_amount(origin: OriginFor<T>, new: BalanceOf<T>) -> DispatchResult {
 			ensure_root(origin)?;
 			<IssuingAmount<T>>::put(new);
 			Ok(())
