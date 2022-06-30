@@ -2,5 +2,12 @@
 panic = 'unwind'
 
 [workspace]
-members = ['node', 'runtime/arctic', 'runtime/frost',  "pallets/simple-inflation", "integration-tests"]
+members = [
+    "node",
+    "runtime/arctic",
+    "runtime/frost",
+    "pallets/fees-split",
+    "pallets/simple-inflation",
+    "integration-tests",
+]
 

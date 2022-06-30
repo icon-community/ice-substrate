@@ -114,7 +114,7 @@ dependencies = [
 
 [[package]]
 name = "arctic-runtime"
-version = "0.4.34"
+version = "0.4.35"
 dependencies = [
  "cumulus-pallet-aura-ext",
  "cumulus-pallet-dmp-queue",
@@ -149,6 +149,7 @@ dependencies = [
  "pallet-evm-precompile-modexp",
  "pallet-evm-precompile-sha3fips",
  "pallet-evm-precompile-simple",
+ "pallet-fees-split",
  "pallet-grandpa",
  "pallet-randomness-collective-flip",
  "pallet-session",
@@ -3049,7 +3050,7 @@ dependencies = [
 
 [[package]]
 name = "frost-runtime"
-version = "0.4.34"
+version = "0.4.35"
 dependencies = [
  "fp-rpc",
  "fp-self-contained",
@@ -3076,6 +3077,7 @@ dependencies = [
  "pallet-evm-precompile-modexp",
  "pallet-evm-precompile-sha3fips",
  "pallet-evm-precompile-simple",
+ "pallet-fees-split",
  "pallet-grandpa",
  "pallet-randomness-collective-flip",
  "pallet-session",
@@ -3654,6 +3656,8 @@ dependencies = [
  "pallet-dynamic-fee",
  "pallet-ethereum",
  "pallet-evm",
+ "pallet-fees-split",
+ "pallet-simple-inflation",
  "pallet-transaction-payment-rpc",
  "parity-scale-codec",
  "polkadot-cli",
@@ -6148,6 +6152,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "pallet-fees-split"
+version = "0.0.1"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "parity-scale-codec",
+ "scale-info",
+ "serde",
+ "sp-core",
+ "sp-std",
+]
+
+[[package]]
 name = "pallet-gilt"
 version = "4.0.0-dev"
 source = "git+https://github.com/paritytech/substrate?branch=polkadot-v0.9.23#76522d7937ba94ff1becef4e4e3ca78e3e1de341"
@@ -6507,7 +6524,7 @@ dependencies = [
 
 [[package]]
 name = "pallet-simple-inflation"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "frame-support",
  "frame-system",
@@ -6519,6 +6536,7 @@ dependencies = [
  "parity-scale-codec",
  "scale-info",
  "sp-runtime",
+ "sp-std",
 ]
 
 [[package]]

@@ -189,6 +189,8 @@ fn make_genesis(
 		treasury: Default::default(),
 		polkadot_xcm: Default::default(),
 		parachain_system: Default::default(),
+		simple_inflation: Default::default(),
+		fees_split: Default::default(),
 	}
 }
 

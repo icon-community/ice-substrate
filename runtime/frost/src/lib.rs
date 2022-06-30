@@ -535,6 +535,8 @@ impl pallet_simple_inflation::Config for Runtime {
 	type IssuingAmount = IssuingAmount;
 }
 
+impl pallet_fees_split::Config for Runtime {}
+
 frame_support::parameter_types! {
 	pub BoundDivision: U256 = U256::from(1024);
 }
@@ -594,9 +596,10 @@ construct_runtime!(
 		Assets: pallet_assets::{Pallet, Call, Storage, Config<T>, Event<T>},
 		Council: pallet_collective::<Instance1>::{Pallet, Call, Storage, Origin<T>, Event<T>, Config<T>},
 		Treasury: pallet_treasury::{Pallet, Call, Storage, Config, Event<T>},
-		SimpleInflation: pallet_simple_inflation::{Pallet},
+		SimpleInflation: pallet_simple_inflation::{Pallet, Call, Storage, Config<T>},
 		Session: pallet_session::{Pallet, Call, Storage, Event, Config<T>},
 		Authorship: pallet_authorship::{Pallet, Call, Storage, Inherent},
+		FeesSplit: pallet_fees_split::{Pallet, Call, Storage, Config<T>},
 	}
 );
 

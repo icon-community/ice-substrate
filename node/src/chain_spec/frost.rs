@@ -276,5 +276,7 @@ fn testnet_genesis(
 			phantom: PhantomData,
 		},
 		treasury: Default::default(),
+		simple_inflation: Default::default(),
+		fees_split: Default::default(),
 	}
 }
