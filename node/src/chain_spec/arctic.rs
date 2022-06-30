@@ -181,7 +181,7 @@ fn make_genesis(
 		polkadot_xcm: Default::default(),
 		parachain_system: Default::default(),
 		simple_inflation: Default::default(),
-		runtime_common: Default::default(),
+		fees_split: Default::default(),
 	}
 }
 

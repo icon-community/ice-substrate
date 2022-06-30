@@ -1,4 +1,4 @@
-use crate::{Authorship, Balances, NegativeImbalance, RuntimeCommon, Treasury};
+use crate::{Authorship, Balances, FeesSplit, NegativeImbalance, Treasury};
 use frame_support::traits::{Currency, Imbalance, OnUnbalanced};
 
 pub struct Author;
@@ -13,9 +13,7 @@ impl OnUnbalanced<NegativeImbalance> for Author {
 pub struct DealWithFees;
 impl OnUnbalanced<NegativeImbalance> for DealWithFees {
 	fn on_unbalanceds<B>(mut fees_then_tips: impl Iterator<Item = NegativeImbalance>) {
-		let config = RuntimeCommon::config();
-
-		let treasury_cut = config.treasury_fee_cut_percent;
+		let treasury_cut = FeesSplit::treasury_cut_percent();
 		let author_cut = 100 - treasury_cut;
 
 		if let Some(fees) = fees_then_tips.next() {

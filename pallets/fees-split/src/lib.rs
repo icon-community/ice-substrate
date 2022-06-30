@@ -2,28 +2,10 @@
 
 pub use pallet::*;
 
-use codec::{Decode, Encode};
 use frame_support::pallet_prelude::*;
 use frame_system::pallet_prelude::*;
-use sp_std::prelude::*;
 
 const MAX_PERCENT: u32 = 100;
-
-#[derive(
-	Clone, Copy, Encode, Decode, PartialEq, RuntimeDebug, scale_info::TypeInfo, MaxEncodedLen,
-)]
-#[cfg_attr(feature = "std", derive(serde::Serialize, serde::Deserialize))]
-pub struct HostConfiguration {
-	pub treasury_fee_cut_percent: u32,
-}
-
-impl Default for HostConfiguration {
-	fn default() -> Self {
-		Self {
-			treasury_fee_cut_percent: 0,
-		}
-	}
-}
 
 #[frame_support::pallet]
 pub mod pallet {
@@ -41,15 +23,15 @@ pub mod pallet {
 
 	#[pallet::genesis_config]
 	pub struct GenesisConfig<T: Config> {
-		pub host_configuration: HostConfiguration,
+		pub treasury_cut_percent: u32,
 		_marker: PhantomData<T>,
 	}
 
 	#[cfg(feature = "std")]
 	impl<T: Config> GenesisConfig<T> {
-		pub fn new(host_configuration: HostConfiguration) -> Self {
+		pub fn new(treasury_cut_percent: u32) -> Self {
 			Self {
-				host_configuration,
+				treasury_cut_percent,
 				_marker: PhantomData,
 			}
 		}
@@ -59,9 +41,7 @@ pub mod pallet {
 	impl<T: Config> Default for GenesisConfig<T> {
 		fn default() -> Self {
 			Self {
-				host_configuration: HostConfiguration {
-					treasury_fee_cut_percent: 80,
-				},
+				treasury_cut_percent: 80,
 				_marker: PhantomData,
 			}
 		}
@@ -70,13 +50,13 @@ pub mod pallet {
 	#[pallet::genesis_build]
 	impl<T: Config> GenesisBuild<T> for GenesisConfig<T> {
 		fn build(&self) {
-			<ActiveConfig<T>>::put(self.host_configuration);
+			<TreasuryCutPercent<T>>::put(self.treasury_cut_percent);
 		}
 	}
 
 	#[pallet::storage]
-	#[pallet::getter(fn config)]
-	pub type ActiveConfig<T> = StorageValue<_, HostConfiguration, ValueQuery>;
+	#[pallet::getter(fn treasury_cut_percent)]
+	pub type TreasuryCutPercent<T> = StorageValue<_, u32, ValueQuery>;
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
@@ -84,15 +64,13 @@ pub mod pallet {
 		WeightInfo::<T>::set_config_with_u32(),
 		DispatchClass::Operational,
 		))]
-		pub fn set_treasury_fee_cut_percent(origin: OriginFor<T>, new: u32) -> DispatchResult {
+		pub fn set_treasury_cut_percent(origin: OriginFor<T>, val: u32) -> DispatchResult {
 			ensure_root(origin)?;
-			let mut config = <ActiveConfig<T>>::get();
 
-			if new <= MAX_PERCENT {
-				config.treasury_fee_cut_percent = new;
+			if val <= MAX_PERCENT {
+				<TreasuryCutPercent<T>>::set(val);
 			}
 
-			<ActiveConfig<T>>::set(config);
 			Ok(())
 		}
 	}
@@ -101,8 +79,6 @@ pub mod pallet {
 pub struct WeightInfo<T>(PhantomData<T>);
 impl<T: Config> WeightInfo<T> {
 	pub fn set_config_with_u32() -> Weight {
-		(10_000_000 as Weight)
-			.saturating_add(T::DbWeight::get().reads(1 as Weight))
-			.saturating_add(T::DbWeight::get().writes(1 as Weight))
+		(10_000_000 as Weight).saturating_add(T::DbWeight::get().writes(1 as Weight))
 	}
 }

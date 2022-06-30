@@ -78,7 +78,7 @@ fp-self-contained = {default-features = false, git = "https://github.com/web3lab
 
 # local pallet
 pallet-simple-inflation = { path = '../../pallets/simple-inflation', default-features = false, version = '0.0.1' }
-pallet-runtime-common = { path = "../common", default-features = false, version = '0.4.34' }
+pallet-fees-split = { path = "../../pallets/fees-split", default-features = false, version = '0.0.1' }
 
 # ice-runtime-common = { default-features = false, path = "../common", optional = true }
 
@@ -137,6 +137,7 @@ std = [
 	"pallet-staking/std",
 	"pallet-authorship/std",
 	"pallet-session/std",
+	"pallet-fees-split/std",
 
 	"sp-api/std",
 	"sp-block-builder/std",
@@ -156,8 +157,6 @@ std = [
 
 	"scale-info/std",
 	# "ice-runtime-common",
-
-	"pallet-runtime-common/std",
 ]
 runtime-benchmarks = [
 	'sp-runtime/runtime-benchmarks',

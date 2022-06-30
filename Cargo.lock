@@ -149,9 +149,9 @@ dependencies = [
  "pallet-evm-precompile-modexp",
  "pallet-evm-precompile-sha3fips",
  "pallet-evm-precompile-simple",
+ "pallet-fees-split",
  "pallet-grandpa",
  "pallet-randomness-collective-flip",
- "pallet-runtime-common",
  "pallet-session",
  "pallet-simple-inflation",
  "pallet-staking",
@@ -3077,9 +3077,9 @@ dependencies = [
  "pallet-evm-precompile-modexp",
  "pallet-evm-precompile-sha3fips",
  "pallet-evm-precompile-simple",
+ "pallet-fees-split",
  "pallet-grandpa",
  "pallet-randomness-collective-flip",
- "pallet-runtime-common",
  "pallet-session",
  "pallet-simple-inflation",
  "pallet-staking",
@@ -3656,7 +3656,7 @@ dependencies = [
  "pallet-dynamic-fee",
  "pallet-ethereum",
  "pallet-evm",
- "pallet-runtime-common",
+ "pallet-fees-split",
  "pallet-simple-inflation",
  "pallet-transaction-payment-rpc",
  "parity-scale-codec",
@@ -6152,6 +6152,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "pallet-fees-split"
+version = "0.0.1"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "parity-scale-codec",
+ "scale-info",
+ "serde",
+ "sp-core",
+ "sp-std",
+]
+
+[[package]]
 name = "pallet-gilt"
 version = "4.0.0-dev"
 source = "git+https://github.com/paritytech/substrate?branch=polkadot-v0.9.23#76522d7937ba94ff1becef4e4e3ca78e3e1de341"
@@ -6453,19 +6466,6 @@ dependencies = [
  "scale-info",
  "sp-io",
  "sp-runtime",
- "sp-std",
-]
-
-[[package]]
-name = "pallet-runtime-common"
-version = "0.4.34"
-dependencies = [
- "frame-support",
- "frame-system",
- "parity-scale-codec",
- "scale-info",
- "serde",
- "sp-core",
  "sp-std",
 ]
 

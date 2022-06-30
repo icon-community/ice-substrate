@@ -1,6 +1,6 @@
 [package]
-name = "pallet-runtime-common"
-version = "0.4.34"
+name = "pallet-fees-split"
+version = "0.0.1"
 authors = ["ICE Team <https://icenetwork.io>"]
 edition = "2021"
 license = "Apache-2.0"

@@ -130,7 +130,7 @@ frost-runtime = { path = "../runtime/frost", default-features = false, features 
 
 # local pallets
 pallet-simple-inflation = { path = "../pallets/simple-inflation", default-features = false, features = ["std"] }
-pallet-runtime-common = { path  = "../runtime/common", default-features = false, features = ["std"] }
+pallet-fees-split = { path  = "../pallets/fees-split", default-features = false, features = ["std"] }
 
 # try-runtime
 frame-try-runtime = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.23", optional = true }

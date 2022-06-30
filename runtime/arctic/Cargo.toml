@@ -76,9 +76,9 @@ fp-self-contained = { default-features = false, git = "https://github.com/web3la
 
 # local pallet
 pallet-simple-inflation = { path = '../../pallets/simple-inflation', default-features = false, version = '0.0.1' }
-pallet-runtime-common = { path = "../common", default-features = false, version = '0.4.34' }
+pallet-fees-split = { path = "../../pallets/fees-split", default-features = false, version = '0.0.1' }
 
-# ice-runtime-common = { default-features = false, path = "../common", optional=true}
+# ice-runtime-fees-split = { default-features = false, path = "../fees-split", optional=true}
 
 # try-runtime
 frame-try-runtime = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.23", default-features = false, optional = true }
@@ -149,7 +149,7 @@ std = [
 	"pallet-treasury/std",
     "pallet-collective/std",
 	"pallet-simple-inflation/std",
-	"pallet-runtime-common/std",
+	"pallet-fees-split/std",
 	"pallet-contracts/std",
 	"pallet-contracts-primitives/std",
 	"pallet-contracts-rpc-runtime-api/std",
@@ -171,7 +171,7 @@ std = [
 	"sp-transaction-pool/std",
 	"sp-version/std",
 
-	# "ice-runtime-common",
+	# "ice-runtime-fees-split",
 
 	"frame-benchmarking/std",
 	# "frame-system-benchmarking/std",
