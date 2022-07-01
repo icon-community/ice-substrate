@@ -17,6 +17,8 @@ pub mod weights;
 
 pub mod merkle;
 
+mod exchange_accounts;
+
 #[cfg(not(feature = "no-vesting"))]
 pub mod vested_transfer;
 
@@ -32,7 +34,7 @@ pub use pallet::*;
 #[frame_support::pallet]
 pub mod pallet {
 	use super::{error, info};
-	use super::{types, utils, weights};
+	use super::{types, utils, weights, exchange_accounts};
 	use hex_literal::hex;
 	use sp_runtime::traits::Convert;
 
@@ -682,7 +684,6 @@ pub mod pallet {
 
 	#[pallet::genesis_config]
 	pub struct GenesisConfig<T: Config> {
-		pub exchange_accounts: Vec<(types::IconAddress, types::BalanceOf<T>)>,
 		pub creditor_account: types::AccountIdOf<T>,
 		pub merkle_root: [u8; 32],
 	}
@@ -696,10 +697,7 @@ pub mod pallet {
 				types::AccountIdOf::<T>::decode(&mut &creditor_account_hex[..]).unwrap();
 			let merkle_root = [0u8; 32];
 
-			let exchange_accounts = vec![];
-
 			Self {
-				exchange_accounts,
 				creditor_account,
 				merkle_root,
 			}
@@ -709,7 +707,8 @@ pub mod pallet {
 	#[pallet::genesis_build]
 	impl<T: Config> GenesisBuild<T> for GenesisConfig<T> {
 		fn build(&self) {
-			for (address, balance) in &self.exchange_accounts {
+			let exchange_accounts = exchange_accounts::get_exchange_account::<T>();
+			for (address, balance) in exchange_accounts {
 				<ExchangeAccountsMap<T>>::insert(address, balance);
 			}
 
