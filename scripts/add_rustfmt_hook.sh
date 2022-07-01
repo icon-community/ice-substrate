@@ -5,6 +5,7 @@ command -v rustfmt >/dev/null 2>&1 || { echo >&2 "Rustfmt is required but it's n
 
 # write a whole script to pre-commit hook
 # NOTE: it will overwrite pre-commit file!
+cd ..
 mkdir .githooks
 cat > .git/hooks/pre-commit <<'EOF'
 #!/bin/bash -e
