@@ -8,13 +8,13 @@
   "telemetryEndpoints": null,
   "protocolId": null,
   "properties": {
-    "ss58Format": 42,
+    "ss58Format": 15253,
     "tokenDecimals": 18,
     "tokenSymbol": "ICZ"
   },
   "badBlocks": null,
   "relayChain": "arctic",
-  "paraId": 3025,
+  "paraId": 3015,
   "codeSubstitutes": {},
   "genesis": {
     "raw": {

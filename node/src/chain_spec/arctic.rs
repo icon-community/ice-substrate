@@ -3,7 +3,7 @@ use arctic_runtime::currency::ICY;
 use arctic_runtime::{
 	wasm_binary_unwrap, AccountId, AuraConfig, AuraId, BalancesConfig, CollatorSelectionConfig,
 	CouncilConfig, EVMConfig, GenesisConfig, ParachainInfoConfig, SessionConfig, SessionKeys,
-	Signature, SudoConfig, SystemConfig, VestingConfig, TechnicalCommitteeConfig,
+	Signature, SudoConfig, SystemConfig, TechnicalCommitteeConfig, VestingConfig,
 };
 use cumulus_primitives_core::ParaId;
 use hex_literal::hex;
@@ -18,7 +18,7 @@ pub type ArcticChainSpec = sc_service::GenericChainSpec<GenesisConfig, Extension
 
 const ARCTIC_PROPERTIES: &str = r#"
         {
-            "ss58Format": 42,
+            "ss58Format": 15253,
             "tokenDecimals": 18,
             "tokenSymbol": "ICZ"
         }"#;
@@ -66,7 +66,7 @@ pub fn get_chain_spec(para_id: u32) -> ArcticChainSpec {
 		},
 		vec![],
 		None,
-		None,
+		Some("arctic"),
 		None,
 		serde_json::from_str(ARCTIC_PROPERTIES).unwrap(),
 		Extensions {
@@ -115,7 +115,7 @@ pub fn get_dev_chain_spec(para_id: u32) -> ArcticChainSpec {
 		},
 		vec![],
 		None,
-		None,
+		Some("arctic-dev"),
 		None,
 		serde_json::from_str(ARCTIC_PROPERTIES).unwrap(),
 		Extensions {

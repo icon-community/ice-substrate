@@ -93,7 +93,7 @@ pub struct ExportGenesisStateCommand {
 	/// Id of the parachain this state is for.
 	///
 	/// Default: 2000
-	#[clap(long, default_value = "2000")]
+	#[clap(long, default_value = "3015")]
 	pub parachain_id: u32,
 
 	/// The name of the chain for that the genesis state should be exported.

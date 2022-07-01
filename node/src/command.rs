@@ -26,7 +26,7 @@ use std::{io::Write, net::SocketAddr};
 
 use frame_benchmarking_cli::{BenchmarkCmd, SUBSTRATE_REFERENCE_HARDWARE};
 
-const PARA_ID: u32 = 2000;
+const PARA_ID: u32 = 3015;
 
 trait IdentifyChain {
 	fn is_arctic(&self) -> bool;

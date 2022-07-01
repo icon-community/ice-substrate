@@ -16,7 +16,7 @@ use std::marker::PhantomData;
 // const STAGING_TELEMETRY_URL: &str = "wss://telemetry.polkadot.io/submit/";
 const FROST_PROPERTIES: &str = r#"
         {
-            "ss58Format": 42,
+            "ss58Format": 15253,
             "tokenDecimals": 18,
             "tokenSymbol": "ICZ"
         }"#;
@@ -97,7 +97,7 @@ pub fn testnet_config() -> Result<FrostChainSpec, String> {
 		// Telemetry
 		None,
 		// Protocol ID
-		None,
+		Some("frost"),
 		None,
 		// Properties
 		serde_json::from_str(FROST_PROPERTIES).unwrap(),
@@ -140,7 +140,7 @@ pub fn development_config() -> Result<FrostChainSpec, String> {
 		// Telemetry
 		None,
 		// Protocol ID
-		None,
+		Some("frost-dev"),
 		None,
 		// Properties
 		serde_json::from_str(FROST_PROPERTIES).unwrap(),
