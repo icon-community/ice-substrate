@@ -1,7 +1,8 @@
 use frost_runtime::{
 	currency::ICY, opaque::SessionKeys, AccountId, AuraConfig, BalancesConfig, CouncilConfig,
-	EVMConfig, EthereumConfig, GenesisConfig, GrandpaConfig, SessionConfig, Signature, SudoConfig,
-	SystemConfig, TreasuryPalletId, WASM_BINARY,
+	CouncilMembershipConfig, DemocracyConfig, EVMConfig, EthereumConfig, GenesisConfig,
+	GrandpaConfig, IndicesConfig, SessionConfig, Signature, SudoConfig, SystemConfig,
+	TechnicalCommitteeConfig, TechnicalMembershipConfig, TreasuryPalletId, WASM_BINARY,
 };
 use hex_literal::hex;
 use sc_service::ChainType;
@@ -10,7 +11,6 @@ use sp_core::{crypto::UncheckedInto, sr25519, Pair, Public};
 use sp_finality_grandpa::AuthorityId as GrandpaId;
 use sp_runtime::traits::{AccountIdConversion, IdentifyAccount, Verify};
 use std::collections::BTreeMap;
-use std::marker::PhantomData;
 
 // The URL for the telemetry server.
 // const STAGING_TELEMETRY_URL: &str = "wss://telemetry.polkadot.io/submit/";
@@ -80,6 +80,9 @@ pub fn testnet_config() -> Result<FrostChainSpec, String> {
 				vec![
 					hex!["62687296bffd79f12178c4278b9439d5eeb8ed7cc0b1f2ae29307e806a019659"].into(),
 				],
+				vec![
+					hex!["62687296bffd79f12178c4278b9439d5eeb8ed7cc0b1f2ae29307e806a019659"].into(),
+				],
 				// Sudo account
 				hex!["62687296bffd79f12178c4278b9439d5eeb8ed7cc0b1f2ae29307e806a019659"].into(),
 				// Pre-funded accounts
@@ -121,6 +124,7 @@ pub fn development_config() -> Result<FrostChainSpec, String> {
 				// Initial PoA authorities
 				vec![authority_keys_from_seed("Alice")],
 				// Council members
+				vec![get_account_id_from_seed::<sr25519::Public>("Alice")],
 				vec![get_account_id_from_seed::<sr25519::Public>("Alice")],
 				// Sudo account
 				get_account_id_from_seed::<sr25519::Public>("Alice"),
@@ -169,6 +173,7 @@ pub fn local_testnet_config() -> Result<FrostChainSpec, String> {
 				],
 				// Council members
 				vec![get_account_id_from_seed::<sr25519::Public>("Alice")],
+				vec![get_account_id_from_seed::<sr25519::Public>("Alice")],
 				// Sudo account
 				get_account_id_from_seed::<sr25519::Public>("Alice"),
 				// Pre-funded accounts
@@ -213,6 +218,7 @@ fn testnet_genesis(
 	wasm_binary: &[u8],
 	_initial_authorities: Vec<(AuraId, GrandpaId)>,
 	council_members: Vec<AccountId>,
+	technical_committee_membership: Vec<AccountId>,
 	root_key: AccountId,
 	endowed_accounts: Vec<AccountId>,
 	_enable_println: bool,
@@ -271,12 +277,27 @@ fn testnet_genesis(
 		base_fee: Default::default(),
 		vesting: Default::default(),
 		assets: Default::default(),
-		council: CouncilConfig {
+		council_membership: CouncilMembershipConfig {
 			members: council_members,
-			phantom: PhantomData,
+			phantom: Default::default(),
+		},
+		council: CouncilConfig {
+			members: vec![],
+			phantom: Default::default(),
 		},
 		treasury: Default::default(),
 		simple_inflation: Default::default(),
 		fees_split: Default::default(),
+		technical_membership: TechnicalMembershipConfig {
+			members: technical_committee_membership,
+			phantom: Default::default(),
+		},
+		technical_committee: TechnicalCommitteeConfig {
+			members: vec![],
+			phantom: Default::default(),
+		},
+		phragmen_election: Default::default(),
+		indices: IndicesConfig { indices: vec![] },
+		democracy: DemocracyConfig::default(),
 	}
 }

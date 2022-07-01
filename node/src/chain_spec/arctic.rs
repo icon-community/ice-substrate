@@ -2,8 +2,9 @@ use super::{get_from_seed, Extensions};
 use arctic_runtime::currency::ICY;
 use arctic_runtime::{
 	wasm_binary_unwrap, AccountId, AuraConfig, AuraId, BalancesConfig, CollatorSelectionConfig,
-	CouncilConfig, EVMConfig, GenesisConfig, ParachainInfoConfig, SessionConfig, SessionKeys,
-	Signature, SudoConfig, SystemConfig, VestingConfig, TechnicalCommitteeConfig,
+	CouncilConfig, CouncilMembershipConfig, DemocracyConfig, EVMConfig, GenesisConfig,
+	IndicesConfig, ParachainInfoConfig, SessionConfig, SessionKeys, Signature, SudoConfig,
+	SystemConfig, TechnicalCommitteeConfig, TechnicalMembershipConfig, VestingConfig,
 };
 use cumulus_primitives_core::ParaId;
 use hex_literal::hex;
@@ -11,7 +12,6 @@ use sc_service::ChainType;
 use sp_core::{crypto::UncheckedInto, sr25519, Pair, Public};
 use sp_runtime::traits::{IdentifyAccount, Verify};
 use std::collections::BTreeMap;
-use std::marker::PhantomData;
 
 /// Publicly expose ArcticChainSpec for sc service
 pub type ArcticChainSpec = sc_service::GenericChainSpec<GenesisConfig, Extensions>;
@@ -177,12 +177,16 @@ fn make_genesis(
 		dynamic_fee: Default::default(),
 		base_fee: Default::default(),
 		assets: Default::default(),
-		council: CouncilConfig {
+		council_membership: CouncilMembershipConfig {
 			members: council_members,
-			phantom: PhantomData,
+			phantom: Default::default(),
+		},
+		council: CouncilConfig {
+			members: vec![],
+			phantom: Default::default(),
 		},
 		technical_committee: TechnicalCommitteeConfig {
-			members: technical_committee,
+			members: vec![],
 			phantom: Default::default(),
 		},
 		ethereum: Default::default(),
@@ -191,6 +195,13 @@ fn make_genesis(
 		parachain_system: Default::default(),
 		simple_inflation: Default::default(),
 		fees_split: Default::default(),
+		technical_membership: TechnicalMembershipConfig {
+			members: technical_committee,
+			phantom: Default::default(),
+		},
+		phragmen_election: Default::default(),
+		indices: IndicesConfig { indices: vec![] },
+		democracy: DemocracyConfig::default(),
 	}
 }
 
