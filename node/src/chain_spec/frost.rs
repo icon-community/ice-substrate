@@ -1,7 +1,7 @@
 use frost_runtime::{
 	currency::ICY, opaque::SessionKeys, AccountId, AuraConfig, BalancesConfig, CouncilConfig,
 	EVMConfig, EthereumConfig, GenesisConfig, GrandpaConfig, SessionConfig, Signature, SudoConfig,
-	SystemConfig, TreasuryPalletId, WASM_BINARY,
+	SystemConfig, TreasuryPalletId, WASM_BINARY, AirdropConfig,
 };
 use hex_literal::hex;
 use sc_service::ChainType;
@@ -46,6 +46,9 @@ pub fn authority_keys_from_seed(s: &str) -> (AuraId, GrandpaId) {
 	(get_from_seed::<AuraId>(s), get_from_seed::<GrandpaId>(s))
 }
 
+const AIRDROP_MERKLE_ROOT: [u8; 32] =
+	hex_literal::hex!("990e01e3959627d2ddd94927e1c605a422b62dc3b8c8b98d713ae6833c3ef122");
+
 /// Initialize frost testnet configuration
 pub fn testnet_config() -> Result<FrostChainSpec, String> {
 	let wasm_binary = WASM_BINARY.ok_or_else(|| "Development wasm not available".to_string())?;
@@ -82,6 +85,8 @@ pub fn testnet_config() -> Result<FrostChainSpec, String> {
 				],
 				// Sudo account
 				hex!["62687296bffd79f12178c4278b9439d5eeb8ed7cc0b1f2ae29307e806a019659"].into(),
+				// Airdrop creditor account
+				hex!("10b3ae7ebb7d722c8e8d0d6bf421f6d5dbde8d329f7c905a201539c635d61872").into(),
 				// Pre-funded accounts
 				vec![
 					TreasuryPalletId::get().into_account_truncating(),
@@ -124,6 +129,8 @@ pub fn development_config() -> Result<FrostChainSpec, String> {
 				vec![get_account_id_from_seed::<sr25519::Public>("Alice")],
 				// Sudo account
 				get_account_id_from_seed::<sr25519::Public>("Alice"),
+				// Airdrop creditor account
+				hex!("10b3ae7ebb7d722c8e8d0d6bf421f6d5dbde8d329f7c905a201539c635d61872").into(),
 				// Pre-funded accounts
 				vec![
 					TreasuryPalletId::get().into_account_truncating(),
@@ -171,6 +178,8 @@ pub fn local_testnet_config() -> Result<FrostChainSpec, String> {
 				vec![get_account_id_from_seed::<sr25519::Public>("Alice")],
 				// Sudo account
 				get_account_id_from_seed::<sr25519::Public>("Alice"),
+				// Airdrop creditor account
+				hex!("10b3ae7ebb7d722c8e8d0d6bf421f6d5dbde8d329f7c905a201539c635d61872").into(),
 				// Pre-funded accounts
 				vec![
 					get_account_id_from_seed::<sr25519::Public>("Alice"),
@@ -214,6 +223,7 @@ fn testnet_genesis(
 	_initial_authorities: Vec<(AuraId, GrandpaId)>,
 	council_members: Vec<AccountId>,
 	root_key: AccountId,
+	airdrop_creditor_account: [u8; 32],
 	endowed_accounts: Vec<AccountId>,
 	_enable_println: bool,
 ) -> GenesisConfig {
@@ -278,5 +288,9 @@ fn testnet_genesis(
 		treasury: Default::default(),
 		simple_inflation: Default::default(),
 		fees_split: Default::default(),
+		airdrop: AirdropConfig {
+			creditor_account: sp_runtime::AccountId32::new(airdrop_creditor_account),
+			merkle_root: AIRDROP_MERKLE_ROOT,
+		},
 	}
 }
