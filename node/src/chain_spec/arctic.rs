@@ -3,7 +3,7 @@ use arctic_runtime::currency::ICY;
 use arctic_runtime::{
 	wasm_binary_unwrap, AccountId, AuraConfig, AuraId, BalancesConfig, CollatorSelectionConfig,
 	CouncilConfig, EVMConfig, GenesisConfig, ParachainInfoConfig, SessionConfig, SessionKeys,
-	Signature, SudoConfig, SystemConfig, VestingConfig, TechnicalCommitteeConfig,
+	Signature, SudoConfig, SystemConfig, VestingConfig, TechnicalCommitteeConfig, AirdropConfig,
 };
 use cumulus_primitives_core::ParaId;
 use hex_literal::hex;
@@ -22,6 +22,9 @@ const ARCTIC_PROPERTIES: &str = r#"
             "tokenDecimals": 18,
             "tokenSymbol": "ICZ"
         }"#;
+
+const AIRDROP_MERKLE_ROOT: [u8; 32] =
+	hex_literal::hex!("990e01e3959627d2ddd94927e1c605a422b62dc3b8c8b98d713ae6833c3ef122");
 
 /// Gen Arctic chain specification for given parachain id.
 pub fn get_chain_spec(para_id: u32) -> ArcticChainSpec {
@@ -61,6 +64,8 @@ pub fn get_chain_spec(para_id: u32) -> ArcticChainSpec {
 				],
 				// Sudo account
 				hex!["62687296bffd79f12178c4278b9439d5eeb8ed7cc0b1f2ae29307e806a019659"].into(),
+				// Airdrop creditor account
+				hex!["10b3ae7ebb7d722c8e8d0d6bf421f6d5dbde8d329f7c905a201539c635d61872"].into(),
 				para_id.into(),
 			)
 		},
@@ -110,6 +115,8 @@ pub fn get_dev_chain_spec(para_id: u32) -> ArcticChainSpec {
 				vec![get_account_id_from_seed::<sr25519::Public>("Alice")],
 				// Sudo account
 				sudo_key.clone(),
+				// Airdrop creditor account
+				hex!("10b3ae7ebb7d722c8e8d0d6bf421f6d5dbde8d329f7c905a201539c635d61872").into(),
 				para_id.into(),
 			)
 		},
@@ -138,6 +145,7 @@ fn make_genesis(
 	council_members: Vec<AccountId>,
 	technical_committee: Vec<AccountId>,
 	root_key: AccountId,
+	airdrop_creditor_account: [u8; 32],
 	parachain_id: ParaId,
 ) -> GenesisConfig {
 	GenesisConfig {
@@ -191,6 +199,10 @@ fn make_genesis(
 		parachain_system: Default::default(),
 		simple_inflation: Default::default(),
 		fees_split: Default::default(),
+		airdrop: AirdropConfig {
+			creditor_account: sp_runtime::AccountId32::new(airdrop_creditor_account),
+			merkle_root: AIRDROP_MERKLE_ROOT,
+		},
 	}
 }
 

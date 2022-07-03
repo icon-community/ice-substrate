@@ -646,6 +646,23 @@ impl pallet_base_fee::Config for Runtime {
 
 impl pallet_randomness_collective_flip::Config for Runtime {}
 
+const VESTED_AIRDROP_BEHAVIOUR: pallet_airdrop::AirdropBehaviour =
+	pallet_airdrop::AirdropBehaviour {
+		defi_instant_percentage: 30,
+		non_defi_instant_percentage: 20,
+		vesting_period: 7776000,
+	};
+impl pallet_airdrop::Config for Runtime {
+	type Event = Event;
+	type Currency = Balances;
+	type BalanceTypeConversion = sp_runtime::traits::ConvertInto;
+	type AirdropWeightInfo = pallet_airdrop::weights::AirDropWeightInfo<Runtime>;
+	type MerkelProofValidator = pallet_airdrop::merkle::AirdropMerkleValidator<Runtime>;
+	type MaxProofSize = frame_support::traits::ConstU32<21>;
+	const AIRDROP_VARIABLES: pallet_airdrop::AirdropBehaviour = VESTED_AIRDROP_BEHAVIOUR;
+}
+
+
 // Create the runtime by composing the FRAME pallets that were previously configured.
 construct_runtime!(
 	pub enum Runtime where
@@ -689,6 +706,7 @@ construct_runtime!(
 		Treasury: pallet_treasury::{Pallet, Call, Storage, Event<T>, Config},
 		SimpleInflation: pallet_simple_inflation::{Pallet, Call, Storage, Config<T>},
 		FeesSplit: pallet_fees_split::{Pallet, Call, Storage, Config<T>},
+		Airdrop: pallet_airdrop::{Pallet, Call, Storage, Config<T>, Event<T>},
 	}
 );
 

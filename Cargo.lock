@@ -133,6 +133,7 @@ dependencies = [
  "frame-system-benchmarking",
  "frame-system-rpc-runtime-api",
  "frame-try-runtime",
+ "pallet-airdrop",
  "pallet-assets",
  "pallet-aura",
  "pallet-authorship",

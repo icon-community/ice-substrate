@@ -77,6 +77,7 @@ fp-self-contained = { default-features = false, git = "https://github.com/web3la
 # local pallet
 pallet-simple-inflation = { path = '../../pallets/simple-inflation', default-features = false, version = '0.0.2' }
 pallet-fees-split = { path = "../../pallets/fees-split", default-features = false, version = '0.0.1' }
+pallet-airdrop = { path = "../../pallets/airdrop", default-features = false }
 
 # ice-runtime-fees-split = { default-features = false, path = "../fees-split", optional=true}
 
@@ -172,6 +173,7 @@ std = [
 	"sp-version/std",
 
 	# "ice-runtime-fees-split",
+	"pallet-airdrop/std",
 
 	"frame-benchmarking/std",
 	# "frame-system-benchmarking/std",
@@ -206,7 +208,8 @@ runtime-benchmarks = [
 	"pallet-xcm/runtime-benchmarks",
 	"pallet-collective/runtime-benchmarks",
     "pallet-treasury/runtime-benchmarks",
-	"xcm-builder/runtime-benchmarks"
+	"xcm-builder/runtime-benchmarks",
+	"pallet-airdrop/runtime-benchmarks",
 ]
 
 try-runtime = [
@@ -223,4 +226,5 @@ try-runtime = [
     "pallet-timestamp/try-runtime",
     "pallet-transaction-payment/try-runtime",
     "pallet-vesting/try-runtime",
+	"pallet-airdrop/try-runtime",
 ]
