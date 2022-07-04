@@ -29,7 +29,7 @@ fn frost_properties() -> Properties {
 
 	properties.insert("tokenSymbol".into(), "ICY".into());
 	properties.insert("tokenDecimals".into(), 18.into());
-	properties.insert("ss58Format".into(), 42.into());
+	properties.insert("ss58Format".into(), 15253.into());
 
 	properties
 }
