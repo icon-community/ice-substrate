@@ -1088,11 +1088,11 @@ construct_runtime!(
 		UncheckedExtrinsic = UncheckedExtrinsic
 	{
 		// Basic stuff
-		System: frame_system::{Pallet, Call, Config, Storage, Event<T>} = 1,
-		Timestamp: pallet_timestamp::{Pallet, Call, Storage, Inherent} = 2,
-		Identity: pallet_identity::{Pallet, Call, Storage, Event<T>} = 3,
-		Sudo: pallet_sudo::{Pallet, Call, Config<T>, Storage, Event<T>} = 4,
-		Indices: pallet_indices::{Pallet, Call, Storage, Config<T>, Event<T>} = 5,
+		System: frame_system::{Pallet, Call, Config, Storage, Event<T>} = 0,
+		Timestamp: pallet_timestamp::{Pallet, Call, Storage, Inherent} = 1,
+		Identity: pallet_identity::{Pallet, Call, Storage, Event<T>} = 2,
+		Sudo: pallet_sudo::{Pallet, Call, Config<T>, Storage, Event<T>} = 3,
+		Indices: pallet_indices::{Pallet, Call, Storage, Config<T>, Event<T>} = 4,
 
 		// Parachain stuff
 		ParachainSystem: cumulus_pallet_parachain_system::{Pallet, Call, Config, Storage, Inherent, Event<T>, ValidateUnsigned} = 10,

@@ -1028,12 +1028,12 @@ construct_runtime!(
 		UncheckedExtrinsic = UncheckedExtrinsic
 	{
 		// Basic stuff
-		System: frame_system::{Pallet, Call, Config, Storage, Event<T>} = 1,
-		Timestamp: pallet_timestamp::{Pallet, Call, Storage, Inherent} = 2,
-		Identity: pallet_identity::{Pallet, Call, Storage, Event<T>} = 3,
-		Sudo: pallet_sudo::{Pallet, Call, Config<T>, Storage, Event<T>} = 4,
-		Indices: pallet_indices::{Pallet, Call, Storage, Config<T>, Event<T>} = 5,
-		Grandpa: pallet_grandpa::{Pallet, Call, Storage, Config, Event} = 6,
+		System: frame_system::{Pallet, Call, Config, Storage, Event<T>} = 0,
+		Timestamp: pallet_timestamp::{Pallet, Call, Storage, Inherent} = 1,
+		Identity: pallet_identity::{Pallet, Call, Storage, Event<T>} = 2,
+		Sudo: pallet_sudo::{Pallet, Call, Config<T>, Storage, Event<T>} = 3,
+		Indices: pallet_indices::{Pallet, Call, Storage, Config<T>, Event<T>} = 4,
+		Grandpa: pallet_grandpa::{Pallet, Call, Storage, Config, Event} = 5,
 
 		// Monetary stuff
 		Balances: pallet_balances::{Pallet, Call, Storage, Config<T>, Event<T>} = 10,
