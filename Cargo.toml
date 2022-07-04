@@ -6,6 +6,7 @@ members = [
     "node",
     "runtime/arctic",
     "runtime/frost",
+    "pallets/airdrop",
     "pallets/fees-split",
     "pallets/simple-inflation",
     "integration-tests",
