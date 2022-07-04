@@ -1,3 +1,5 @@
+#![allow(clippy::type_complexity)]
+
 //! Parachain Service and ServiceFactory implementation.
 
 //! Parachain Service and ServiceFactory implementation.
