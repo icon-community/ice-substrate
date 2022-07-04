@@ -114,7 +114,7 @@ dependencies = [
 
 [[package]]
 name = "arctic-runtime"
-version = "0.4.35"
+version = "0.4.37"
 dependencies = [
  "cumulus-pallet-aura-ext",
  "cumulus-pallet-dmp-queue",
@@ -139,12 +139,15 @@ dependencies = [
  "pallet-authorship",
  "pallet-balances",
  "pallet-base-fee",
+ "pallet-bounties",
  "pallet-collator-selection",
  "pallet-collective",
  "pallet-contracts",
  "pallet-contracts-primitives",
  "pallet-contracts-rpc-runtime-api",
+ "pallet-democracy",
  "pallet-dynamic-fee",
+ "pallet-elections-phragmen",
  "pallet-ethereum",
  "pallet-evm",
  "pallet-evm-precompile-modexp",
@@ -152,15 +155,24 @@ dependencies = [
  "pallet-evm-precompile-simple",
  "pallet-fees-split",
  "pallet-grandpa",
+ "pallet-identity",
+ "pallet-indices",
+ "pallet-membership",
+ "pallet-multisig",
+ "pallet-preimage",
+ "pallet-proxy",
  "pallet-randomness-collective-flip",
+ "pallet-scheduler",
  "pallet-session",
  "pallet-simple-inflation",
  "pallet-staking",
  "pallet-sudo",
  "pallet-timestamp",
+ "pallet-tips",
  "pallet-transaction-payment",
  "pallet-transaction-payment-rpc-runtime-api",
  "pallet-treasury",
+ "pallet-utility",
  "pallet-vesting",
  "pallet-xcm",
  "parachain-info",
@@ -184,6 +196,7 @@ dependencies = [
  "sp-std",
  "sp-transaction-pool",
  "sp-version",
+ "static_assertions",
  "substrate-wasm-builder",
  "try-runtime-cli",
  "xcm",
@@ -3051,7 +3064,7 @@ dependencies = [
 
 [[package]]
 name = "frost-runtime"
-version = "0.4.35"
+version = "0.4.37"
 dependencies = [
  "fp-rpc",
  "fp-self-contained",
@@ -3069,11 +3082,14 @@ dependencies = [
  "pallet-authorship",
  "pallet-balances",
  "pallet-base-fee",
+ "pallet-bounties",
  "pallet-collective",
  "pallet-contracts",
  "pallet-contracts-primitives",
  "pallet-contracts-rpc-runtime-api",
+ "pallet-democracy",
  "pallet-dynamic-fee",
+ "pallet-elections-phragmen",
  "pallet-ethereum",
  "pallet-evm",
  "pallet-evm-precompile-modexp",
@@ -3081,15 +3097,24 @@ dependencies = [
  "pallet-evm-precompile-simple",
  "pallet-fees-split",
  "pallet-grandpa",
+ "pallet-identity",
+ "pallet-indices",
+ "pallet-membership",
+ "pallet-multisig",
+ "pallet-preimage",
+ "pallet-proxy",
  "pallet-randomness-collective-flip",
+ "pallet-scheduler",
  "pallet-session",
  "pallet-simple-inflation",
  "pallet-staking",
  "pallet-sudo",
  "pallet-timestamp",
+ "pallet-tips",
  "pallet-transaction-payment",
  "pallet-transaction-payment-rpc-runtime-api",
  "pallet-treasury",
+ "pallet-utility",
  "pallet-vesting",
  "parity-scale-codec",
  "scale-info",
@@ -3109,6 +3134,7 @@ dependencies = [
  "sp-std",
  "sp-transaction-pool",
  "sp-version",
+ "static_assertions",
  "substrate-wasm-builder",
  "try-runtime-cli",
 ]
@@ -3619,7 +3645,7 @@ dependencies = [
 
 [[package]]
 name = "ice-node"
-version = "0.4.34"
+version = "0.4.37"
 dependencies = [
  "arctic-runtime",
  "async-trait",

@@ -7,7 +7,7 @@ homepage = 'https://substrate.dev'
 license = 'Apache-2.0'
 name = 'frost-runtime'
 repository = 'https://github.com/web3labs/ice-substrate/'
-version = '0.4.35'
+version = '0.4.37'
 publish = false
 
 [package.metadata.docs.rs]
@@ -18,6 +18,7 @@ codec = { package = "parity-scale-codec", version = "3.0.0", default-features = 
 serde = { version = "1.0.101", optional = true, features = ["derive"] }
 scale-info = { version = "2.0.1", default-features = false, features = ["derive"] }
 smallvec = "1.0.0"
+static_assertions = "1.1.0"
 
 # frame dependencies
 frame-executive = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.23" }
@@ -41,6 +42,18 @@ pallet-vesting = {  default-features = false, git = "https://github.com/parityte
 pallet-staking = {  default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.23" }
 pallet-authorship = {  default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.23" }
 pallet-session = {  default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.23" }
+pallet-utility = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.23", default-features = false }
+pallet-scheduler = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.23", default-features = false }
+pallet-preimage = { git = 'https://github.com/paritytech/substrate.git', branch = 'polkadot-v0.9.23', default-features = false }
+pallet-proxy = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.23", default-features = false }
+pallet-multisig = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.23", default-features = false }
+pallet-identity = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.23", default-features = false }
+pallet-bounties = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.23", default-features = false }
+pallet-tips = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.23", default-features = false }
+pallet-elections-phragmen = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.23", default-features = false }
+pallet-membership = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.23", default-features = false }
+pallet-democracy = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.23", default-features = false }
+pallet-indices = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.23", default-features = false }
 
 log = "0.4.17"
 
@@ -140,6 +153,17 @@ std = [
 	"pallet-session/std",
 	"pallet-fees-split/std",
 	"pallet-airdrop/std",
+	"pallet-scheduler/std",
+	"pallet-preimage/std",
+	"pallet-proxy/std",
+	"pallet-multisig/std",
+	"pallet-identity/std",
+	"pallet-bounties/std",
+	"pallet-tips/std",
+	"pallet-elections-phragmen/std",
+	"pallet-membership/std",
+	"pallet-democracy/std",
+	"pallet-indices/std",
 
 	"sp-api/std",
 	"sp-block-builder/std",
@@ -174,6 +198,13 @@ runtime-benchmarks = [
 	"pallet-collective/runtime-benchmarks",
     "pallet-treasury/runtime-benchmarks",
 	"pallet-airdrop/runtime-benchmarks",
+	"pallet-utility/runtime-benchmarks",
+	"pallet-scheduler/runtime-benchmarks",
+	"pallet-bounties/runtime-benchmarks",
+	"pallet-tips/runtime-benchmarks",
+	"pallet-elections-phragmen/runtime-benchmarks",
+	"pallet-membership/runtime-benchmarks",
+	"pallet-indices/runtime-benchmarks",
 ]
 
 try-runtime = [
@@ -191,4 +222,6 @@ try-runtime = [
     "pallet-transaction-payment/try-runtime",
     "pallet-vesting/try-runtime",
 	"pallet-airdrop/try-runtime",
+	"pallet-scheduler/try-runtime",
+	"pallet-membership/try-runtime",
 ]
