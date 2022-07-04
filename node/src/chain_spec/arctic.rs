@@ -1,13 +1,14 @@
 use super::{get_from_seed, Extensions};
 use arctic_runtime::currency::ICY;
 use arctic_runtime::{
-	wasm_binary_unwrap, AccountId, AuraConfig, AuraId, BalancesConfig, CollatorSelectionConfig,
-	CouncilConfig, CouncilMembershipConfig, DemocracyConfig, EVMConfig, GenesisConfig,
-	IndicesConfig, ParachainInfoConfig, SessionConfig, SessionKeys, Signature, SudoConfig,
-	SystemConfig, TechnicalCommitteeConfig, TechnicalMembershipConfig, VestingConfig, AirdropConfig
+	wasm_binary_unwrap, AccountId, AirdropConfig, AuraConfig, AuraId, BalancesConfig,
+	CollatorSelectionConfig, CouncilConfig, CouncilMembershipConfig, DemocracyConfig, EVMConfig,
+	GenesisConfig, IndicesConfig, ParachainInfoConfig, SessionConfig, SessionKeys, Signature,
+	SudoConfig, SystemConfig, TechnicalCommitteeConfig, TechnicalMembershipConfig, VestingConfig,
 };
 use cumulus_primitives_core::ParaId;
 use hex_literal::hex;
+use sc_chain_spec::Properties;
 use sc_service::ChainType;
 use sp_core::{crypto::UncheckedInto, sr25519, Pair, Public};
 use sp_runtime::traits::{IdentifyAccount, Verify};
@@ -16,80 +17,108 @@ use std::collections::BTreeMap;
 /// Publicly expose ArcticChainSpec for sc service
 pub type ArcticChainSpec = sc_service::GenericChainSpec<GenesisConfig, Extensions>;
 
-const ARCTIC_PROPERTIES: &str = r#"
-        {
-            "ss58Format": 42,
-            "tokenDecimals": 18,
-            "tokenSymbol": "ICZ"
-        }"#;
-
 const AIRDROP_MERKLE_ROOT: [u8; 32] =
-	hex_literal::hex!("990e01e3959627d2ddd94927e1c605a422b62dc3b8c8b98d713ae6833c3ef122");
+	hex!("990e01e3959627d2ddd94927e1c605a422b62dc3b8c8b98d713ae6833c3ef122");
 
-/// Gen Arctic chain specification for given parachain id.
-pub fn get_chain_spec(para_id: u32) -> ArcticChainSpec {
+const PARA_ID: u32 = 2000;
+
+fn arctic_properties() -> Properties {
+	let mut properties = Properties::new();
+
+	properties.insert("tokenSymbol".into(), "ICY".into());
+	properties.insert("tokenDecimals".into(), 18.into());
+	properties.insert("ss58Format".into(), 42.into());
+
+	properties
+}
+
+/// Gen Arctic chain specification.
+pub fn get_chain_spec() -> ArcticChainSpec {
+	let endowed_accounts = vec![
+		hex!["62687296bffd79f12178c4278b9439d5eeb8ed7cc0b1f2ae29307e806a019659"].into(),
+		hex!["d893ef775b5689473b2e9fa32c1f15c72a7c4c86f05f03ee32b8aca6ce61b92c"].into(),
+		hex!["98003761bff94c8c44af38b8a92c1d5992d061d41f700c76255c810d447d613f"].into(),
+	];
+
+	let authorities = vec![
+		(
+			hex!["62687296bffd79f12178c4278b9439d5eeb8ed7cc0b1f2ae29307e806a019659"].into(),
+			hex!["62687296bffd79f12178c4278b9439d5eeb8ed7cc0b1f2ae29307e806a019659"]
+				.unchecked_into(),
+		),
+		(
+			hex!["d893ef775b5689473b2e9fa32c1f15c72a7c4c86f05f03ee32b8aca6ce61b92c"].into(),
+			hex!["d893ef775b5689473b2e9fa32c1f15c72a7c4c86f05f03ee32b8aca6ce61b92c"]
+				.unchecked_into(),
+		),
+	];
+
+	let council_members =
+		vec![hex!["62687296bffd79f12178c4278b9439d5eeb8ed7cc0b1f2ae29307e806a019659"].into()];
+
+	let technical_committee =
+		vec![hex!["62687296bffd79f12178c4278b9439d5eeb8ed7cc0b1f2ae29307e806a019659"].into()];
+
+	let root_key: AccountId =
+		hex!["62687296bffd79f12178c4278b9439d5eeb8ed7cc0b1f2ae29307e806a019659"].into();
+
+	let airdrop_creditor_account: AccountId =
+		hex!["10b3ae7ebb7d722c8e8d0d6bf421f6d5dbde8d329f7c905a201539c635d61872"].into();
+
 	ArcticChainSpec::from_genesis(
-		"Arctic Testnet",
+		"Arctic",
 		"arctic",
 		ChainType::Live,
 		move || {
 			make_genesis(
-				// Endowed accounts
-				vec![
-					hex!["62687296bffd79f12178c4278b9439d5eeb8ed7cc0b1f2ae29307e806a019659"].into(),
-					hex!["d893ef775b5689473b2e9fa32c1f15c72a7c4c86f05f03ee32b8aca6ce61b92c"].into(),
-					hex!["98003761bff94c8c44af38b8a92c1d5992d061d41f700c76255c810d447d613f"].into(),
-				],
-				// Initial PoA authorities
-				vec![
-					(
-						hex!["62687296bffd79f12178c4278b9439d5eeb8ed7cc0b1f2ae29307e806a019659"]
-							.into(),
-						hex!["62687296bffd79f12178c4278b9439d5eeb8ed7cc0b1f2ae29307e806a019659"]
-							.unchecked_into(),
-					),
-					(
-						hex!["d893ef775b5689473b2e9fa32c1f15c72a7c4c86f05f03ee32b8aca6ce61b92c"]
-							.into(),
-						hex!["d893ef775b5689473b2e9fa32c1f15c72a7c4c86f05f03ee32b8aca6ce61b92c"]
-							.unchecked_into(),
-					),
-				],
-				// Council members
-				vec![
-					hex!["62687296bffd79f12178c4278b9439d5eeb8ed7cc0b1f2ae29307e806a019659"].into(),
-				],
-				vec![
-					hex!["62687296bffd79f12178c4278b9439d5eeb8ed7cc0b1f2ae29307e806a019659"].into(),
-				],
-				// Sudo account
-				hex!["62687296bffd79f12178c4278b9439d5eeb8ed7cc0b1f2ae29307e806a019659"].into(),
-				// Airdrop creditor account
-				hex!["10b3ae7ebb7d722c8e8d0d6bf421f6d5dbde8d329f7c905a201539c635d61872"].into(),
-				para_id.into(),
+				endowed_accounts.clone(),
+				authorities.clone(),
+				council_members.clone(),
+				technical_committee.clone(),
+				root_key.clone(),
+				airdrop_creditor_account.clone(),
+				PARA_ID.into(),
 			)
 		},
 		vec![],
 		None,
 		None,
 		None,
-		serde_json::from_str(ARCTIC_PROPERTIES).unwrap(),
+		Some(arctic_properties()),
 		Extensions {
 			bad_blocks: Default::default(),
-			relay_chain: "arctic".into(),
-			para_id,
+			relay_chain: "rococo".into(),
+			para_id: PARA_ID,
 		},
 	)
 }
 
-/// Gen Arctic chain specification for given parachain id.
-pub fn get_dev_chain_spec(para_id: u32) -> ArcticChainSpec {
-	// Alice as default
-	let sudo_key = get_account_id_from_seed::<sr25519::Public>("Alice");
-	let endowned = vec![
+/// Gen Arctic chain specification.
+pub fn get_dev_chain_spec() -> ArcticChainSpec {
+	let endowed_accounts = vec![
 		(get_account_id_from_seed::<sr25519::Public>("Alice")),
 		(get_account_id_from_seed::<sr25519::Public>("Bob")),
 	];
+
+	let authorities = vec![
+		(
+			get_account_id_from_seed::<sr25519::Public>("Alice"),
+			get_from_seed::<AuraId>("Alice"),
+		),
+		(
+			get_account_id_from_seed::<sr25519::Public>("Bob"),
+			get_from_seed::<AuraId>("Bob"),
+		),
+	];
+
+	let council_members = vec![get_account_id_from_seed::<sr25519::Public>("Alice")];
+
+	let technical_committee = vec![get_account_id_from_seed::<sr25519::Public>("Alice")];
+
+	let root_key = get_account_id_from_seed::<sr25519::Public>("Alice");
+
+	let airdrop_creditor_account: AccountId =
+		hex!["10b3ae7ebb7d722c8e8d0d6bf421f6d5dbde8d329f7c905a201539c635d61872"].into();
 
 	ArcticChainSpec::from_genesis(
 		"Arctic Dev",
@@ -97,38 +126,24 @@ pub fn get_dev_chain_spec(para_id: u32) -> ArcticChainSpec {
 		ChainType::Development,
 		move || {
 			make_genesis(
-				// Endowed accounts
-				endowned.clone(),
-				// Initial PoA authorities
-				vec![
-					(
-						get_account_id_from_seed::<sr25519::Public>("Alice"),
-						get_from_seed::<AuraId>("Alice"),
-					),
-					(
-						get_account_id_from_seed::<sr25519::Public>("Bob"),
-						get_from_seed::<AuraId>("Bob"),
-					),
-				],
-				// Council members
-				vec![get_account_id_from_seed::<sr25519::Public>("Alice")],
-				vec![get_account_id_from_seed::<sr25519::Public>("Alice")],
-				// Sudo account
-				sudo_key.clone(),
-				// Airdrop creditor account
-				hex!("10b3ae7ebb7d722c8e8d0d6bf421f6d5dbde8d329f7c905a201539c635d61872").into(),
-				para_id.into(),
+				endowed_accounts.clone(),
+				authorities.clone(),
+				council_members.clone(),
+				technical_committee.clone(),
+				root_key.clone(),
+				airdrop_creditor_account.clone(),
+				PARA_ID.into(),
 			)
 		},
 		vec![],
 		None,
 		None,
 		None,
-		serde_json::from_str(ARCTIC_PROPERTIES).unwrap(),
+		Some(arctic_properties()),
 		Extensions {
 			bad_blocks: Default::default(),
-			relay_chain: "arctic".into(),
-			para_id,
+			relay_chain: "rococo-local".into(),
+			para_id: PARA_ID,
 		},
 	)
 }
@@ -145,7 +160,7 @@ fn make_genesis(
 	council_members: Vec<AccountId>,
 	technical_committee: Vec<AccountId>,
 	root_key: AccountId,
-	airdrop_creditor_account: [u8; 32],
+	airdrop_creditor_account: AccountId,
 	parachain_id: ParaId,
 ) -> GenesisConfig {
 	GenesisConfig {
@@ -204,7 +219,7 @@ fn make_genesis(
 		simple_inflation: Default::default(),
 		fees_split: Default::default(),
 		airdrop: AirdropConfig {
-			creditor_account: sp_runtime::AccountId32::new(airdrop_creditor_account),
+			creditor_account: airdrop_creditor_account,
 			merkle_root: AIRDROP_MERKLE_ROOT,
 		},
 		technical_membership: TechnicalMembershipConfig {

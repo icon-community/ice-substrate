@@ -1,3 +1,5 @@
+#![allow(clippy::type_complexity)]
+
 //! Local Service and ServiceFactory implementation. Specialized wrapper over substrate service.
 
 use fc_consensus::FrontierBlockImport;

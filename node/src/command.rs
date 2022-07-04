@@ -26,8 +26,6 @@ use std::{io::Write, net::SocketAddr};
 
 use frame_benchmarking_cli::{BenchmarkCmd, SUBSTRATE_REFERENCE_HARDWARE};
 
-const PARA_ID: u32 = 2000;
-
 trait IdentifyChain {
 	fn is_arctic(&self) -> bool;
 }
@@ -44,16 +42,13 @@ impl<T: sc_service::ChainSpec + 'static> IdentifyChain for T {
 	}
 }
 
-fn load_spec(
-	id: &str,
-	para_id: u32,
-) -> std::result::Result<Box<dyn sc_service::ChainSpec>, String> {
+fn load_spec(id: &str) -> std::result::Result<Box<dyn sc_service::ChainSpec>, String> {
 	Ok(match id {
 		"dev" => Box::new(development_config()?),
 		"frost" => Box::new(testnet_config()?),
 		"" | "frost-local-testnet" => Box::new(local_testnet_config()?),
-		"arctic-dev" => Box::new(get_dev_chain_spec(para_id)),
-		"arctic" => Box::new(get_chain_spec(para_id)),
+		"arctic-dev" => Box::new(get_dev_chain_spec()),
+		"arctic" => Box::new(get_chain_spec()),
 
 		path => {
 			let chain_spec = ArcticChainSpec::from_json_file(path.into())?;
@@ -100,7 +95,7 @@ impl SubstrateCli for Cli {
 	}
 
 	fn load_spec(&self, id: &str) -> std::result::Result<Box<dyn sc_service::ChainSpec>, String> {
-		load_spec(id, PARA_ID)
+		load_spec(id)
 	}
 
 	fn native_runtime_version(chain_spec: &Box<dyn ChainSpec>) -> &'static RuntimeVersion {
