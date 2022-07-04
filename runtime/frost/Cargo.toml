@@ -92,6 +92,7 @@ fp-self-contained = {default-features = false, git = "https://github.com/web3lab
 # local pallet
 pallet-simple-inflation = { path = '../../pallets/simple-inflation', default-features = false, version = '0.0.2' }
 pallet-fees-split = { path = "../../pallets/fees-split", default-features = false, version = '0.0.1' }
+pallet-airdrop = { path = "../../pallets/airdrop", default-features = false }
 
 # ice-runtime-common = { default-features = false, path = "../common", optional = true }
 
@@ -151,6 +152,7 @@ std = [
 	"pallet-authorship/std",
 	"pallet-session/std",
 	"pallet-fees-split/std",
+	"pallet-airdrop/std",
 	"pallet-scheduler/std",
 	"pallet-preimage/std",
 	"pallet-proxy/std",
@@ -195,6 +197,7 @@ runtime-benchmarks = [
 	"pallet-vesting/runtime-benchmarks",
 	"pallet-collective/runtime-benchmarks",
     "pallet-treasury/runtime-benchmarks",
+	"pallet-airdrop/runtime-benchmarks",
 	"pallet-utility/runtime-benchmarks",
 	"pallet-scheduler/runtime-benchmarks",
 	"pallet-bounties/runtime-benchmarks",
@@ -218,6 +221,7 @@ try-runtime = [
     "pallet-timestamp/try-runtime",
     "pallet-transaction-payment/try-runtime",
     "pallet-vesting/try-runtime",
+	"pallet-airdrop/try-runtime",
 	"pallet-scheduler/try-runtime",
 	"pallet-membership/try-runtime",
 ]

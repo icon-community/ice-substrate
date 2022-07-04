@@ -571,6 +571,22 @@ impl pallet_simple_inflation::Config for Runtime {
 
 impl pallet_fees_split::Config for Runtime {}
 
+const VESTED_AIRDROP_BEHAVIOUR: pallet_airdrop::AirdropBehaviour =
+	pallet_airdrop::AirdropBehaviour {
+		defi_instant_percentage: 30,
+		non_defi_instant_percentage: 20,
+		vesting_period: 7776000,
+	};
+impl pallet_airdrop::Config for Runtime {
+	type Event = Event;
+	type Currency = Balances;
+	type BalanceTypeConversion = sp_runtime::traits::ConvertInto;
+	type AirdropWeightInfo = pallet_airdrop::weights::AirDropWeightInfo<Runtime>;
+	type MerkelProofValidator = pallet_airdrop::merkle::AirdropMerkleValidator<Runtime>;
+	type MaxProofSize = frame_support::traits::ConstU32<21>;
+	const AIRDROP_VARIABLES: pallet_airdrop::AirdropBehaviour = VESTED_AIRDROP_BEHAVIOUR;
+}
+
 impl pallet_utility::Config for Runtime {
 	type Call = Call;
 	type Event = Event;
@@ -1032,6 +1048,8 @@ construct_runtime!(
 		Session: pallet_session::{Pallet, Call, Storage, Event, Config<T>},
 		Authorship: pallet_authorship::{Pallet, Call, Storage, Inherent},
 		FeesSplit: pallet_fees_split::{Pallet, Call, Storage, Config<T>},
+		Airdrop: pallet_airdrop::{Pallet, Call, Storage, Config<T>, Event<T>},
+		
 		Utility: pallet_utility::{Pallet, Call, Event},
 		Preimage: pallet_preimage::{Pallet, Call, Storage, Event<T>},
 		Scheduler: pallet_scheduler::{Pallet, Call, Storage, Event<T>},
