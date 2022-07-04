@@ -43,7 +43,7 @@ frame_support::construct_runtime!(
 
 parameter_types! {
 	pub const BlockHashCount: u64 = 250;
-	pub const SS58Prefix: u8 = 42;
+	pub const SS58Prefix: u16 = 15253;
 }
 
 impl system::Config for Test {
