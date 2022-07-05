@@ -3,8 +3,9 @@ use arctic_runtime::currency::ICY;
 use arctic_runtime::{
 	wasm_binary_unwrap, AccountId, AirdropConfig, AuraConfig, AuraId, BalancesConfig,
 	CollatorSelectionConfig, CouncilConfig, CouncilMembershipConfig, DemocracyConfig, EVMConfig,
-	GenesisConfig, IndicesConfig, ParachainInfoConfig, SessionConfig, SessionKeys, Signature,
-	SudoConfig, SystemConfig, TechnicalCommitteeConfig, TechnicalMembershipConfig, VestingConfig,
+	GenesisConfig, IndicesConfig, ParachainInfoConfig, SS58Prefix, SessionConfig, SessionKeys,
+	Signature, SudoConfig, SystemConfig, TechnicalCommitteeConfig, TechnicalMembershipConfig,
+	VestingConfig,
 };
 use cumulus_primitives_core::ParaId;
 use hex_literal::hex;
@@ -27,7 +28,7 @@ fn arctic_properties() -> Properties {
 
 	properties.insert("tokenSymbol".into(), "ICY".into());
 	properties.insert("tokenDecimals".into(), 18.into());
-	properties.insert("ss58Format".into(), 15253.into());
+	properties.insert("ss58Format".into(), SS58Prefix::get().into());
 
 	properties
 }

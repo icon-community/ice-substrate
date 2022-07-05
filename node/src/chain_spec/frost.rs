@@ -3,7 +3,7 @@
 use frost_runtime::{
 	currency::ICY, opaque::SessionKeys, AccountId, AirdropConfig, AuraConfig, BalancesConfig,
 	CouncilConfig, CouncilMembershipConfig, DemocracyConfig, EVMConfig, EthereumConfig,
-	GenesisConfig, GrandpaConfig, IndicesConfig, SessionConfig, Signature, SudoConfig,
+	GenesisConfig, GrandpaConfig, IndicesConfig, SS58Prefix, SessionConfig, Signature, SudoConfig,
 	SystemConfig, TechnicalCommitteeConfig, TechnicalMembershipConfig, TreasuryPalletId,
 	WASM_BINARY,
 };
@@ -31,7 +31,7 @@ fn frost_properties() -> Properties {
 
 	properties.insert("tokenSymbol".into(), "ICY".into());
 	properties.insert("tokenDecimals".into(), 18.into());
-	properties.insert("ss58Format".into(), 15253.into());
+	properties.insert("ss58Format".into(), SS58Prefix::get().into());
 
 	properties
 }
