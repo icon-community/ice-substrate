@@ -100,7 +100,7 @@ impl types::DoTransfer for DoVestdTransfer {
 		if !snapshot.done_instant {
 			<T as airdrop::Config>::Currency::transfer(
 				&creditor,
-				&claimer,
+				claimer,
 				instant_amount,
 				ExistenceRequirement::KeepAlive,
 			)
