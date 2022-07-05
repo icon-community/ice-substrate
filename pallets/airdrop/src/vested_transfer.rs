@@ -72,7 +72,7 @@ impl types::DoTransfer for DoVestdTransfer {
 					}
 					// log error
 					Err(err) => {
-						info!("Error while aplying vesting. For: {claimer:?}. Reason: {err:?}");
+						error!("Error while aplying vesting. For: {claimer:?}. Reason: {err:?}");
 					}
 				}
 			}
@@ -105,7 +105,7 @@ impl types::DoTransfer for DoVestdTransfer {
 				ExistenceRequirement::KeepAlive,
 			)
 			.map_err(|err| {
-				info!("Failed to instant transfer. Claimer: {claimer:?}. Reason: {err:?}");
+				error!("Failed to instant transfer. Claimer: {claimer:?}. Reason: {err:?}");
 				err
 			})?;
 
