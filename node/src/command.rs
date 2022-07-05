@@ -1,3 +1,5 @@
+#![allow(clippy::borrowed_box)]
+
 use crate::{
 	chain_spec::arctic::*,
 	chain_spec::frost::*,

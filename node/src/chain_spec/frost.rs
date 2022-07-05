@@ -1,3 +1,5 @@
+#![allow(clippy::too_many_arguments)]
+
 use frost_runtime::{
 	currency::ICY, opaque::SessionKeys, AccountId, AirdropConfig, AuraConfig, BalancesConfig,
 	CouncilConfig, CouncilMembershipConfig, DemocracyConfig, EVMConfig, EthereumConfig,
