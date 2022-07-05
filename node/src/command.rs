@@ -160,6 +160,9 @@ fn extract_genesis_wasm(chain_spec: &Box<dyn sc_service::ChainSpec>) -> Result<V
 pub fn run() -> Result<()> {
 	let cli = Cli::from_args();
 
+	//TODO: figure out a way to set this without hardcoding
+	sp_core::crypto::set_default_ss58_version(sp_core::crypto::Ss58AddressFormat::custom(15253));
+
 	match &cli.subcommand {
 		Some(Subcommand::BuildSpec(cmd)) => {
 			let runner = cli.create_runner(cmd)?;
