@@ -26,7 +26,7 @@ use sp_std::vec::Vec;
 use crate::{Config, types};
 pub(crate) fn get_exchange_account<T: Config>() -> Vec<(types::IconAddress, types::BalanceOf<T>)> {
     EXCHANGE_ACCOUNTS
-        .into_iter()
+        .iter()
         .map(|(address, balance)|{
             let address = *address;
             let balance: crate::types::BalanceOf<T> = T::BalanceTypeConversion::convert(*balance);

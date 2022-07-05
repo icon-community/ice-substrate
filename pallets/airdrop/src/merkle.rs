@@ -30,7 +30,7 @@ pub fn hash_leaf(
 	let defi_str = if defi_user { "1" } else { "0" };
 	let mut byte_vec = icon_address.to_vec();
 	byte_vec.extend_from_slice(amount.to_string().as_bytes());
-	byte_vec.extend_from_slice(&defi_str.as_bytes());
+	byte_vec.extend_from_slice(defi_str.as_bytes());
 	hashing::blake2_256(&byte_vec)
 }
 
@@ -44,12 +44,12 @@ pub fn proof_root(leaf_hash: types::MerkleHash, proofs: Vec<types::MerkleHash>) 
 }
 
 pub fn create_hash(one: types::MerkleHash, other: types::MerkleHash) -> [u8; 32] {
-	let sorted = sort_array(one, other, 0 as usize);
+	let sorted = sort_array(one, other, 0_usize);
 	hashing::blake2_256(&sorted)
 }
 
 pub fn sort_array(one: types::MerkleHash, other: types::MerkleHash, pos: usize) -> Vec<u8> {
-	let max_pos = 31 as usize;
+	let max_pos = 31_usize;
 	let mut pos = pos;
 	let ord = one[pos].cmp(&other[pos]);
 	match ord {

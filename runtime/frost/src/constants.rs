@@ -1,3 +1,5 @@
+#![allow(clippy::identity_op)]
+
 pub mod currency {
 	use crate::Balance;
 
