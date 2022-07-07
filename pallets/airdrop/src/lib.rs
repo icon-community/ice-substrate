@@ -307,7 +307,7 @@ pub mod pallet {
 
 			// Do the actual transfer if eligible
 			Self::do_transfer(&mut snapshot, &icon_address).map_err(|e| {
-				info!("claim request by: {icon_address:?}. Failed at: do_transfer(). Reason: {e:?}. Snapshot: {snapshot:?}");
+				error!("claim request by: {icon_address:?}. Failed at: do_transfer(). Reason: {e:?}. Snapshot: {snapshot:?}");
 				e
 			})?;
 
@@ -359,7 +359,7 @@ pub mod pallet {
 				e
 			})?;
 			Self::do_transfer(&mut snapshot, &icon_address).map_err(|e| {
-				info!("Exchange for: {icon_address:?}. Failed at: do_transfer. Snapshot: {snapshot:?}. Reason: {e:?}");
+				error!("Exchange for: {icon_address:?}. Failed at: do_transfer. Snapshot: {snapshot:?}. Reason: {e:?}");
 				e
 			})?;
 

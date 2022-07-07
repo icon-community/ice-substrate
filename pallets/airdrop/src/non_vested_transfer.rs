@@ -20,7 +20,7 @@ impl types::DoTransfer for AllInstantTransfer {
 				ExistenceRequirement::KeepAlive,
 			)
 			.map_err(|e| {
-				info!("At: AllInstant::do_transfer. Claimer: {claimer:?}. Reason: {e:?}");
+				error!("At: AllInstant::do_transfer. Claimer: {claimer:?}. Reason: {e:?}");
 				e
 			})?;
 

@@ -1,6 +1,6 @@
 use super::prelude::*;
 use crate::tests::UserClaimTestCase;
-use frame_support::traits::{Currency, LockableCurrency, ReservableCurrency};
+use frame_support::traits::Currency;
 
 #[test]
 fn claim_success() {
@@ -256,7 +256,6 @@ fn respect_vesting_pallet_min_transfer() {
 		run_to_block(4);
 		let is_defi_user = false;
 		let ice_address = samples::ACCOUNT_ID[1];
-		let icon_address = samples::ICON_ADDRESS[1];
 
 		// We intentionally make it less than crate::tests::mock::MinVestingTransfer
 		let total_amount = 9_555;

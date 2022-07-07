@@ -413,7 +413,7 @@ fn validate_creditor_fund() {
 	minimal_test_ext().execute_with(|| {
 		let exestinsial_balance = <Test as pallet_airdrop::Config>::Currency::minimum_balance();
 		let donator = samples::ACCOUNT_ID[1];
-		<Test as pallet_airdrop::Config>::Currency::deposit_creating(&donator, u64::MAX.into());
+		let _put_fund = <Test as pallet_airdrop::Config>::Currency::deposit_creating(&donator, u64::MAX.into());
 
 		// When creditor balance is empty.
 		{
