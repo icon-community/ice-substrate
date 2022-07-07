@@ -21,11 +21,11 @@ For Arctic Testnet and other custom networks, we need to load the network spec a
 \
 Scan the QR below to add Arctic testnet&#x20;
 
-![](.gitbook/assets/add\_specs\_arctic-testnet-sr25519.png)
+![add_specs_arctic-testnet-sr25519](https://user-images.githubusercontent.com/1651925/177788715-96040777-8d57-4342-a4b6-010f575fdae0.png)
 
 Download the animated QR below and open it with an image viewer. This is a multipart data scan, scroll continuously through the images until the scan is complete.
 
-![](.gitbook/assets/load\_metadata\_arctic-testnetV1.png)
+![load_metadata_arctic-testnetV1](https://user-images.githubusercontent.com/1651925/177788759-dee20d4c-a4f7-4fc3-a366-226308b3c1fc.png)
 
 ### Add New Network
 
