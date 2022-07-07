@@ -7,13 +7,9 @@ Parity signer turns your mobile phone into cold storage, and enables transaction
 
 ### Create new account
 
-For first-time setup and creating a new account see instructions here
+For first-time setup and creating a new account see instructions [here](https://support.polkadot.network/support/solutions/articles/65000180512)
 
-{% embed url="https://support.polkadot.network/support/solutions/articles/65000180512" %}
-
-{% hint style="info" %}
-Backup your seed phrase on paper or use [Banana Split](https://github.com/paritytech/banana\_split) for maximum security
-{% endhint %}
+> Backup your seed phrase on paper or use [Banana Split](https://github.com/paritytech/banana\_split) for maximum security
 
 ### Adding ICE networks&#x20;
 
