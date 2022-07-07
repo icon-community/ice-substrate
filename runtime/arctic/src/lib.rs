@@ -1,7 +1,6 @@
 //! The Substrate Node Template runtime. This can be compiled with `#[no_std]`, ready for Wasm.
 #![allow(clippy::identity_op)]
 #![allow(clippy::unnecessary_cast)]
-
 #![cfg_attr(not(feature = "std"), no_std)]
 // `construct_runtime!` does a lot of recursion and requires us to increase the limit to 256.
 #![recursion_limit = "256"]
@@ -25,6 +24,7 @@ use codec::{Decode, Encode, MaxEncodedLen};
 use pallet_evm::FeeCalculator;
 
 use frame_support::{
+	pallet_prelude::ConstU32,
 	traits::{EnsureOneOf, EqualPrivilegeOnly, InstanceFilter, LockIdentifier},
 	RuntimeDebug,
 };
@@ -384,9 +384,9 @@ impl pallet_contracts::Config for Runtime {
 	type DeletionQueueDepth = DeletionQueueDepth;
 	type DeletionWeightLimit = DeletionWeightLimit;
 	type Schedule = Schedule;
-	type ContractAccessWeight = ();
-	type MaxCodeLen = ();
-	type RelaxedMaxCodeLen = ();
+	type ContractAccessWeight = pallet_contracts::DefaultContractAccessWeight<RuntimeBlockWeights>;
+	type MaxCodeLen = ConstU32<{ 128 * 1024 }>;
+	type RelaxedMaxCodeLen = ConstU32<{ 256 * 1024 }>;
 	type CallStack = [pallet_contracts::Frame<Self>; 31];
 	type AddressGenerator = pallet_contracts::DefaultAddressGenerator;
 }
