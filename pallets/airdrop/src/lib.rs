@@ -22,11 +22,7 @@ pub mod merkle;
 
 mod exchange_accounts;
 
-#[cfg(not(feature = "no-vesting"))]
 pub mod vested_transfer;
-
-#[cfg(feature = "no-vesting")]
-pub mod non_vested_transfer;
 
 #[cfg(not(test))]
 pub(crate) use log::{error, info};
@@ -533,13 +529,9 @@ pub mod pallet {
 		}
 
 		pub fn ensure_claimable(snapshot: &types::SnapshotInfo<T>) -> DispatchResult {
-			#[cfg(not(feature = "no-vesting"))]
 			let already_claimed = snapshot.done_instant && snapshot.done_vesting;
 
-			#[cfg(feature = "no-vesting")]
-			let already_claimed = snapshot.done_instant;
-
-			if already_claimed {
+            if already_claimed {
 				Err(Error::<T>::ClaimAlreadyMade.into())
 			} else {
 				Ok(())
@@ -653,12 +645,7 @@ pub mod pallet {
 			icon_address: &types::IconAddress,
 		) -> Result<(), DispatchError> {
 			use types::DoTransfer;
-
-			#[cfg(not(feature = "no-vesting"))]
 			type TransferType = super::vested_transfer::DoVestdTransfer;
-
-			#[cfg(feature = "no-vesting")]
-			type TransferType = super::non_vested_transfer::AllInstantTransfer;
 
 			let transfer_result = TransferType::do_transfer(snapshot);
 
