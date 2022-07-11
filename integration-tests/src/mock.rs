@@ -35,42 +35,42 @@ parameter_types! {
 }
 
 impl frame_system::Config for Test {
-	type AccountData = pallet_balances::AccountData<u64>;
-	type AccountId = u64;
 	type BaseCallFilter = frame_support::traits::Everything;
-	type BlockHashCount = ConstU64<250>;
-	type BlockLength = ();
-	type BlockNumber = u64;
 	type BlockWeights = ();
+	type BlockLength = ();
+	type Origin = Origin;
 	type Call = Call;
-	type DbWeight = ();
-	type Event = Event;
+	type Index = u64;
+	type BlockNumber = u64;
 	type Hash = H256;
 	type Hashing = BlakeTwo256;
-	type Header = Header;
-	type Index = u64;
+	type AccountId = u64;
 	type Lookup = IdentityLookup<Self::AccountId>;
-	type OnKilledAccount = ();
-	type OnNewAccount = ();
-	type OnSetCode = ();
-	type MaxConsumers = frame_support::traits::ConstU32<16>;
-	type Origin = Origin;
-	type PalletInfo = PalletInfo;
-	type SS58Prefix = ();
-	type SystemWeightInfo = ();
+	type Header = Header;
+	type Event = Event;
+	type BlockHashCount = ConstU64<250>;
+	type DbWeight = ();
 	type Version = ();
+	type PalletInfo = PalletInfo;
+	type AccountData = pallet_balances::AccountData<u64>;
+	type OnNewAccount = ();
+	type OnKilledAccount = ();
+	type SystemWeightInfo = ();
+	type SS58Prefix = ();
+	type OnSetCode = ();
+	type MaxConsumers = ConstU32<16>;
 }
 
 impl pallet_balances::Config for Test {
-	type AccountStore = System;
 	type Balance = u64;
 	type DustRemoval = ();
 	type Event = Event;
 	type ExistentialDeposit = ExistentialDeposit;
+	type AccountStore = System;
+	type WeightInfo = ();
 	type MaxLocks = ConstU32<10>;
 	type MaxReserves = ();
 	type ReserveIdentifier = [u8; 8];
-	type WeightInfo = ();
 }
 parameter_types! {
 	pub const MinVestedTransfer: u64 = 256 * 2;
@@ -78,12 +78,12 @@ parameter_types! {
 }
 
 impl pallet_vesting::Config for Test {
-	type BlockNumberToBalance = Identity;
-	type Currency = Balances;
 	type Event = Event;
-	const MAX_VESTING_SCHEDULES: u32 = 3;
+	type Currency = Balances;
+	type BlockNumberToBalance = Identity;
 	type MinVestedTransfer = MinVestedTransfer;
 	type WeightInfo = ();
+	const MAX_VESTING_SCHEDULES: u32 = 3;
 }
 
 /// Balance of an account.
@@ -105,6 +105,7 @@ impl pallet_assets::Config for Test {
 	type Currency = Balances;
 	type ForceOrigin = frame_system::EnsureRoot<u64>;
 	type AssetDeposit = AssetDeposit;
+	type AssetAccountDeposit = ();
 	type MetadataDepositBase = MetadataDepositBase;
 	type MetadataDepositPerByte = MetaDataDepositPerByte;
 	type ApprovalDeposit = ApprovalDeposit;
@@ -112,7 +113,6 @@ impl pallet_assets::Config for Test {
 	type Freezer = ();
 	type Extra = ();
 	type WeightInfo = ();
-	type AssetAccountDeposit = ();
 }
 
 pub struct ExtBuilder {

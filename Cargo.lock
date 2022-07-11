@@ -114,7 +114,7 @@ dependencies = [
 
 [[package]]
 name = "arctic-runtime"
-version = "0.4.42"
+version = "0.4.43"
 dependencies = [
  "cumulus-pallet-aura-ext",
  "cumulus-pallet-dmp-queue",
@@ -3078,7 +3078,7 @@ dependencies = [
 
 [[package]]
 name = "frost-runtime"
-version = "0.4.42"
+version = "0.4.43"
 dependencies = [
  "fp-rpc",
  "fp-self-contained",
@@ -3658,7 +3658,7 @@ dependencies = [
 
 [[package]]
 name = "ice-node"
-version = "0.4.44"
+version = "0.4.45"
 dependencies = [
  "arctic-runtime",
  "async-trait",
@@ -5677,7 +5677,7 @@ dependencies = [
 
 [[package]]
 name = "pallet-airdrop"
-version = "0.4.3"
+version = "0.4.4"
 dependencies = [
  "fp-evm",
  "frame-benchmarking",

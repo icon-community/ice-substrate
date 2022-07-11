@@ -12,7 +12,7 @@ const ED: u64 = 256;
 fn vest_and_assert_no_vesting<T>(account: u64)
 where
 	u64: EncodeLike<<T as frame_system::Config>::AccountId>,
-	T: pallet_vesting::Config,
+	T: Config,
 {
 	// Its ok for this to fail because the user may already have no schedules.
 	let _result = Vesting::vest(Some(account).into());

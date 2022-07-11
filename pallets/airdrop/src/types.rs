@@ -61,7 +61,7 @@ pub type MerkleProofs<T> = BoundedVec<MerkleHash, <T as Config>::MaxProofSize>;
 ///
 pub type VestingInfoOf<T> = pallet_vesting::VestingInfo<VestingBalanceOf<T>, BlockNumberOf<T>>;
 
-/// type that represnt the error that can occur while validation the signature
+/// type that represent the error that can occur while validation the signature
 #[derive(Eq, PartialEq, Debug)]
 pub enum SignatureValidationError {
 	InvalidIconAddress,
@@ -77,21 +77,21 @@ pub struct SnapshotInfo<T: Config> {
 	/// Icon address of this snapshot
 	pub ice_address: AccountIdOf<T>,
 
-	/// Total airdroppable-amount this icon_address hold
+	/// Total air-droppable-amount this icon_address hold
 	pub amount: BalanceOf<T>,
 
-	/// Indicator wather this icon_address holder is defi-user
+	/// Indicator weather this icon_address holder is defi-user
 	pub defi_user: bool,
 
-	/// indicator wather the user have claimmed the balance
+	/// indicator weather the user have claimed the balance
 	/// which will be given through instant transfer
 	pub done_instant: bool,
 
-	/// Indicator weather vesting schedult have been applied
+	/// Indicator weather vesting schedule have been applied
 	/// to this user
 	pub done_vesting: bool,
 
-	// blocknumber that started vesting
+	// block number that started vesting
 	pub vesting_block_number: Option<BlockNumberOf<T>>,
 
 	// block number when instant amount was given
@@ -183,7 +183,7 @@ pub trait MerkelProofValidator<T: Config> {
 }
 
 /// Trait to commit behaviour of do_transfer function
-/// this trait now can me implmeneted according to
+/// this trait now can me implemented according to
 /// the node behaviour eg: vesting manner and direct manner
 pub trait DoTransfer {
 	fn do_transfer<T: Config>(snapshot: &mut SnapshotInfo<T>) -> DispatchResult;

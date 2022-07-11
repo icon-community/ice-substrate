@@ -48,7 +48,7 @@ mod tests {
 	#[test]
 	fn currency_units() {
 		println!(
-			"DOLLARS 10e18 == {} plank // CENTS == {} plank // MLLICENTS == {} plank",
+			"DOLLARS 10e18 == {} plank // CENTS == {} plank // MILLICENTS == {} plank",
 			DOLLARS.separated_string(),
 			CENTS.separated_string(),
 			MILLICENTS.separated_string()
@@ -321,8 +321,8 @@ mod tests {
 			4294967295,
 			RuntimeBlockWeights::get().max_block / 2,
 			RuntimeBlockWeights::get().max_block,
-			Weight::max_value() / 2,
-			Weight::max_value(),
+			Weight::MAX / 2,
+			Weight::MAX,
 		]
 		.into_iter()
 		.for_each(|i| {
