@@ -161,7 +161,7 @@ pub fn run() -> Result<()> {
 	let cli = Cli::from_args();
 
 	//TODO: figure out a way to set this without hardcoding
-	sp_core::crypto::set_default_ss58_version(sp_core::crypto::Ss58AddressFormat::custom(15253));
+	sp_core::crypto::set_default_ss58_version(sp_core::crypto::Ss58AddressFormat::custom(2207));
 
 	match &cli.subcommand {
 		Some(Subcommand::BuildSpec(cmd)) => {

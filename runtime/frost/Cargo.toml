@@ -7,7 +7,7 @@ homepage = 'https://substrate.dev'
 license = 'Apache-2.0'
 name = 'frost-runtime'
 repository = 'https://github.com/web3labs/ice-substrate/'
-version = '0.4.41'
+version = '0.4.42'
 publish = false
 
 [package.metadata.docs.rs]
@@ -54,8 +54,6 @@ pallet-elections-phragmen = { git = "https://github.com/paritytech/substrate", b
 pallet-membership = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.24", default-features = false }
 pallet-democracy = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.24", default-features = false }
 pallet-indices = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.24", default-features = false }
-
-log = "0.4.17"
 
 # Contracts specific packages
 pallet-contracts = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.24", default-features = false }
