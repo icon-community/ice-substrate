@@ -304,7 +304,7 @@ fn partail_transfer_can_reclaim() {
 		#[cfg(not(feature = "no-vesting"))]
 		let (instant_amount, vesting_amount) = {
 			let (raw_instant, raw_vesting) =
-				utils::get_splitted_amounts::<Test>(case.amount, get_per(case.defi_user)).unwrap();
+				utils::get_split_amounts::<Test>(case.amount, get_per(case.defi_user)).unwrap();
 			let (schedule, rem) = utils::new_vesting_with_deadline::<
 				Test,
 				{ crate::vested_transfer::VESTING_APPLICABLE_FROM },

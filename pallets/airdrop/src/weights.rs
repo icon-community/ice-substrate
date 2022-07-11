@@ -4,18 +4,17 @@ use frame_support::{traits::Get, weights::Weight};
 use sp_std::marker::PhantomData;
 
 pub trait WeightInfo {
-	
 	fn set_airdrop_server_account() -> Weight;
 	fn dispatch_user_claim() -> Weight;
 	fn dispatch_exchange_claim() -> Weight;
 	fn update_airdrop_state() -> Weight;
-	fn change_merkle_root()->Weight;
+	fn change_merkle_root() -> Weight;
 }
 
 /// Weight functions for `pallet_airdrop`.
 pub struct AirDropWeightInfo<T>(PhantomData<T>);
 
-impl<T: frame_system::Config> WeightInfo for AirDropWeightInfo<T>{
+impl<T: frame_system::Config> WeightInfo for AirDropWeightInfo<T> {
 	// Storage: Airdrop ServerAccount (r:1 w:1)
 	// Storage: System Number (r:1 w:0)
 	// Storage: System ExecutionPhase (r:1 w:0)
@@ -23,16 +22,6 @@ impl<T: frame_system::Config> WeightInfo for AirDropWeightInfo<T>{
 	// Storage: System Events (r:1 w:1)
 	fn set_airdrop_server_account() -> Weight {
 		(20_566_000 as Weight)
-			.saturating_add(T::DbWeight::get().reads(5 as Weight))
-			.saturating_add(T::DbWeight::get().writes(3 as Weight))
-	}
-	// Storage: Airdrop AirdropChainState (r:1 w:1)
-	// Storage: System Number (r:1 w:0)
-	// Storage: System ExecutionPhase (r:1 w:0)
-	// Storage: System EventCount (r:1 w:1)
-	// Storage: System Events (r:1 w:1)
-	fn update_airdrop_state() -> Weight {
-		(20_384_000 as Weight)
 			.saturating_add(T::DbWeight::get().reads(5 as Weight))
 			.saturating_add(T::DbWeight::get().writes(3 as Weight))
 	}
@@ -73,6 +62,16 @@ impl<T: frame_system::Config> WeightInfo for AirDropWeightInfo<T>{
 			.saturating_add(T::DbWeight::get().reads(14 as Weight))
 			.saturating_add(T::DbWeight::get().writes(8 as Weight))
 	}
+	// Storage: Airdrop AirdropChainState (r:1 w:1)
+	// Storage: System Number (r:1 w:0)
+	// Storage: System ExecutionPhase (r:1 w:0)
+	// Storage: System EventCount (r:1 w:1)
+	// Storage: System Events (r:1 w:1)
+	fn update_airdrop_state() -> Weight {
+		(20_384_000 as Weight)
+			.saturating_add(T::DbWeight::get().reads(5 as Weight))
+			.saturating_add(T::DbWeight::get().writes(3 as Weight))
+	}
 	// Storage: Airdrop MerkleRoot (r:1 w:1)
 	// Storage: System Number (r:1 w:0)
 	// Storage: System ExecutionPhase (r:1 w:0)
@@ -84,4 +83,3 @@ impl<T: frame_system::Config> WeightInfo for AirDropWeightInfo<T>{
 			.saturating_add(T::DbWeight::get().writes(3 as Weight))
 	}
 }
-

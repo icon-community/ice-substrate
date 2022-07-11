@@ -48,9 +48,7 @@ where
 	B: Get<u32>,
 {
 	fn from(sample: BenchmarkSample<'a>) -> Self {
-		let proff_size = B::get();
-
-		// assert_eq!(sample.merkle_proofs.len(), proff_size as usize);
+		// assert_eq!(sample.merkle_proofs.len(), proof_size as usize);
 		let amount = sample.amount;
 		let defi_user = sample.defi_user;
 		let ice_address = hex::decode(sample.ice_address).unwrap().try_into().unwrap();
@@ -71,9 +69,9 @@ where
 		let merkle_proofs = sample
 			.merkle_proofs
 			.iter()
-			.map(|proff| {
-				let proff = hex::decode(proff).unwrap();
-				proff.try_into().unwrap()
+			.map(|proof| {
+				let proof = hex::decode(proof).unwrap();
+				proof.try_into().unwrap()
 			})
 			.collect::<Vec<MerkleHash>>()
 			.try_into()
@@ -93,7 +91,7 @@ where
 	}
 }
 
-pub const benchmark_samples: [BenchmarkSample; 4] = [
+pub const BENCHMARK_SAMPLES: [BenchmarkSample; 4] = [
 	   BenchmarkSample{
 		icon_address : "3d16047c23cc3e27e807f6cfc55fb8d950555690",
 		icon_signature : "a9b435d7720228efd12327a3551ffab56e737be8071673cfdad59f25a9d20f425b99874ac4c17b29063160d247c95cc0a71b3647e58b5dfb67c1839943920b9700",
@@ -184,7 +182,7 @@ pub const benchmark_samples: [BenchmarkSample; 4] = [
 	}
    ];
 
-const creditor_key: sp_core::sr25519::Public = sr25519::Public([1; 32]);
+const CREDITOR_KEY: sr25519::Public = sr25519::Public([1; 32]);
 
 fn assert_last_event<T: Config>(generic_event: <T as Config>::Event) {
 	frame_system::Pallet::<T>::assert_last_event(generic_event.into());

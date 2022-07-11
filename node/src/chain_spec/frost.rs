@@ -52,7 +52,7 @@ pub fn authority_keys_from_seed(s: &str) -> (AuraId, GrandpaId) {
 }
 
 const AIRDROP_MERKLE_ROOT: [u8; 32] =
-	hex_literal::hex!("990e01e3959627d2ddd94927e1c605a422b62dc3b8c8b98d713ae6833c3ef122");
+	hex!("990e01e3959627d2ddd94927e1c605a422b62dc3b8c8b98d713ae6833c3ef122");
 
 /// Initialize frost testnet configuration
 pub fn testnet_config() -> Result<FrostChainSpec, String> {
