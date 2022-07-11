@@ -195,7 +195,7 @@ parameter_types! {
 			::with_sensible_defaults(2 * WEIGHT_PER_SECOND, NORMAL_DISPATCH_RATIO);
 	pub RuntimeBlockLength: BlockLength = BlockLength
 			::max_with_normal_ratio(5 * 1024 * 1024, NORMAL_DISPATCH_RATIO);
-	pub const SS58Prefix: u16 = 15253;
+	pub const SS58Prefix: u16 = 2207;
 }
 
 // Configure FRAME pallets to include in runtime.
