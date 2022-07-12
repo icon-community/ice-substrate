@@ -472,6 +472,7 @@ pub fn run() -> Result<()> {
 			let runner = cli.create_runner(cmd)?;
 			let chain_spec = &runner.config().chain_spec;
 			let is_arctic = chain_spec.is_arctic();
+			let is_snow = chain_spec.is_snow();
 			info!("Starting benchmarking");
 			match cmd {
 				BenchmarkCmd::Pallet(cmd) => {
@@ -482,6 +483,11 @@ pub fn run() -> Result<()> {
 							info!("running pallet benchmarking for arctic");
 							runner.sync_run(|config| {
 								cmd.run::<arctic_runtime::Block, arctic::Executor>(config)
+							})
+						} else if is_snow {
+							info!("running pallet benchmarking for snow");
+							runner.sync_run(|config| {
+								cmd.run::<snow_runtime::Block, snow::Executor>(config)
 							})
 						} else {
 							info!("running pallet benchmarking for frost");
@@ -504,6 +510,12 @@ pub fn run() -> Result<()> {
 							_,
 						>(&config, parachain::build_import_queue)?;
 						cmd.run(partials.client)
+					} else if is_snow {
+						let partials = parachain::new_partial::<snow::RuntimeApi, snow::Executor, _>(
+							&config,
+							parachain::build_import_queue,
+						)?;
+						cmd.run(partials.client)
 					} else {
 						let partials = solo::new_partial(&config)?;
 						cmd.run(partials.client)
@@ -516,6 +528,14 @@ pub fn run() -> Result<()> {
 							arctic::Executor,
 							_,
 						>(&config, parachain::build_import_queue)?;
+						let db = partials.backend.expose_db();
+						let storage = partials.backend.expose_storage();
+						cmd.run(config, partials.client.clone(), db, storage)
+					} else if is_snow {
+						let partials = parachain::new_partial::<snow::RuntimeApi, snow::Executor, _>(
+							&config,
+							parachain::build_import_queue,
+						)?;
 						let db = partials.backend.expose_db();
 						let storage = partials.backend.expose_storage();
 						cmd.run(config, partials.client.clone(), db, storage)
@@ -644,7 +664,7 @@ pub fn run() -> Result<()> {
 }
 
 fn set_default_ss58_version(spec: &Box<dyn sc_service::ChainSpec>) {
-	let ss58_version = if spec.is_arctic() || spec.is_frost() {
+	let ss58_version = if spec.is_arctic() || spec.is_dev() {
 		// Ss58AddressFormatRegistry::ArcticAccount
 		sp_core::crypto::Ss58AddressFormat::custom(2208)
 	} else if spec.is_snow() {
@@ -795,23 +815,5 @@ impl CliConfiguration<Self> for RelayChainCli {
 		F: FnOnce(&mut sc_cli::LoggerBuilder, &sc_service::Configuration),
 	{
 		unreachable!("PolkadotCli is never initialized; qed");
-	}
-}
-
-pub trait IdentifyVariant {
-	fn is_arctic(&self) -> bool;
-	fn is_frost(&self) -> bool;
-	fn is_snow(&self) -> bool;
-}
-
-impl IdentifyVariant for Box<dyn ChainSpec> {
-	fn is_arctic(&self) -> bool {
-		self.id().starts_with("arctic")
-	}
-	fn is_frost(&self) -> bool {
-		self.id().starts_with("frost")
-	}
-	fn is_snow(&self) -> bool {
-		self.id().starts_with("snow")
 	}
 }
