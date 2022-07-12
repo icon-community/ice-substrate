@@ -231,6 +231,10 @@ pub fn run() -> Result<()> {
 		}
 		Some(Subcommand::ExportBlocks(cmd)) => {
 			let runner = cli.create_runner(cmd)?;
+			let chain_spec = &runner.config().chain_spec;
+
+			set_default_ss58_version(chain_spec);
+
 			if runner.config().chain_spec.is_snow() {
 				runner.async_run(|config| {
 					let PartialComponents {
