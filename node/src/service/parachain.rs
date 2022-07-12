@@ -36,25 +36,49 @@ use crate::primitives::*;
 use crate::shell_upgrade::{BuildOnAccess, Verifier};
 
 /// Arctic network runtime executor.
-pub mod arctic_service {
+pub mod arctic {    
 	pub use arctic_runtime::RuntimeApi;
-	/// arctic runtime executor.
-	pub struct Executor;
-	impl sc_executor::NativeExecutionDispatch for Executor {
-		#[cfg(not(feature = "runtime-benchmarks"))]
-		type ExtendHostFunctions = ();
 
-		#[cfg(feature = "runtime-benchmarks")]
-		type ExtendHostFunctions = frame_benchmarking::benchmarking::HostFunctions;
+    /// Arctic runtime executor.
+    pub struct Executor;
+    impl sc_executor::NativeExecutionDispatch for Executor {
+        #[cfg(not(feature = "runtime-benchmarks"))]
+        type ExtendHostFunctions = ();
 
-		fn dispatch(method: &str, data: &[u8]) -> Option<Vec<u8>> {
-			arctic_runtime::api::dispatch(method, data)
-		}
+        #[cfg(feature = "runtime-benchmarks")]
+        type ExtendHostFunctions = frame_benchmarking::benchmarking::HostFunctions;
 
-		fn native_version() -> sc_executor::NativeVersion {
-			arctic_runtime::native_version()
-		}
-	}
+        fn dispatch(method: &str, data: &[u8]) -> Option<Vec<u8>> {
+            arctic_runtime::api::dispatch(method, data)
+        }
+
+        fn native_version() -> sc_executor::NativeVersion {
+            arctic_runtime::native_version()
+        }
+    }
+}
+
+/// Snow network runtime executor.
+pub mod snow {    
+	pub use snow_runtime::RuntimeApi;
+
+    /// Snow runtime executor.
+    pub struct Executor;
+    impl sc_executor::NativeExecutionDispatch for Executor {
+        #[cfg(not(feature = "runtime-benchmarks"))]
+        type ExtendHostFunctions = ();
+
+        #[cfg(feature = "runtime-benchmarks")]
+        type ExtendHostFunctions = frame_benchmarking::benchmarking::HostFunctions;
+
+        fn dispatch(method: &str, data: &[u8]) -> Option<Vec<u8>> {
+            snow_runtime::api::dispatch(method, data)
+        }
+
+        fn native_version() -> sc_executor::NativeVersion {
+            snow_runtime::native_version()
+        }
+    }
 }
 
 /// Starts a `ServiceBuilder` for a full service.
@@ -572,7 +596,7 @@ where
 	))
 }
 
-/// Start a parachain node for Astar.
+/// Start a parachain node for Arctic
 pub async fn start_arctic_node(
 	parachain_config: Configuration,
 	polkadot_config: Configuration,
@@ -580,15 +604,139 @@ pub async fn start_arctic_node(
 	id: ParaId,
 ) -> sc_service::error::Result<(
 	TaskManager,
-	Arc<
-		TFullClient<
-			Block,
-			arctic_runtime::RuntimeApi,
-			NativeElseWasmExecutor<arctic_service::Executor>,
-		>,
-	>,
+	Arc<TFullClient<Block,arctic::RuntimeApi, NativeElseWasmExecutor<arctic::Executor>>>,
 )> {
-	start_node_impl::<arctic_runtime::RuntimeApi, arctic_service::Executor, _, _>(
+	start_node_impl::<arctic_runtime::RuntimeApi, arctic::Executor, _, _>(
+        parachain_config,
+        polkadot_config,
+        collator_options,
+        id,
+        |client,
+         block_import,
+         config,
+         telemetry,
+         task_manager| {
+            let slot_duration = cumulus_client_consensus_aura::slot_duration(&*client)?;
+            let can_author_with = sp_consensus::CanAuthorWithNativeVersion::new(client.executor().clone());
+
+            cumulus_client_consensus_aura::import_queue::<
+                sp_consensus_aura::sr25519::AuthorityPair,
+                _,
+                _,
+                _,
+                _,
+                _,
+                _,
+            >(cumulus_client_consensus_aura::ImportQueueParams {
+                block_import,
+                client,
+                create_inherent_data_providers: move |_, _| async move {
+                    let time = sp_timestamp::InherentDataProvider::from_system_time();
+
+                    let slot =
+                        sp_consensus_aura::inherents::InherentDataProvider::from_timestamp_and_slot_duration(
+                            *time,
+                            slot_duration,
+                        );
+
+                    Ok((time, slot))
+                },
+                registry: config.prometheus_registry(),
+                can_author_with,
+                spawner: &task_manager.spawn_essential_handle(),
+                telemetry,
+            })
+            .map_err(Into::into)
+        },
+        |client,
+         prometheus_registry,
+         telemetry,
+         task_manager,
+         relay_chain_interface,
+         transaction_pool,
+         sync_oracle,
+         keystore,
+         force_authoring| {
+            let spawn_handle = task_manager.spawn_handle();
+
+            let slot_duration =
+                cumulus_client_consensus_aura::slot_duration(&*client).unwrap();
+
+            let proposer_factory =
+                sc_basic_authorship::ProposerFactory::with_proof_recording(
+                    spawn_handle,
+                    client.clone(),
+                    transaction_pool,
+                    prometheus_registry,
+                    telemetry.clone(),
+                );
+
+            let relay_chain_for_aura = relay_chain_interface.clone();
+
+            Ok(AuraConsensus::build::<
+                sp_consensus_aura::sr25519::AuthorityPair,
+                _,
+                _,
+                _,
+                _,
+                _,
+                _,
+            >(BuildAuraConsensusParams {
+                proposer_factory,
+                create_inherent_data_providers:
+                    move |_, (relay_parent, validation_data)| {
+                        let relay_chain_for_aura = relay_chain_for_aura.clone();
+                        async move {
+                            let parachain_inherent =
+                                cumulus_primitives_parachain_inherent::ParachainInherentData::create_at(
+                                    relay_parent,
+                                    &relay_chain_for_aura,
+                                    &validation_data,
+                                    id,
+                                ).await;
+                            let time = sp_timestamp::InherentDataProvider::from_system_time();
+                            let slot =
+                                sp_consensus_aura::inherents::InherentDataProvider::from_timestamp_and_slot_duration(
+                                    *time,
+                                    slot_duration,
+                                );
+
+                            let parachain_inherent = parachain_inherent.ok_or_else(|| {
+                                Box::<dyn std::error::Error + Send + Sync>::from(
+                                    "Failed to create parachain inherent",
+                                )
+                            })?;
+                            Ok((time, slot, parachain_inherent))
+                        }
+                    },
+                block_import: client.clone(),
+                para_client: client,
+                backoff_authoring_blocks: Option::<()>::None,
+                sync_oracle,
+                keystore,
+                force_authoring,
+                slot_duration,
+                // We got around 500ms for proposing
+                block_proposal_slot_portion: SlotProportion::new(1f32 / 24f32),
+                // And a maximum of 750ms if slots are skipped
+                max_block_proposal_slot_portion: Some(SlotProportion::new(1f32 / 16f32)),
+                telemetry,
+            })
+        )
+    }).await
+}
+
+/// Start a parachain node for Snow
+pub async fn start_snow_node(
+	parachain_config: Configuration,
+	polkadot_config: Configuration,
+	collator_options: CollatorOptions,
+	id: ParaId,
+) -> sc_service::error::Result<(
+	TaskManager,
+	Arc<TFullClient<Block, snow::RuntimeApi, NativeElseWasmExecutor<snow::Executor>>>,
+)> {
+	start_node_impl::<snow_runtime::RuntimeApi, snow::Executor, _, _>(
         parachain_config,
         polkadot_config,
         collator_options,

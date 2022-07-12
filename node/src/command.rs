@@ -1,14 +1,12 @@
 #![allow(clippy::borrowed_box)]
 
 use crate::{
-	chain_spec::arctic::*,
-	chain_spec::frost::*,
-	chain_spec::Extensions,
+	chain_spec,
 	cli::{Cli, RelayChainCli, Subcommand},
 	primitives::Block,
-	service::arctic,
-	service::arctic_service,
-	service::frost,
+	service::parachain,
+	service::parachain::{arctic, snow, start_arctic_node, start_snow_node},
+	service::solo,
 };
 use codec::Encode;
 use cumulus_client_service::genesis::generate_genesis_block;
@@ -26,15 +24,24 @@ use sp_core::hexdisplay::HexDisplay;
 use sp_runtime::traits::Block as BlockT;
 use std::{io::Write, net::SocketAddr};
 
+#[cfg(feature = "runtime-benchmarks")]
 use frame_benchmarking_cli::{BenchmarkCmd, SUBSTRATE_REFERENCE_HARDWARE};
 
 trait IdentifyChain {
+	fn is_snow(&self) -> bool;
 	fn is_arctic(&self) -> bool;
+	fn is_dev(&self) -> bool;
 }
 
 impl IdentifyChain for dyn sc_service::ChainSpec {
+	fn is_snow(&self) -> bool {
+		self.id().starts_with("snow")
+	}
 	fn is_arctic(&self) -> bool {
 		self.id().starts_with("arctic")
+	}
+	fn is_dev(&self) -> bool {
+		self.id().starts_with("dev")
 	}
 }
 
@@ -42,24 +49,35 @@ impl<T: sc_service::ChainSpec + 'static> IdentifyChain for T {
 	fn is_arctic(&self) -> bool {
 		<dyn sc_service::ChainSpec>::is_arctic(self)
 	}
+	fn is_snow(&self) -> bool {
+		<dyn sc_service::ChainSpec>::is_snow(self)
+	}
+	fn is_dev(&self) -> bool {
+		<dyn sc_service::ChainSpec>::is_dev(self)
+	}
 }
 
 fn load_spec(id: &str) -> std::result::Result<Box<dyn sc_service::ChainSpec>, String> {
 	Ok(match id {
-		"dev" => Box::new(development_config()?),
-		"frost" => Box::new(testnet_config()?),
-		"" | "frost-local-testnet" => Box::new(local_testnet_config()?),
-		"arctic-dev" => Box::new(get_dev_chain_spec()),
-		"arctic" => Box::new(get_chain_spec()),
+		"dev" => Box::new(chain_spec::frost::development_config()?),
+		"arctic-dev" => Box::new(chain_spec::arctic::get_dev_chain_spec()),
+		"arctic" => Box::new(chain_spec::arctic::get_chain_spec()),
+		"snow-dev" => Box::new(chain_spec::snow::get_dev_chain_spec()),
 
 		path => {
-			let chain_spec = ArcticChainSpec::from_json_file(path.into())?;
-			if chain_spec.is_arctic() {
-				Box::new(ArcticChainSpec::from_json_file(path.into())?)
+			let chain_spec = chain_spec::snow::SnowChainSpec::from_json_file(path.into())?;
+			if chain_spec.is_snow() {
+				Box::new(chain_spec::snow::SnowChainSpec::from_json_file(
+					path.into(),
+				)?)
+			} else if chain_spec.is_arctic() {
+				Box::new(chain_spec::arctic::ArcticChainSpec::from_json_file(
+					path.into(),
+				)?)
 			} else {
-				Box::new(FrostChainSpec::from_json_file(std::path::PathBuf::from(
-					path,
-				))?)
+				Box::new(chain_spec::frost::FrostChainSpec::from_json_file(
+					std::path::PathBuf::from(path),
+				)?)
 			}
 		}
 	})
@@ -67,7 +85,7 @@ fn load_spec(id: &str) -> std::result::Result<Box<dyn sc_service::ChainSpec>, St
 
 impl SubstrateCli for Cli {
 	fn impl_name() -> String {
-		"Arctic Collator".into()
+		"Snow".into()
 	}
 
 	fn impl_version() -> String {
@@ -75,13 +93,7 @@ impl SubstrateCli for Cli {
 	}
 
 	fn description() -> String {
-		format!(
-			"Arctic Collator\n\nThe command-line arguments provided first will be \
-        passed to the parachain node, while the arguments provided after -- will be passed \
-        to the relaychain node.\n\n\
-        {} [parachain-args] -- [relaychain-args]",
-			Self::executable_name()
-		)
+		env!("CARGO_PKG_DESCRIPTION").into()
 	}
 
 	fn author() -> String {
@@ -93,7 +105,7 @@ impl SubstrateCli for Cli {
 	}
 
 	fn copyright_start_year() -> i32 {
-		2021
+		2022
 	}
 
 	fn load_spec(&self, id: &str) -> std::result::Result<Box<dyn sc_service::ChainSpec>, String> {
@@ -101,17 +113,21 @@ impl SubstrateCli for Cli {
 	}
 
 	fn native_runtime_version(chain_spec: &Box<dyn ChainSpec>) -> &'static RuntimeVersion {
-		if chain_spec.is_arctic() {
+		if chain_spec.is_snow() {
 			&arctic_runtime::VERSION
-		} else {
+		} else if chain_spec.is_arctic() {
+			&arctic_runtime::VERSION
+		} else if chain_spec.is_dev() {
 			&frost_runtime::VERSION
+		} else {
+			unreachable!();
 		}
 	}
 }
 
 impl SubstrateCli for RelayChainCli {
 	fn impl_name() -> String {
-		"Arctic Collator".into()
+		"Snow Collator".into()
 	}
 
 	fn impl_version() -> String {
@@ -119,7 +135,7 @@ impl SubstrateCli for RelayChainCli {
 	}
 
 	fn description() -> String {
-		"Arctic Collator\n\nThe command-line arguments provided first will be \
+		"Snow parachain collator\n\nThe command-line arguments provided first will be \
         passed to the parachain node, while the arguments provided after -- will be passed \
         to the relaychain node.\n\n\
         ice-node [parachain-args] -- [relaychain-args]"
@@ -135,7 +151,7 @@ impl SubstrateCli for RelayChainCli {
 	}
 
 	fn copyright_start_year() -> i32 {
-		2021
+		2022
 	}
 
 	fn load_spec(&self, id: &str) -> std::result::Result<Box<dyn sc_service::ChainSpec>, String> {
@@ -156,7 +172,7 @@ fn extract_genesis_wasm(chain_spec: &Box<dyn sc_service::ChainSpec>) -> Result<V
 		.ok_or_else(|| "Could not find wasm file in genesis state!".into())
 }
 
-/// Parse command line arguments into service configuration.
+// Parse command line arguments into service configuration.
 pub fn run() -> Result<()> {
 	let cli = Cli::from_args();
 
@@ -175,19 +191,30 @@ pub fn run() -> Result<()> {
 
 			set_default_ss58_version(chain_spec);
 
-			if runner.config().chain_spec.is_arctic() {
+			if runner.config().chain_spec.is_snow() {
 				runner.async_run(|config| {
 					let PartialComponents {
 						client,
 						task_manager,
 						import_queue,
 						..
-					} =
-						arctic::new_partial::<
-							arctic_service::RuntimeApi,
-							arctic_service::Executor,
-							_,
-						>(&config, arctic::build_import_queue)?;
+					} = parachain::new_partial::<snow::RuntimeApi, snow::Executor, _>(
+						&config,
+						parachain::build_import_queue,
+					)?;
+					Ok((cmd.run(client, import_queue), task_manager))
+				})
+			} else if runner.config().chain_spec.is_arctic() {
+				runner.async_run(|config| {
+					let PartialComponents {
+						client,
+						task_manager,
+						import_queue,
+						..
+					} = parachain::new_partial::<arctic::RuntimeApi, arctic::Executor, _>(
+						&config,
+						parachain::build_import_queue,
+					)?;
 					Ok((cmd.run(client, import_queue), task_manager))
 				})
 			} else {
@@ -197,96 +224,35 @@ pub fn run() -> Result<()> {
 						task_manager,
 						import_queue,
 						..
-					} = frost::new_partial(&config)?;
+					} = solo::new_partial(&config)?;
 					Ok((cmd.run(client, import_queue), task_manager))
 				})
 			}
 		}
-		Some(Subcommand::Benchmark(cmd)) => {
-			let runner = cli.create_runner(cmd)?;
-			let chain_spec = &runner.config().chain_spec;
-
-			set_default_ss58_version(chain_spec);
-
-			let is_arctic = chain_spec.is_arctic();
-			info!("Starting benchmarking");
-			match cmd {
-				BenchmarkCmd::Pallet(cmd) => {
-					info!("Benchmarking for pallet");
-					if cfg!(feature = "runtime-benchmarks") {
-						info!("Runtime benchmarking enabled");
-						if is_arctic {
-							info!("running pallet benchmarking for arctic");
-							runner.sync_run(|config| {
-								cmd.run::<arctic_runtime::Block, arctic_service::Executor>(config)
-							})
-						} else {
-							info!("running pallet benchmarking for frost");
-							runner.sync_run(|config| {
-								cmd.run::<frost_runtime::Block, frost::ExecutorDispatch>(config)
-							})
-						}
-					} else {
-						info!("error no benchmarking enabled");
-						Err("Benchmarking wasn't enabled when building the node. \
-                You can enable it with `--features runtime-benchmarks`."
-							.into())
-					}
-				}
-				BenchmarkCmd::Block(cmd) => runner.sync_run(|config| {
-					if is_arctic {
-						let partials = arctic::new_partial::<
-							arctic_service::RuntimeApi,
-							arctic_service::Executor,
-							_,
-						>(&config, arctic::build_import_queue)?;
-						cmd.run(partials.client)
-					} else {
-						let partials = frost::new_partial(&config)?;
-						cmd.run(partials.client)
-					}
-				}),
-				BenchmarkCmd::Storage(cmd) => runner.sync_run(|config| {
-					if is_arctic {
-						let partials = arctic::new_partial::<
-							arctic_service::RuntimeApi,
-							arctic_service::Executor,
-							_,
-						>(&config, arctic::build_import_queue)?;
-						let db = partials.backend.expose_db();
-						let storage = partials.backend.expose_storage();
-						cmd.run(config, partials.client.clone(), db, storage)
-					} else {
-						let partials = frost::new_partial(&config)?;
-						let db = partials.backend.expose_db();
-						let storage = partials.backend.expose_storage();
-						cmd.run(config, partials.client.clone(), db, storage)
-					}
-				}),
-				BenchmarkCmd::Overhead(_) => Err("Unsupported benchmarking command".into()),
-				BenchmarkCmd::Machine(cmd) => {
-					runner.sync_run(|config| cmd.run(&config, SUBSTRATE_REFERENCE_HARDWARE.clone()))
-				}
-			}
-		}
 		Some(Subcommand::ExportBlocks(cmd)) => {
 			let runner = cli.create_runner(cmd)?;
-			let chain_spec = &runner.config().chain_spec;
-
-			set_default_ss58_version(chain_spec);
-
-			if runner.config().chain_spec.is_arctic() {
+			if runner.config().chain_spec.is_snow() {
 				runner.async_run(|config| {
 					let PartialComponents {
 						client,
 						task_manager,
 						..
-					} =
-						arctic::new_partial::<
-							arctic_service::RuntimeApi,
-							arctic_service::Executor,
-							_,
-						>(&config, arctic::build_import_queue)?;
+					} = parachain::new_partial::<snow::RuntimeApi, snow::Executor, _>(
+						&config,
+						parachain::build_import_queue,
+					)?;
+					Ok((cmd.run(client, config.database), task_manager))
+				})
+			} else if runner.config().chain_spec.is_arctic() {
+				runner.async_run(|config| {
+					let PartialComponents {
+						client,
+						task_manager,
+						..
+					} = parachain::new_partial::<arctic::RuntimeApi, arctic::Executor, _>(
+						&config,
+						parachain::build_import_queue,
+					)?;
 					Ok((cmd.run(client, config.database), task_manager))
 				})
 			} else {
@@ -295,7 +261,7 @@ pub fn run() -> Result<()> {
 						client,
 						task_manager,
 						..
-					} = frost::new_partial(&config)?;
+					} = solo::new_partial(&config)?;
 					Ok((cmd.run(client, config.database), task_manager))
 				})
 			}
@@ -306,18 +272,28 @@ pub fn run() -> Result<()> {
 
 			set_default_ss58_version(chain_spec);
 
-			if runner.config().chain_spec.is_arctic() {
+			if runner.config().chain_spec.is_snow() {
 				runner.async_run(|config| {
 					let PartialComponents {
 						client,
 						task_manager,
 						..
-					} =
-						arctic::new_partial::<
-							arctic_service::RuntimeApi,
-							arctic_service::Executor,
-							_,
-						>(&config, arctic::build_import_queue)?;
+					} = parachain::new_partial::<snow::RuntimeApi, snow::Executor, _>(
+						&config,
+						parachain::build_import_queue,
+					)?;
+					Ok((cmd.run(client, config.chain_spec), task_manager))
+				})
+			} else if runner.config().chain_spec.is_arctic() {
+				runner.async_run(|config| {
+					let PartialComponents {
+						client,
+						task_manager,
+						..
+					} = parachain::new_partial::<arctic::RuntimeApi, arctic::Executor, _>(
+						&config,
+						parachain::build_import_queue,
+					)?;
 					Ok((cmd.run(client, config.chain_spec), task_manager))
 				})
 			} else {
@@ -326,7 +302,7 @@ pub fn run() -> Result<()> {
 						client,
 						task_manager,
 						..
-					} = frost::new_partial(&config)?;
+					} = solo::new_partial(&config)?;
 					Ok((cmd.run(client, config.chain_spec), task_manager))
 				})
 			}
@@ -337,19 +313,30 @@ pub fn run() -> Result<()> {
 
 			set_default_ss58_version(chain_spec);
 
-			if runner.config().chain_spec.is_arctic() {
+			if runner.config().chain_spec.is_snow() {
 				runner.async_run(|config| {
 					let PartialComponents {
 						client,
 						task_manager,
 						import_queue,
 						..
-					} =
-						arctic::new_partial::<
-							arctic_service::RuntimeApi,
-							arctic_service::Executor,
-							_,
-						>(&config, arctic::build_import_queue)?;
+					} = parachain::new_partial::<snow::RuntimeApi, snow::Executor, _>(
+						&config,
+						parachain::build_import_queue,
+					)?;
+					Ok((cmd.run(client, import_queue), task_manager))
+				})
+			} else if runner.config().chain_spec.is_arctic() {
+				runner.async_run(|config| {
+					let PartialComponents {
+						client,
+						task_manager,
+						import_queue,
+						..
+					} = parachain::new_partial::<arctic::RuntimeApi, arctic::Executor, _>(
+						&config,
+						parachain::build_import_queue,
+					)?;
 					Ok((cmd.run(client, import_queue), task_manager))
 				})
 			} else {
@@ -359,7 +346,7 @@ pub fn run() -> Result<()> {
 						task_manager,
 						import_queue,
 						..
-					} = frost::new_partial(&config)?;
+					} = solo::new_partial(&config)?;
 					Ok((cmd.run(client, import_queue), task_manager))
 				})
 			}
@@ -393,19 +380,30 @@ pub fn run() -> Result<()> {
 
 			set_default_ss58_version(chain_spec);
 
-			if runner.config().chain_spec.is_arctic() {
+			if runner.config().chain_spec.is_snow() {
 				runner.async_run(|config| {
 					let PartialComponents {
 						client,
 						task_manager,
 						backend,
 						..
-					} =
-						arctic::new_partial::<
-							arctic_service::RuntimeApi,
-							arctic_service::Executor,
-							_,
-						>(&config, arctic::build_import_queue)?;
+					} = parachain::new_partial::<snow::RuntimeApi, snow::Executor, _>(
+						&config,
+						parachain::build_import_queue,
+					)?;
+					Ok((cmd.run(client, backend, None), task_manager))
+				})
+			} else if runner.config().chain_spec.is_arctic() {
+				runner.async_run(|config| {
+					let PartialComponents {
+						client,
+						task_manager,
+						backend,
+						..
+					} = parachain::new_partial::<arctic::RuntimeApi, arctic::Executor, _>(
+						&config,
+						parachain::build_import_queue,
+					)?;
 					Ok((cmd.run(client, backend, None), task_manager))
 				})
 			} else {
@@ -415,7 +413,7 @@ pub fn run() -> Result<()> {
 						task_manager,
 						backend,
 						..
-					} = frost::new_partial(&config)?;
+					} = solo::new_partial(&config)?;
 					Ok((cmd.run(client, backend, None), task_manager))
 				})
 			}
@@ -469,6 +467,71 @@ pub fn run() -> Result<()> {
 		Some(Subcommand::Sign(cmd)) => cmd.run(),
 		Some(Subcommand::Verify(cmd)) => cmd.run(),
 		Some(Subcommand::Vanity(cmd)) => cmd.run(),
+		#[cfg(feature = "runtime-benchmarks")]
+		Some(Subcommand::Benchmark(cmd)) => {
+			let runner = cli.create_runner(cmd)?;
+			let chain_spec = &runner.config().chain_spec;
+			let is_arctic = chain_spec.is_arctic();
+			info!("Starting benchmarking");
+			match cmd {
+				BenchmarkCmd::Pallet(cmd) => {
+					info!("Benchmarking for pallet");
+					if cfg!(feature = "runtime-benchmarks") {
+						info!("Runtime benchmarking enabled");
+						if is_arctic {
+							info!("running pallet benchmarking for arctic");
+							runner.sync_run(|config| {
+								cmd.run::<arctic_runtime::Block, arctic::Executor>(config)
+							})
+						} else {
+							info!("running pallet benchmarking for frost");
+							runner.sync_run(|config| {
+								cmd.run::<frost_runtime::Block, solo::ExecutorDispatch>(config)
+							})
+						}
+					} else {
+						info!("error no benchmarking enabled");
+						Err("Benchmarking wasn't enabled when building the node. \
+                You can enable it with `--features runtime-benchmarks`."
+							.into())
+					}
+				}
+				BenchmarkCmd::Block(cmd) => runner.sync_run(|config| {
+					if is_arctic {
+						let partials = parachain::new_partial::<
+							arctic::RuntimeApi,
+							arctic::Executor,
+							_,
+						>(&config, parachain::build_import_queue)?;
+						cmd.run(partials.client)
+					} else {
+						let partials = solo::new_partial(&config)?;
+						cmd.run(partials.client)
+					}
+				}),
+				BenchmarkCmd::Storage(cmd) => runner.sync_run(|config| {
+					if is_arctic {
+						let partials = parachain::new_partial::<
+							arctic::RuntimeApi,
+							arctic::Executor,
+							_,
+						>(&config, parachain::build_import_queue)?;
+						let db = partials.backend.expose_db();
+						let storage = partials.backend.expose_storage();
+						cmd.run(config, partials.client.clone(), db, storage)
+					} else {
+						let partials = solo::new_partial(&config)?;
+						let db = partials.backend.expose_db();
+						let storage = partials.backend.expose_storage();
+						cmd.run(config, partials.client.clone(), db, storage)
+					}
+				}),
+				BenchmarkCmd::Overhead(_) => Err("Unsupported benchmarking command".into()),
+				BenchmarkCmd::Machine(cmd) => {
+					runner.sync_run(|config| cmd.run(&config, SUBSTRATE_REFERENCE_HARDWARE.clone()))
+				}
+			}
+		}
 		#[cfg(feature = "try-runtime")]
 		Some(Subcommand::TryRuntime(cmd)) => {
 			let runner = cli.create_runner(cmd)?;
@@ -476,7 +539,7 @@ pub fn run() -> Result<()> {
 
 			set_default_ss58_version(chain_spec);
 
-			if chain_spec.is_arctic() {
+			if chain_spec.is_snow() {
 				runner.async_run(|config| {
 					let registry = config.prometheus_config.as_ref().map(|cfg| &cfg.registry);
 					let task_manager =
@@ -485,7 +548,20 @@ pub fn run() -> Result<()> {
 								sc_cli::Error::Service(sc_service::Error::Prometheus(e))
 							})?;
 					Ok((
-						cmd.run::<arctic_runtime::Block, arctic_service::Executor>(config),
+						cmd.run::<snow_runtime::Block, snow::Executor>(config),
+						task_manager,
+					))
+				})
+			} else if chain_spec.is_arctic() {
+				runner.async_run(|config| {
+					let registry = config.prometheus_config.as_ref().map(|cfg| &cfg.registry);
+					let task_manager =
+						sc_service::TaskManager::new(config.tokio_handle.clone(), registry)
+							.map_err(|e| {
+								sc_cli::Error::Service(sc_service::Error::Prometheus(e))
+							})?;
+					Ok((
+						cmd.run::<arctic_runtime::Block, arctic::Executor>(config),
 						task_manager,
 					))
 				})
@@ -497,10 +573,7 @@ pub fn run() -> Result<()> {
 							.map_err(|e| {
 								sc_cli::Error::Service(sc_service::Error::Prometheus(e))
 							})?;
-					Ok((
-						cmd.run::<Block, arctic_service::Executor>(config),
-						task_manager,
-					))
+					Ok((cmd.run::<Block, arctic::Executor>(config), task_manager))
 				})
 			}
 		}
@@ -513,11 +586,11 @@ pub fn run() -> Result<()> {
 			let collator_options = cli.run.collator_options();
 
 			runner.run_node_until_exit(|config| async move {
-				if !config.chain_spec.is_arctic() {
+				if config.chain_spec.is_dev() {
 					info!("Starting Frost Node");
-					return frost::start_frost_node(config).map_err(Into::into);
+					return solo::start_frost_node(config).map_err(Into::into);
 				}
-				let para_id = Extensions::try_get(&*config.chain_spec)
+				let para_id = chain_spec::Extensions::try_get(&*config.chain_spec)
 					.map(|e| e.para_id)
 					.ok_or_else(|| "Could not find parachain ID in chain-spec.".to_string())?;
 
@@ -554,10 +627,17 @@ pub fn run() -> Result<()> {
 					}
 				);
 
-				arctic::start_arctic_node(config, polkadot_config, collator_options, id)
-					.await
-					.map(|r| r.0)
-					.map_err(Into::into)
+				if config.chain_spec.is_snow() {
+					start_snow_node(config, polkadot_config, collator_options, id)
+						.await
+						.map(|r| r.0)
+						.map_err(Into::into)
+				} else {
+					start_arctic_node(config, polkadot_config, collator_options, id)
+						.await
+						.map(|r| r.0)
+						.map_err(Into::into)
+				}
 			})
 		}
 	}

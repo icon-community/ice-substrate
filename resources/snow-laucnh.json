@@ -28,7 +28,7 @@
   "parachains": [
     {
       "bin": "../target/release/ice-node",
-      "chain": "arctic-dev",
+      "chain": "snow-dev",
       "balance": 100000000000000000,
       "nodes": [
         {

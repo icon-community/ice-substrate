@@ -11,7 +11,7 @@ use hex_literal::hex;
 use sc_chain_spec::Properties;
 use sc_service::ChainType;
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
-use sp_core::{crypto::UncheckedInto, sr25519, Pair, Public};
+use sp_core::{sr25519, Pair, Public};
 use sp_finality_grandpa::AuthorityId as GrandpaId;
 use sp_runtime::traits::{AccountIdConversion, IdentifyAccount, Verify};
 use std::collections::BTreeMap;
@@ -53,69 +53,6 @@ pub fn authority_keys_from_seed(s: &str) -> (AuraId, GrandpaId) {
 
 const AIRDROP_MERKLE_ROOT: [u8; 32] =
 	hex!("990e01e3959627d2ddd94927e1c605a422b62dc3b8c8b98d713ae6833c3ef122");
-
-/// Initialize frost testnet configuration
-pub fn testnet_config() -> Result<FrostChainSpec, String> {
-	let wasm_binary = WASM_BINARY.ok_or_else(|| "Development wasm not available".to_string())?;
-
-	let initial_authorities = vec![
-		(
-			hex!["62687296bffd79f12178c4278b9439d5eeb8ed7cc0b1f2ae29307e806a019659"]
-				.unchecked_into(),
-			hex!["27c6da25d03bb6b3c751da3e8c5265b0bb357c15240602443cc286c0658b47f9"]
-				.unchecked_into(),
-		),
-		(
-			hex!["d893ef775b5689473b2e9fa32c1f15c72a7c4c86f05f03ee32b8aca6ce61b92c"]
-				.unchecked_into(),
-			hex!["85ec524aeacb6e558619a10da82cdf787026209211d1b7462cb176d58f2add86"]
-				.unchecked_into(),
-		),
-	];
-
-	let council_members =
-		vec![hex!["62687296bffd79f12178c4278b9439d5eeb8ed7cc0b1f2ae29307e806a019659"].into()];
-
-	let technical_committee_membership =
-		vec![hex!["62687296bffd79f12178c4278b9439d5eeb8ed7cc0b1f2ae29307e806a019659"].into()];
-
-	let root_key: AccountId =
-		hex!["62687296bffd79f12178c4278b9439d5eeb8ed7cc0b1f2ae29307e806a019659"].into();
-
-	let airdrop_creditor_account: AccountId =
-		hex!["10b3ae7ebb7d722c8e8d0d6bf421f6d5dbde8d329f7c905a201539c635d61872"].into();
-
-	let endowed_accounts = vec![
-		TreasuryPalletId::get().into_account_truncating(),
-		hex!["62687296bffd79f12178c4278b9439d5eeb8ed7cc0b1f2ae29307e806a019659"].into(),
-		hex!["d893ef775b5689473b2e9fa32c1f15c72a7c4c86f05f03ee32b8aca6ce61b92c"].into(),
-		hex!["98003761bff94c8c44af38b8a92c1d5992d061d41f700c76255c810d447d613f"].into(),
-	];
-
-	Ok(FrostChainSpec::from_genesis(
-		"Frost Testnet",
-		"frost-testnet",
-		ChainType::Local,
-		move || {
-			testnet_genesis(
-				wasm_binary,
-				initial_authorities.clone(),
-				council_members.clone(),
-				technical_committee_membership.clone(),
-				root_key.clone(),
-				airdrop_creditor_account.clone(),
-				endowed_accounts.clone(),
-				true,
-			)
-		},
-		vec![],
-		None,
-		None,
-		None,
-		frost_properties().into(),
-		None,
-	))
-}
 
 /// Initialize frost development configuration
 pub fn development_config() -> Result<FrostChainSpec, String> {
@@ -161,64 +98,6 @@ pub fn development_config() -> Result<FrostChainSpec, String> {
 		None,
 		None,
 		frost_properties().into(),
-		None,
-	))
-}
-
-/// Initialize frost local testnet configuration
-pub fn local_testnet_config() -> Result<FrostChainSpec, String> {
-	let wasm_binary = WASM_BINARY.ok_or_else(|| "Development wasm not available".to_string())?;
-
-	let initial_authorities = vec![
-		authority_keys_from_seed("Alice"),
-		authority_keys_from_seed("Bob"),
-	];
-
-	let council_members = vec![get_account_id_from_seed::<sr25519::Public>("Alice")];
-
-	let technical_committee_membership = vec![get_account_id_from_seed::<sr25519::Public>("Alice")];
-
-	let root_key = get_account_id_from_seed::<sr25519::Public>("Alice");
-
-	let airdrop_creditor_account: AccountId =
-		hex!["10b3ae7ebb7d722c8e8d0d6bf421f6d5dbde8d329f7c905a201539c635d61872"].into();
-
-	let endowed_accounts = vec![
-		get_account_id_from_seed::<sr25519::Public>("Alice"),
-		get_account_id_from_seed::<sr25519::Public>("Bob"),
-		get_account_id_from_seed::<sr25519::Public>("Charlie"),
-		get_account_id_from_seed::<sr25519::Public>("Dave"),
-		get_account_id_from_seed::<sr25519::Public>("Eve"),
-		get_account_id_from_seed::<sr25519::Public>("Ferdie"),
-		get_account_id_from_seed::<sr25519::Public>("Alice//stash"),
-		get_account_id_from_seed::<sr25519::Public>("Bob//stash"),
-		get_account_id_from_seed::<sr25519::Public>("Charlie//stash"),
-		get_account_id_from_seed::<sr25519::Public>("Dave//stash"),
-		get_account_id_from_seed::<sr25519::Public>("Eve//stash"),
-		get_account_id_from_seed::<sr25519::Public>("Ferdie//stash"),
-	];
-
-	Ok(FrostChainSpec::from_genesis(
-		"Frost Local Testnet",
-		"frost-local-testnet",
-		ChainType::Local,
-		move || {
-			testnet_genesis(
-				wasm_binary,
-				initial_authorities.clone(),
-				council_members.clone(),
-				technical_committee_membership.clone(),
-				root_key.clone(),
-				airdrop_creditor_account.clone(),
-				endowed_accounts.clone(),
-				true,
-			)
-		},
-		vec![],
-		None,
-		None,
-		None,
-		None,
 		None,
 	))
 }
