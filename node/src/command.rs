@@ -160,16 +160,21 @@ fn extract_genesis_wasm(chain_spec: &Box<dyn sc_service::ChainSpec>) -> Result<V
 pub fn run() -> Result<()> {
 	let cli = Cli::from_args();
 
-	//TODO: figure out a way to set this without hardcoding
-	sp_core::crypto::set_default_ss58_version(sp_core::crypto::Ss58AddressFormat::custom(2207));
-
 	match &cli.subcommand {
 		Some(Subcommand::BuildSpec(cmd)) => {
 			let runner = cli.create_runner(cmd)?;
+			let chain_spec = &runner.config().chain_spec;
+
+			set_default_ss58_version(chain_spec);
+
 			runner.sync_run(|config| cmd.run(config.chain_spec, config.network))
 		}
 		Some(Subcommand::CheckBlock(cmd)) => {
 			let runner = cli.create_runner(cmd)?;
+			let chain_spec = &runner.config().chain_spec;
+
+			set_default_ss58_version(chain_spec);
+
 			if runner.config().chain_spec.is_arctic() {
 				runner.async_run(|config| {
 					let PartialComponents {
@@ -200,6 +205,9 @@ pub fn run() -> Result<()> {
 		Some(Subcommand::Benchmark(cmd)) => {
 			let runner = cli.create_runner(cmd)?;
 			let chain_spec = &runner.config().chain_spec;
+
+			set_default_ss58_version(chain_spec);
+
 			let is_arctic = chain_spec.is_arctic();
 			info!("Starting benchmarking");
 			match cmd {
@@ -263,6 +271,10 @@ pub fn run() -> Result<()> {
 		}
 		Some(Subcommand::ExportBlocks(cmd)) => {
 			let runner = cli.create_runner(cmd)?;
+			let chain_spec = &runner.config().chain_spec;
+
+			set_default_ss58_version(chain_spec);
+
 			if runner.config().chain_spec.is_arctic() {
 				runner.async_run(|config| {
 					let PartialComponents {
@@ -290,6 +302,10 @@ pub fn run() -> Result<()> {
 		}
 		Some(Subcommand::ExportState(cmd)) => {
 			let runner = cli.create_runner(cmd)?;
+			let chain_spec = &runner.config().chain_spec;
+
+			set_default_ss58_version(chain_spec);
+
 			if runner.config().chain_spec.is_arctic() {
 				runner.async_run(|config| {
 					let PartialComponents {
@@ -317,6 +333,10 @@ pub fn run() -> Result<()> {
 		}
 		Some(Subcommand::ImportBlocks(cmd)) => {
 			let runner = cli.create_runner(cmd)?;
+			let chain_spec = &runner.config().chain_spec;
+
+			set_default_ss58_version(chain_spec);
+
 			if runner.config().chain_spec.is_arctic() {
 				runner.async_run(|config| {
 					let PartialComponents {
@@ -346,6 +366,10 @@ pub fn run() -> Result<()> {
 		}
 		Some(Subcommand::PurgeChain(cmd)) => {
 			let runner = cli.create_runner(cmd)?;
+			let chain_spec = &runner.config().chain_spec;
+
+			set_default_ss58_version(chain_spec);
+
 			runner.sync_run(|config| {
 				let polkadot_cli = RelayChainCli::new(
 					&config,
@@ -365,6 +389,10 @@ pub fn run() -> Result<()> {
 		}
 		Some(Subcommand::Revert(cmd)) => {
 			let runner = cli.create_runner(cmd)?;
+			let chain_spec = &runner.config().chain_spec;
+
+			set_default_ss58_version(chain_spec);
+
 			if runner.config().chain_spec.is_arctic() {
 				runner.async_run(|config| {
 					let PartialComponents {
@@ -445,6 +473,9 @@ pub fn run() -> Result<()> {
 		Some(Subcommand::TryRuntime(cmd)) => {
 			let runner = cli.create_runner(cmd)?;
 			let chain_spec = &runner.config().chain_spec;
+
+			set_default_ss58_version(chain_spec);
+
 			if chain_spec.is_arctic() {
 				runner.async_run(|config| {
 					let registry = config.prometheus_config.as_ref().map(|cfg| &cfg.registry);
@@ -475,6 +506,10 @@ pub fn run() -> Result<()> {
 		}
 		None => {
 			let runner = cli.create_runner(&cli.run.normalize())?;
+			let chain_spec = &runner.config().chain_spec;
+
+			set_default_ss58_version(chain_spec);
+
 			let collator_options = cli.run.collator_options();
 
 			runner.run_node_until_exit(|config| async move {
@@ -528,6 +563,22 @@ pub fn run() -> Result<()> {
 	}
 }
 
+fn set_default_ss58_version(spec: &Box<dyn sc_service::ChainSpec>) {
+	let ss58_version = if spec.is_arctic() || spec.is_frost() {
+		// Ss58AddressFormatRegistry::ArcticAccount
+		sp_core::crypto::Ss58AddressFormat::custom(2208)
+	} else if spec.is_snow() {
+		// Ss58AddressFormatRegistry::SnowAccount
+		sp_core::crypto::Ss58AddressFormat::custom(2207)
+	} else {
+		// Ss58AddressFormatRegistry::PolkadotAccount
+		sp_core::crypto::Ss58AddressFormat::custom(42)
+	}
+	.into();
+
+	sp_core::crypto::set_default_ss58_version(ss58_version);
+}
+
 impl DefaultConfigurationValues for RelayChainCli {
 	fn p2p_listen_port() -> u16 {
 		30334
@@ -555,12 +606,12 @@ impl CliConfiguration<Self> for RelayChainCli {
 		self.base.base.import_params()
 	}
 
-	fn network_params(&self) -> Option<&NetworkParams> {
-		self.base.base.network_params()
-	}
-
 	fn keystore_params(&self) -> Option<&KeystoreParams> {
 		self.base.base.keystore_params()
+	}
+
+	fn network_params(&self) -> Option<&NetworkParams> {
+		self.base.base.network_params()
 	}
 
 	fn base_path(&self) -> Result<Option<BasePath>> {
@@ -568,51 +619,6 @@ impl CliConfiguration<Self> for RelayChainCli {
 			.shared_params()
 			.base_path()
 			.or_else(|| self.base_path.clone().map(Into::into)))
-	}
-
-	fn rpc_http(&self, default_listen_port: u16) -> Result<Option<SocketAddr>> {
-		self.base.base.rpc_http(default_listen_port)
-	}
-
-	fn rpc_ipc(&self) -> Result<Option<String>> {
-		self.base.base.rpc_ipc()
-	}
-
-	fn rpc_ws(&self, default_listen_port: u16) -> Result<Option<SocketAddr>> {
-		self.base.base.rpc_ws(default_listen_port)
-	}
-
-	fn prometheus_config(
-		&self,
-		default_listen_port: u16,
-		chain_spec: &Box<dyn ChainSpec>,
-	) -> Result<Option<PrometheusConfig>> {
-		self.base
-			.base
-			.prometheus_config(default_listen_port, chain_spec)
-	}
-
-	fn init<F>(
-		&self,
-		_support_url: &String,
-		_impl_version: &String,
-		_logger_hook: F,
-		_config: &sc_service::Configuration,
-	) -> Result<()>
-	where
-		F: FnOnce(&mut sc_cli::LoggerBuilder, &sc_service::Configuration),
-	{
-		unreachable!("PolkadotCli is never initialized; qed");
-	}
-
-	fn chain_id(&self, is_frost: bool) -> Result<String> {
-		let chain_id = self.base.base.chain_id(is_frost)?;
-
-		Ok(if chain_id.is_empty() {
-			self.chain_id.clone().unwrap_or_default()
-		} else {
-			chain_id
-		})
 	}
 
 	fn role(&self, is_frost: bool) -> Result<sc_service::Role> {
@@ -627,6 +633,28 @@ impl CliConfiguration<Self> for RelayChainCli {
 		self.base.base.state_cache_child_ratio()
 	}
 
+	fn chain_id(&self, is_frost: bool) -> Result<String> {
+		let chain_id = self.base.base.chain_id(is_frost)?;
+
+		Ok(if chain_id.is_empty() {
+			self.chain_id.clone().unwrap_or_default()
+		} else {
+			chain_id
+		})
+	}
+
+	fn rpc_http(&self, default_listen_port: u16) -> Result<Option<SocketAddr>> {
+		self.base.base.rpc_http(default_listen_port)
+	}
+
+	fn rpc_ipc(&self) -> Result<Option<String>> {
+		self.base.base.rpc_ipc()
+	}
+
+	fn rpc_ws(&self, default_listen_port: u16) -> Result<Option<SocketAddr>> {
+		self.base.base.rpc_ws(default_listen_port)
+	}
+
 	fn rpc_methods(&self) -> Result<sc_service::config::RpcMethods> {
 		self.base.base.rpc_methods()
 	}
@@ -637,6 +665,23 @@ impl CliConfiguration<Self> for RelayChainCli {
 
 	fn rpc_cors(&self, is_frost: bool) -> Result<Option<Vec<String>>> {
 		self.base.base.rpc_cors(is_frost)
+	}
+
+	fn prometheus_config(
+		&self,
+		default_listen_port: u16,
+		chain_spec: &Box<dyn ChainSpec>,
+	) -> Result<Option<PrometheusConfig>> {
+		self.base
+			.base
+			.prometheus_config(default_listen_port, chain_spec)
+	}
+
+	fn telemetry_endpoints(
+		&self,
+		chain_spec: &Box<dyn ChainSpec>,
+	) -> Result<Option<sc_telemetry::TelemetryEndpoints>> {
+		self.base.base.telemetry_endpoints(chain_spec)
 	}
 
 	fn default_heap_pages(&self) -> Result<Option<u64>> {
@@ -659,10 +704,34 @@ impl CliConfiguration<Self> for RelayChainCli {
 		self.base.base.announce_block()
 	}
 
-	fn telemetry_endpoints(
+	fn init<F>(
 		&self,
-		chain_spec: &Box<dyn ChainSpec>,
-	) -> Result<Option<sc_telemetry::TelemetryEndpoints>> {
-		self.base.base.telemetry_endpoints(chain_spec)
+		_support_url: &String,
+		_impl_version: &String,
+		_logger_hook: F,
+		_config: &sc_service::Configuration,
+	) -> Result<()>
+	where
+		F: FnOnce(&mut sc_cli::LoggerBuilder, &sc_service::Configuration),
+	{
+		unreachable!("PolkadotCli is never initialized; qed");
+	}
+}
+
+pub trait IdentifyVariant {
+	fn is_arctic(&self) -> bool;
+	fn is_frost(&self) -> bool;
+	fn is_snow(&self) -> bool;
+}
+
+impl IdentifyVariant for Box<dyn ChainSpec> {
+	fn is_arctic(&self) -> bool {
+		self.id().starts_with("arctic")
+	}
+	fn is_frost(&self) -> bool {
+		self.id().starts_with("frost")
+	}
+	fn is_snow(&self) -> bool {
+		self.id().starts_with("snow")
 	}
 }
