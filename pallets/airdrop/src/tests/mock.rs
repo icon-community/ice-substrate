@@ -76,7 +76,7 @@ impl system::Config for Test {
 parameter_types! {
 	pub const ExistentialDeposit: u128 = 500;
 	pub const MaxLocks: u32 = 50;
-	pub const VestingMinTransfer: Balance = 10_000;
+	pub const VestingMinTransfer: Balance = 1000;
 }
 
 impl pallet_airdrop::Config for Test {

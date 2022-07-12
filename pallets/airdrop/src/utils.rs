@@ -7,6 +7,7 @@ use sp_runtime::{
 	traits::{BlakeTwo256, Bounded, CheckedDiv, CheckedMul, CheckedSub, Convert, Saturating},
 	AccountId32, DispatchError,
 };
+use frame_support::traits::Get;
 use sp_std::vec::Vec;
 
 /// Returns an optional vesting schedule which when applied release given amount
@@ -21,28 +22,34 @@ where
 	T: pallet_vesting::Config,
 {
 	const MIN_AMOUNT_PER_BLOCK: u32 = 1u32;
+	let min_vesting_amount = <T as pallet_vesting::Config>::MinVestedTransfer::get();
 
 	type BlockToBalance<T> = <T as pallet_vesting::Config>::BlockNumberToBalance;
-	let mut vesting = None;
+	let vesting;
 
 	let ends_in_as_balance = BlockToBalance::<T>::convert(ends_in);
 	let transfer_over = ends_in_as_balance.saturating_sub(VESTING_APPLICABLE_FROM.into());
 
 	let idol_transfer_multiple = transfer_over * MIN_AMOUNT_PER_BLOCK.into();
 
-	let remaining_amount = amount % idol_transfer_multiple;
+	let mut remaining_amount = amount % idol_transfer_multiple;
 	let primary_transfer_amount = amount.saturating_sub(remaining_amount);
 
 	let per_block = primary_transfer_amount
 		.checked_div(&idol_transfer_multiple)
-		.unwrap_or_else(Bounded::min_value);
+		.unwrap_or_else(Bounded::min_value); 
 
-	if per_block > Bounded::min_value() {
+	let per_block_is_ok = per_block > 0u32.into();
+	let locked_amount_is_ok = primary_transfer_amount >= min_vesting_amount;
+	if per_block_is_ok && locked_amount_is_ok {
 		vesting = Some(types::VestingInfoOf::<T>::new(
 			primary_transfer_amount,
 			per_block,
 			VESTING_APPLICABLE_FROM.into(),
 		));
+	} else {
+		vesting = None;
+		remaining_amount = amount;
 	}
 
 	(vesting, remaining_amount)
@@ -56,7 +63,7 @@ pub fn get_instant_percentage<T: airdrop::Config>(is_defi_user: bool) -> u8 {
 	}
 }
 
-pub fn get_splitted_amounts<T: airdrop::Config>(
+pub fn get_split_amounts<T: airdrop::Config>(
 	total_amount: types::BalanceOf<T>,
 	instant_percentage: u8,
 ) -> Result<(types::BalanceOf<T>, types::VestingBalanceOf<T>), DispatchError> {

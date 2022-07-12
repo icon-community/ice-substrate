@@ -24,7 +24,7 @@ fn claim_success() {
 			case.merkle_proofs,
 		));
 
-		let ice_account = AirdropModule::to_account_id(case.ice_address.clone()).unwrap();
+		let ice_account = AirdropModule::convert_to_account_id(case.ice_address.clone()).unwrap();
 		let total_balance = <Test as pallet_airdrop::Config>::Currency::total_balance(&ice_account);
 		let usable_balance =
 			<Test as pallet_airdrop::Config>::Currency::usable_balance(&ice_account);
@@ -101,7 +101,7 @@ fn already_claimed() {
 			ofw_account
 		));
 		let mut case = UserClaimTestCase::default();
-		let ice_account = AirdropModule::to_account_id(case.ice_address).unwrap();
+		let ice_account = AirdropModule::convert_to_account_id(case.ice_address).unwrap();
 		case.amount = 10017332_u64.into();
 
 		let mut snapshot = types::SnapshotInfo::default().ice_address(ice_account.clone());
@@ -260,8 +260,7 @@ fn respect_vesting_pallet_min_transfer() {
 		let ice_address = samples::ACCOUNT_ID[1];
 
 		// We intentionally make it less than crate::tests::mock::MinVestingTransfer
-		let total_amount = 9_555;
-		assert!(total_amount < crate::tests::mock::VestingMinTransfer::get());
+		let total_amount = <Test as pallet_vesting::Config>::MinVestedTransfer::get() - 1;
 
 		let mut snapshot =
 			types::SnapshotInfo::<Test>::new(ice_address, is_defi_user, total_amount);
@@ -292,15 +291,14 @@ fn partail_transfer_can_reclaim() {
 
 		let mut case = UserClaimTestCase::default();
 		case.amount = 10_u64.pow(18).into();
-		let ice_account = AirdropModule::to_account_id(case.ice_address.clone()).unwrap();
+		let ice_account = AirdropModule::convert_to_account_id(case.ice_address.clone()).unwrap();
 		set_creditor_balance(Bounded::max_value());
 
 		let mut user_balance =
 			<Test as pallet_airdrop::Config>::Currency::total_balance(&ice_account);
 		assert_eq!(user_balance, 0u32.into());
 
-<<<<<<< HEAD
-		let (init_instant_amount, init_vesting_amount) = utils::get_splitted_amounts::<Test>(
+		let (init_instant_amount, init_vesting_amount) = utils::get_split_amounts::<Test>(
 			case.amount,
 			utils::get_instant_percentage::<Test>(case.defi_user),
 		)
@@ -311,22 +309,6 @@ fn partail_transfer_can_reclaim() {
 		>(init_vesting_amount, vesting_period.into());
 		let vesting_amount = vesting_schedule.map(|s| s.locked()).unwrap_or(0u32.into());
 		let instant_amount = init_instant_amount + reminding_amount;
-=======
-		#[cfg(feature = "no-vesting")]
-		let (instant_amount, vesting_amount) = (case.amount, 0u128);
-
-		#[cfg(not(feature = "no-vesting"))]
-		let (instant_amount, vesting_amount) = {
-			let (raw_instant, raw_vesting) =
-				utils::get_split_amounts::<Test>(case.amount, get_per(case.defi_user)).unwrap();
-			let (schedule, rem) = utils::new_vesting_with_deadline::<
-				Test,
-				{ crate::vested_transfer::VESTING_APPLICABLE_FROM },
-			>(raw_vesting, crate::vested_transfer::BLOCKS_IN_YEAR.into());
-
-			(raw_instant + rem, schedule.unwrap().locked())
-		};
->>>>>>> upstream-main
 
 		// Eat all vesting slots so next vesting will fail
 		{
@@ -373,8 +355,8 @@ fn partail_transfer_can_reclaim() {
 			assert_eq!(mapped_icon_wallet.as_ref(), Some(&case.icon_address));
 			assert_eq!(new_balance, user_balance + instant_amount);
 
-            let expected_vesting_status = cfg!(feature = "no-vesting");
-            assert_eq!(snapshot.done_vesting, expected_vesting_status);
+			let expected_vesting_status = cfg!(feature = "no-vesting");
+			assert_eq!(snapshot.done_vesting, expected_vesting_status);
 
 			user_balance = new_balance;
 		}
@@ -397,23 +379,24 @@ fn partail_transfer_can_reclaim() {
 			case.amount,
 			case.defi_user,
 			case.merkle_proofs,
-		).map(|_| ());
-        let expected_res;
-        let expected_vesting_block_number;
-        let expected_final_balance = user_balance + vesting_amount;
-        let expected_instant_block_number = Some(1);
-        if cfg!(feature = "no-vesting") {
-            expected_res = Err(PalletError::ClaimAlreadyMade.into());
-            expected_vesting_block_number = None;
-        } else {
-            expected_res = Ok(());
-            expected_vesting_block_number = Some(12);
-        };
+		)
+		.map(|_| ());
+		let expected_res;
+		let expected_vesting_block_number;
+		let expected_final_balance = user_balance + vesting_amount;
+		let expected_instant_block_number = Some(1);
+		if cfg!(feature = "no-vesting") {
+			expected_res = Err(PalletError::ClaimAlreadyMade.into());
+			expected_vesting_block_number = None;
+		} else {
+			expected_res = Ok(());
+			expected_vesting_block_number = Some(12);
+		};
 
 		let snapshot = AirdropModule::get_icon_snapshot_map(&case.icon_address).unwrap();
 		let mapped_icon_wallet = AirdropModule::get_ice_to_icon_map(&ice_account);
 		let final_balance = <Test as pallet_airdrop::Config>::Currency::total_balance(&ice_account);
-        assert_eq!(reclaim_res, expected_res);
+		assert_eq!(reclaim_res, expected_res);
 		assert!(snapshot.done_instant);
 		assert!(snapshot.done_vesting);
 		assert_eq!(mapped_icon_wallet.as_ref(), Some(&case.icon_address));

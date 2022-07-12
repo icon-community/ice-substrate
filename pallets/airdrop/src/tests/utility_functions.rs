@@ -62,19 +62,12 @@ fn ensure_root_or_server() {
 }
 
 #[test]
-<<<<<<< HEAD
 fn get_vesting_amounts_splitted() {
 	use sp_runtime::ArithmeticError;
 	let expected_defi_instant_per=40;
     let expected_non_defi_instant_per=30;
     minimal_test_ext().execute_with(|| {
-		let get_splitted_amounts: _ = utils::get_splitted_amounts::<Test>;
-=======
-fn get_vesting_amounts_split() {
-	minimal_test_ext().execute_with(|| {
-		use sp_runtime::ArithmeticError;
 		let get_split_amounts: _ = utils::get_split_amounts::<Test>;
->>>>>>> upstream-main
 		let defi_instant = utils::get_instant_percentage::<Test>(true);
 		let non_defi_instant = utils::get_instant_percentage::<Test>(false);
 
@@ -87,25 +80,20 @@ fn get_vesting_amounts_split() {
 			ArithmeticError::Overflow
 		);
 		assert_eq!(
-<<<<<<< HEAD
 			Ok((10_u32.into(), 0u32.into())),
-			get_splitted_amounts(10, 100)
-=======
-			Ok((0_u32.into(), 0_u32.into())),
-			get_split_amounts(0_u32.into(), defi_instant)
->>>>>>> upstream-main
+			get_split_amounts(10, 100)
 		);
         assert_eq!(
             Ok((0u32.into(), 10u32.into())),
-            get_splitted_amounts(10, 0)
+            get_split_amounts(10, 0)
         );
         assert_eq!(
             Ok((0u32.into(), 0u32.into())),
-            get_splitted_amounts(0, 50)
+            get_split_amounts(0, 50)
         );
         assert_eq!(
             Ok((0u32.into(), 0u32.into())),
-            get_splitted_amounts(0, 0)
+            get_split_amounts(0, 0)
         );
 
 		assert_eq!(
@@ -117,19 +105,6 @@ fn get_vesting_amounts_split() {
 			Ok((1200_u32.into(), 1800_u32.into())),
 			get_split_amounts(3_000_u32.into(), defi_instant)
 		);
-<<<<<<< HEAD
-=======
-
-		assert_eq!(
-			Ok((0_u32.into(), 1_u32.into())),
-			get_split_amounts(1_u32.into(), non_defi_instant)
-		);
-		assert_eq!(
-			Ok((0_u32.into(), 1_u32.into())),
-			get_split_amounts(1_u32.into(), defi_instant)
-		);
-
->>>>>>> upstream-main
 		assert_eq!(
 			Ok((2932538_u32.into(), 6842591_u32.into())),
 			get_split_amounts(9775129_u32.into(), non_defi_instant)
@@ -147,7 +122,7 @@ fn get_vesting_amounts_splitted_no_vesting() {
 	use sp_runtime::ArithmeticError;
    
     minimal_test_ext().execute_with(|| {
-		let get_splitted_amounts: _ = utils::get_splitted_amounts::<Test>;
+		let get_splitted_amounts: _ = utils::get_split_amounts::<Test>;
 		let defi_instant = 100;
 		let non_defi_instant = 100;
 		assert_eq!(
@@ -191,17 +166,26 @@ fn cook_vesting_schedule() {
 	minimal_test_ext().execute_with(|| {
 		{
 			let (schedule, remainder) =
-				utils::new_vesting_with_deadline::<Test, 0u32>(10u32.into(), 10u32.into());
+				utils::new_vesting_with_deadline::<Test, 0u32>(1000u32.into(), 1000u32.into());
 
 			let schedule = schedule.unwrap();
 			assert_eq!(remainder, 0u32.into());
 
-			assert_eq!(schedule.locked(), 10u32.into());
+			assert_eq!(schedule.locked(), 1000u32.into());
 			assert_eq!(schedule.per_block(), 1u32.into());
 			assert_eq!(
 				schedule.ending_block_as_balance::<BlockToBalance>(),
-				10u32.into()
+				1000u32.into()
 			);
+		}
+
+		{
+			let min_vesting_amount = <Test as pallet_vesting::Config>::MinVestedTransfer::get();
+			let amount = min_vesting_amount - 1;
+			let (schedule, remainder) = utils::new_vesting_with_deadline::<Test, 0u32>(amount, 1);
+
+			assert_eq!(schedule, None);
+			assert_eq!(remainder, amount);
 		}
 
 		{
@@ -214,13 +198,13 @@ fn cook_vesting_schedule() {
 
 		{
 			let (schedule, remained) =
-				utils::new_vesting_with_deadline::<Test, 5u32>(12u32.into(), 10u32.into());
+				utils::new_vesting_with_deadline::<Test, 5u32>(1002u32.into(), 10u32.into());
 
 			let primary = schedule.unwrap();
 			assert_eq!(remained, 2u32.into());
 
-			assert_eq!(primary.locked(), 10u32.into());
-			assert_eq!(primary.per_block(), 2u32.into());
+			assert_eq!(primary.locked(), 1000u32.into());
+			assert_eq!(primary.per_block(), 200u32.into());
 			assert_eq!(
 				primary.ending_block_as_balance::<BlockToBalance>(),
 				10u32.into()
@@ -229,13 +213,13 @@ fn cook_vesting_schedule() {
 
 		{
 			let (schedule, remained) =
-				utils::new_vesting_with_deadline::<Test, 0u32>(16u32.into(), 10u32.into());
+				utils::new_vesting_with_deadline::<Test, 0u32>(1006_u32.into(), 10u32.into());
 
 			let schedule = schedule.unwrap();
 			assert_eq!(remained, 6u32.into());
 
-			assert_eq!(schedule.locked(), 10u32.into());
-			assert_eq!(schedule.per_block(), 1u32.into());
+			assert_eq!(schedule.locked(), 1000_u32.into());
+			assert_eq!(schedule.per_block(), 100_u32.into());
 			assert_eq!(
 				schedule.ending_block_as_balance::<BlockToBalance>(),
 				10u32.into()
