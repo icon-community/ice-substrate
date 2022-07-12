@@ -87,11 +87,13 @@ impl pallet_airdrop::Config for Test {
 	type MerkelProofValidator = TestValidator<Test>;
 	type MaxProofSize = ConstU32<10>;
 
-	const AIRDROP_VARIABLES: types::AirdropBehaviour = types::AirdropBehaviour {
-		defi_instant_percentage: 40,
-		non_defi_instant_percentage: 30,
-		vesting_period: 5_256_000,
-	};
+	const AIRDROP_VARIABLES: types::AirdropBehaviour = {
+        types::AirdropBehaviour {
+		    defi_instant_percentage: 40,
+		    non_defi_instant_percentage: 30,
+		    vesting_period: 5_256_000,
+	    }
+    };
 }
 
 impl pallet_balances::Config for Test {

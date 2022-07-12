@@ -1,7 +1,6 @@
 use crate as airdrop;
 use airdrop::types;
 use codec::alloc::string::String;
-use frame_support::pallet_prelude::*;
 use hex::FromHexError;
 use sp_core::H160;
 use sp_runtime::{
@@ -57,7 +56,7 @@ pub fn get_instant_percentage<T: airdrop::Config>(is_defi_user: bool) -> u8 {
 	}
 }
 
-pub fn get_split_amounts<T: airdrop::Config>(
+pub fn get_splitted_amounts<T: airdrop::Config>(
 	total_amount: types::BalanceOf<T>,
 	instant_percentage: u8,
 ) -> Result<(types::BalanceOf<T>, types::VestingBalanceOf<T>), DispatchError> {
@@ -163,18 +162,4 @@ pub fn wrap_bytes(payload: &[u8]) -> Vec<u8> {
 
 pub fn get_current_block_number<T: frame_system::Config>() -> types::BlockNumberOf<T> {
 	<frame_system::Pallet<T>>::block_number()
-}
-
-/// Struct that panics with given message
-/// This is intended to use as ValueQuery's OnEmpty holder
-pub struct PanicOnNoCreditor;
-impl<T> Get<T> for PanicOnNoCreditor {
-	fn get() -> T {
-		panic!(
-			"No creditor account configured.\
-		This call was expected to return default value,\
-		which will in turn produce undesired behaviour as \
-		using default AccountId as creditor is not unexpected"
-		);
-	}
 }

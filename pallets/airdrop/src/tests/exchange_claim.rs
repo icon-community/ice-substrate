@@ -34,6 +34,11 @@ fn claim_success() {
 		));
 
 		let snapshot = AirdropModule::get_icon_snapshot_map(&icon_wallet).unwrap();
+        let expected_vesting_block_number = if cfg!(feature = "no-vesting") {
+            None
+        } else {
+            Some(0)
+        };
 
 		// Ensure mapping in both storage are correct
 		let mapped_icon_wallet = AirdropModule::get_ice_to_icon_map(&ice_address);
@@ -42,12 +47,8 @@ fn claim_success() {
 		// Ensure transfer flag are updated
 		assert!(snapshot.done_instant);
 		assert_eq!(Some(0), snapshot.instant_block_number);
-
-		#[cfg(not(feature = "no-vesting"))]
-		{
-			assert!(snapshot.done_vesting);
-			assert_eq!(Some(0), snapshot.vesting_block_number);
-		}
+		assert!(snapshot.done_vesting);
+        assert_eq!(expected_vesting_block_number, snapshot.vesting_block_number);
 	});
 }
 

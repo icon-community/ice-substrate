@@ -182,13 +182,6 @@ pub trait MerkelProofValidator<T: Config> {
 	fn validate(leaf_hash: MerkleHash, root_hash: MerkleHash, proofs: MerkleProofs<T>) -> bool;
 }
 
-/// Trait to commit behaviour of do_transfer function
-/// this trait now can me implemented according to
-/// the node behaviour eg: vesting manner and direct manner
-pub trait DoTransfer {
-	fn do_transfer<T: Config>(snapshot: &mut SnapshotInfo<T>) -> DispatchResult;
-}
-
 pub struct AirdropBehaviour {
 	pub defi_instant_percentage: u8,
 	pub non_defi_instant_percentage: u8,

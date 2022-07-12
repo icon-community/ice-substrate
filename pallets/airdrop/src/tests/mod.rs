@@ -10,7 +10,6 @@ pub mod prelude {
 		set_creditor_balance, transfer_to_creditor,
 	};
 	pub use crate as pallet_airdrop;
-	pub use crate::tests;
 	pub use codec::Encode;
 	pub use frame_support::{
 		assert_err, assert_err_ignore_postinfo, assert_err_with_weight, assert_noop, assert_ok,
@@ -18,7 +17,7 @@ pub mod prelude {
 	};
 	pub use hex_literal::hex as decode_hex;
 	pub use mock::{AirdropModule, Origin, Test};
-	pub use pallet_airdrop::{types, utils};
+	pub use pallet_airdrop::{types, utils, tests, transfer};
 	pub use sp_core::bytes;
 	pub use sp_runtime::traits::{Bounded, IdentifyAccount, Saturating};
 
