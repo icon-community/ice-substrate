@@ -65,7 +65,7 @@ fn load_spec(id: &str) -> std::result::Result<Box<dyn sc_service::ChainSpec>, St
 		"snow-dev" => Box::new(chain_spec::snow::get_dev_chain_spec()),
 		
 		path => {
-			let chain_spec = chain_spec::arctic::ArcticChainSpec::from_json_file(path.into())?;
+			let chain_spec = chain_spec::snow::SnowChainSpec::from_json_file(path.into())?;
 			if chain_spec.is_snow() {
 				Box::new(chain_spec::snow::SnowChainSpec::from_json_file(path.into())?)
 			} else if chain_spec.is_arctic() {
