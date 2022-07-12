@@ -4,6 +4,7 @@ panic = 'unwind'
 [workspace]
 members = [
     "node",
+    "runtime/snow",
     "runtime/arctic",
     "runtime/frost",
     "pallets/airdrop",

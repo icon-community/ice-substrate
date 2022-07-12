@@ -26,57 +26,57 @@ pub struct Cli {
 /// Possible subcommands of the main binary.
 #[derive(Debug, Parser)]
 pub enum Subcommand {
-	/// Export the genesis state of the parachain.
-	#[clap(name = "export-genesis-state")]
-	ExportGenesisState(ExportGenesisStateCommand),
+    /// Key management cli utilities
+    #[clap(subcommand)]
+    Key(KeySubcommand),
 
-	/// Export the genesis wasm of the parachain.
-	#[clap(name = "export-genesis-wasm")]
-	ExportGenesisWasm(ExportGenesisWasmCommand),
+    /// Verify a signature for a message, provided on STDIN, with a given (public or secret) key.
+    Verify(VerifyCmd),
 
-	/// Key management cli utilities
-	#[clap(subcommand)]
-	Key(KeySubcommand),
+    /// Generate a seed that provides a vanity address.
+    Vanity(VanityCmd),
 
-	/// The custom benchmark subcommmand benchmarking runtime modules.
-	#[clap(subcommand)]
-	Benchmark(frame_benchmarking_cli::BenchmarkCmd),
+    /// Sign a message, with a given (secret) key.
+    Sign(SignCmd),
 
-	/// Try some experimental command on the runtime. This includes migration and runtime-upgrade
-	/// testing.
-	#[cfg(feature = "try-runtime")]
-	TryRuntime(try_runtime_cli::TryRuntimeCmd),
+    /// Build a chain specification.
+    BuildSpec(sc_cli::BuildSpecCmd),
 
-	/// Verify a signature for a message, provided on STDIN, with a given
-	/// (public or secret) key.
-	Verify(VerifyCmd),
+    /// Validate blocks.
+    CheckBlock(sc_cli::CheckBlockCmd),
 
-	/// Generate a seed that provides a vanity address.
-	Vanity(VanityCmd),
+    /// Export blocks.
+    ExportBlocks(sc_cli::ExportBlocksCmd),
 
-	/// Sign a message, with a given (secret) key.
-	Sign(SignCmd),
+    /// Export the state of a given block into a chain spec.
+    ExportState(sc_cli::ExportStateCmd),
 
-	/// Build a chain specification.
-	BuildSpec(sc_cli::BuildSpecCmd),
+    /// Import blocks.
+    ImportBlocks(sc_cli::ImportBlocksCmd),
 
-	/// Validate blocks.
-	CheckBlock(sc_cli::CheckBlockCmd),
+    /// Remove the whole chain.
+    PurgeChain(cumulus_client_cli::PurgeChainCmd),
 
-	/// Export blocks.
-	ExportBlocks(sc_cli::ExportBlocksCmd),
+    /// Revert the chain to a previous state.
+    Revert(sc_cli::RevertCmd),
 
-	/// Export the state of a given block into a chain spec.
-	ExportState(sc_cli::ExportStateCmd),
+    /// Export the genesis state of the parachain.
+    #[clap(name = "export-genesis-state")]
+    ExportGenesisState(ExportGenesisStateCommand),
 
-	/// Import blocks.
-	ImportBlocks(sc_cli::ImportBlocksCmd),
+    /// Export the genesis wasm of the parachain.
+    #[clap(name = "export-genesis-wasm")]
+    ExportGenesisWasm(ExportGenesisWasmCommand),
 
-	/// Remove the whole chain.
-	PurgeChain(cumulus_client_cli::PurgeChainCmd),
+    /// The custom benchmark subcommmand benchmarking runtime pallets.
+    #[cfg(feature = "runtime-benchmarks")]
+    #[clap(name = "benchmark", about = "Benchmark runtime pallets.")]
+    #[clap(subcommand)]
+    Benchmark(frame_benchmarking_cli::BenchmarkCmd),
 
-	/// Revert the chain to a previous state.
-	Revert(sc_cli::RevertCmd),
+    /// Try some command against runtime state.
+    #[cfg(feature = "try-runtime")]
+    TryRuntime(try_runtime_cli::TryRuntimeCmd),
 }
 
 /// Command for exporting the genesis state of the parachain
