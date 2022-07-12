@@ -7,7 +7,7 @@ homepage = 'https://substrate.dev'
 license = 'Apache-2.0'
 name = 'ice-node'
 repository = 'https://github.com/web3labs/ice-substrate'
-version = '0.4.45'
+version = '0.4.46'
 publish = false
 
 [package.metadata.docs.rs]
@@ -29,6 +29,7 @@ hex-literal = "0.3.4"
 
 # primitives
 sp-api = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.24" }
+sp-io = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.24" }
 sp-block-builder = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.24" }
 sp-blockchain = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.24" }
 sp-core = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.24" }
@@ -124,8 +125,8 @@ pallet-ethereum = { default-features = false, git = "https://github.com/web3labs
 pallet-dynamic-fee = {  default-features = false, git = "https://github.com/web3labs/frontier", branch = "polkadot-v0.9.24" }
 pallet-base-fee = {  default-features = false, git = "https://github.com/web3labs/frontier", branch = "polkadot-v0.9.24" }
 
+snow-runtime = { path = "../runtime/snow", default-features = false, features = ["std"] }
 arctic-runtime = { path = "../runtime/arctic", default-features = false, features = ["std"] }
-
 frost-runtime = { path = "../runtime/frost", default-features = false, features = ["std"] }
 
 # local pallets
@@ -135,7 +136,6 @@ pallet-fees-split = { path  = "../pallets/fees-split", default-features = false,
 # try-runtime
 frame-try-runtime = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.24", optional = true }
 try-runtime-cli = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.24", optional = true }
-
 
 [build-dependencies]
 sc-service = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.24", optional = true }
@@ -171,5 +171,6 @@ runtime-benchmarks = [
     "polkadot-service/runtime-benchmarks",
 	"frost-runtime/runtime-benchmarks",
 	"arctic-runtime/runtime-benchmarks",
+    "snow-runtime/runtime-benchmarks",
 ]
 
