@@ -19,7 +19,7 @@ use std::collections::BTreeMap;
 pub type ArcticChainSpec = sc_service::GenericChainSpec<GenesisConfig, Extensions>;
 
 const AIRDROP_MERKLE_ROOT: [u8; 32] =
-	hex!("990e01e3959627d2ddd94927e1c605a422b62dc3b8c8b98d713ae6833c3ef122");
+	hex!("b654eac2f99abbe8e847a2079a2018bcf09989c00a3e0dd0114a335c4d97ef32");
 
 const PARA_ID: u32 = 2000;
 

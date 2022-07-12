@@ -1,13 +1,13 @@
 use crate as airdrop;
 use airdrop::types;
 use codec::alloc::string::String;
-use frame_support::pallet_prelude::*;
 use hex::FromHexError;
 use sp_core::H160;
 use sp_runtime::{
 	traits::{BlakeTwo256, Bounded, CheckedDiv, CheckedMul, CheckedSub, Convert, Saturating},
 	AccountId32, DispatchError,
 };
+use frame_support::traits::Get;
 use sp_std::vec::Vec;
 
 /// Returns an optional vesting schedule which when applied release given amount
@@ -22,28 +22,34 @@ where
 	T: pallet_vesting::Config,
 {
 	const MIN_AMOUNT_PER_BLOCK: u32 = 1u32;
+	let min_vesting_amount = <T as pallet_vesting::Config>::MinVestedTransfer::get();
 
 	type BlockToBalance<T> = <T as pallet_vesting::Config>::BlockNumberToBalance;
-	let mut vesting = None;
+	let vesting;
 
 	let ends_in_as_balance = BlockToBalance::<T>::convert(ends_in);
 	let transfer_over = ends_in_as_balance.saturating_sub(VESTING_APPLICABLE_FROM.into());
 
 	let idol_transfer_multiple = transfer_over * MIN_AMOUNT_PER_BLOCK.into();
 
-	let remaining_amount = amount % idol_transfer_multiple;
+	let mut remaining_amount = amount % idol_transfer_multiple;
 	let primary_transfer_amount = amount.saturating_sub(remaining_amount);
 
 	let per_block = primary_transfer_amount
 		.checked_div(&idol_transfer_multiple)
-		.unwrap_or_else(Bounded::min_value);
+		.unwrap_or_else(Bounded::min_value); 
 
-	if per_block > Bounded::min_value() {
+	let per_block_is_ok = per_block > 0u32.into();
+	let locked_amount_is_ok = primary_transfer_amount >= min_vesting_amount;
+	if per_block_is_ok && locked_amount_is_ok {
 		vesting = Some(types::VestingInfoOf::<T>::new(
 			primary_transfer_amount,
 			per_block,
 			VESTING_APPLICABLE_FROM.into(),
 		));
+	} else {
+		vesting = None;
+		remaining_amount = amount;
 	}
 
 	(vesting, remaining_amount)
@@ -163,18 +169,4 @@ pub fn wrap_bytes(payload: &[u8]) -> Vec<u8> {
 
 pub fn get_current_block_number<T: frame_system::Config>() -> types::BlockNumberOf<T> {
 	<frame_system::Pallet<T>>::block_number()
-}
-
-/// Struct that panics with given message
-/// This is intended to use as ValueQuery's OnEmpty holder
-pub struct PanicOnNoCreditor;
-impl<T> Get<T> for PanicOnNoCreditor {
-	fn get() -> T {
-		panic!(
-			"No creditor account configured.\
-		This call was expected to return default value,\
-		which will in turn produce undesired behaviour as \
-		using default AccountId as creditor is not unexpected"
-		);
-	}
 }
