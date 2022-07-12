@@ -1,12 +1,12 @@
 #![allow(clippy::borrowed_box)]
 
 use crate::{
-	chain_spec,		
+	chain_spec,
 	cli::{Cli, RelayChainCli, Subcommand},
 	primitives::Block,
-	service::solo,
 	service::parachain,
-	service::parachain::{snow, arctic, start_snow_node, start_arctic_node},	
+	service::parachain::{arctic, snow, start_arctic_node, start_snow_node},
+	service::solo,
 };
 use codec::Encode;
 use cumulus_client_service::genesis::generate_genesis_block;
@@ -28,9 +28,9 @@ use std::{io::Write, net::SocketAddr};
 use frame_benchmarking_cli::{BenchmarkCmd, SUBSTRATE_REFERENCE_HARDWARE};
 
 trait IdentifyChain {
-	fn is_snow(&self) -> bool;	
-	fn is_arctic(&self) -> bool;	
-	fn is_dev(&self) -> bool;	
+	fn is_snow(&self) -> bool;
+	fn is_arctic(&self) -> bool;
+	fn is_dev(&self) -> bool;
 }
 
 impl IdentifyChain for dyn sc_service::ChainSpec {
@@ -39,10 +39,10 @@ impl IdentifyChain for dyn sc_service::ChainSpec {
 	}
 	fn is_arctic(&self) -> bool {
 		self.id().starts_with("arctic")
-	}	
+	}
 	fn is_dev(&self) -> bool {
 		self.id().starts_with("dev")
-	}	
+	}
 }
 
 impl<T: sc_service::ChainSpec + 'static> IdentifyChain for T {
@@ -59,19 +59,25 @@ impl<T: sc_service::ChainSpec + 'static> IdentifyChain for T {
 
 fn load_spec(id: &str) -> std::result::Result<Box<dyn sc_service::ChainSpec>, String> {
 	Ok(match id {
-		"dev" => Box::new(chain_spec::frost::development_config()?),		
+		"dev" => Box::new(chain_spec::frost::development_config()?),
 		"arctic-dev" => Box::new(chain_spec::arctic::get_dev_chain_spec()),
 		"arctic" => Box::new(chain_spec::arctic::get_chain_spec()),
 		"snow-dev" => Box::new(chain_spec::snow::get_dev_chain_spec()),
-		
+
 		path => {
 			let chain_spec = chain_spec::snow::SnowChainSpec::from_json_file(path.into())?;
 			if chain_spec.is_snow() {
-				Box::new(chain_spec::snow::SnowChainSpec::from_json_file(path.into())?)
+				Box::new(chain_spec::snow::SnowChainSpec::from_json_file(
+					path.into(),
+				)?)
 			} else if chain_spec.is_arctic() {
-				Box::new(chain_spec::arctic::ArcticChainSpec::from_json_file(path.into())?)
+				Box::new(chain_spec::arctic::ArcticChainSpec::from_json_file(
+					path.into(),
+				)?)
 			} else {
-				Box::new(chain_spec::frost::FrostChainSpec::from_json_file(std::path::PathBuf::from(path,))?)
+				Box::new(chain_spec::frost::FrostChainSpec::from_json_file(
+					std::path::PathBuf::from(path),
+				)?)
 			}
 		}
 	})
@@ -87,8 +93,8 @@ impl SubstrateCli for Cli {
 	}
 
 	fn description() -> String {
-        env!("CARGO_PKG_DESCRIPTION").into()
-    }
+		env!("CARGO_PKG_DESCRIPTION").into()
+	}
 
 	fn author() -> String {
 		env!("CARGO_PKG_AUTHORS").into()
@@ -170,16 +176,21 @@ fn extract_genesis_wasm(chain_spec: &Box<dyn sc_service::ChainSpec>) -> Result<V
 pub fn run() -> Result<()> {
 	let cli = Cli::from_args();
 
-	//TODO: figure out a way to set this without hardcoding
-	sp_core::crypto::set_default_ss58_version(sp_core::crypto::Ss58AddressFormat::custom(2207));
-
 	match &cli.subcommand {
 		Some(Subcommand::BuildSpec(cmd)) => {
 			let runner = cli.create_runner(cmd)?;
+			let chain_spec = &runner.config().chain_spec;
+
+			set_default_ss58_version(chain_spec);
+
 			runner.sync_run(|config| cmd.run(config.chain_spec, config.network))
 		}
 		Some(Subcommand::CheckBlock(cmd)) => {
 			let runner = cli.create_runner(cmd)?;
+			let chain_spec = &runner.config().chain_spec;
+
+			set_default_ss58_version(chain_spec);
+
 			if runner.config().chain_spec.is_snow() {
 				runner.async_run(|config| {
 					let PartialComponents {
@@ -187,12 +198,10 @@ pub fn run() -> Result<()> {
 						task_manager,
 						import_queue,
 						..
-					} =
-						parachain::new_partial::<
-							snow::RuntimeApi,
-							snow::Executor,
-							_,
-						>(&config, parachain::build_import_queue)?;
+					} = parachain::new_partial::<snow::RuntimeApi, snow::Executor, _>(
+						&config,
+						parachain::build_import_queue,
+					)?;
 					Ok((cmd.run(client, import_queue), task_manager))
 				})
 			} else if runner.config().chain_spec.is_arctic() {
@@ -202,12 +211,10 @@ pub fn run() -> Result<()> {
 						task_manager,
 						import_queue,
 						..
-					} =
-						parachain::new_partial::<
-							arctic::RuntimeApi,
-							arctic::Executor,
-							_,
-						>(&config, parachain::build_import_queue)?;
+					} = parachain::new_partial::<arctic::RuntimeApi, arctic::Executor, _>(
+						&config,
+						parachain::build_import_queue,
+					)?;
 					Ok((cmd.run(client, import_queue), task_manager))
 				})
 			} else {
@@ -224,18 +231,20 @@ pub fn run() -> Result<()> {
 		}
 		Some(Subcommand::ExportBlocks(cmd)) => {
 			let runner = cli.create_runner(cmd)?;
+			let chain_spec = &runner.config().chain_spec;
+
+			set_default_ss58_version(chain_spec);
+
 			if runner.config().chain_spec.is_snow() {
 				runner.async_run(|config| {
 					let PartialComponents {
 						client,
 						task_manager,
 						..
-					} =
-						parachain::new_partial::<
-							snow::RuntimeApi,
-							snow::Executor,
-							_,
-						>(&config, parachain::build_import_queue)?;
+					} = parachain::new_partial::<snow::RuntimeApi, snow::Executor, _>(
+						&config,
+						parachain::build_import_queue,
+					)?;
 					Ok((cmd.run(client, config.database), task_manager))
 				})
 			} else if runner.config().chain_spec.is_arctic() {
@@ -244,12 +253,10 @@ pub fn run() -> Result<()> {
 						client,
 						task_manager,
 						..
-					} =
-						parachain::new_partial::<
-							arctic::RuntimeApi,
-							arctic::Executor,
-							_,
-						>(&config, parachain::build_import_queue)?;
+					} = parachain::new_partial::<arctic::RuntimeApi, arctic::Executor, _>(
+						&config,
+						parachain::build_import_queue,
+					)?;
 					Ok((cmd.run(client, config.database), task_manager))
 				})
 			} else {
@@ -265,18 +272,20 @@ pub fn run() -> Result<()> {
 		}
 		Some(Subcommand::ExportState(cmd)) => {
 			let runner = cli.create_runner(cmd)?;
+			let chain_spec = &runner.config().chain_spec;
+
+			set_default_ss58_version(chain_spec);
+
 			if runner.config().chain_spec.is_snow() {
 				runner.async_run(|config| {
 					let PartialComponents {
 						client,
 						task_manager,
 						..
-					} =
-						parachain::new_partial::<
-							snow::RuntimeApi,
-							snow::Executor,
-							_,
-						>(&config, parachain::build_import_queue)?;
+					} = parachain::new_partial::<snow::RuntimeApi, snow::Executor, _>(
+						&config,
+						parachain::build_import_queue,
+					)?;
 					Ok((cmd.run(client, config.chain_spec), task_manager))
 				})
 			} else if runner.config().chain_spec.is_arctic() {
@@ -285,12 +294,10 @@ pub fn run() -> Result<()> {
 						client,
 						task_manager,
 						..
-					} =
-						parachain::new_partial::<
-							arctic::RuntimeApi,
-							arctic::Executor,
-							_,
-						>(&config, parachain::build_import_queue)?;
+					} = parachain::new_partial::<arctic::RuntimeApi, arctic::Executor, _>(
+						&config,
+						parachain::build_import_queue,
+					)?;
 					Ok((cmd.run(client, config.chain_spec), task_manager))
 				})
 			} else {
@@ -306,6 +313,10 @@ pub fn run() -> Result<()> {
 		}
 		Some(Subcommand::ImportBlocks(cmd)) => {
 			let runner = cli.create_runner(cmd)?;
+			let chain_spec = &runner.config().chain_spec;
+
+			set_default_ss58_version(chain_spec);
+
 			if runner.config().chain_spec.is_snow() {
 				runner.async_run(|config| {
 					let PartialComponents {
@@ -313,12 +324,10 @@ pub fn run() -> Result<()> {
 						task_manager,
 						import_queue,
 						..
-					} =
-						parachain::new_partial::<
-							snow::RuntimeApi,
-							snow::Executor,
-							_,
-						>(&config, parachain::build_import_queue)?;
+					} = parachain::new_partial::<snow::RuntimeApi, snow::Executor, _>(
+						&config,
+						parachain::build_import_queue,
+					)?;
 					Ok((cmd.run(client, import_queue), task_manager))
 				})
 			} else if runner.config().chain_spec.is_arctic() {
@@ -328,12 +337,10 @@ pub fn run() -> Result<()> {
 						task_manager,
 						import_queue,
 						..
-					} =
-						parachain::new_partial::<
-							arctic::RuntimeApi,
-							arctic::Executor,
-							_,
-						>(&config, parachain::build_import_queue)?;
+					} = parachain::new_partial::<arctic::RuntimeApi, arctic::Executor, _>(
+						&config,
+						parachain::build_import_queue,
+					)?;
 					Ok((cmd.run(client, import_queue), task_manager))
 				})
 			} else {
@@ -350,6 +357,10 @@ pub fn run() -> Result<()> {
 		}
 		Some(Subcommand::PurgeChain(cmd)) => {
 			let runner = cli.create_runner(cmd)?;
+			let chain_spec = &runner.config().chain_spec;
+
+			set_default_ss58_version(chain_spec);
+
 			runner.sync_run(|config| {
 				let polkadot_cli = RelayChainCli::new(
 					&config,
@@ -369,6 +380,10 @@ pub fn run() -> Result<()> {
 		}
 		Some(Subcommand::Revert(cmd)) => {
 			let runner = cli.create_runner(cmd)?;
+			let chain_spec = &runner.config().chain_spec;
+
+			set_default_ss58_version(chain_spec);
+
 			if runner.config().chain_spec.is_snow() {
 				runner.async_run(|config| {
 					let PartialComponents {
@@ -376,12 +391,10 @@ pub fn run() -> Result<()> {
 						task_manager,
 						backend,
 						..
-					} =
-						parachain::new_partial::<
-							snow::RuntimeApi,
-							snow::Executor,
-							_,
-						>(&config, parachain::build_import_queue)?;
+					} = parachain::new_partial::<snow::RuntimeApi, snow::Executor, _>(
+						&config,
+						parachain::build_import_queue,
+					)?;
 					Ok((cmd.run(client, backend, None), task_manager))
 				})
 			} else if runner.config().chain_spec.is_arctic() {
@@ -391,12 +404,10 @@ pub fn run() -> Result<()> {
 						task_manager,
 						backend,
 						..
-					} =
-						parachain::new_partial::<
-							arctic::RuntimeApi,
-							arctic::Executor,
-							_,
-						>(&config, parachain::build_import_queue)?;
+					} = parachain::new_partial::<arctic::RuntimeApi, arctic::Executor, _>(
+						&config,
+						parachain::build_import_queue,
+					)?;
 					Ok((cmd.run(client, backend, None), task_manager))
 				})
 			} else {
@@ -465,6 +476,7 @@ pub fn run() -> Result<()> {
 			let runner = cli.create_runner(cmd)?;
 			let chain_spec = &runner.config().chain_spec;
 			let is_arctic = chain_spec.is_arctic();
+			let is_snow = chain_spec.is_snow();
 			info!("Starting benchmarking");
 			match cmd {
 				BenchmarkCmd::Pallet(cmd) => {
@@ -475,6 +487,11 @@ pub fn run() -> Result<()> {
 							info!("running pallet benchmarking for arctic");
 							runner.sync_run(|config| {
 								cmd.run::<arctic_runtime::Block, arctic::Executor>(config)
+							})
+						} else if is_snow {
+							info!("running pallet benchmarking for snow");
+							runner.sync_run(|config| {
+								cmd.run::<snow_runtime::Block, snow::Executor>(config)
 							})
 						} else {
 							info!("running pallet benchmarking for frost");
@@ -497,6 +514,12 @@ pub fn run() -> Result<()> {
 							_,
 						>(&config, parachain::build_import_queue)?;
 						cmd.run(partials.client)
+					} else if is_snow {
+						let partials = parachain::new_partial::<snow::RuntimeApi, snow::Executor, _>(
+							&config,
+							parachain::build_import_queue,
+						)?;
+						cmd.run(partials.client)
 					} else {
 						let partials = solo::new_partial(&config)?;
 						cmd.run(partials.client)
@@ -509,6 +532,14 @@ pub fn run() -> Result<()> {
 							arctic::Executor,
 							_,
 						>(&config, parachain::build_import_queue)?;
+						let db = partials.backend.expose_db();
+						let storage = partials.backend.expose_storage();
+						cmd.run(config, partials.client.clone(), db, storage)
+					} else if is_snow {
+						let partials = parachain::new_partial::<snow::RuntimeApi, snow::Executor, _>(
+							&config,
+							parachain::build_import_queue,
+						)?;
 						let db = partials.backend.expose_db();
 						let storage = partials.backend.expose_storage();
 						cmd.run(config, partials.client.clone(), db, storage)
@@ -529,6 +560,9 @@ pub fn run() -> Result<()> {
 		Some(Subcommand::TryRuntime(cmd)) => {
 			let runner = cli.create_runner(cmd)?;
 			let chain_spec = &runner.config().chain_spec;
+
+			set_default_ss58_version(chain_spec);
+
 			if chain_spec.is_snow() {
 				runner.async_run(|config| {
 					let registry = config.prometheus_config.as_ref().map(|cfg| &cfg.registry);
@@ -563,15 +597,16 @@ pub fn run() -> Result<()> {
 							.map_err(|e| {
 								sc_cli::Error::Service(sc_service::Error::Prometheus(e))
 							})?;
-					Ok((
-						cmd.run::<Block, arctic::Executor>(config),
-						task_manager,
-					))
+					Ok((cmd.run::<Block, arctic::Executor>(config), task_manager))
 				})
 			}
 		}
 		None => {
 			let runner = cli.create_runner(&cli.run.normalize())?;
+			let chain_spec = &runner.config().chain_spec;
+
+			set_default_ss58_version(chain_spec);
+
 			let collator_options = cli.run.collator_options();
 
 			runner.run_node_until_exit(|config| async move {
@@ -618,20 +653,35 @@ pub fn run() -> Result<()> {
 
 				if config.chain_spec.is_snow() {
 					start_snow_node(config, polkadot_config, collator_options, id)
-					.await
-					.map(|r| r.0)
-					.map_err(Into::into)
+						.await
+						.map(|r| r.0)
+						.map_err(Into::into)
 				} else {
 					start_arctic_node(config, polkadot_config, collator_options, id)
-					.await
-					.map(|r| r.0)
-					.map_err(Into::into)
-				}				
+						.await
+						.map(|r| r.0)
+						.map_err(Into::into)
+				}
 			})
 		}
 	}
 }
 
+fn set_default_ss58_version(spec: &Box<dyn sc_service::ChainSpec>) {
+	let ss58_version = if spec.is_arctic() || spec.is_dev() {
+		// Ss58AddressFormatRegistry::ArcticAccount
+		sp_core::crypto::Ss58AddressFormat::custom(2208)
+	} else if spec.is_snow() {
+		// Ss58AddressFormatRegistry::SnowAccount
+		sp_core::crypto::Ss58AddressFormat::custom(2207)
+	} else {
+		// Ss58AddressFormatRegistry::PolkadotAccount
+		sp_core::crypto::Ss58AddressFormat::custom(42)
+	}
+	.into();
+
+	sp_core::crypto::set_default_ss58_version(ss58_version);
+}
 
 impl DefaultConfigurationValues for RelayChainCli {
 	fn p2p_listen_port() -> u16 {
@@ -660,12 +710,12 @@ impl CliConfiguration<Self> for RelayChainCli {
 		self.base.base.import_params()
 	}
 
-	fn network_params(&self) -> Option<&NetworkParams> {
-		self.base.base.network_params()
-	}
-
 	fn keystore_params(&self) -> Option<&KeystoreParams> {
 		self.base.base.keystore_params()
+	}
+
+	fn network_params(&self) -> Option<&NetworkParams> {
+		self.base.base.network_params()
 	}
 
 	fn base_path(&self) -> Result<Option<BasePath>> {
@@ -673,51 +723,6 @@ impl CliConfiguration<Self> for RelayChainCli {
 			.shared_params()
 			.base_path()
 			.or_else(|| self.base_path.clone().map(Into::into)))
-	}
-
-	fn rpc_http(&self, default_listen_port: u16) -> Result<Option<SocketAddr>> {
-		self.base.base.rpc_http(default_listen_port)
-	}
-
-	fn rpc_ipc(&self) -> Result<Option<String>> {
-		self.base.base.rpc_ipc()
-	}
-
-	fn rpc_ws(&self, default_listen_port: u16) -> Result<Option<SocketAddr>> {
-		self.base.base.rpc_ws(default_listen_port)
-	}
-
-	fn prometheus_config(
-		&self,
-		default_listen_port: u16,
-		chain_spec: &Box<dyn ChainSpec>,
-	) -> Result<Option<PrometheusConfig>> {
-		self.base
-			.base
-			.prometheus_config(default_listen_port, chain_spec)
-	}
-
-	fn init<F>(
-		&self,
-		_support_url: &String,
-		_impl_version: &String,
-		_logger_hook: F,
-		_config: &sc_service::Configuration,
-	) -> Result<()>
-	where
-		F: FnOnce(&mut sc_cli::LoggerBuilder, &sc_service::Configuration),
-	{
-		unreachable!("PolkadotCli is never initialized; qed");
-	}
-
-	fn chain_id(&self, is_frost: bool) -> Result<String> {
-		let chain_id = self.base.base.chain_id(is_frost)?;
-
-		Ok(if chain_id.is_empty() {
-			self.chain_id.clone().unwrap_or_default()
-		} else {
-			chain_id
-		})
 	}
 
 	fn role(&self, is_frost: bool) -> Result<sc_service::Role> {
@@ -732,6 +737,28 @@ impl CliConfiguration<Self> for RelayChainCli {
 		self.base.base.state_cache_child_ratio()
 	}
 
+	fn chain_id(&self, is_frost: bool) -> Result<String> {
+		let chain_id = self.base.base.chain_id(is_frost)?;
+
+		Ok(if chain_id.is_empty() {
+			self.chain_id.clone().unwrap_or_default()
+		} else {
+			chain_id
+		})
+	}
+
+	fn rpc_http(&self, default_listen_port: u16) -> Result<Option<SocketAddr>> {
+		self.base.base.rpc_http(default_listen_port)
+	}
+
+	fn rpc_ipc(&self) -> Result<Option<String>> {
+		self.base.base.rpc_ipc()
+	}
+
+	fn rpc_ws(&self, default_listen_port: u16) -> Result<Option<SocketAddr>> {
+		self.base.base.rpc_ws(default_listen_port)
+	}
+
 	fn rpc_methods(&self) -> Result<sc_service::config::RpcMethods> {
 		self.base.base.rpc_methods()
 	}
@@ -742,6 +769,23 @@ impl CliConfiguration<Self> for RelayChainCli {
 
 	fn rpc_cors(&self, is_frost: bool) -> Result<Option<Vec<String>>> {
 		self.base.base.rpc_cors(is_frost)
+	}
+
+	fn prometheus_config(
+		&self,
+		default_listen_port: u16,
+		chain_spec: &Box<dyn ChainSpec>,
+	) -> Result<Option<PrometheusConfig>> {
+		self.base
+			.base
+			.prometheus_config(default_listen_port, chain_spec)
+	}
+
+	fn telemetry_endpoints(
+		&self,
+		chain_spec: &Box<dyn ChainSpec>,
+	) -> Result<Option<sc_telemetry::TelemetryEndpoints>> {
+		self.base.base.telemetry_endpoints(chain_spec)
 	}
 
 	fn default_heap_pages(&self) -> Result<Option<u64>> {
@@ -764,10 +808,16 @@ impl CliConfiguration<Self> for RelayChainCli {
 		self.base.base.announce_block()
 	}
 
-	fn telemetry_endpoints(
+	fn init<F>(
 		&self,
-		chain_spec: &Box<dyn ChainSpec>,
-	) -> Result<Option<sc_telemetry::TelemetryEndpoints>> {
-		self.base.base.telemetry_endpoints(chain_spec)
+		_support_url: &String,
+		_impl_version: &String,
+		_logger_hook: F,
+		_config: &sc_service::Configuration,
+	) -> Result<()>
+	where
+		F: FnOnce(&mut sc_cli::LoggerBuilder, &sc_service::Configuration),
+	{
+		unreachable!("PolkadotCli is never initialized; qed");
 	}
 }
