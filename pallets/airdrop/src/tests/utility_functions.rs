@@ -62,45 +62,33 @@ fn ensure_root_or_server() {
 }
 
 #[test]
-fn get_vesting_amounts_splitted() {
+fn get_vesting_amounts_split() {
 	use sp_runtime::ArithmeticError;
-	let expected_defi_instant_per=40;
-    let expected_non_defi_instant_per=30;
-    minimal_test_ext().execute_with(|| {
+	let expected_defi_instant_per = 40;
+	let expected_non_defi_instant_per = 30;
+	minimal_test_ext().execute_with(|| {
 		let get_split_amounts: _ = utils::get_split_amounts::<Test>;
 		let defi_instant = utils::get_instant_percentage::<Test>(true);
 		let non_defi_instant = utils::get_instant_percentage::<Test>(false);
 
-        assert_eq!(
-            (expected_defi_instant_per, expected_non_defi_instant_per),
-            (defi_instant, non_defi_instant),
-        );
+		assert_eq!(
+			(expected_defi_instant_per, expected_non_defi_instant_per),
+			(defi_instant, non_defi_instant),
+		);
 		assert_err!(
 			get_split_amounts(types::ServerBalance::max_value(), defi_instant),
 			ArithmeticError::Overflow
 		);
-		assert_eq!(
-			Ok((10_u32.into(), 0u32.into())),
-			get_split_amounts(10, 100)
-		);
-        assert_eq!(
-            Ok((0u32.into(), 10u32.into())),
-            get_split_amounts(10, 0)
-        );
-        assert_eq!(
-            Ok((0u32.into(), 0u32.into())),
-            get_split_amounts(0, 50)
-        );
-        assert_eq!(
-            Ok((0u32.into(), 0u32.into())),
-            get_split_amounts(0, 0)
-        );
+		assert_eq!(Ok((10_u32.into(), 0u32.into())), get_split_amounts(10, 100));
+		assert_eq!(Ok((0u32.into(), 10u32.into())), get_split_amounts(10, 0));
+		assert_eq!(Ok((0u32.into(), 0u32.into())), get_split_amounts(0, 50));
+		assert_eq!(Ok((0u32.into(), 0u32.into())), get_split_amounts(0, 0));
 
 		assert_eq!(
 			Ok((900_u32.into(), 2100_u32.into())),
 			get_split_amounts(3_000_u32.into(), non_defi_instant)
 		);
-        
+
 		assert_eq!(
 			Ok((1200_u32.into(), 1800_u32.into())),
 			get_split_amounts(3_000_u32.into(), defi_instant)
@@ -113,50 +101,37 @@ fn get_vesting_amounts_splitted() {
 			Ok((3910051_u32.into(), 5865078_u32.into())),
 			get_split_amounts(9775129_u32.into(), defi_instant)
 		);
-       
 	});
 }
 
 #[test]
-fn get_vesting_amounts_splitted_no_vesting() {
+fn get_vesting_amounts_split_no_vesting() {
 	use sp_runtime::ArithmeticError;
-   
-    minimal_test_ext().execute_with(|| {
-		let get_splitted_amounts: _ = utils::get_split_amounts::<Test>;
+
+	minimal_test_ext().execute_with(|| {
+		let get_split_amounts: _ = utils::get_split_amounts::<Test>;
 		let defi_instant = 100;
 		let non_defi_instant = 100;
+		assert_eq!(Ok((10_u32.into(), 0u32.into())), get_split_amounts(10, 100));
+		assert_eq!(Ok((0u32.into(), 10u32.into())), get_split_amounts(10, 0));
+		assert_eq!(Ok((0u32.into(), 0u32.into())), get_split_amounts(0, 50));
+		assert_eq!(Ok((0u32.into(), 0u32.into())), get_split_amounts(0, 0));
 		assert_eq!(
-			Ok((10_u32.into(), 0u32.into())),
-			get_splitted_amounts(10, 100)
+			Ok((3000u32.into(), 0u32.into())),
+			get_split_amounts(3000, non_defi_instant)
 		);
-        assert_eq!(
-            Ok((0u32.into(), 10u32.into())),
-            get_splitted_amounts(10, 0)
-        );
-        assert_eq!(
-            Ok((0u32.into(), 0u32.into())),
-            get_splitted_amounts(0, 50)
-        );
-        assert_eq!(
-            Ok((0u32.into(), 0u32.into())),
-            get_splitted_amounts(0, 0)
-        );
-        assert_eq!(
-            Ok((3000u32.into(), 0u32.into())),
-            get_splitted_amounts(3000, non_defi_instant)
-        );
-        assert_eq!(
-            Ok((3000u32.into(), 0u32.into())),
-            get_splitted_amounts(3000, defi_instant)
-        );
-        assert_eq!(
-            Ok((9775129_u32.into(), 0u32.into())),
-            get_splitted_amounts(9775129, non_defi_instant)
-        );
-        assert_eq!(
-            Ok((9775129_u32.into(), 0u32.into())),
-            get_splitted_amounts(9775129, defi_instant)
-        );
+		assert_eq!(
+			Ok((3000u32.into(), 0u32.into())),
+			get_split_amounts(3000, defi_instant)
+		);
+		assert_eq!(
+			Ok((9775129_u32.into(), 0u32.into())),
+			get_split_amounts(9775129, non_defi_instant)
+		);
+		assert_eq!(
+			Ok((9775129_u32.into(), 0u32.into())),
+			get_split_amounts(9775129, defi_instant)
+		);
 	});
 }
 
@@ -278,7 +253,7 @@ fn making_vesting_transfer() {
 
 			// Make sure flags are updated
 			assert!(snapshot.done_instant);
-            assert!(snapshot.done_vesting);
+			assert!(snapshot.done_vesting);
 		}
 
 		// When instant transfer is true but not vesting
@@ -486,7 +461,7 @@ fn validate_creditor_fund() {
 			);
 		}
 
-		// When creditor balance is exactly same as exestinsial balance
+		// When creditor balance is exactly same as existential balance
 		{
 			transfer_to_creditor(&donor, existential_balance);
 			assert_err!(
@@ -517,36 +492,36 @@ fn validate_creditor_fund() {
 
 #[test]
 fn ensure_claimable_snapshot() {
-    type SnapshotInfo = types::SnapshotInfo<Test>;
+	type SnapshotInfo = types::SnapshotInfo<Test>;
 	minimal_test_ext().execute_with(|| {
-        let both_true = SnapshotInfo {
-            done_instant: true,
-            done_vesting: true,
-            ..Default::default()
-        };
-        let both_false = SnapshotInfo {
-            done_vesting: false,
-            done_instant: false,
-            ..Default::default()
-        };
-        let instant_true_vesting_false = SnapshotInfo {
-            done_instant: true,
-            done_vesting: false,
-            ..Default::default()
-        };
-        let instant_false_vesting_true = SnapshotInfo {
-            done_instant: false,
-            done_vesting: true,
-            ..Default::default()
-        };
+		let both_true = SnapshotInfo {
+			done_instant: true,
+			done_vesting: true,
+			..Default::default()
+		};
+		let both_false = SnapshotInfo {
+			done_vesting: false,
+			done_instant: false,
+			..Default::default()
+		};
+		let instant_true_vesting_false = SnapshotInfo {
+			done_instant: true,
+			done_vesting: false,
+			..Default::default()
+		};
+		let instant_false_vesting_true = SnapshotInfo {
+			done_instant: false,
+			done_vesting: true,
+			..Default::default()
+		};
 
-        assert_ok!(AirdropModule::ensure_claimable(&both_false));
-        assert_ok!(AirdropModule::ensure_claimable(&instant_true_vesting_false));
-        assert_ok!(AirdropModule::ensure_claimable(&instant_false_vesting_true));
-        assert_err!(
-            AirdropModule::ensure_claimable(&both_true),
-            PalletError::ClaimAlreadyMade,
-        );
+		assert_ok!(AirdropModule::ensure_claimable(&both_false));
+		assert_ok!(AirdropModule::ensure_claimable(&instant_true_vesting_false));
+		assert_ok!(AirdropModule::ensure_claimable(&instant_false_vesting_true));
+		assert_err!(
+			AirdropModule::ensure_claimable(&both_true),
+			PalletError::ClaimAlreadyMade,
+		);
 	});
 }
 
@@ -656,7 +631,6 @@ fn insert_or_get_snapshot() {
 fn storage_version() {
 	minimal_test_ext().execute_with(|| {
 		let version = AirdropModule::get_storage_version();
-		assert_eq!(1_u32,version);
-		
+		assert_eq!(1_u32, version);
 	});
 }

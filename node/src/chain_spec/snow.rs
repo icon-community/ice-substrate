@@ -1,3 +1,8 @@
+use cumulus_primitives_core::ParaId;
+use hex_literal::hex;
+use sc_chain_spec::Properties;
+use sc_service::ChainType;
+use snow_runtime::currency::ICY;
 use snow_runtime::{
 	wasm_binary_unwrap, AccountId, AirdropConfig, AuraConfig, AuraId, BalancesConfig,
 	CollatorSelectionConfig, CouncilConfig, CouncilMembershipConfig, DemocracyConfig, EVMConfig,
@@ -5,11 +10,6 @@ use snow_runtime::{
 	Signature, SudoConfig, SystemConfig, TechnicalCommitteeConfig, TechnicalMembershipConfig,
 	VestingConfig,
 };
-use snow_runtime::currency::ICY;
-use cumulus_primitives_core::ParaId;
-use hex_literal::hex;
-use sc_chain_spec::Properties;
-use sc_service::ChainType;
 use sp_core::{sr25519, Pair, Public};
 use sp_runtime::traits::{IdentifyAccount, Verify};
 use std::collections::BTreeMap;
@@ -187,10 +187,10 @@ where
 
 /// Generate an Aura authority key
 pub fn get_authority_keys_from_seed(seed: &str) -> (AccountId, AuraId) {
-    (
-        get_account_id_from_seed::<sr25519::Public>(seed),
-        get_from_seed::<AuraId>(seed),
-    )
+	(
+		get_account_id_from_seed::<sr25519::Public>(seed),
+		get_from_seed::<AuraId>(seed),
+	)
 }
 
 /// Helper for session keys to map aura id

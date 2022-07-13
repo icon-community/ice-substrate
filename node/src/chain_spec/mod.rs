@@ -4,9 +4,9 @@ use sp_core::{Pair, Public};
 
 use crate::primitives::Block;
 
-pub mod snow;
 pub mod arctic;
 pub mod frost;
+pub mod snow;
 /// Node `ChainSpec` extensions.
 ///
 /// Additional parameters for some Substrate core modules,
