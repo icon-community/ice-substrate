@@ -1,17 +1,17 @@
+use snow_runtime::{
+	wasm_binary_unwrap, AccountId, Balance, AirdropConfig, AuraConfig, AuraId, BalancesConfig,
+	CollatorSelectionConfig, CouncilConfig, CouncilMembershipConfig, DemocracyConfig, EVMConfig,
+	GenesisConfig, IndicesConfig, ParachainInfoConfig, SS58Prefix, SessionConfig, SessionKeys,
+	Signature, SudoConfig, SystemConfig, TechnicalCommitteeConfig, TechnicalMembershipConfig,
+	VestingConfig, TreasuryPalletId,
+};
+use snow_runtime::currency::ICY;
 use cumulus_primitives_core::ParaId;
 use hex_literal::hex;
 use sc_chain_spec::Properties;
 use sc_service::ChainType;
-use snow_runtime::currency::ICY;
-use snow_runtime::{
-	wasm_binary_unwrap, AccountId, AirdropConfig, AuraConfig, AuraId, BalancesConfig,
-	CollatorSelectionConfig, CouncilConfig, CouncilMembershipConfig, DemocracyConfig, EVMConfig,
-	GenesisConfig, IndicesConfig, ParachainInfoConfig, SS58Prefix, SessionConfig, SessionKeys,
-	Signature, SudoConfig, SystemConfig, TechnicalCommitteeConfig, TechnicalMembershipConfig,
-	VestingConfig,
-};
-use sp_core::{sr25519, Pair, Public};
-use sp_runtime::traits::{IdentifyAccount, Verify};
+use sp_core::{crypto::UncheckedInto, sr25519, Pair, Public};
+use sp_runtime::traits::{AccountIdConversion, IdentifyAccount, Verify};
 use std::collections::BTreeMap;
 
 use super::{get_from_seed, Extensions};
@@ -19,10 +19,13 @@ use super::{get_from_seed, Extensions};
 /// Publicly expose SnowChainSpec for sc service
 pub type SnowChainSpec = sc_service::GenericChainSpec<GenesisConfig, Extensions>;
 
-const AIRDROP_MERKLE_ROOT: [u8; 32] =
-	hex!("990e01e3959627d2ddd94927e1c605a422b62dc3b8c8b98d713ae6833c3ef122");
-
 const PARA_ID: u32 = 2000;
+
+//const TOTAL_SUPPLY: Balance = ICY * 1800000000;
+//const TOTAL_AIR_DROP: Balance = 1 * ICY;
+
+const AIRDROP_MERKLE_ROOT: [u8; 32] =
+	hex!("b654eac2f99abbe8e847a2079a2018bcf09989c00a3e0dd0114a335c4d97ef32");
 
 fn snow_properties() -> Properties {
 	let mut properties = Properties::new();
@@ -55,8 +58,12 @@ pub fn get_dev_chain_spec() -> SnowChainSpec {
 	];
 
 	let endowed_accounts = vec![
-		(get_account_id_from_seed::<sr25519::Public>("Alice")),
-		(get_account_id_from_seed::<sr25519::Public>("Bob")),
+		(
+			(get_account_id_from_seed::<sr25519::Public>("Alice"), ICY * 300_000_000)
+		),
+		(			
+			(get_account_id_from_seed::<sr25519::Public>("Bob"), ICY * 300_000_000)
+		),
 	];
 
 	let council_members = vec![get_account_id_from_seed::<sr25519::Public>("Alice")];
@@ -84,7 +91,7 @@ pub fn get_dev_chain_spec() -> SnowChainSpec {
 		},
 		vec![],
 		None,
-		None,
+		"snow".into(),
 		None,
 		Some(snow_properties()),
 		Extensions {
@@ -95,12 +102,80 @@ pub fn get_dev_chain_spec() -> SnowChainSpec {
 	)
 }
 
-/// Helper function to create Arctic GenesisConfig.
+pub fn testnet_spec() -> SnowChainSpec {
+
+	let root_key: AccountId =
+		hex!["6f38cb15a6ec17a68f2aec60d2cd8cd15e58b4e33ee7f705d1cbcde07009d33f"].into();
+		
+	let invulnerables = vec![
+		(
+		  hex!["f28ae952b7518dbc35543b894facca7db5ab982ec6aa9afbba4e8c015ce4b74a"].into(),
+		  hex!["62687296bffd79f12178c4278b9439d5eeb8ed7cc0b1f2ae29307e806a019659"]
+				.unchecked_into(),
+		),
+	];
+	let authorities = vec![
+		(
+			hex!["f28ae952b7518dbc35543b894facca7db5ab982ec6aa9afbba4e8c015ce4b74a"].into(),
+			hex!["62687296bffd79f12178c4278b9439d5eeb8ed7cc0b1f2ae29307e806a019659"]
+				.unchecked_into(),
+		),
+	];
+
+	let airdrop_creditor_account: AccountId =
+		hex!["10b3ae7ebb7d722c8e8d0d6bf421f6d5dbde8d329f7c905a201539c635d61872"].into();
+
+	let endowed_accounts = vec![		
+	  (hex!["10b3ae7ebb7d722c8e8d0d6bf421f6d5dbde8d329f7c905a201539c635d61872"].into(), ICY * 630000000),
+	  (TreasuryPalletId::get().into_account_truncating(), ICY * 1170000000),
+	  (hex!["6f38cb15a6ec17a68f2aec60d2cd8cd15e58b4e33ee7f705d1cbcde07009d33f"].into(), ICY * 50),
+	  (hex!["f28ae952b7518dbc35543b894facca7db5ab982ec6aa9afbba4e8c015ce4b74a"].into(), ICY * 5100),
+	  (hex!["62687296bffd79f12178c4278b9439d5eeb8ed7cc0b1f2ae29307e806a019659"].into(), ICY * 10),
+	  (hex!["328d54003810edf7cef62d1374032333ade2fdb2756138fc43f6b4c1918bef7c"].into(), ICY * 10),
+	  (hex!["f057f9fbec27bb5b92c5f30e89cae9826f5b86cae8380aa383c079939b3e0a55"].into(), ICY * 10),
+	  (hex!["6adaa753d9c17d9280d2469acdac1aa9b7f01be3d4149f667b9be7c7fbad1319"].into(), ICY * 10),
+	];
+	
+   let council_members = vec![get_account_id_from_seed::<sr25519::Public>("Alice")];
+	
+   let technical_committee = vec![get_account_id_from_seed::<sr25519::Public>("Alice")];
+
+	SnowChainSpec::from_genesis(
+		"Snow Local Tesnet",
+		"snow-testnet",
+		ChainType::Local,
+		move || {
+			make_genesis(
+				root_key.clone(),
+				authorities.clone(),
+				invulnerables.clone(),
+				endowed_accounts.clone(),
+				council_members.clone(),
+				technical_committee.clone(),
+				airdrop_creditor_account.clone(),
+				PARA_ID.into(),
+			)
+		},
+		vec![],
+		None,
+		"snow".into(),
+		None,
+		Some(snow_properties()),
+		Extensions {
+			bad_blocks: Default::default(),
+			relay_chain: "rococo-local".into(),
+			para_id: PARA_ID,
+		},
+	)
+
+}
+
+/// Helper function to create GenesisConfig.
 fn make_genesis(
 	root_key: AccountId,
 	authorities: Vec<(AccountId, AuraId)>,
 	invulnerables: Vec<(AccountId, AuraId)>,
-	endowed_accounts: Vec<AccountId>,
+	endowed_accounts: Vec<(AccountId, Balance)>,
 	council_members: Vec<AccountId>,
 	technical_committee: Vec<AccountId>,
 	airdrop_creditor_account: AccountId,
@@ -115,11 +190,7 @@ fn make_genesis(
 		},
 		parachain_info: ParachainInfoConfig { parachain_id },
 		balances: BalancesConfig {
-			balances: endowed_accounts
-				.iter()
-				.cloned()
-				.map(|k| (k, ICY * 300_000_000))
-				.collect(),
+			balances: endowed_accounts,				
 		},
 		vesting: VestingConfig { vesting: vec![] },
 		aura: AuraConfig {
@@ -128,7 +199,7 @@ fn make_genesis(
 		aura_ext: Default::default(),
 		collator_selection: CollatorSelectionConfig {
 			desired_candidates: 200,
-			candidacy_bond: 32_000 * ICY,
+			candidacy_bond: 5000 * ICY,
 			invulnerables: invulnerables.iter().cloned().map(|(acc, _)| acc).collect(),
 		},
 		session: SessionConfig {
@@ -187,10 +258,10 @@ where
 
 /// Generate an Aura authority key
 pub fn get_authority_keys_from_seed(seed: &str) -> (AccountId, AuraId) {
-	(
-		get_account_id_from_seed::<sr25519::Public>(seed),
-		get_from_seed::<AuraId>(seed),
-	)
+    (
+        get_account_id_from_seed::<sr25519::Public>(seed),
+        get_from_seed::<AuraId>(seed),
+    )
 }
 
 /// Helper for session keys to map aura id

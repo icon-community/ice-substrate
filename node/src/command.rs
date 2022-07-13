@@ -63,6 +63,7 @@ fn load_spec(id: &str) -> std::result::Result<Box<dyn sc_service::ChainSpec>, St
 		"arctic-dev" => Box::new(chain_spec::arctic::get_dev_chain_spec()),
 		"arctic" => Box::new(chain_spec::arctic::get_chain_spec()),
 		"snow-dev" => Box::new(chain_spec::snow::get_dev_chain_spec()),
+		"snow-testnet" => Box::new(chain_spec::snow::testnet_spec()),
 
 		path => {
 			let chain_spec = chain_spec::snow::SnowChainSpec::from_json_file(path.into())?;
