@@ -123,22 +123,26 @@ pub fn testnet_spec() -> SnowChainSpec {
 	];
 
 	let airdrop_creditor_account: AccountId =
-		hex!["10b3ae7ebb7d722c8e8d0d6bf421f6d5dbde8d329f7c905a201539c635d61872"].into();
+		hex!["1d94604ab70381bc1ea9e14854b939f4c651d2259aa0f7eb193971d526f64a45"].into();
 
 	let endowed_accounts = vec![		
 	  (hex!["10b3ae7ebb7d722c8e8d0d6bf421f6d5dbde8d329f7c905a201539c635d61872"].into(), ICY * 630000000),
 	  (TreasuryPalletId::get().into_account_truncating(), ICY * 1170000000),
-	  (hex!["6f38cb15a6ec17a68f2aec60d2cd8cd15e58b4e33ee7f705d1cbcde07009d33f"].into(), ICY * 50),
+	  (hex!["6f38cb15a6ec17a68f2aec60d2cd8cd15e58b4e33ee7f705d1cbcde07009d33f"].into(), ICY * 2000),
 	  (hex!["f28ae952b7518dbc35543b894facca7db5ab982ec6aa9afbba4e8c015ce4b74a"].into(), ICY * 5100),
-	  (hex!["62687296bffd79f12178c4278b9439d5eeb8ed7cc0b1f2ae29307e806a019659"].into(), ICY * 10),
-	  (hex!["328d54003810edf7cef62d1374032333ade2fdb2756138fc43f6b4c1918bef7c"].into(), ICY * 10),
-	  (hex!["f057f9fbec27bb5b92c5f30e89cae9826f5b86cae8380aa383c079939b3e0a55"].into(), ICY * 10),
-	  (hex!["6adaa753d9c17d9280d2469acdac1aa9b7f01be3d4149f667b9be7c7fbad1319"].into(), ICY * 10),
+	  (hex!["62687296bffd79f12178c4278b9439d5eeb8ed7cc0b1f2ae29307e806a019659"].into(), ICY * 2000),
+	  (hex!["328d54003810edf7cef62d1374032333ade2fdb2756138fc43f6b4c1918bef7c"].into(), ICY * 2000),
+	  (hex!["f057f9fbec27bb5b92c5f30e89cae9826f5b86cae8380aa383c079939b3e0a55"].into(), ICY * 2000),
+	  (hex!["6adaa753d9c17d9280d2469acdac1aa9b7f01be3d4149f667b9be7c7fbad1319"].into(), ICY * 2000),
 	];
 	
-   let council_members = vec![get_account_id_from_seed::<sr25519::Public>("Alice")];
-	
-   let technical_committee = vec![get_account_id_from_seed::<sr25519::Public>("Alice")];
+   let council_members = vec![];
+
+   let technical_committee = vec![
+	hex!["f28ae952b7518dbc35543b894facca7db5ab982ec6aa9afbba4e8c015ce4b74a"].into(),
+	hex!["f057f9fbec27bb5b92c5f30e89cae9826f5b86cae8380aa383c079939b3e0a55"].into(),
+	hex!["70d8131ab823528226296bbfbb5827a5ae84beda0edf73f0cbc95057ef43be6a"].into(),
+   ];
 
 	SnowChainSpec::from_genesis(
 		"Snow Local Tesnet",
