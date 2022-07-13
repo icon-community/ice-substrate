@@ -17,7 +17,7 @@ pub mod prelude {
 	};
 	pub use hex_literal::hex as decode_hex;
 	pub use mock::{AirdropModule, Origin, Test};
-	pub use pallet_airdrop::{types, utils, tests, transfer};
+	pub use pallet_airdrop::{tests, transfer, types, utils};
 	pub use sp_core::bytes;
 	pub use sp_runtime::traits::{Bounded, IdentifyAccount, Saturating};
 

@@ -79,7 +79,7 @@ pub fn development_config() -> Result<FrostChainSpec, String> {
 
 	Ok(FrostChainSpec::from_genesis(
 		"Frost Development",
-		"frost-dev",
+		"dev",
 		ChainType::Development,
 		move || {
 			testnet_genesis(

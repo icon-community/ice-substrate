@@ -25,9 +25,8 @@ fn claim_success() {
 		));
 
 		let ice_account = AirdropModule::convert_to_account_id(case.ice_address.clone()).unwrap();
-		let total_balance = <Test as pallet_airdrop::Config>::Currency::total_balance(&ice_account);
-		let usable_balance =
-			<Test as pallet_airdrop::Config>::Currency::usable_balance(&ice_account);
+		let total_balance = <Test as Config>::Currency::total_balance(&ice_account);
+		let usable_balance = <Test as Config>::Currency::usable_balance(&ice_account);
 		let snapshot = <pallet_airdrop::IconSnapshotMap<Test>>::get(&case.icon_address).unwrap();
 		let mapped_icon_wallet = AirdropModule::get_ice_to_icon_map(&ice_account);
 
@@ -66,7 +65,7 @@ fn insufficient_balance() {
 		let mut case = UserClaimTestCase::default();
 		case.amount = 10017332_u64.into();
 		let creditor_account = force_get_creditor_account::<Test>();
-		<Test as pallet_airdrop::Config>::Currency::set_balance(
+		<Test as Config>::Currency::set_balance(
 			mock::Origin::root(),
 			creditor_account,
 			10_u32.into(),
@@ -111,7 +110,7 @@ fn already_claimed() {
 		pallet_airdrop::IconSnapshotMap::<Test>::insert(&case.icon_address, snapshot);
 		let creditor_account = force_get_creditor_account::<Test>();
 
-		<Test as pallet_airdrop::Config>::Currency::set_balance(
+		<Test as Config>::Currency::set_balance(
 			mock::Origin::root(),
 			creditor_account,
 			10_000_0000_u32.into(),
@@ -145,12 +144,12 @@ fn invalid_payload() {
 			Origin::root(),
 			ofw_account
 		));
-		let mut case =UserClaimTestCase::default();
+		let mut case = UserClaimTestCase::default();
 
 		case.message = *b"icx_sendTransaction.data.{method.transfer.params.{wallet.eee7a79d04e11a2dd43399f677878522523327cae2691b6cd1eb972b5a88eb48}}.dataType.call.from.hxb48f3bd3862d4a489fb3c9b761c4cfb20b34a645.nid.0x1.nonce.0x1.stepLimit.0x0.timestamp.0x0.to.hxb48f3bd3862d4a489fb3c9b761c4cfb20b34a645.version.0x3";
 		let creditor_account = force_get_creditor_account::<Test>();
 
-		<Test as pallet_airdrop::Config>::Currency::set_balance(
+		<Test as Config>::Currency::set_balance(
 			mock::Origin::root(),
 			creditor_account,
 			10_000_0000_u32.into(),
@@ -188,7 +187,7 @@ fn invalid_ice_signature() {
 		case.ice_signature = [0u8; 64];
 
 		let creditor_account = force_get_creditor_account::<Test>();
-		<Test as pallet_airdrop::Config>::Currency::set_balance(
+		<Test as Config>::Currency::set_balance(
 			mock::Origin::root(),
 			creditor_account,
 			10_000_0000_u32.into(),
@@ -226,7 +225,7 @@ fn invalid_icon_signature() {
 		case.icon_signature = [0u8; 65];
 
 		let creditor_account = force_get_creditor_account::<Test>();
-		<Test as pallet_airdrop::Config>::Currency::set_balance(
+		<Test as Config>::Currency::set_balance(
 			mock::Origin::root(),
 			creditor_account,
 			10_000_0000_u32.into(),
@@ -272,10 +271,10 @@ fn respect_vesting_pallet_min_transfer() {
 		assert!(snapshot.done_instant);
 		assert_eq!(
 			total_amount,
-			<Test as pallet_airdrop::Config>::Currency::total_balance(&ice_address)
+			<Test as Config>::Currency::total_balance(&ice_address)
 		);
 
-		// vesting amount derived from given total_amount will alwayd be less
+		// vesting amount derived from given total_amount will always be less
 		// than pallet_vesting::Config::vestingMinTransfer in this case
 		// that means everything was transferred as instant amount
 		// this means snapshot.vesting_block_number should not have been set
@@ -284,7 +283,7 @@ fn respect_vesting_pallet_min_transfer() {
 }
 
 #[test]
-fn partail_transfer_can_reclaim() {
+fn partial_transfer_can_reclaim() {
 	let vesting_period = Test::AIRDROP_VARIABLES.vesting_period;
 	minimal_test_ext().execute_with(|| {
 		run_to_block(1);
@@ -294,8 +293,7 @@ fn partail_transfer_can_reclaim() {
 		let ice_account = AirdropModule::convert_to_account_id(case.ice_address.clone()).unwrap();
 		set_creditor_balance(Bounded::max_value());
 
-		let mut user_balance =
-			<Test as pallet_airdrop::Config>::Currency::total_balance(&ice_account);
+		let mut user_balance = <Test as Config>::Currency::total_balance(&ice_account);
 		assert_eq!(user_balance, 0u32.into());
 
 		let (init_instant_amount, init_vesting_amount) = utils::get_split_amounts::<Test>(
@@ -325,8 +323,7 @@ fn partail_transfer_can_reclaim() {
 				amount_consumed += 10_000;
 			}
 
-			let new_balance =
-				<Test as pallet_airdrop::Config>::Currency::total_balance(&ice_account);
+			let new_balance = <Test as Config>::Currency::total_balance(&ice_account);
 			assert_eq!(new_balance, user_balance + amount_consumed);
 			user_balance = new_balance;
 		}
@@ -349,8 +346,7 @@ fn partail_transfer_can_reclaim() {
 
 			let snapshot = AirdropModule::get_icon_snapshot_map(&case.icon_address).unwrap();
 			let mapped_icon_wallet = AirdropModule::get_ice_to_icon_map(&ice_account);
-			let new_balance =
-				<Test as pallet_airdrop::Config>::Currency::total_balance(&ice_account);
+			let new_balance = <Test as Config>::Currency::total_balance(&ice_account);
 			assert!(snapshot.done_instant);
 			assert_eq!(mapped_icon_wallet.as_ref(), Some(&case.icon_address));
 			assert_eq!(new_balance, user_balance + instant_amount);
@@ -361,7 +357,7 @@ fn partail_transfer_can_reclaim() {
 			user_balance = new_balance;
 		}
 
-		// Release the streames vesting schedules put previously
+		// Release the streams vesting schedules put previously
 		{
 			run_to_block(12);
 			assert_ok!(pallet_vesting::Pallet::<Test>::vest(Origin::signed(
@@ -395,7 +391,7 @@ fn partail_transfer_can_reclaim() {
 
 		let snapshot = AirdropModule::get_icon_snapshot_map(&case.icon_address).unwrap();
 		let mapped_icon_wallet = AirdropModule::get_ice_to_icon_map(&ice_account);
-		let final_balance = <Test as pallet_airdrop::Config>::Currency::total_balance(&ice_account);
+		let final_balance = <Test as Config>::Currency::total_balance(&ice_account);
 		assert_eq!(reclaim_res, expected_res);
 		assert!(snapshot.done_instant);
 		assert!(snapshot.done_vesting);

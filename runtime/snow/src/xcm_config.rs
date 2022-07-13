@@ -1,6 +1,6 @@
 use super::{
-	AccountId, Assets, Balance, Balances, Call, Event, Origin, ParachainInfo, ParachainSystem, PolkadotXcm, Runtime,
-	WeightToFee, DealWithFees, XcmpQueue,
+	AccountId, Assets, Balance, Balances, Call, DealWithFees, Event, Origin, ParachainInfo,
+	ParachainSystem, PolkadotXcm, Runtime, WeightToFee, XcmpQueue,
 };
 use frame_support::{
 	match_types, parameter_types,
@@ -11,16 +11,17 @@ use pallet_xcm::XcmPassthrough;
 use polkadot_parachain::primitives::Sibling;
 use xcm::latest::prelude::*;
 use xcm_builder::{
-	AccountId32Aliases, AllowKnownQueryResponses, AllowSubscriptionsFrom, AllowTopLevelPaidExecutionFrom, 
-	AllowUnpaidExecutionFrom, CurrencyAdapter, EnsureXcmOrigin, FixedWeightBounds, FixedRateOfFungible, 
-	FungiblesAdapter, IsConcrete, LocationInverter, ConvertedConcreteAssetId, ParentIsPreset, 
-	ParentAsSuperuser, AsPrefixedGeneralIndex, RelayChainAsNative, SiblingParachainAsNative, 
-	SiblingParachainConvertsVia, SignedAccountId32AsNative, SignedToAccountId32, SovereignSignedViaLocation, 
-	TakeWeightCredit, UsingComponents,
+	AccountId32Aliases, AllowKnownQueryResponses, AllowSubscriptionsFrom,
+	AllowTopLevelPaidExecutionFrom, AllowUnpaidExecutionFrom, AsPrefixedGeneralIndex,
+	ConvertedConcreteAssetId, CurrencyAdapter, EnsureXcmOrigin, FixedRateOfFungible,
+	FixedWeightBounds, FungiblesAdapter, IsConcrete, LocationInverter, ParentAsSuperuser,
+	ParentIsPreset, RelayChainAsNative, SiblingParachainAsNative, SiblingParachainConvertsVia,
+	SignedAccountId32AsNative, SignedToAccountId32, SovereignSignedViaLocation, TakeWeightCredit,
+	UsingComponents,
 };
 use xcm_executor::{
-    traits::{FilterAssetLocation, JustTry},
-    XcmExecutor,
+	traits::{FilterAssetLocation, JustTry},
+	XcmExecutor,
 };
 
 parameter_types! {
@@ -30,9 +31,9 @@ parameter_types! {
 	pub Ancestry: MultiLocation = Parachain(ParachainInfo::parachain_id().into()).into();
 	// XCM arctic location
 	pub const Local: MultiLocation = Here.into();
-    pub AssetsPalletLocation: MultiLocation =
-        PalletInstance(<Assets as PalletInfoAccess>::index() as u8).into();
-    pub CheckingAccount: AccountId = PolkadotXcm::check_account();
+	pub AssetsPalletLocation: MultiLocation =
+		PalletInstance(<Assets as PalletInfoAccess>::index() as u8).into();
+	pub CheckingAccount: AccountId = PolkadotXcm::check_account();
 }
 
 /// Type for specifying how a `MultiLocation` can be converted into an `AccountId`. This is used
@@ -49,39 +50,39 @@ pub type LocationToAccountId = (
 
 /// Means for transacting the native currency on this chain.
 pub type CurrencyTransactor = CurrencyAdapter<
-    // Use this currency:
-    Balances,
-    // Use this currency when it is a fungible asset matching the given location or name:
-    IsConcrete<Local>,
-    // Convert an XCM MultiLocation into a local account id:
-    LocationToAccountId,
-    // Our chain's account ID type (we can't get away without mentioning it explicitly):
-    AccountId,
-    // We don't track any teleports of `Balances`.
-    (),
+	// Use this currency:
+	Balances,
+	// Use this currency when it is a fungible asset matching the given location or name:
+	IsConcrete<Local>,
+	// Convert an XCM MultiLocation into a local account id:
+	LocationToAccountId,
+	// Our chain's account ID type (we can't get away without mentioning it explicitly):
+	AccountId,
+	// We don't track any teleports of `Balances`.
+	(),
 >;
 
 /// Means for transacting assets besides the native currency on this chain.
 pub type FungiblesTransactor = FungiblesAdapter<
-    // Use this fungibles implementation:
-    Assets,
-    // Use this currency when it is a fungible asset matching the given location or name:
-    //ConvertedConcreteAssetId<AssetId, Balance, Local, JustTry>,
-	// Use this currency when it is a fungible asset matching the given location or name:    
-	 ConvertedConcreteAssetId<
-        u128,
-        Balance,
+	// Use this fungibles implementation:
+	Assets,
+	// Use this currency when it is a fungible asset matching the given location or name:
+	//ConvertedConcreteAssetId<AssetId, Balance, Local, JustTry>,
+	// Use this currency when it is a fungible asset matching the given location or name:
+	ConvertedConcreteAssetId<
+		u128,
+		Balance,
 		AsPrefixedGeneralIndex<AssetsPalletLocation, u128, JustTry>,
-        JustTry,
-    >,
-    // Convert an XCM MultiLocation into a local account id:
-    LocationToAccountId,
-    // Our chain's account ID type (we can't get away without mentioning it explicitly):
-    AccountId,
-    // We don't track any teleports of `Assets`.
-    Nothing,
-    // We don't track any teleports of `Assets`.
-    CheckingAccount,
+		JustTry,
+	>,
+	// Convert an XCM MultiLocation into a local account id:
+	LocationToAccountId,
+	// Our chain's account ID type (we can't get away without mentioning it explicitly):
+	AccountId,
+	// We don't track any teleports of `Assets`.
+	Nothing,
+	// We don't track any teleports of `Assets`.
+	CheckingAccount,
 >;
 
 /// Means for transacting assets on this chain.
@@ -102,8 +103,8 @@ pub type XcmOriginToTransactDispatchOrigin = (
 	// recognized.
 	SiblingParachainAsNative<cumulus_pallet_xcm::Origin, Origin>,
 	// Superuser converter for the Relay-chain (Parent) location. This will allow it to issue a
-    // transaction from the Root origin.
-    ParentAsSuperuser<Origin>,
+	// transaction from the Root origin.
+	ParentAsSuperuser<Origin>,
 	// Native signed account converter; this just converts an `AccountId32` origin into a normal
 	// `Origin::Signed` origin of the same 32-byte value.
 	SignedAccountId32AsNative<RelayNetwork, Origin>,
@@ -127,29 +128,29 @@ match_types! {
 }
 
 pub type XcmBarrier = (
-    // Allows local origin messages which call weight_credit >= weight_limit.
-    TakeWeightCredit,
-    // Allows non-local origin messages, for example from from the xcmp queue,
-    // which have the ability to deposit assets and pay for their own execution.
-    AllowTopLevelPaidExecutionFrom<Everything>,
-    // Parent and its exec plurality get free execution
-    AllowUnpaidExecutionFrom<ParentOrParentsPlurality>,
-    // Expected responses are OK.
-    // Allows `Pending` or `VersionNotifier` query responses.
-    AllowKnownQueryResponses<PolkadotXcm>,
-    // Subscriptions for version tracking are OK.
-    // Allows execution of `SubscribeVersion` or `UnsubscribeVersion` instruction,
-    // from parent or sibling chains.
-    //AllowSubscriptionsFrom<ParentOrSiblings>,
-	AllowSubscriptionsFrom<Everything>
+	// Allows local origin messages which call weight_credit >= weight_limit.
+	TakeWeightCredit,
+	// Allows non-local origin messages, for example from from the xcmp queue,
+	// which have the ability to deposit assets and pay for their own execution.
+	AllowTopLevelPaidExecutionFrom<Everything>,
+	// Parent and its exec plurality get free execution
+	AllowUnpaidExecutionFrom<ParentOrParentsPlurality>,
+	// Expected responses are OK.
+	// Allows `Pending` or `VersionNotifier` query responses.
+	AllowKnownQueryResponses<PolkadotXcm>,
+	// Subscriptions for version tracking are OK.
+	// Allows execution of `SubscribeVersion` or `UnsubscribeVersion` instruction,
+	// from parent or sibling chains.
+	//AllowSubscriptionsFrom<ParentOrSiblings>,
+	AllowSubscriptionsFrom<Everything>,
 );
 
 // Allow any asset for reserve on Testnet / dev
 pub struct ReserveAssetFilter;
 impl FilterAssetLocation for ReserveAssetFilter {
-    fn filter_asset_location(_asset: &MultiAsset, _origin: &MultiLocation) -> bool {
-        true
-    }
+	fn filter_asset_location(_asset: &MultiAsset, _origin: &MultiLocation) -> bool {
+		true
+	}
 }
 
 pub struct XcmConfig;
@@ -159,14 +160,14 @@ impl xcm_executor::Config for XcmConfig {
 	// How to withdraw and deposit an asset.
 	type AssetTransactor = AssetTransactors;
 	type OriginConverter = XcmOriginToTransactDispatchOrigin;
-	type IsReserve = ReserveAssetFilter;//NativeAsset;
+	type IsReserve = ReserveAssetFilter; //NativeAsset;
 	type IsTeleporter = (); // Teleporting is disabled.
 	type LocationInverter = LocationInverter<Ancestry>;
 	type Barrier = XcmBarrier;
-	type Weigher = FixedWeightBounds<UnitWeightCost, Call, MaxInstructions>;	
+	type Weigher = FixedWeightBounds<UnitWeightCost, Call, MaxInstructions>;
 	type Trader = (
 		FixedRateOfFungible<UnitPerSecond, ()>,
-		UsingComponents<WeightToFee, RelayLocation, AccountId, Balances, DealWithFees>
+		UsingComponents<WeightToFee, RelayLocation, AccountId, Balances, DealWithFees>,
 	);
 	type ResponseHandler = PolkadotXcm;
 	type AssetTrap = PolkadotXcm;
@@ -196,7 +197,7 @@ impl pallet_xcm::Config for Runtime {
 	// Needs to be `Everything` for local testing.
 	type XcmExecutor = XcmExecutor<XcmConfig>;
 	type XcmTeleportFilter = Nothing;
-    type XcmReserveTransferFilter = Everything;
+	type XcmReserveTransferFilter = Everything;
 	type Weigher = FixedWeightBounds<UnitWeightCost, Call, MaxInstructions>;
 	type LocationInverter = LocationInverter<Ancestry>;
 	type Origin = Origin;

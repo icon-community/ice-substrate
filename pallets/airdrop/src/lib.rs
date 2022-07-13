@@ -32,7 +32,7 @@ pub use pallet::*;
 #[frame_support::pallet]
 pub mod pallet {
 	use super::{error, info};
-	use super::{types, utils, transfer, weights, exchange_accounts};
+	use super::{exchange_accounts, transfer, types, utils, weights};
 	use hex_literal::hex;
 	use sp_runtime::traits::Convert;
 
@@ -147,12 +147,14 @@ pub mod pallet {
 		StorageValue<_, types::AccountIdOf<T>, OptionQuery>;
 
 	#[pallet::type_value]
-	pub(super) fn DefaultStorageVersion<T: Config>() -> u32 { 1_u32.into()}
+	pub(super) fn DefaultStorageVersion<T: Config>() -> u32 {
+		1_u32.into()
+	}
 
 	#[pallet::storage]
 	#[pallet::getter(fn get_storage_version)]
 	pub(super) type StorageVersion<T: Config> =
-	StorageValue<Value = u32, QueryKind = ValueQuery, OnEmpty = DefaultStorageVersion<T>>;
+		StorageValue<Value = u32, QueryKind = ValueQuery, OnEmpty = DefaultStorageVersion<T>>;
 
 	#[pallet::error]
 	pub enum Error<T> {
@@ -540,7 +542,7 @@ pub mod pallet {
 		pub fn ensure_claimable(snapshot: &types::SnapshotInfo<T>) -> DispatchResult {
 			let already_claimed = snapshot.done_instant && snapshot.done_vesting;
 
-            if already_claimed {
+			if already_claimed {
 				Err(Error::<T>::ClaimAlreadyMade.into())
 			} else {
 				Ok(())

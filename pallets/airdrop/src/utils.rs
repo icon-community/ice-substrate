@@ -1,13 +1,13 @@
 use crate as airdrop;
 use airdrop::types;
 use codec::alloc::string::String;
+use frame_support::traits::Get;
 use hex::FromHexError;
 use sp_core::H160;
 use sp_runtime::{
 	traits::{BlakeTwo256, Bounded, CheckedDiv, CheckedMul, CheckedSub, Convert, Saturating},
 	AccountId32, DispatchError,
 };
-use frame_support::traits::Get;
 use sp_std::vec::Vec;
 
 /// Returns an optional vesting schedule which when applied release given amount
@@ -37,7 +37,7 @@ where
 
 	let per_block = primary_transfer_amount
 		.checked_div(&idol_transfer_multiple)
-		.unwrap_or_else(Bounded::min_value); 
+		.unwrap_or_else(Bounded::min_value);
 
 	let per_block_is_ok = per_block > 0u32.into();
 	let locked_amount_is_ok = primary_transfer_amount >= min_vesting_amount;

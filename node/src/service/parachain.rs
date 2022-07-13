@@ -36,49 +36,49 @@ use crate::primitives::*;
 use crate::shell_upgrade::{BuildOnAccess, Verifier};
 
 /// Arctic network runtime executor.
-pub mod arctic {    
+pub mod arctic {
 	pub use arctic_runtime::RuntimeApi;
 
-    /// Arctic runtime executor.
-    pub struct Executor;
-    impl sc_executor::NativeExecutionDispatch for Executor {
-        #[cfg(not(feature = "runtime-benchmarks"))]
-        type ExtendHostFunctions = ();
+	/// Arctic runtime executor.
+	pub struct Executor;
+	impl sc_executor::NativeExecutionDispatch for Executor {
+		#[cfg(not(feature = "runtime-benchmarks"))]
+		type ExtendHostFunctions = ();
 
-        #[cfg(feature = "runtime-benchmarks")]
-        type ExtendHostFunctions = frame_benchmarking::benchmarking::HostFunctions;
+		#[cfg(feature = "runtime-benchmarks")]
+		type ExtendHostFunctions = frame_benchmarking::benchmarking::HostFunctions;
 
-        fn dispatch(method: &str, data: &[u8]) -> Option<Vec<u8>> {
-            arctic_runtime::api::dispatch(method, data)
-        }
+		fn dispatch(method: &str, data: &[u8]) -> Option<Vec<u8>> {
+			arctic_runtime::api::dispatch(method, data)
+		}
 
-        fn native_version() -> sc_executor::NativeVersion {
-            arctic_runtime::native_version()
-        }
-    }
+		fn native_version() -> sc_executor::NativeVersion {
+			arctic_runtime::native_version()
+		}
+	}
 }
 
 /// Snow network runtime executor.
-pub mod snow {    
+pub mod snow {
 	pub use snow_runtime::RuntimeApi;
 
-    /// Snow runtime executor.
-    pub struct Executor;
-    impl sc_executor::NativeExecutionDispatch for Executor {
-        #[cfg(not(feature = "runtime-benchmarks"))]
-        type ExtendHostFunctions = ();
+	/// Snow runtime executor.
+	pub struct Executor;
+	impl sc_executor::NativeExecutionDispatch for Executor {
+		#[cfg(not(feature = "runtime-benchmarks"))]
+		type ExtendHostFunctions = ();
 
-        #[cfg(feature = "runtime-benchmarks")]
-        type ExtendHostFunctions = frame_benchmarking::benchmarking::HostFunctions;
+		#[cfg(feature = "runtime-benchmarks")]
+		type ExtendHostFunctions = frame_benchmarking::benchmarking::HostFunctions;
 
-        fn dispatch(method: &str, data: &[u8]) -> Option<Vec<u8>> {
-            snow_runtime::api::dispatch(method, data)
-        }
+		fn dispatch(method: &str, data: &[u8]) -> Option<Vec<u8>> {
+			snow_runtime::api::dispatch(method, data)
+		}
 
-        fn native_version() -> sc_executor::NativeVersion {
-            snow_runtime::native_version()
-        }
-    }
+		fn native_version() -> sc_executor::NativeVersion {
+			snow_runtime::native_version()
+		}
+	}
 }
 
 /// Starts a `ServiceBuilder` for a full service.
@@ -604,7 +604,7 @@ pub async fn start_arctic_node(
 	id: ParaId,
 ) -> sc_service::error::Result<(
 	TaskManager,
-	Arc<TFullClient<Block,arctic::RuntimeApi, NativeElseWasmExecutor<arctic::Executor>>>,
+	Arc<TFullClient<Block, arctic::RuntimeApi, NativeElseWasmExecutor<arctic::Executor>>>,
 )> {
 	start_node_impl::<arctic_runtime::RuntimeApi, arctic::Executor, _, _>(
         parachain_config,

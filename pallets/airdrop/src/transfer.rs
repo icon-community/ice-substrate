@@ -19,26 +19,26 @@ pub fn do_transfer<T: airdrop::Config>(snapshot: &mut types::SnapshotInfo<T>) ->
 	let instant_percentage = utils::get_instant_percentage::<T>(defi_user);
 	let (mut instant_amount, vesting_amount) =
 			utils::get_split_amounts::<T>(total_amount, instant_percentage).map_err(|e |{
-				error!("At: get_splitted_amount. amount: {total_amount:?}. Instant percentage: {instant_percentage}. Reason: {e:?}");
+				error!("At: get_split_amount. amount: {total_amount:?}. Instant percentage: {instant_percentage}. Reason: {e:?}");
 				e
 			})?;
 
-	let (transfer_shcedule, remainding_amount) = utils::new_vesting_with_deadline::<
+	let (transfer_schedule, remaining_amount) = utils::new_vesting_with_deadline::<
 		T,
 		VESTING_APPLICABLE_FROM,
 	>(vesting_amount, vesting_should_end_in.into());
 
 	// Amount to be transferred is:
-	// x% of totoal amount
-	// + remainding amount which was not perfectly divisible
+	// x% of total amount
+	// + remaining amount which was not perfectly divisible
 	instant_amount = {
-		let remainding_amount = <T::BalanceTypeConversion as Convert<
+		let remaining_amount = <T::BalanceTypeConversion as Convert<
 			types::VestingBalanceOf<T>,
 			types::BalanceOf<T>,
-		>>::convert(remainding_amount);
+		>>::convert(remaining_amount);
 
 		instant_amount
-			.checked_add(&remainding_amount)
+			.checked_add(&remaining_amount)
 			.ok_or(sp_runtime::ArithmeticError::Overflow)?
 	};
 
@@ -47,7 +47,7 @@ pub fn do_transfer<T: airdrop::Config>(snapshot: &mut types::SnapshotInfo<T>) ->
 	);
 	let claimer_origin = <T::Lookup as sp_runtime::traits::StaticLookup>::unlookup(claimer.clone());
 
-	match transfer_shcedule {
+	match transfer_schedule {
 		// Apply vesting
 		Some(schedule) if !snapshot.done_vesting => {
 			let vest_res = pallet_vesting::Pallet::<T>::vested_transfer(
@@ -67,7 +67,7 @@ pub fn do_transfer<T: airdrop::Config>(snapshot: &mut types::SnapshotInfo<T>) ->
 				}
 				// log error
 				Err(err) => {
-					error!("Error while aplying vesting. For: {claimer:?}. Reason: {err:?}");
+					error!("Error while applying vesting. For: {claimer:?}. Reason: {err:?}");
 				}
 			}
 		}
