@@ -28,7 +28,7 @@
   "parachains": [
     {
       "bin": "../target/release/ice-node",
-      "chain": "snow-dev",
+      "chain": "snow-testnet",
       "balance": 100000000000000000,
       "nodes": [
         {
@@ -41,7 +41,7 @@
             "--unsafe-rpc-external",
             "--rpc-cors=all",
             "--rpc-methods=Unsafe",
-            "--log=cumulus-collator=trace",
+
             "--",
             "--execution=wasm"
           ]
