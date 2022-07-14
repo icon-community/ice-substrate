@@ -3658,7 +3658,7 @@ dependencies = [
 
 [[package]]
 name = "ice-node"
-version = "0.4.50"
+version = "0.4.51"
 dependencies = [
  "arctic-runtime",
  "async-trait",

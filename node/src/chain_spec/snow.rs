@@ -124,11 +124,11 @@ pub fn testnet_spec() -> SnowChainSpec {
 	let endowed_accounts = vec![
 		(
 			hex!["10b3ae7ebb7d722c8e8d0d6bf421f6d5dbde8d329f7c905a201539c635d61872"].into(),
-			ICY * 630000000,
+			ICY * 931000000,
 		),
 		(
 			TreasuryPalletId::get().into_account_truncating(),
-			ICY * 1170000000,
+			ICY * 1729000000,
 		),
 		(
 			hex!["6f38cb15a6ec17a68f2aec60d2cd8cd15e58b4e33ee7f705d1cbcde07009d33f"].into(),
@@ -292,4 +292,16 @@ pub fn get_authority_keys_from_seed(seed: &str) -> (AccountId, AuraId) {
 /// Helper for session keys to map aura id
 fn session_keys(aura: AuraId) -> SessionKeys {
 	SessionKeys { aura }
+}
+
+pub fn snow_kusama_config() -> Result<SnowChainSpec, String> {
+	sc_chain_spec::GenericChainSpec::from_json_bytes(
+		&include_bytes!("../../../resources/snow-kusama.json")[..],
+	)
+}
+
+pub fn snow_staging_rococo_config() -> Result<SnowChainSpec, String> {
+	sc_chain_spec::GenericChainSpec::from_json_bytes(
+		&include_bytes!("../../../resources/snow-staging-rococo.json")[..],
+	)
 }
