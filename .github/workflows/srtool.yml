@@ -1,8 +1,8 @@
 name: Srtool build
 
 env:
-  SUBWASM_VERSION: 0.15.0
-  SRTOOL_TAG: 1.57.0
+  SUBWASM_VERSION: 0.17.0
+  SRTOOL_TAG: 1.60.0
 
 on:
   workflow_dispatch:
@@ -10,7 +10,7 @@ on:
       srtool_tag:
         description: The SRTOOL tag to use
         # keep the same as `env.SRTOOL_TAG`
-        default: 1.57.0
+        default: 1.60.0
         required: false
       ref:
         description: The ref to be used for the repo
@@ -22,7 +22,7 @@ jobs:
     name: Build ${{ matrix.chain }} ${{ github.event.inputs.ref || github.ref }}
     strategy:
       matrix:
-        chain: ["arctic"]
+        chain: ["snow"]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
