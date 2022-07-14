@@ -572,8 +572,8 @@ impl pallet_simple_inflation::Config for Runtime {
 
 impl pallet_fees_split::Config for Runtime {}
 
-const VESTED_AIRDROP_BEHAVIOUR: pallet_airdrop::AirdropBehaviour =
-	pallet_airdrop::AirdropBehaviour {
+const AIRDROP_VESTING_TERMS: pallet_airdrop::VestingTerms =
+	pallet_airdrop::VestingTerms {
 		defi_instant_percentage: 30,
 		non_defi_instant_percentage: 20,
 		vesting_period: 7776000,
@@ -585,7 +585,7 @@ impl pallet_airdrop::Config for Runtime {
 	type BalanceTypeConversion = ConvertInto;
 	type MerkelProofValidator = pallet_airdrop::merkle::AirdropMerkleValidator<Runtime>;
 	type MaxProofSize = ConstU32<21>;
-	const AIRDROP_VARIABLES: pallet_airdrop::AirdropBehaviour = VESTED_AIRDROP_BEHAVIOUR;
+	const VESTING_TERMS: pallet_airdrop::VestingTerms = AIRDROP_VESTING_TERMS;
 }
 
 impl pallet_utility::Config for Runtime {
