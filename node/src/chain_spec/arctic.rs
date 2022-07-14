@@ -242,3 +242,17 @@ where
 {
 	AccountPublic::from(get_from_seed::<TPublic>(seed)).into_account()
 }
+
+pub fn arctic_kusama_config(
+) -> Result<sc_chain_spec::GenericChainSpec<arctic_runtime::GenesisConfig, Extensions>, String> {
+	sc_chain_spec::GenericChainSpec::from_json_bytes(
+		&include_bytes!("../../../resources/arctic-kusama.json")[..],
+	)
+}
+
+pub fn arctic_staging_rococo_config(
+) -> Result<sc_chain_spec::GenericChainSpec<arctic_runtime::GenesisConfig, Extensions>, String> {
+	sc_chain_spec::GenericChainSpec::from_json_bytes(
+		&include_bytes!("../../../resources/arctic-staging-rococo.json")[..],
+	)
+}

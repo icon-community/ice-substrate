@@ -1,15 +1,15 @@
-use snow_runtime::{
-	wasm_binary_unwrap, AccountId, Balance, AirdropConfig, AuraConfig, AuraId, BalancesConfig,
-	CollatorSelectionConfig, CouncilConfig, CouncilMembershipConfig, DemocracyConfig, EVMConfig,
-	GenesisConfig, IndicesConfig, ParachainInfoConfig, SS58Prefix, SessionConfig, SessionKeys,
-	Signature, SudoConfig, SystemConfig, TechnicalCommitteeConfig, TechnicalMembershipConfig,
-	VestingConfig, TreasuryPalletId,
-};
-use snow_runtime::currency::ICY;
 use cumulus_primitives_core::ParaId;
 use hex_literal::hex;
 use sc_chain_spec::Properties;
 use sc_service::ChainType;
+use snow_runtime::currency::ICY;
+use snow_runtime::{
+	wasm_binary_unwrap, AccountId, AirdropConfig, AuraConfig, AuraId, Balance, BalancesConfig,
+	CollatorSelectionConfig, CouncilConfig, CouncilMembershipConfig, DemocracyConfig, EVMConfig,
+	GenesisConfig, IndicesConfig, ParachainInfoConfig, SS58Prefix, SessionConfig, SessionKeys,
+	Signature, SudoConfig, SystemConfig, TechnicalCommitteeConfig, TechnicalMembershipConfig,
+	TreasuryPalletId, VestingConfig,
+};
 use sp_core::{crypto::UncheckedInto, sr25519, Pair, Public};
 use sp_runtime::traits::{AccountIdConversion, IdentifyAccount, Verify};
 use std::collections::BTreeMap;
@@ -58,12 +58,14 @@ pub fn get_dev_chain_spec() -> SnowChainSpec {
 	];
 
 	let endowed_accounts = vec![
-		(
-			(get_account_id_from_seed::<sr25519::Public>("Alice"), ICY * 300_000_000)
-		),
-		(			
-			(get_account_id_from_seed::<sr25519::Public>("Bob"), ICY * 300_000_000)
-		),
+		((
+			get_account_id_from_seed::<sr25519::Public>("Alice"),
+			ICY * 300_000_000,
+		)),
+		((
+			get_account_id_from_seed::<sr25519::Public>("Bob"),
+			ICY * 300_000_000,
+		)),
 	];
 
 	let council_members = vec![get_account_id_from_seed::<sr25519::Public>("Alice")];
@@ -103,46 +105,63 @@ pub fn get_dev_chain_spec() -> SnowChainSpec {
 }
 
 pub fn testnet_spec() -> SnowChainSpec {
-
 	let root_key: AccountId =
 		hex!["6f38cb15a6ec17a68f2aec60d2cd8cd15e58b4e33ee7f705d1cbcde07009d33f"].into();
-		
-	let invulnerables = vec![
-		(
-		  hex!["f28ae952b7518dbc35543b894facca7db5ab982ec6aa9afbba4e8c015ce4b74a"].into(),
-		  hex!["62687296bffd79f12178c4278b9439d5eeb8ed7cc0b1f2ae29307e806a019659"]
-				.unchecked_into(),
-		),
-	];
-	let authorities = vec![
-		(
-			hex!["f28ae952b7518dbc35543b894facca7db5ab982ec6aa9afbba4e8c015ce4b74a"].into(),
-			hex!["62687296bffd79f12178c4278b9439d5eeb8ed7cc0b1f2ae29307e806a019659"]
-				.unchecked_into(),
-		),
-	];
+
+	let invulnerables = vec![(
+		hex!["f28ae952b7518dbc35543b894facca7db5ab982ec6aa9afbba4e8c015ce4b74a"].into(),
+		hex!["62687296bffd79f12178c4278b9439d5eeb8ed7cc0b1f2ae29307e806a019659"].unchecked_into(),
+	)];
+	let authorities = vec![(
+		hex!["f28ae952b7518dbc35543b894facca7db5ab982ec6aa9afbba4e8c015ce4b74a"].into(),
+		hex!["62687296bffd79f12178c4278b9439d5eeb8ed7cc0b1f2ae29307e806a019659"].unchecked_into(),
+	)];
 
 	let airdrop_creditor_account: AccountId =
 		hex!["1d94604ab70381bc1ea9e14854b939f4c651d2259aa0f7eb193971d526f64a45"].into();
 
-	let endowed_accounts = vec![		
-	  (hex!["10b3ae7ebb7d722c8e8d0d6bf421f6d5dbde8d329f7c905a201539c635d61872"].into(), ICY * 630000000),
-	  (TreasuryPalletId::get().into_account_truncating(), ICY * 1170000000),
-	  (hex!["6f38cb15a6ec17a68f2aec60d2cd8cd15e58b4e33ee7f705d1cbcde07009d33f"].into(), ICY * 2000),
-	  (hex!["f28ae952b7518dbc35543b894facca7db5ab982ec6aa9afbba4e8c015ce4b74a"].into(), ICY * 5100),
-	  (hex!["62687296bffd79f12178c4278b9439d5eeb8ed7cc0b1f2ae29307e806a019659"].into(), ICY * 2000),
-	  (hex!["328d54003810edf7cef62d1374032333ade2fdb2756138fc43f6b4c1918bef7c"].into(), ICY * 2000),
-	  (hex!["f057f9fbec27bb5b92c5f30e89cae9826f5b86cae8380aa383c079939b3e0a55"].into(), ICY * 2000),
-	  (hex!["6adaa753d9c17d9280d2469acdac1aa9b7f01be3d4149f667b9be7c7fbad1319"].into(), ICY * 2000),
+	let endowed_accounts = vec![
+		(
+			hex!["10b3ae7ebb7d722c8e8d0d6bf421f6d5dbde8d329f7c905a201539c635d61872"].into(),
+			ICY * 630000000,
+		),
+		(
+			TreasuryPalletId::get().into_account_truncating(),
+			ICY * 1170000000,
+		),
+		(
+			hex!["6f38cb15a6ec17a68f2aec60d2cd8cd15e58b4e33ee7f705d1cbcde07009d33f"].into(),
+			ICY * 2000,
+		),
+		(
+			hex!["f28ae952b7518dbc35543b894facca7db5ab982ec6aa9afbba4e8c015ce4b74a"].into(),
+			ICY * 5100,
+		),
+		(
+			hex!["62687296bffd79f12178c4278b9439d5eeb8ed7cc0b1f2ae29307e806a019659"].into(),
+			ICY * 2000,
+		),
+		(
+			hex!["328d54003810edf7cef62d1374032333ade2fdb2756138fc43f6b4c1918bef7c"].into(),
+			ICY * 2000,
+		),
+		(
+			hex!["f057f9fbec27bb5b92c5f30e89cae9826f5b86cae8380aa383c079939b3e0a55"].into(),
+			ICY * 2000,
+		),
+		(
+			hex!["6adaa753d9c17d9280d2469acdac1aa9b7f01be3d4149f667b9be7c7fbad1319"].into(),
+			ICY * 2000,
+		),
 	];
-	
-   let council_members = vec![];
 
-   let technical_committee = vec![
-	hex!["f28ae952b7518dbc35543b894facca7db5ab982ec6aa9afbba4e8c015ce4b74a"].into(),
-	hex!["f057f9fbec27bb5b92c5f30e89cae9826f5b86cae8380aa383c079939b3e0a55"].into(),
-	hex!["70d8131ab823528226296bbfbb5827a5ae84beda0edf73f0cbc95057ef43be6a"].into(),
-   ];
+	let council_members = vec![];
+
+	let technical_committee = vec![
+		hex!["f28ae952b7518dbc35543b894facca7db5ab982ec6aa9afbba4e8c015ce4b74a"].into(),
+		hex!["f057f9fbec27bb5b92c5f30e89cae9826f5b86cae8380aa383c079939b3e0a55"].into(),
+		hex!["70d8131ab823528226296bbfbb5827a5ae84beda0edf73f0cbc95057ef43be6a"].into(),
+	];
 
 	SnowChainSpec::from_genesis(
 		"Snow Local Tesnet",
@@ -171,7 +190,6 @@ pub fn testnet_spec() -> SnowChainSpec {
 			para_id: PARA_ID,
 		},
 	)
-
 }
 
 /// Helper function to create GenesisConfig.
@@ -194,7 +212,7 @@ fn make_genesis(
 		},
 		parachain_info: ParachainInfoConfig { parachain_id },
 		balances: BalancesConfig {
-			balances: endowed_accounts,				
+			balances: endowed_accounts,
 		},
 		vesting: VestingConfig { vesting: vec![] },
 		aura: AuraConfig {
@@ -262,13 +280,27 @@ where
 
 /// Generate an Aura authority key
 pub fn get_authority_keys_from_seed(seed: &str) -> (AccountId, AuraId) {
-    (
-        get_account_id_from_seed::<sr25519::Public>(seed),
-        get_from_seed::<AuraId>(seed),
-    )
+	(
+		get_account_id_from_seed::<sr25519::Public>(seed),
+		get_from_seed::<AuraId>(seed),
+	)
 }
 
 /// Helper for session keys to map aura id
 fn session_keys(aura: AuraId) -> SessionKeys {
 	SessionKeys { aura }
+}
+
+pub fn snow_kusama_config(
+) -> Result<sc_chain_spec::GenericChainSpec<snow_runtime::GenesisConfig, Extensions>, String> {
+	sc_chain_spec::GenericChainSpec::from_json_bytes(
+		&include_bytes!("../../../resources/arctic-kusama.json")[..],
+	)
+}
+
+pub fn snow_staging_rococo_config(
+) -> Result<sc_chain_spec::GenericChainSpec<snow_runtime::GenesisConfig, Extensions>, String> {
+	sc_chain_spec::GenericChainSpec::from_json_bytes(
+		&include_bytes!("../../../resources/arctic-staging-rococo.json")[..],
+	)
 }
