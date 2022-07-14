@@ -12,12 +12,12 @@ pub fn do_transfer<T: airdrop::Config>(snapshot: &mut types::SnapshotInfo<T>) ->
 	let vesting_should_end_in = <T as airdrop::Config>::VESTING_TERMS.vesting_period;
 	let creditor = AirdropModule::<T>::get_creditor_account()?;
 
-    let defi_user = snapshot.defi_user;
+	let defi_user = snapshot.defi_user;
 	let total_amount = snapshot.amount;
 	let claimer = &snapshot.ice_address;
 	let instant_percentage = utils::get_instant_percentage::<T>(defi_user);
 
-    let (mut instant_amount, vesting_amount) =
+	let (mut instant_amount, vesting_amount) =
 			utils::get_split_amounts::<T>(total_amount, instant_percentage).map_err(|e |{
 				error!("At: get_split_amount. amount: {total_amount:?}. Instant percentage: {instant_percentage}. Reason: {e:?}");
 				e
