@@ -24,7 +24,7 @@ use sp_core::hexdisplay::HexDisplay;
 use sp_runtime::traits::Block as BlockT;
 use std::{io::Write, net::SocketAddr};
 
-use crate::chain_spec::arctic::{arctic_kusama_config, arctic_staging_rococo_config};
+use crate::chain_spec::arctic::arctic_staging_rococo_config;
 use crate::chain_spec::snow::{snow_kusama_config, snow_staging_rococo_config};
 #[cfg(feature = "runtime-benchmarks")]
 use frame_benchmarking_cli::{BenchmarkCmd, SUBSTRATE_REFERENCE_HARDWARE};
@@ -66,7 +66,6 @@ fn load_spec(id: &str) -> std::result::Result<Box<dyn sc_service::ChainSpec>, St
 		"arctic" => Box::new(chain_spec::arctic::get_chain_spec()),
 		"snow-dev" => Box::new(chain_spec::snow::get_dev_chain_spec()),
 		"snow-testnet" => Box::new(chain_spec::snow::testnet_spec()),
-		"arctic-kusama" => Box::new(arctic_kusama_config()?),
 		"arctic-staging-rococo" => Box::new(arctic_staging_rococo_config()?),
 		"snow-kusama" => Box::new(snow_kusama_config()?),
 		"snow-staging-rococo" => Box::new(snow_staging_rococo_config()?),
