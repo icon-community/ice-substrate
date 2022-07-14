@@ -182,7 +182,7 @@ pub trait MerkelProofValidator<T: Config> {
 	fn validate(leaf_hash: MerkleHash, root_hash: MerkleHash, proofs: MerkleProofs<T>) -> bool;
 }
 
-pub struct AirdropBehaviour {
+pub struct VestingTerms {
 	pub defi_instant_percentage: u8,
 	pub non_defi_instant_percentage: u8,
 	pub vesting_period: u32,
