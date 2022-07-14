@@ -104,7 +104,7 @@ polkadot-primitives = { git = "https://github.com/paritytech/polkadot", branch =
 polkadot-parachain = { git = "https://github.com/paritytech/polkadot", branch = "release-v0.9.24" }
 polkadot-service = { git = "https://github.com/paritytech/polkadot", branch = "release-v0.9.24" }
 polkadot-cli = { git = "https://github.com/paritytech/polkadot", branch = "release-v0.9.24", optional = true }
-
+xcm = { git = "https://github.com/paritytech/polkadot", default-features = false, branch = "release-v0.9.24" }
 
 # These dependencies are used for runtime benchmarking
 frame-benchmarking = { branch = "polkadot-v0.9.24", git = "https://github.com/paritytech/substrate" }

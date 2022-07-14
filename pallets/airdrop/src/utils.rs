@@ -57,9 +57,9 @@ where
 
 pub fn get_instant_percentage<T: airdrop::Config>(is_defi_user: bool) -> u8 {
 	if is_defi_user {
-		T::AIRDROP_VARIABLES.defi_instant_percentage
+		T::VESTING_TERMS.defi_instant_percentage
 	} else {
-		T::AIRDROP_VARIABLES.non_defi_instant_percentage
+		T::VESTING_TERMS.non_defi_instant_percentage
 	}
 }
 

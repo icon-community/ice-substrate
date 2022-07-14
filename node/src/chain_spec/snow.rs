@@ -6,9 +6,9 @@ use snow_runtime::currency::ICY;
 use snow_runtime::{
 	wasm_binary_unwrap, AccountId, AirdropConfig, AuraConfig, AuraId, Balance, BalancesConfig,
 	CollatorSelectionConfig, CouncilConfig, CouncilMembershipConfig, DemocracyConfig, EVMConfig,
-	GenesisConfig, IndicesConfig, ParachainInfoConfig, SS58Prefix, SessionConfig, SessionKeys,
-	Signature, SudoConfig, SystemConfig, TechnicalCommitteeConfig, TechnicalMembershipConfig,
-	TreasuryPalletId, VestingConfig,
+	GenesisConfig, IndicesConfig, ParachainInfoConfig, PolkadotXcmConfig, SS58Prefix,
+	SessionConfig, SessionKeys, Signature, SudoConfig, SystemConfig, TechnicalCommitteeConfig,
+	TechnicalMembershipConfig, TreasuryPalletId, VestingConfig,
 };
 use sp_core::{crypto::UncheckedInto, sr25519, Pair, Public};
 use sp_runtime::traits::{AccountIdConversion, IdentifyAccount, Verify};
@@ -20,6 +20,7 @@ use super::{get_from_seed, Extensions};
 pub type SnowChainSpec = sc_service::GenericChainSpec<GenesisConfig, Extensions>;
 
 const PARA_ID: u32 = 2000;
+const SAFE_XCM_VERSION: u32 = xcm::prelude::XCM_VERSION;
 
 //const TOTAL_SUPPLY: Balance = ICY * 1800000000;
 //const TOTAL_AIR_DROP: Balance = 1 * ICY;
@@ -264,7 +265,9 @@ fn make_genesis(
 		phragmen_election: Default::default(),
 		indices: IndicesConfig { indices: vec![] },
 		democracy: DemocracyConfig::default(),
-		polkadot_xcm: Default::default(),
+		polkadot_xcm: PolkadotXcmConfig {
+			safe_xcm_version: Some(SAFE_XCM_VERSION),
+		}, // Default::default(),
 	}
 }
 

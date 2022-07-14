@@ -48,7 +48,7 @@ pub mod pallet {
 	use weights::WeightInfo;
 
 	// Re-exports
-	pub use types::AirdropBehaviour;
+	pub use types::VestingTerms;
 
 	/// Configure the pallet by specifying the parameters and types on which it depends.
 	#[pallet::config]
@@ -75,7 +75,7 @@ pub mod pallet {
 
 		type MaxProofSize: Get<u32>;
 
-		const AIRDROP_VARIABLES: AirdropBehaviour;
+		const VESTING_TERMS: VestingTerms;
 	}
 
 	#[pallet::pallet]

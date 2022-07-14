@@ -160,7 +160,7 @@ impl xcm_executor::Config for XcmConfig {
 	// How to withdraw and deposit an asset.
 	type AssetTransactor = AssetTransactors;
 	type OriginConverter = XcmOriginToTransactDispatchOrigin;
-	type IsReserve = ReserveAssetFilter; //NativeAsset;
+	type IsReserve = (); // ReserveAssetFilter; //NativeAsset;
 	type IsTeleporter = (); // Teleporting is disabled.
 	type LocationInverter = LocationInverter<Ancestry>;
 	type Barrier = XcmBarrier;

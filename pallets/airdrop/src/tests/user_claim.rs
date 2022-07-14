@@ -284,7 +284,7 @@ fn respect_vesting_pallet_min_transfer() {
 
 #[test]
 fn partial_transfer_can_reclaim() {
-	let vesting_period = Test::AIRDROP_VARIABLES.vesting_period;
+	let vesting_period = Test::VESTING_TERMS.vesting_period;
 	minimal_test_ext().execute_with(|| {
 		run_to_block(1);
 
