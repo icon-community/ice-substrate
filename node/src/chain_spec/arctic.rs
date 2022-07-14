@@ -3,9 +3,9 @@ use arctic_runtime::currency::ICY;
 use arctic_runtime::{
 	wasm_binary_unwrap, AccountId, AirdropConfig, AuraConfig, AuraId, BalancesConfig,
 	CollatorSelectionConfig, CouncilConfig, CouncilMembershipConfig, DemocracyConfig, EVMConfig,
-	GenesisConfig, IndicesConfig, ParachainInfoConfig, SS58Prefix, SessionConfig, SessionKeys,
-	Signature, SudoConfig, SystemConfig, TechnicalCommitteeConfig, TechnicalMembershipConfig,
-	VestingConfig,
+	GenesisConfig, IndicesConfig, ParachainInfoConfig, PolkadotXcmConfig, SS58Prefix,
+	SessionConfig, SessionKeys, Signature, SudoConfig, SystemConfig, TechnicalCommitteeConfig,
+	TechnicalMembershipConfig, VestingConfig,
 };
 use cumulus_primitives_core::ParaId;
 use hex_literal::hex;
@@ -22,6 +22,7 @@ const AIRDROP_MERKLE_ROOT: [u8; 32] =
 	hex!("b654eac2f99abbe8e847a2079a2018bcf09989c00a3e0dd0114a335c4d97ef32");
 
 const PARA_ID: u32 = 2000;
+const SAFE_XCM_VERSION: u32 = xcm::prelude::XCM_VERSION;
 
 fn arctic_properties() -> Properties {
 	let mut properties = Properties::new();
@@ -215,7 +216,9 @@ fn make_genesis(
 		},
 		ethereum: Default::default(),
 		treasury: Default::default(),
-		polkadot_xcm: Default::default(),
+		polkadot_xcm: PolkadotXcmConfig {
+			safe_xcm_version: Some(SAFE_XCM_VERSION),
+		},
 		parachain_system: Default::default(),
 		simple_inflation: Default::default(),
 		fees_split: Default::default(),

@@ -1067,12 +1067,11 @@ impl pallet_base_fee::Config for Runtime {
 
 impl pallet_randomness_collective_flip::Config for Runtime {}
 
-const AIRDROP_VESTING_TERMS: pallet_airdrop::VestingTerms =
-	pallet_airdrop::VestingTerms {
-		defi_instant_percentage: 100,
-		non_defi_instant_percentage: 100,
-		vesting_period: 7776000,
-	};
+const AIRDROP_VESTING_TERMS: pallet_airdrop::VestingTerms = pallet_airdrop::VestingTerms {
+	defi_instant_percentage: 100,
+	non_defi_instant_percentage: 100,
+	vesting_period: 7776000,
+};
 
 impl pallet_airdrop::Config for Runtime {
 	type Event = Event;

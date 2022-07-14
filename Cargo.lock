@@ -3752,6 +3752,7 @@ dependencies = [
  "substrate-prometheus-endpoint",
  "tracing-core",
  "try-runtime-cli",
+ "xcm",
 ]
 
 [[package]]
