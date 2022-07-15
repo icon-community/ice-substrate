@@ -20,7 +20,7 @@ jobs:
       SUBWASM_VERSION: 0.17.0
     strategy:
       matrix:
-        chain: ["arctic"]
+        chain: ["snow"]
     steps:
       - uses: actions/checkout@v2
         with:
@@ -86,7 +86,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
     - name: Checkout the source code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       with:
         submodules: true
     - name: Install Rust toolchain
@@ -122,13 +122,13 @@ jobs:
 
     steps:
     - name: Checkout the source code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     - name: Create dir
       shell: bash
       run: |
         mkdir -p release/tmp/
         cd release/tmp/
-        mkdir  arctic x86_64
+        mkdir  snow x86_64
     - name: get x86_64 binary
       uses: actions/download-artifact@v2
       with:
@@ -136,16 +136,16 @@ jobs:
         path: release/tmp/x86_64/
     - uses: actions/download-artifact@v2
       with:
-        name: arctic-runtime
-        path: release/tmp/arctic/
+        name: snow-runtime
+        path: release/tmp/snow/
     - id: compress_artifacts
       shell: bash
       run: |
         cd release/
-        echo "::set-output name=arctic::$(jq -r '.core_version' tmp/arctic/arctic-info.json | awk '{print $1}')"
+        echo "::set-output name=snow::$(jq -r '.core_version' tmp/snow/snow-info.json | awk '{print $1}')"
         chmod +x tmp/x86_64/ice-node
         tar -czvf ice-node.tar.gz -C tmp/x86_64/ ice-node
-        cd tmp/arctic;tar -czvf ../../runtime-"$(jq -r '.core_version' arctic-info.json | awk '{print $1}')".tar.gz *;cd ../../
+        cd tmp/snow;tar -czvf ../../runtime-"$(jq -r '.core_version' snow-info.json | awk '{print $1}')".tar.gz *;cd ../../
         sha256sum *.tar.gz > sha256sum
         rm -rf tmp/
 
