@@ -12,7 +12,7 @@
     },
     "badBlocks": null,
     "relayChain": "rococo",
-    "paraId": 2000,
+    "paraId": 4025,
     "codeSubstitutes": {},
     "genesis": {
       "runtime": {
@@ -27,7 +27,7 @@
         },
         "parachainSystem": null,
         "parachainInfo": {
-          "parachainId": 2000
+          "parachainId": 4025
         },
         "balances": {
           "balances": [
