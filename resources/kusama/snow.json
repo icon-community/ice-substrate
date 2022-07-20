@@ -12,7 +12,7 @@
     },
     "badBlocks": null,
     "relayChain": "kusama",
-    "paraId": 2128,
+    "paraId": 2129,
     "codeSubstitutes": {},
     "genesis": {
       "runtime": {
@@ -27,7 +27,7 @@
         },
         "parachainSystem": null,
         "parachainInfo": {
-          "parachainId": 2128
+          "parachainId": 2129
         },
         "balances": {
           "balances": [
