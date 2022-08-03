@@ -21,7 +21,7 @@ pub type ArcticChainSpec = sc_service::GenericChainSpec<GenesisConfig, Extension
 const AIRDROP_MERKLE_ROOT: [u8; 32] =
 	hex!("b654eac2f99abbe8e847a2079a2018bcf09989c00a3e0dd0114a335c4d97ef32");
 
-const PARA_ID: u32 = 2000;
+const PARA_ID: u32 = 2001;
 const SAFE_XCM_VERSION: u32 = xcm::prelude::XCM_VERSION;
 
 fn arctic_properties() -> Properties {

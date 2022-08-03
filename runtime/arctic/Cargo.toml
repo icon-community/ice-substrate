@@ -26,6 +26,11 @@ frame-support = { default-features = false, git = "https://github.com/paritytech
 frame-system = { default-features = false, package = "frame-system", git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.24" }
 frame-system-rpc-runtime-api = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.24" }
 
+# orml dependencies
+orml-traits = { default-features = false, git = "https://github.com/open-web3-stack/open-runtime-module-library", branch = "polkadot-v0.9.24" }
+orml-xtokens = { default-features = false, git = "https://github.com/open-web3-stack/open-runtime-module-library", branch = "polkadot-v0.9.24" }
+# orml-xtokens = { default-features = false, version = "0.4.1-dev" }
+
 # pallets dependencies from substrate 
 pallet-aura = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.24" }
 pallet-balances = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.24" }
@@ -143,6 +148,9 @@ std = [
 	"frame-system/std",
 	"fp-rpc/std",
 	"fp-self-contained/std",
+
+	"orml-traits/std",
+	"orml-xtokens/std",
 
 	"pallet-ethereum/std",
 	"pallet-evm/std",

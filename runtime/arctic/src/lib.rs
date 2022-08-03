@@ -25,7 +25,7 @@ use pallet_evm::FeeCalculator;
 
 use frame_support::{
 	pallet_prelude::ConstU32,
-	traits::{EnsureOneOf, EqualPrivilegeOnly, InstanceFilter, LockIdentifier},
+	traits::{ConstU64, EnsureOneOf, EqualPrivilegeOnly, InstanceFilter, LockIdentifier},
 	RuntimeDebug,
 };
 use frame_system::{
@@ -39,7 +39,7 @@ use sp_core::{crypto::KeyTypeId, OpaqueMetadata, H160, H256, U256};
 use sp_runtime::{
 	create_runtime_str, generic, impl_opaque_keys,
 	traits::{
-		AccountIdLookup, BlakeTwo256, Block as BlockT, ConvertInto, DispatchInfoOf, Dispatchable,
+		AccountIdLookup, BlakeTwo256, Block as BlockT, Convert, ConvertInto, DispatchInfoOf, Dispatchable,
 		IdentifyAccount, PostDispatchInfoOf, Verify,
 	},
 	transaction_validity::{TransactionSource, TransactionValidity, TransactionValidityError},
@@ -50,6 +50,9 @@ use sp_std::{marker::PhantomData, prelude::*};
 #[cfg(feature = "std")]
 use sp_version::NativeVersion;
 use sp_version::RuntimeVersion;
+
+#[cfg(feature = "std")]
+use serde::{Serialize, Deserialize};
 
 use frame_support::inherent::Vec;
 use sp_std::boxed::Box;
@@ -66,7 +69,17 @@ use xcm_config::{XcmConfig, XcmOriginToTransactDispatchOrigin};
 
 // XCM Imports
 use xcm::latest::prelude::BodyId;
+use xcm::latest::prelude::MultiLocation;
+use xcm::latest::prelude::Junction;
+use xcm::latest::prelude::NetworkId;
+use xcm::latest::prelude::X1;
+use xcm::latest::prelude::Parachain;
+use xcm::latest::prelude::Parent;
+use xcm::latest::prelude::GeneralKey;
+use xcm_builder::{LocationInverter, FixedWeightBounds};
 use xcm_executor::XcmExecutor;
+use orml_traits::location::AbsoluteReserveProvider;
+use orml_traits::parameter_type_with_key;
 
 // A few exports that help ease life for downstream crates.
 use fp_rpc::TransactionStatus;
@@ -1083,6 +1096,82 @@ impl pallet_airdrop::Config for Runtime {
 	const VESTING_TERMS: pallet_airdrop::VestingTerms = AIRDROP_VESTING_TERMS;
 }
 
+parameter_type_with_key! {
+	pub ParachainMinFee: |location: MultiLocation| -> Option<u128> {
+		#[allow(clippy::match_ref_pats)] // false positive
+		match (location.parents, location.first_interior()) {
+			// TODO abhi: use PARA_ID here instead of 2001, also change the fees returned
+			(1, Some(Parachain(2001))) => Some(40),
+			_ => None,
+		}
+	};
+}
+
+#[derive(Encode, Decode, Eq, PartialEq, Copy, Clone, RuntimeDebug, PartialOrd, Ord, MaxEncodedLen, scale_info::TypeInfo)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+pub enum CurrencyId {
+	/// Polkadot
+	DOT,
+	/// Kusama
+	// KSM,
+	/// Arctic
+	ICY,
+	/// Snow
+	ICZ,
+	/// Acala
+	ACA
+}
+
+pub struct RelativeCurrencyIdConvert;
+
+impl Convert<CurrencyId, Option<MultiLocation>> for RelativeCurrencyIdConvert {
+	fn convert(id: CurrencyId) -> Option<MultiLocation> {
+		match id {
+			CurrencyId::DOT => Some(Parent.into()),
+			// TODO abhi: use PARA_IDs of respective chains instead of hard-coding
+			CurrencyId::ICY => Some((Parent, Parachain(2001), GeneralKey("ICY".into())).into()),
+			CurrencyId::ICZ => Some((Parent, Parachain(2001), GeneralKey("ICZ".into())).into()),
+			CurrencyId::ACA => Some((Parent, Parachain(2000), GeneralKey("ACA".into())).into()),
+		}
+	}
+}
+
+pub struct AccountIdToMultiLocation;
+impl Convert<AccountId, MultiLocation> for AccountIdToMultiLocation {
+	fn convert(account: AccountId) -> MultiLocation {
+		X1(Junction::AccountId32 {
+			network: NetworkId::Any,
+			id: account.into(),
+		})
+		.into()
+	}
+}
+
+parameter_types! {
+	// TODO abhi: use PARA_ID instead of hard-coding
+	pub SelfLocation: MultiLocation = MultiLocation::new(1, X1(Parachain(2001)));
+	// TODO abhi: use PARA_ID instead of hard-coding
+	pub Ancestry: MultiLocation = Parachain(2001).into();
+	pub const MaxAssetsForTransfer: usize = 2;
+}
+
+impl orml_xtokens::Config for Runtime {
+	type Event = Event;
+	type Balance = Balance;
+	type CurrencyId = CurrencyId;
+	type CurrencyIdConvert = RelativeCurrencyIdConvert;
+	type AccountIdToMultiLocation = AccountIdToMultiLocation;
+	type SelfLocation = SelfLocation;
+	type MultiLocationsFilter = frame_support::traits::Everything; // ParentOrParachains;
+	type MinXcmFee = ParachainMinFee;
+	type XcmExecutor = XcmExecutor<XcmConfig>;
+	type Weigher = FixedWeightBounds<ConstU64<10>, Call, ConstU32<100>>;
+	type BaseXcmWeight = ConstU64<100_000_000>;
+	type LocationInverter = LocationInverter<Ancestry>;
+	type MaxAssetsForTransfer = MaxAssetsForTransfer;
+	type ReserveProvider = AbsoluteReserveProvider; // RelativeReserveProvider;
+}
+
 // Create the runtime by composing the FRAME pallets that were previously configured.
 construct_runtime!(
 	pub enum Runtime where
@@ -1150,6 +1239,7 @@ construct_runtime!(
 		PolkadotXcm: pallet_xcm::{Pallet, Call, Event<T>, Origin, Config} = 81,
 		CumulusXcm: cumulus_pallet_xcm::{Pallet, Event<T>, Origin} = 82,
 		DmpQueue: cumulus_pallet_dmp_queue::{Pallet, Call, Storage, Event<T>} = 83,
+		XTokens: orml_xtokens::{Pallet, Call, Storage, Event<T>} = 84
 	}
 );
 
