@@ -29,6 +29,7 @@ frame-system-rpc-runtime-api = { default-features = false, git = "https://github
 # orml dependencies
 orml-traits = { default-features = false, git = "https://github.com/open-web3-stack/open-runtime-module-library", branch = "polkadot-v0.9.24" }
 orml-xtokens = { default-features = false, git = "https://github.com/open-web3-stack/open-runtime-module-library", branch = "polkadot-v0.9.24" }
+orml-asset-registry = { default-features = false, git = "https://github.com/open-web3-stack/open-runtime-module-library", branch = "polkadot-v0.9.24" }
 # orml-xtokens = { default-features = false, version = "0.4.1-dev" }
 
 # pallets dependencies from substrate 
@@ -151,6 +152,7 @@ std = [
 
 	"orml-traits/std",
 	"orml-xtokens/std",
+	"orml-asset-registry/std",
 
 	"pallet-ethereum/std",
 	"pallet-evm/std",

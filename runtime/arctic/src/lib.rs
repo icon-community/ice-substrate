@@ -25,7 +25,7 @@ use pallet_evm::FeeCalculator;
 
 use frame_support::{
 	pallet_prelude::ConstU32,
-	traits::{ConstU64, EnsureOneOf, EqualPrivilegeOnly, InstanceFilter, LockIdentifier},
+	traits::{ConstU64, EnsureOneOf, EqualPrivilegeOnly, InstanceFilter, LockIdentifier, EnsureOrigin, EnsureOriginWithArg},
 	RuntimeDebug,
 };
 use frame_system::{
@@ -1096,6 +1096,7 @@ impl pallet_airdrop::Config for Runtime {
 	const VESTING_TERMS: pallet_airdrop::VestingTerms = AIRDROP_VESTING_TERMS;
 }
 
+/// xtokens impl
 parameter_type_with_key! {
 	pub ParachainMinFee: |location: MultiLocation| -> Option<u128> {
 		#[allow(clippy::match_ref_pats)] // false positive
@@ -1172,6 +1173,36 @@ impl orml_xtokens::Config for Runtime {
 	type ReserveProvider = AbsoluteReserveProvider; // RelativeReserveProvider;
 }
 
+/// Asset-registry impl
+pub struct AssetAuthority;
+impl EnsureOriginWithArg<Origin, Option<u32>> for AssetAuthority {
+	type Success = ();
+
+	fn try_origin(origin: Origin, asset_id: &Option<u32>) -> Result<Self::Success, Origin> {
+		EnsureRoot::try_origin(origin)
+	}
+
+	#[cfg(feature = "runtime-benchmarks")]
+	fn successful_origin(_asset_id: &Option<u32>) -> Origin {
+		unimplemented!()
+	}
+}
+
+#[derive(scale_info::TypeInfo, Encode, Decode, Clone, Eq, PartialEq, Debug)]
+pub struct CustomMetadata {
+	pub fee_per_second: u128,
+}
+
+impl orml_asset_registry::Config for Runtime {
+	type Event = Event;
+	type Balance = Balance;
+	type AssetId = u32;
+	type AuthorityOrigin = AssetAuthority;
+	type CustomMetadata = CustomMetadata;
+	type AssetProcessor = orml_asset_registry::SequentialId<Runtime>;
+	type WeightInfo = ();
+}
+
 // Create the runtime by composing the FRAME pallets that were previously configured.
 construct_runtime!(
 	pub enum Runtime where
@@ -1239,7 +1270,10 @@ construct_runtime!(
 		PolkadotXcm: pallet_xcm::{Pallet, Call, Event<T>, Origin, Config} = 81,
 		CumulusXcm: cumulus_pallet_xcm::{Pallet, Event<T>, Origin} = 82,
 		DmpQueue: cumulus_pallet_dmp_queue::{Pallet, Call, Storage, Event<T>} = 83,
-		XTokens: orml_xtokens::{Pallet, Call, Storage, Event<T>} = 84
+		XTokens: orml_xtokens::{Pallet, Call, Storage, Event<T>} = 84,
+
+		// Asset registry
+		AssetRegistry: orml_asset_registry::{Pallet, Call, Storage, Event<T>} = 90
 	}
 );
 
