@@ -72,7 +72,7 @@ use xcm::latest::prelude::BodyId;
 use xcm::latest::prelude::MultiLocation;
 use xcm::latest::prelude::Junction;
 use xcm::latest::prelude::NetworkId;
-use xcm::latest::prelude::X1;
+use xcm::latest::prelude::{X1, X2};
 use xcm::latest::prelude::Parachain;
 use xcm::latest::prelude::Parent;
 use xcm::latest::prelude::GeneralKey;
@@ -1120,7 +1120,9 @@ pub enum CurrencyId {
 	/// Snow
 	ICZ,
 	/// Acala
-	ACA
+	ACA,
+	/// Karura
+	KAR
 }
 
 pub struct RelativeCurrencyIdConvert;
@@ -1133,6 +1135,38 @@ impl Convert<CurrencyId, Option<MultiLocation>> for RelativeCurrencyIdConvert {
 			CurrencyId::ICY => Some((Parent, Parachain(2001), GeneralKey("ICY".into())).into()),
 			CurrencyId::ICZ => Some((Parent, Parachain(2001), GeneralKey("ICZ".into())).into()),
 			CurrencyId::ACA => Some((Parent, Parachain(2000), GeneralKey("ACA".into())).into()),
+			CurrencyId::KAR => Some((Parent, Parachain(2000), GeneralKey("KAR".into())).into()),
+		}
+	}
+}
+
+impl Convert<MultiLocation, Option<CurrencyId>> for RelativeCurrencyIdConvert {
+	fn convert(l: MultiLocation) -> Option<CurrencyId> {
+		let icy: Vec<u8> = "ICY".into();
+		let icz: Vec<u8> = "ICZ".into();
+		let aca: Vec<u8> = "ACA".into();
+		let kar: Vec<u8> = "KAR".into();
+
+		if l == MultiLocation::parent() {
+			return Some(CurrencyId::DOT);
+		}
+
+		match l {
+			MultiLocation { parents, interior } if parents == 1 => match interior {
+				X2(Parachain(2001), GeneralKey(k)) if k == icy => Some(CurrencyId::ICY),
+				X2(Parachain(2001), GeneralKey(k)) if k == icz => Some(CurrencyId::ICZ),
+				X2(Parachain(2000), GeneralKey(k)) if k == aca => Some(CurrencyId::ACA),
+				X2(Parachain(2000), GeneralKey(k)) if k == kar => Some(CurrencyId::KAR),
+				_ => None,
+			},
+			MultiLocation { parents, interior } if parents == 0 => match interior {
+				X1(GeneralKey(k)) if k == icy => Some(CurrencyId::ICY),
+				X1(GeneralKey(k)) if k == icz => Some(CurrencyId::ICZ),
+				X1(GeneralKey(k)) if k == aca => Some(CurrencyId::ACA),
+				X1(GeneralKey(k)) if k == kar => Some(CurrencyId::KAR),
+				_ => None,
+			},
+			_ => None,
 		}
 	}
 }
@@ -1166,7 +1200,7 @@ impl orml_xtokens::Config for Runtime {
 	type MultiLocationsFilter = frame_support::traits::Everything; // ParentOrParachains;
 	type MinXcmFee = ParachainMinFee;
 	type XcmExecutor = XcmExecutor<XcmConfig>;
-	type Weigher = FixedWeightBounds<ConstU64<10>, Call, ConstU32<100>>;
+	type Weigher = FixedWeightBounds<ConstU64<2000_000_000>, Call, ConstU32<100>>;
 	type BaseXcmWeight = ConstU64<100_000_000>;
 	type LocationInverter = LocationInverter<Ancestry>;
 	type MaxAssetsForTransfer = MaxAssetsForTransfer;
