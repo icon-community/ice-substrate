@@ -25,7 +25,10 @@ use pallet_evm::FeeCalculator;
 
 use frame_support::{
 	pallet_prelude::ConstU32,
-	traits::{ConstU64, EnsureOneOf, EqualPrivilegeOnly, InstanceFilter, LockIdentifier, EnsureOrigin, EnsureOriginWithArg},
+	traits::{
+		ConstU64, EnsureOneOf, EnsureOrigin, EnsureOriginWithArg, EqualPrivilegeOnly,
+		InstanceFilter, LockIdentifier,
+	},
 	RuntimeDebug,
 };
 use frame_system::{
@@ -39,8 +42,8 @@ use sp_core::{crypto::KeyTypeId, OpaqueMetadata, H160, H256, U256};
 use sp_runtime::{
 	create_runtime_str, generic, impl_opaque_keys,
 	traits::{
-		AccountIdLookup, BlakeTwo256, Block as BlockT, Convert, ConvertInto, DispatchInfoOf, Dispatchable,
-		IdentifyAccount, PostDispatchInfoOf, Verify,
+		AccountIdLookup, BlakeTwo256, Block as BlockT, Convert, ConvertInto, DispatchInfoOf,
+		Dispatchable, IdentifyAccount, PostDispatchInfoOf, Verify,
 	},
 	transaction_validity::{TransactionSource, TransactionValidity, TransactionValidityError},
 	ApplyExtrinsicResult, FixedPointNumber, MultiSignature, Perquintill,
@@ -52,7 +55,7 @@ use sp_version::NativeVersion;
 use sp_version::RuntimeVersion;
 
 #[cfg(feature = "std")]
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 use frame_support::inherent::Vec;
 use sp_std::boxed::Box;
@@ -68,18 +71,20 @@ pub type NegativeImbalance = <Balances as Currency<AccountId>>::NegativeImbalanc
 use xcm_config::{XcmConfig, XcmOriginToTransactDispatchOrigin};
 
 // XCM Imports
-use xcm::latest::prelude::BodyId;
-use xcm::latest::prelude::MultiLocation;
-use xcm::latest::prelude::Junction;
-use xcm::latest::prelude::NetworkId;
-use xcm::latest::prelude::{X1, X2};
-use xcm::latest::prelude::Parachain;
-use xcm::latest::prelude::Parent;
-use xcm::latest::prelude::GeneralKey;
-use xcm_builder::{LocationInverter, FixedWeightBounds};
-use xcm_executor::XcmExecutor;
 use orml_traits::location::AbsoluteReserveProvider;
 use orml_traits::parameter_type_with_key;
+use xcm::latest::prelude::AssetId::Concrete;
+use xcm::latest::prelude::BodyId;
+use xcm::latest::prelude::GeneralKey;
+use xcm::latest::prelude::Junction;
+use xcm::latest::prelude::MultiAsset;
+use xcm::latest::prelude::MultiLocation;
+use xcm::latest::prelude::NetworkId;
+use xcm::latest::prelude::Parachain;
+use xcm::latest::prelude::Parent;
+use xcm::latest::prelude::{X1, X2};
+use xcm_builder::{FixedWeightBounds, LocationInverter};
+use xcm_executor::XcmExecutor;
 
 // A few exports that help ease life for downstream crates.
 use fp_rpc::TransactionStatus;
@@ -1108,7 +1113,19 @@ parameter_type_with_key! {
 	};
 }
 
-#[derive(Encode, Decode, Eq, PartialEq, Copy, Clone, RuntimeDebug, PartialOrd, Ord, MaxEncodedLen, scale_info::TypeInfo)]
+#[derive(
+	Encode,
+	Decode,
+	Eq,
+	PartialEq,
+	Copy,
+	Clone,
+	RuntimeDebug,
+	PartialOrd,
+	Ord,
+	MaxEncodedLen,
+	scale_info::TypeInfo,
+)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub enum CurrencyId {
 	/// Polkadot
@@ -1122,7 +1139,7 @@ pub enum CurrencyId {
 	/// Acala
 	ACA,
 	/// Karura
-	KAR
+	KAR,
 }
 
 pub struct RelativeCurrencyIdConvert;
@@ -1167,6 +1184,21 @@ impl Convert<MultiLocation, Option<CurrencyId>> for RelativeCurrencyIdConvert {
 				_ => None,
 			},
 			_ => None,
+		}
+	}
+}
+
+impl Convert<MultiAsset, Option<CurrencyId>> for RelativeCurrencyIdConvert {
+	fn convert(a: MultiAsset) -> Option<CurrencyId> {
+		if let MultiAsset {
+			// fun: Fungible(_),
+			id: Concrete(id),
+			..
+		} = a
+		{
+			Self::convert(id)
+		} else {
+			Option::None
 		}
 	}
 }
