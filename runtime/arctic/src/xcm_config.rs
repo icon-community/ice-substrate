@@ -1,6 +1,6 @@
 use super::{
 	AccountId, Assets, Balance, Balances, Call, DealWithFees, Event, Origin, ParachainInfo,
-	ParachainSystem, PolkadotXcm, Runtime, WeightToFee, XcmpQueue,
+	ParachainSystem, PolkadotXcm, Runtime, WeightToFee, XcmpQueue, CurrencyId, RelativeCurrencyIdConvert, Tokens
 };
 use frame_support::{
 	match_types, parameter_types,
@@ -23,6 +23,8 @@ use xcm_executor::{
 	traits::{FilterAssetLocation, JustTry},
 	XcmExecutor,
 };
+
+use orml_xcm_support::{IsNativeConcrete, MultiCurrencyAdapter, MultiNativeAsset};
 
 parameter_types! {
 	pub const RelayLocation: MultiLocation = MultiLocation::parent();
@@ -62,6 +64,17 @@ pub type CurrencyTransactor = CurrencyAdapter<
 	(),
 >;
 
+pub type LocalAssetTransactor = MultiCurrencyAdapter<
+	Tokens,
+	(),
+	IsNativeConcrete<CurrencyId, RelativeCurrencyIdConvert>,
+	AccountId,
+	LocationToAccountId,
+	CurrencyId,
+	RelativeCurrencyIdConvert,
+	(),
+>;
+
 /// Means for transacting assets besides the native currency on this chain.
 pub type FungiblesTransactor = FungiblesAdapter<
 	// Use this fungibles implementation:
@@ -73,7 +86,7 @@ pub type FungiblesTransactor = FungiblesAdapter<
 		u128,
 		Balance,
 		AsPrefixedGeneralIndex<AssetsPalletLocation, u128, JustTry>,
-		JustTry,
+		JustTry
 	>,
 	// Convert an XCM MultiLocation into a local account id:
 	LocationToAccountId,
@@ -158,7 +171,7 @@ impl xcm_executor::Config for XcmConfig {
 	type Call = Call;
 	type XcmSender = XcmRouter;
 	// How to withdraw and deposit an asset.
-	type AssetTransactor = AssetTransactors;
+	type AssetTransactor = LocalAssetTransactor; // AssetTransactors;
 	type OriginConverter = XcmOriginToTransactDispatchOrigin;
 	type IsReserve = (); // ReserveAssetFilter; //NativeAsset;
 	type IsTeleporter = (); // Teleporting is disabled.

@@ -26,7 +26,7 @@ use pallet_evm::FeeCalculator;
 use frame_support::{
 	pallet_prelude::ConstU32,
 	traits::{
-		ConstU64, EnsureOneOf, EnsureOrigin, EnsureOriginWithArg, EqualPrivilegeOnly,
+		ConstU64, EnsureOneOf, EnsureOrigin, EnsureOriginWithArg, EqualPrivilegeOnly, Everything,
 		InstanceFilter, LockIdentifier,
 	},
 	RuntimeDebug,
@@ -1269,6 +1269,39 @@ impl orml_asset_registry::Config for Runtime {
 	type WeightInfo = ();
 }
 
+parameter_type_with_key! {
+	pub ExistentialDeposits: |currency_id: CurrencyId| -> Balance {
+		// every currency has a zero existential deposit
+		match currency_id {
+			_ => 0,
+		}
+	};
+}
+
+parameter_types! {
+	pub ORMLMaxLocks: u32 = 2;
+	// pub NativeTreasuryAccount: AccountId = TreasuryPalletId::get().into_account();
+
+}
+
+type Amount = i128;
+
+impl orml_tokens::Config for Runtime {
+	type Event = Event;
+	type Balance = Balance;
+	type Amount = Amount;
+	type CurrencyId = CurrencyId;
+	type WeightInfo = ();
+	type ExistentialDeposits = ExistentialDeposits;
+	type OnDust = ();
+	type MaxLocks = ConstU32<50>;
+	type MaxReserves = ConstU32<50>;
+	type ReserveIdentifier = [u8; 8];
+	type DustRemovalWhitelist = Everything;
+	type OnNewTokenAccount = ();
+	type OnKilledTokenAccount = ();
+}
+
 // Create the runtime by composing the FRAME pallets that were previously configured.
 construct_runtime!(
 	pub enum Runtime where
@@ -1336,7 +1369,8 @@ construct_runtime!(
 		PolkadotXcm: pallet_xcm::{Pallet, Call, Event<T>, Origin, Config} = 81,
 		CumulusXcm: cumulus_pallet_xcm::{Pallet, Event<T>, Origin} = 82,
 		DmpQueue: cumulus_pallet_dmp_queue::{Pallet, Call, Storage, Event<T>} = 83,
-		XTokens: orml_xtokens::{Pallet, Call, Storage, Event<T>} = 84,
+		Tokens: orml_tokens::{Pallet, Call, Storage, Event<T>} = 84,
+		XTokens: orml_xtokens::{Pallet, Call, Storage, Event<T>} = 85,
 
 		// Asset registry
 		AssetRegistry: orml_asset_registry::{Pallet, Call, Storage, Event<T>} = 90
