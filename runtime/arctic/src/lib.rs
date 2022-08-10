@@ -1216,9 +1216,9 @@ impl Convert<AccountId, MultiLocation> for AccountIdToMultiLocation {
 
 parameter_types! {
 	// TODO abhi: use PARA_ID instead of hard-coding
-	pub SelfLocation: MultiLocation = MultiLocation::new(1, X1(Parachain(2001)));
+	pub SelfLocation: MultiLocation = MultiLocation::here(); // MultiLocation::new(1, X1(Parachain(2001)));
 	// TODO abhi: use PARA_ID instead of hard-coding
-	pub Ancestry: MultiLocation = Parachain(2001).into();
+	pub Ancestry: MultiLocation = Parachain(ParachainInfo::parachain_id().into()).into(); // Parachain(2001).into();
 	pub const MaxAssetsForTransfer: usize = 2;
 }
 
