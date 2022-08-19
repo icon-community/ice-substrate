@@ -1,6 +1,7 @@
 use super::{
-	AccountId, Assets, Balance, Balances, Call, DealWithFees, Event, Origin, ParachainInfo,
-	ParachainSystem, PolkadotXcm, Runtime, WeightToFee, XcmpQueue, CurrencyId, RelativeCurrencyIdConvert, Tokens
+	AccountId, Assets, Balance, Balances, Call, CurrencyId, DealWithFees, Event, Origin,
+	ParachainInfo, ParachainSystem, PolkadotXcm, RelativeCurrencyIdConvert, Runtime, Tokens,
+	UnknownTokens, WeightToFee, XcmpQueue,
 };
 use frame_support::{
 	match_types, parameter_types,
@@ -20,7 +21,7 @@ use xcm_builder::{
 	UsingComponents,
 };
 use xcm_executor::{
-	traits::{FilterAssetLocation, JustTry},
+	traits::{FilterAssetLocation, JustTry, WeightTrader},
 	XcmExecutor,
 };
 
@@ -66,7 +67,7 @@ pub type CurrencyTransactor = CurrencyAdapter<
 
 pub type LocalAssetTransactor = MultiCurrencyAdapter<
 	Tokens,
-	(),
+	UnknownTokens,
 	IsNativeConcrete<CurrencyId, RelativeCurrencyIdConvert>,
 	AccountId,
 	LocationToAccountId,
@@ -86,14 +87,14 @@ pub type FungiblesTransactor = FungiblesAdapter<
 		u128,
 		Balance,
 		AsPrefixedGeneralIndex<AssetsPalletLocation, u128, JustTry>,
-		JustTry
+		JustTry,
 	>,
 	// Convert an XCM MultiLocation into a local account id:
 	LocationToAccountId,
 	// Our chain's account ID type (we can't get away without mentioning it explicitly):
 	AccountId,
 	// We don't track any teleports of `Assets`.
-	Nothing,
+	Everything,
 	// We don't track any teleports of `Assets`.
 	CheckingAccount,
 >;
@@ -126,11 +127,8 @@ pub type XcmOriginToTransactDispatchOrigin = (
 );
 
 parameter_types! {
-	// One XCM operation is 1_000_000_000 weight - almost certainly a conservative estimate.
-	pub UnitWeightCost: Weight = 1_000_000_000;
+	pub const UnitWeightCost: Weight = 0;
 	pub const MaxInstructions: u32 = 100;
-	// TODO: figure correct weight conversion
-	pub UnitPerSecond: (xcm::v1::AssetId, u128) = (MultiLocation::parent().into(), 1_000_000_000);
 }
 
 match_types! {
@@ -166,6 +164,47 @@ impl FilterAssetLocation for ReserveAssetFilter {
 	}
 }
 
+pub struct AllTokensAreCreatedEqualToWeight(MultiLocation);
+impl WeightTrader for AllTokensAreCreatedEqualToWeight {
+	fn new() -> Self {
+		Self(MultiLocation::parent())
+	}
+
+	fn buy_weight(
+		&mut self,
+		weight: Weight,
+		payment: xcm_executor::Assets,
+	) -> Result<xcm_executor::Assets, XcmError> {
+		let asset_id = payment
+			.fungible
+			.iter()
+			.next()
+			.expect("Payment must be something; qed")
+			.0;
+		let required = MultiAsset {
+			id: asset_id.clone(),
+			fun: Fungible(0),
+		};
+
+		if let MultiAsset {
+			fun: _,
+			id: Concrete(ref id),
+		} = &required
+		{
+			self.0 = id.clone();
+		}
+
+		let unused = payment
+			.checked_sub(required)
+			.map_err(|_| XcmError::TooExpensive)?;
+		Ok(unused)
+	}
+
+	fn refund_weight(&mut self, weight: Weight) -> Option<MultiAsset> {
+		None
+	}
+}
+
 pub struct XcmConfig;
 impl xcm_executor::Config for XcmConfig {
 	type Call = Call;
@@ -173,15 +212,12 @@ impl xcm_executor::Config for XcmConfig {
 	// How to withdraw and deposit an asset.
 	type AssetTransactor = LocalAssetTransactor; // AssetTransactors;
 	type OriginConverter = XcmOriginToTransactDispatchOrigin;
-	type IsReserve = (); // ReserveAssetFilter; //NativeAsset;
+	type IsReserve = ReserveAssetFilter; // ReserveAssetFilter; //NativeAsset;
 	type IsTeleporter = (); // Teleporting is disabled.
 	type LocationInverter = LocationInverter<Ancestry>;
 	type Barrier = XcmBarrier;
 	type Weigher = FixedWeightBounds<UnitWeightCost, Call, MaxInstructions>;
-	type Trader = (
-		FixedRateOfFungible<UnitPerSecond, ()>,
-		UsingComponents<WeightToFee, RelayLocation, AccountId, Balances, DealWithFees>,
-	);
+	type Trader = AllTokensAreCreatedEqualToWeight;
 	type ResponseHandler = PolkadotXcm;
 	type AssetTrap = PolkadotXcm;
 	type AssetClaims = PolkadotXcm;

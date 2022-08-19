@@ -20,8 +20,10 @@ pub fn wasm_binary_unwrap() -> &'static [u8] {
 }
 
 pub mod xcm_config;
+use bstringify::bstringify;
 use codec::{Decode, Encode, MaxEncodedLen};
 use pallet_evm::FeeCalculator;
+use scale_info::TypeInfo;
 
 use frame_support::{
 	pallet_prelude::ConstU32,
@@ -33,7 +35,7 @@ use frame_support::{
 };
 use frame_system::{
 	limits::{BlockLength, BlockWeights},
-	EnsureRoot,
+	Config, EnsureRoot,
 };
 
 use sp_api::impl_runtime_apis;
@@ -72,7 +74,7 @@ use xcm_config::{XcmConfig, XcmOriginToTransactDispatchOrigin};
 
 // XCM Imports
 use orml_traits::location::AbsoluteReserveProvider;
-use orml_traits::parameter_type_with_key;
+use orml_traits::{asset_registry, parameter_type_with_key};
 use xcm::latest::prelude::AssetId::Concrete;
 use xcm::latest::prelude::BodyId;
 use xcm::latest::prelude::GeneralKey;
@@ -1123,66 +1125,87 @@ parameter_type_with_key! {
 	RuntimeDebug,
 	PartialOrd,
 	Ord,
+	TypeInfo,
 	MaxEncodedLen,
-	scale_info::TypeInfo,
 )]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "std", serde(rename_all = "camelCase"))]
 pub enum CurrencyId {
-	/// Polkadot
-	DOT,
-	/// Kusama
-	// KSM,
-	/// Arctic
-	ICY,
-	/// Snow
-	ICZ,
-	/// Acala
-	ACA,
-	/// Karura
-	KAR,
+	Token(TokenSymbol),
+	ForeignAsset(ForeignAssetId),
+}
+
+pub fn native_currency_location(para_id: u32, id: CurrencyId) -> MultiLocation {
+	MultiLocation::new(1, X2(Parachain(para_id), GeneralKey(id.encode())))
 }
 
 pub struct RelativeCurrencyIdConvert;
-
 impl Convert<CurrencyId, Option<MultiLocation>> for RelativeCurrencyIdConvert {
 	fn convert(id: CurrencyId) -> Option<MultiLocation> {
+		use CurrencyId::{ForeignAsset, Token};
+		use TokenSymbol::*;
 		match id {
-			CurrencyId::DOT => Some(Parent.into()),
-			// TODO abhi: use PARA_IDs of respective chains instead of hard-coding
-			CurrencyId::ICY => Some((Parent, Parachain(2001), GeneralKey("ICY".into())).into()),
-			CurrencyId::ICZ => Some((Parent, Parachain(2001), GeneralKey("ICZ".into())).into()),
-			CurrencyId::ACA => Some((Parent, Parachain(2000), GeneralKey("ACA".into())).into()),
-			CurrencyId::KAR => Some((Parent, Parachain(2000), GeneralKey("KAR".into())).into()),
+			Token(KSM) => Some(MultiLocation::parent()),
+			Token(ICY) => Some(native_currency_location(
+				ParachainInfo::parachain_id().into(),
+				id,
+			)),
+			Token(KAR) => Some(MultiLocation::new(
+				1,
+				X2(Parachain(2000), GeneralKey([0, 128].to_vec())),
+			)),
+			ForeignAsset(foreign_asset_id) => {
+				let foreign_asset_id = foreign_asset_id as u32;
+				if let Ok(location) = AssetRegistry::multilocation(&foreign_asset_id) {
+					location
+				} else {
+					None
+				}
+			}
+			_ => None,
 		}
 	}
 }
 
 impl Convert<MultiLocation, Option<CurrencyId>> for RelativeCurrencyIdConvert {
-	fn convert(l: MultiLocation) -> Option<CurrencyId> {
-		let icy: Vec<u8> = "ICY".into();
-		let icz: Vec<u8> = "ICZ".into();
-		let aca: Vec<u8> = "ACA".into();
-		let kar: Vec<u8> = "KAR".into();
+	fn convert(location: MultiLocation) -> Option<CurrencyId> {
+		use CurrencyId::{ForeignAsset, Token};
+		use TokenSymbol::*;
 
-		if l == MultiLocation::parent() {
-			return Some(CurrencyId::DOT);
+		if location == MultiLocation::parent() {
+			return Some(Token(KSM));
 		}
 
-		match l {
-			MultiLocation { parents, interior } if parents == 1 => match interior {
-				X2(Parachain(2001), GeneralKey(k)) if k == icy => Some(CurrencyId::ICY),
-				X2(Parachain(2001), GeneralKey(k)) if k == icz => Some(CurrencyId::ICZ),
-				X2(Parachain(2000), GeneralKey(k)) if k == aca => Some(CurrencyId::ACA),
-				X2(Parachain(2000), GeneralKey(k)) if k == kar => Some(CurrencyId::KAR),
+		if let Some(foreign_asset_id) = AssetRegistry::location_to_asset_id(location.clone()) {
+			return Some(ForeignAsset(foreign_asset_id.try_into().unwrap()));
+		}
+
+		match location {
+			MultiLocation {
+				parents: 1,
+				interior: X2(Parachain(para_id), GeneralKey(key)),
+			} => match (para_id, &key[..]) {
+				(2000, &[0, 128]) => Some(Token(KAR)),
+				(id, key) if id == u32::from(ParachainInfo::parachain_id()) => {
+					let currency_id = CurrencyId::decode(&mut &*key).ok()?;
+					match currency_id {
+						Token(ICY) => Some(currency_id),
+						_ => None,
+					}
+				}
 				_ => None,
 			},
-			MultiLocation { parents, interior } if parents == 0 => match interior {
-				X1(GeneralKey(k)) if k == icy => Some(CurrencyId::ICY),
-				X1(GeneralKey(k)) if k == icz => Some(CurrencyId::ICZ),
-				X1(GeneralKey(k)) if k == aca => Some(CurrencyId::ACA),
-				X1(GeneralKey(k)) if k == kar => Some(CurrencyId::KAR),
-				_ => None,
-			},
+			MultiLocation {
+				parents: 0,
+				interior: X1(GeneralKey(key)),
+			} => {
+				let key = &key[..];
+				let currency_id = CurrencyId::decode(&mut &*key).ok()?;
+				match currency_id {
+					Token(ICY) => Some(currency_id),
+					_ => None,
+				}
+			}
 			_ => None,
 		}
 	}
@@ -1191,14 +1214,12 @@ impl Convert<MultiLocation, Option<CurrencyId>> for RelativeCurrencyIdConvert {
 impl Convert<MultiAsset, Option<CurrencyId>> for RelativeCurrencyIdConvert {
 	fn convert(a: MultiAsset) -> Option<CurrencyId> {
 		if let MultiAsset {
-			// fun: Fungible(_),
-			id: Concrete(id),
-			..
+			id: Concrete(id), ..
 		} = a
 		{
 			Self::convert(id)
 		} else {
-			Option::None
+			None
 		}
 	}
 }
@@ -1302,6 +1323,10 @@ impl orml_tokens::Config for Runtime {
 	type OnKilledTokenAccount = ();
 }
 
+impl orml_unknown_tokens::Config for Runtime {
+	type Event = Event;
+}
+
 // Create the runtime by composing the FRAME pallets that were previously configured.
 construct_runtime!(
 	pub enum Runtime where
@@ -1373,7 +1398,8 @@ construct_runtime!(
 		XTokens: orml_xtokens::{Pallet, Call, Storage, Event<T>} = 85,
 
 		// Asset registry
-		AssetRegistry: orml_asset_registry::{Pallet, Call, Storage, Event<T>} = 90
+		AssetRegistry: orml_asset_registry::{Pallet, Call, Storage, Event<T>} = 90,
+		UnknownTokens: orml_unknown_tokens::{Pallet, Storage, Event} = 91,
 	}
 );
 
@@ -1877,3 +1903,102 @@ cumulus_pallet_parachain_system::register_validate_block! {
 	BlockExecutor = cumulus_pallet_aura_ext::BlockExecutor::<Runtime, Executive>,
 	CheckInherents = CheckInherents,
 }
+
+macro_rules! create_currency_id {
+    ($(#[$meta:meta])*
+	$vis:vis enum TokenSymbol {
+        $($(#[$vmeta:meta])* $symbol:ident($name:expr, $deci:literal) = $val:literal,)*
+    }) => {
+		$(#[$meta])*
+		$vis enum TokenSymbol {
+			$($(#[$vmeta])* $symbol = $val,)*
+		}
+
+		impl TryFrom<u8> for TokenSymbol {
+			type Error = ();
+
+			fn try_from(v: u8) -> Result<Self, Self::Error> {
+				match v {
+					$($val => Ok(TokenSymbol::$symbol),)*
+					_ => Err(()),
+				}
+			}
+		}
+
+		impl Into<u8> for TokenSymbol {
+			fn into(self) -> u8 {
+				match self {
+					$(TokenSymbol::$symbol => ($val),)*
+				}
+			}
+		}
+
+		impl TryFrom<Vec<u8>> for CurrencyId {
+			type Error = ();
+			fn try_from(v: Vec<u8>) -> Result<CurrencyId, ()> {
+				match v.as_slice() {
+					$(bstringify!($symbol) => Ok(CurrencyId::Token(TokenSymbol::$symbol)),)*
+					_ => Err(()),
+				}
+			}
+		}
+
+		impl TokenInfo for CurrencyId {
+			fn currency_id(&self) -> Option<u8> {
+				match self {
+					$(CurrencyId::Token(TokenSymbol::$symbol) => Some($val),)*
+					_ => None,
+				}
+			}
+			fn name(&self) -> Option<&str> {
+				match self {
+					$(CurrencyId::Token(TokenSymbol::$symbol) => Some($name),)*
+					_ => None,
+				}
+			}
+			fn symbol(&self) -> Option<&str> {
+				match self {
+					$(CurrencyId::Token(TokenSymbol::$symbol) => Some(stringify!($symbol)),)*
+					_ => None,
+				}
+			}
+			fn decimals(&self) -> Option<u8> {
+				match self {
+					$(CurrencyId::Token(TokenSymbol::$symbol) => Some($deci),)*
+					_ => None,
+				}
+			}
+		}
+
+		$(pub const $symbol: CurrencyId = CurrencyId::Token(TokenSymbol::$symbol);)*
+
+		impl TokenSymbol {
+			pub fn get_info() -> Vec<(&'static str, u32)> {
+				vec![
+					$((stringify!($symbol), $deci),)*
+				]
+			}
+		}
+    }
+}
+
+create_currency_id! {
+	#[derive(Encode, Decode, Eq, PartialEq, Copy, Clone, RuntimeDebug, PartialOrd, Ord, TypeInfo, MaxEncodedLen)]
+	#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+	#[repr(u8)]
+	pub enum TokenSymbol {
+		ICY("Arctic ICY", 18) = 0,
+		DOT("Polkadot", 10) = 1,
+		KSM("Kusama", 12) = 2,
+		KAR("Karura", 12) = 128,
+	}
+}
+
+pub trait TokenInfo {
+	fn currency_id(&self) -> Option<u8>;
+	fn name(&self) -> Option<&str>;
+	fn symbol(&self) -> Option<&str>;
+	fn decimals(&self) -> Option<u8>;
+}
+
+pub type ForeignAssetId = u16;

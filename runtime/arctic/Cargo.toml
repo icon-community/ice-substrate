@@ -19,6 +19,7 @@ serde = { version = "1.0.138", optional = true, features = ["derive"] }
 scale-info = { version = "2.1.0", default-features = false, features = ["derive"] }
 smallvec = "1.9.0"
 static_assertions = "1.1.0"
+bstringify = "0.1.2"
 
 # frame dependencies
 frame-executive = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.24" }
@@ -32,6 +33,7 @@ orml-tokens = { default-features = false, git = "https://github.com/open-web3-st
 orml-xtokens = { default-features = false, git = "https://github.com/open-web3-stack/open-runtime-module-library", branch = "polkadot-v0.9.24" }
 orml-asset-registry = { default-features = false, git = "https://github.com/open-web3-stack/open-runtime-module-library", branch = "polkadot-v0.9.24" }
 orml-xcm-support = { default-features = false, git = "https://github.com/open-web3-stack/open-runtime-module-library", branch = "polkadot-v0.9.24" }
+orml-unknown-tokens = { default-features = false, git = "https://github.com/open-web3-stack/open-runtime-module-library", branch = "polkadot-v0.9.24" }
 # orml-xtokens = { default-features = false, version = "0.4.1-dev" }
 
 # pallets dependencies from substrate 
