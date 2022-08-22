@@ -1327,6 +1327,11 @@ impl orml_unknown_tokens::Config for Runtime {
 	type Event = Event;
 }
 
+parameter_types! {
+	pub const NativeCurrencyId: CurrencyId = CurrencyId::Token(TokenSymbol::ICY);
+	pub const RelayCurrencyId: CurrencyId = CurrencyId::Token(TokenSymbol::KSM);
+}
+
 // Create the runtime by composing the FRAME pallets that were previously configured.
 construct_runtime!(
 	pub enum Runtime where
