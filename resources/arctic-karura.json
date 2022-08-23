@@ -1,6 +1,6 @@
 {
   "relaychain": {
-    "bin": "/home/abhi/code/polkadot/target/release/polkadot",
+    "bin": "../../polkadot/target/release/polkadot",
     "chain": "rococo-local",
     "nodes": [
       {
@@ -42,7 +42,7 @@
   },
   "parachains": [
     {
-      "bin": "/home/abhi/code/Acala/target/release/acala",
+      "bin": "../../Acala/target/release/acala",
       "chain": "karura-dev",
       "balance": "1000000000000000000000",
       "nodes": [
@@ -65,7 +65,7 @@
       ]
     },
     {
-      "bin": "/home/abhi/code/ice-substrate/target/release/ice-node",
+      "bin": "../target/release/ice-node",
       "chain": "arctic-dev",
       "balance": "1000000000000000000000",
       "nodes": [
