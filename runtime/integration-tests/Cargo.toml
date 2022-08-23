@@ -39,6 +39,7 @@ rococo-runtime-constants = { git = "https://github.com/paritytech/polkadot", bra
 xcm-emulator = { git = "https://github.com/shaunxw/xcm-simulator", rev = "651af78d6d7521dc76e1f6bb257af485f8a454c7" } # this rev is for polkadot v0.9.24
 
 [dev-dependencies]
+env_logger = "0.9.0"
 kusama-runtime = { git = "https://github.com/paritytech/polkadot", branch = "release-v0.9.24" }
 kusama-runtime-constants = { git = "https://github.com/paritytech/polkadot", branch = "release-v0.9.24" }
 

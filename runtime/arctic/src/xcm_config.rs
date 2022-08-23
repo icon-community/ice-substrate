@@ -1,7 +1,7 @@
 use super::{
-	AccountId, Assets, Balance, Balances, Call, CurrencyId, DealWithFees, Event, Origin,
-	ParachainInfo, ParachainSystem, PolkadotXcm, RelativeCurrencyIdConvert, Runtime, Tokens,
-	UnknownTokens, WeightToFee, XcmpQueue,
+	AccountId, Assets, Balance, Balances, Call, CurrencyId, Event, Origin, ParachainInfo,
+	ParachainSystem, PolkadotXcm, RelativeCurrencyIdConvert, Runtime, Tokens, UnknownTokens,
+	XcmpQueue,
 };
 use frame_support::{
 	match_types, parameter_types,
@@ -14,18 +14,17 @@ use xcm::latest::prelude::*;
 use xcm_builder::{
 	AccountId32Aliases, AllowKnownQueryResponses, AllowSubscriptionsFrom,
 	AllowTopLevelPaidExecutionFrom, AllowUnpaidExecutionFrom, AsPrefixedGeneralIndex,
-	ConvertedConcreteAssetId, CurrencyAdapter, EnsureXcmOrigin, FixedRateOfFungible,
-	FixedWeightBounds, FungiblesAdapter, IsConcrete, LocationInverter, ParentAsSuperuser,
-	ParentIsPreset, RelayChainAsNative, SiblingParachainAsNative, SiblingParachainConvertsVia,
+	ConvertedConcreteAssetId, CurrencyAdapter, EnsureXcmOrigin, FixedWeightBounds,
+	FungiblesAdapter, IsConcrete, LocationInverter, ParentAsSuperuser, ParentIsPreset,
+	RelayChainAsNative, SiblingParachainAsNative, SiblingParachainConvertsVia,
 	SignedAccountId32AsNative, SignedToAccountId32, SovereignSignedViaLocation, TakeWeightCredit,
-	UsingComponents,
 };
 use xcm_executor::{
 	traits::{FilterAssetLocation, JustTry, WeightTrader},
 	XcmExecutor,
 };
 
-use orml_xcm_support::{IsNativeConcrete, MultiCurrencyAdapter, MultiNativeAsset};
+use orml_xcm_support::{IsNativeConcrete, MultiCurrencyAdapter};
 
 parameter_types! {
 	pub const RelayLocation: MultiLocation = MultiLocation::parent();
@@ -172,7 +171,7 @@ impl WeightTrader for AllTokensAreCreatedEqualToWeight {
 
 	fn buy_weight(
 		&mut self,
-		weight: Weight,
+		_weight: Weight,
 		payment: xcm_executor::Assets,
 	) -> Result<xcm_executor::Assets, XcmError> {
 		let asset_id = payment
@@ -200,7 +199,7 @@ impl WeightTrader for AllTokensAreCreatedEqualToWeight {
 		Ok(unused)
 	}
 
-	fn refund_weight(&mut self, weight: Weight) -> Option<MultiAsset> {
+	fn refund_weight(&mut self, _weight: Weight) -> Option<MultiAsset> {
 		None
 	}
 }

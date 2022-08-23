@@ -1,12 +1,15 @@
-use arctic_runtime::{CurrencyId, AccountId, TokenSymbol, Balance, ExistentialDeposit, Runtime, System, Origin, NativeCurrencyId, RelayCurrencyId};
+use arctic_runtime::{
+	AccountId, Balance, CurrencyId, ExistentialDeposit, NativeCurrencyId, Origin, RelayCurrencyId,
+	Runtime, System, TokenSymbol,
+};
 use cumulus_primitives_core::ParaId;
 use frame_support::traits::GenesisBuild;
-use sp_runtime::traits::AccountIdConversion;
-use xcm_emulator::{decl_test_relay_chain, decl_test_parachain, decl_test_network};
 use polkadot_primitives::v2::{BlockNumber, MAX_CODE_SIZE, MAX_POV_SIZE};
 use polkadot_runtime_parachains::configuration::HostConfiguration;
+use sp_runtime::traits::AccountIdConversion;
+use xcm_emulator::{decl_test_network, decl_test_parachain, decl_test_relay_chain};
 
-use crate::{ALICE, dollar, get_all_module_accounts};
+use crate::{dollar, get_all_module_accounts, ALICE};
 
 decl_test_relay_chain! {
 	pub struct RococoNet {
@@ -26,11 +29,22 @@ decl_test_parachain! {
 	}
 }
 
+decl_test_parachain! {
+	pub struct Sibling {
+		Runtime = Runtime,
+		Origin = Origin,
+		XcmpMessageHandler = arctic_runtime ::XcmpQueue,
+		DmpMessageHandler = arctic_runtime::DmpQueue,
+		new_ext = para_ext(2000),
+	}
+}
+
 decl_test_network! {
 	pub struct TestNet {
 		relay_chain = RococoNet,
 		parachains = vec![
 			(2001, Arctic),
+			(2000, Sibling),
 		],
 	}
 }
@@ -76,12 +90,20 @@ fn default_parachains_host_configuration() -> HostConfiguration<BlockNumber> {
 pub fn rococo_ext() -> sp_io::TestExternalities {
 	use rococo_runtime::{Runtime, System};
 
-	let mut t = frame_system::GenesisConfig::default().build_storage::<Runtime>().unwrap();
+	let mut t = frame_system::GenesisConfig::default()
+		.build_storage::<Runtime>()
+		.unwrap();
 
 	pallet_balances::GenesisConfig::<Runtime> {
 		balances: vec![
-			(AccountId::from(ALICE), 2002 * dollar(CurrencyId::Token(TokenSymbol::KSM))),
-			(ParaId::from(2001).into_account_truncating(), 2 * dollar(CurrencyId::Token(TokenSymbol::KSM))),
+			(
+				AccountId::from(ALICE),
+				2002 * dollar(CurrencyId::Token(TokenSymbol::KSM)),
+			),
+			(
+				ParaId::from(2001).into_account_truncating(),
+				2 * dollar(CurrencyId::Token(TokenSymbol::KSM)),
+			),
 		],
 	}
 	.assimilate_storage(&mut t)
@@ -94,7 +116,9 @@ pub fn rococo_ext() -> sp_io::TestExternalities {
 	.unwrap();
 
 	<pallet_xcm::GenesisConfig as GenesisBuild<Runtime>>::assimilate_storage(
-		&pallet_xcm::GenesisConfig { safe_xcm_version: Some(2) },
+		&pallet_xcm::GenesisConfig {
+			safe_xcm_version: Some(2),
+		},
 		&mut t,
 	)
 	.unwrap();
@@ -122,7 +146,10 @@ pub struct ExtBuilder {
 
 impl Default for ExtBuilder {
 	fn default() -> Self {
-		Self { balances: vec![], parachain_id: 2001 }
+		Self {
+			balances: vec![],
+			parachain_id: 2001,
+		}
 	}
 }
 
@@ -139,7 +166,9 @@ impl ExtBuilder {
 	}
 
 	pub fn build(self) -> sp_io::TestExternalities {
-		let mut t = frame_system::GenesisConfig::default().build_storage::<Runtime>().unwrap();
+		let mut t = frame_system::GenesisConfig::default()
+			.build_storage::<Runtime>()
+			.unwrap();
 
 		let native_currency_id = NativeCurrencyId::get();
 		let existential_deposit = ExistentialDeposit::get();
@@ -151,7 +180,11 @@ impl ExtBuilder {
 				.into_iter()
 				.filter(|(_, currency_id, _)| *currency_id == native_currency_id)
 				.map(|(account_id, _, initial_balance)| (account_id, initial_balance))
-				.chain(get_all_module_accounts().iter().map(|x| (x.clone(), existential_deposit)))
+				.chain(
+					get_all_module_accounts()
+						.iter()
+						.map(|x| (x.clone(), existential_deposit)),
+				)
 				.collect::<Vec<_>>(),
 		}
 		.assimilate_storage(&mut t)
@@ -175,13 +208,17 @@ impl ExtBuilder {
 		.unwrap();
 
 		<parachain_info::GenesisConfig as GenesisBuild<Runtime>>::assimilate_storage(
-			&parachain_info::GenesisConfig { parachain_id: self.parachain_id.into() },
+			&parachain_info::GenesisConfig {
+				parachain_id: self.parachain_id.into(),
+			},
 			&mut t,
 		)
 		.unwrap();
 
 		<pallet_xcm::GenesisConfig as GenesisBuild<Runtime>>::assimilate_storage(
-			&pallet_xcm::GenesisConfig { safe_xcm_version: Some(2) },
+			&pallet_xcm::GenesisConfig {
+				safe_xcm_version: Some(2),
+			},
 			&mut t,
 		)
 		.unwrap();

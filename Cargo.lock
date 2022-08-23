@@ -9211,6 +9211,7 @@ version = "0.0.1"
 dependencies = [
  "arctic-runtime",
  "cumulus-primitives-core",
+ "env_logger",
  "frame-support",
  "frame-system",
  "kusama-runtime",

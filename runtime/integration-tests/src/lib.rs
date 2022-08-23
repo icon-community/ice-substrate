@@ -1,4 +1,6 @@
-use arctic_runtime::{Balance, CurrencyId, TokenSymbol, TokenInfo, AccountId, TreasuryPalletId};
+#![cfg(test)]
+
+use arctic_runtime::{AccountId, Balance, CurrencyId, TokenInfo, TreasuryPalletId};
 use sp_runtime::traits::AccountIdConversion;
 
 mod rococo_cross_chain_xfer;
@@ -14,4 +16,3 @@ pub fn dollar(currency_id: CurrencyId) -> Balance {
 pub fn get_all_module_accounts() -> Vec<AccountId> {
 	vec![TreasuryPalletId::get().into_account_truncating()]
 }
-

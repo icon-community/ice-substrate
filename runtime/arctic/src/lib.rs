@@ -35,7 +35,7 @@ use frame_support::{
 };
 use frame_system::{
 	limits::{BlockLength, BlockWeights},
-	Config, EnsureRoot,
+	EnsureRoot,
 };
 
 use sp_api::impl_runtime_apis;
@@ -74,7 +74,7 @@ use xcm_config::{XcmConfig, XcmOriginToTransactDispatchOrigin};
 
 // XCM Imports
 use orml_traits::location::AbsoluteReserveProvider;
-use orml_traits::{asset_registry, parameter_type_with_key};
+use orml_traits::parameter_type_with_key;
 use xcm::latest::prelude::AssetId::Concrete;
 use xcm::latest::prelude::BodyId;
 use xcm::latest::prelude::GeneralKey;
@@ -83,7 +83,6 @@ use xcm::latest::prelude::MultiAsset;
 use xcm::latest::prelude::MultiLocation;
 use xcm::latest::prelude::NetworkId;
 use xcm::latest::prelude::Parachain;
-use xcm::latest::prelude::Parent;
 use xcm::latest::prelude::{X1, X2};
 use xcm_builder::{FixedWeightBounds, LocationInverter};
 use xcm_executor::XcmExecutor;
@@ -1103,8 +1102,9 @@ impl pallet_airdrop::Config for Runtime {
 	const VESTING_TERMS: pallet_airdrop::VestingTerms = AIRDROP_VESTING_TERMS;
 }
 
-/// xtokens impl
+// xtokens impl
 parameter_type_with_key! {
+	/*
 	pub ParachainMinFee: |location: MultiLocation| -> Option<u128> {
 		#[allow(clippy::match_ref_pats)] // false positive
 		match (location.parents, location.first_interior()) {
@@ -1112,6 +1112,11 @@ parameter_type_with_key! {
 			(1, Some(Parachain(2001))) => Some(40),
 			_ => None,
 		}
+	};
+	*/
+
+	pub ParachainMinFee: |_location: MultiLocation| -> Option<u128> {
+		Some(u128::MAX)
 	};
 }
 
@@ -1236,9 +1241,7 @@ impl Convert<AccountId, MultiLocation> for AccountIdToMultiLocation {
 }
 
 parameter_types! {
-	// TODO abhi: use PARA_ID instead of hard-coding
 	pub SelfLocation: MultiLocation = MultiLocation::here(); // MultiLocation::new(1, X1(Parachain(2001)));
-	// TODO abhi: use PARA_ID instead of hard-coding
 	pub Ancestry: MultiLocation = Parachain(ParachainInfo::parachain_id().into()).into(); // Parachain(2001).into();
 	pub const MaxAssetsForTransfer: usize = 2;
 }
@@ -1265,7 +1268,7 @@ pub struct AssetAuthority;
 impl EnsureOriginWithArg<Origin, Option<u32>> for AssetAuthority {
 	type Success = ();
 
-	fn try_origin(origin: Origin, asset_id: &Option<u32>) -> Result<Self::Success, Origin> {
+	fn try_origin(origin: Origin, _asset_id: &Option<u32>) -> Result<Self::Success, Origin> {
 		EnsureRoot::try_origin(origin)
 	}
 
