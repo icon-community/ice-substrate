@@ -1151,13 +1151,9 @@ impl Convert<CurrencyId, Option<MultiLocation>> for RelativeCurrencyIdConvert {
 		use TokenSymbol::*;
 		match id {
 			Token(KSM) => Some(MultiLocation::parent()),
-			Token(ICY) => Some(native_currency_location(
+			Token(ICZ) => Some(native_currency_location(
 				ParachainInfo::parachain_id().into(),
 				id,
-			)),
-			Token(KAR) => Some(MultiLocation::new(
-				1,
-				X2(Parachain(2000), GeneralKey([0, 128].to_vec())),
 			)),
 			ForeignAsset(foreign_asset_id) => {
 				let foreign_asset_id = foreign_asset_id as u32;
@@ -1167,7 +1163,6 @@ impl Convert<CurrencyId, Option<MultiLocation>> for RelativeCurrencyIdConvert {
 					None
 				}
 			}
-			_ => None,
 		}
 	}
 }
@@ -1190,11 +1185,10 @@ impl Convert<MultiLocation, Option<CurrencyId>> for RelativeCurrencyIdConvert {
 				parents: 1,
 				interior: X2(Parachain(para_id), GeneralKey(key)),
 			} => match (para_id, &key[..]) {
-				(2000, &[0, 128]) => Some(Token(KAR)),
 				(id, key) if id == u32::from(ParachainInfo::parachain_id()) => {
 					let currency_id = CurrencyId::decode(&mut &*key).ok()?;
 					match currency_id {
-						Token(ICY) => Some(currency_id),
+						Token(ICZ) => Some(currency_id),
 						_ => None,
 					}
 				}
@@ -1207,7 +1201,7 @@ impl Convert<MultiLocation, Option<CurrencyId>> for RelativeCurrencyIdConvert {
 				let key = &key[..];
 				let currency_id = CurrencyId::decode(&mut &*key).ok()?;
 				match currency_id {
-					Token(ICY) => Some(currency_id),
+					Token(ICZ) => Some(currency_id),
 					_ => None,
 				}
 			}
@@ -1241,8 +1235,8 @@ impl Convert<AccountId, MultiLocation> for AccountIdToMultiLocation {
 }
 
 parameter_types! {
-	pub SelfLocation: MultiLocation = MultiLocation::here(); // MultiLocation::new(1, X1(Parachain(2001)));
-	pub Ancestry: MultiLocation = Parachain(ParachainInfo::parachain_id().into()).into(); // Parachain(2001).into();
+	pub SelfLocation: MultiLocation = MultiLocation::new(1, X1(Parachain(ParachainInfo::parachain_id().into())));
+	pub Ancestry: MultiLocation = Parachain(ParachainInfo::parachain_id().into()).into();
 	pub const MaxAssetsForTransfer: usize = 2;
 }
 
@@ -1331,8 +1325,18 @@ impl orml_unknown_tokens::Config for Runtime {
 }
 
 parameter_types! {
-	pub const NativeCurrencyId: CurrencyId = CurrencyId::Token(TokenSymbol::ICY);
+	pub const NativeCurrencyId: CurrencyId = CurrencyId::Token(TokenSymbol::ICZ);
 	pub const RelayCurrencyId: CurrencyId = CurrencyId::Token(TokenSymbol::KSM);
+}
+
+pub type AdaptedBasicCurrency =
+	orml_currencies::BasicCurrencyAdapter<Runtime, Balances, Amount, BlockNumber>;
+
+impl orml_currencies::Config for Runtime {
+	type MultiCurrency = Tokens;
+	type NativeCurrency = AdaptedBasicCurrency;
+	type GetNativeCurrencyId = NativeCurrencyId;
+	type WeightInfo = ();
 }
 
 // Create the runtime by composing the FRAME pallets that were previously configured.
@@ -1408,6 +1412,7 @@ construct_runtime!(
 		// Asset registry
 		AssetRegistry: orml_asset_registry::{Pallet, Call, Storage, Event<T>} = 90,
 		UnknownTokens: orml_unknown_tokens::{Pallet, Storage, Event} = 91,
+		Currencies: orml_currencies::{Pallet, Call, Storage} = 92,
 	}
 );
 
@@ -1995,10 +2000,8 @@ create_currency_id! {
 	#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 	#[repr(u8)]
 	pub enum TokenSymbol {
-		ICY("Arctic ICY", 18) = 0,
-		DOT("Polkadot", 10) = 1,
-		KSM("Kusama", 12) = 2,
-		KAR("Karura", 12) = 128,
+		ICZ("Arctic ICZ", 18) = 0,
+		KSM("Kusama", 12) = 130,
 	}
 }
 

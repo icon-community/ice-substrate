@@ -27,7 +27,7 @@ const SAFE_XCM_VERSION: u32 = xcm::prelude::XCM_VERSION;
 fn arctic_properties() -> Properties {
 	let mut properties = Properties::new();
 
-	properties.insert("tokenSymbol".into(), "ICY".into());
+	properties.insert("tokenSymbol".into(), "ICZ".into());
 	properties.insert("tokenDecimals".into(), 18.into());
 	properties.insert("ss58Format".into(), SS58Prefix::get().into());
 

@@ -1,6 +1,6 @@
 use super::{
-	AccountId, Assets, Balance, Balances, Call, CurrencyId, Event, Origin, ParachainInfo,
-	ParachainSystem, PolkadotXcm, RelativeCurrencyIdConvert, Runtime, Tokens, UnknownTokens,
+	AccountId, Assets, Balance, Balances, Call, Currencies, CurrencyId, Event, Origin,
+	ParachainInfo, ParachainSystem, PolkadotXcm, RelativeCurrencyIdConvert, Runtime, UnknownTokens,
 	XcmpQueue,
 };
 use frame_support::{
@@ -65,7 +65,7 @@ pub type CurrencyTransactor = CurrencyAdapter<
 >;
 
 pub type LocalAssetTransactor = MultiCurrencyAdapter<
-	Tokens,
+	Currencies,
 	UnknownTokens,
 	IsNativeConcrete<CurrencyId, RelativeCurrencyIdConvert>,
 	AccountId,
