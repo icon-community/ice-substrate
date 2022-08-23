@@ -1,0 +1,48 @@
+[package]
+name = "runtime-integration-tests"
+version = "0.0.1"
+authors = ["Snow Developers"]
+edition = "2021"
+
+[dependencies]
+arctic-runtime = { path = "../arctic" }
+
+# cumulus deps
+cumulus-primitives-core = { git = "https://github.com/paritytech/cumulus", branch = "polkadot-v0.9.24", default-features = false }
+parachain-info = { git = "https://github.com/paritytech/cumulus", branch = "polkadot-v0.9.24", default-features = false }
+
+# frame deps
+frame-support = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.24" }
+frame-system = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.24" }
+
+# orml
+orml-asset-registry = { default-features = false, git = "https://github.com/open-web3-stack/open-runtime-module-library", branch = "polkadot-v0.9.24" }
+orml-tokens = { default-features = false, git = "https://github.com/open-web3-stack/open-runtime-module-library", branch = "polkadot-v0.9.24" }
+orml-traits = { default-features = false, git = "https://github.com/open-web3-stack/open-runtime-module-library", branch = "polkadot-v0.9.24" }
+
+
+# substrate
+pallet-balances = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.24" }
+pallet-membership = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.24", default-features = false }
+pallet-xcm = { git = "https://github.com/paritytech/polkadot", default-features = false, branch = "release-v0.9.24" }
+sp-io = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.24" }
+sp-runtime = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.24" }
+
+# polkadot deps
+xcm = { git = "https://github.com/paritytech/polkadot", default-features = false, branch = "release-v0.9.24" }
+polkadot-parachain = { git = "https://github.com/paritytech/polkadot", default-features = false, branch = "release-v0.9.24" }
+polkadot-runtime-parachains = { git = "https://github.com/paritytech/polkadot", branch = "release-v0.9.24" }
+polkadot-primitives = { git = "https://github.com/paritytech/polkadot", branch = "release-v0.9.24" }
+
+rococo-runtime = { git = "https://github.com/paritytech/polkadot", branch = "release-v0.9.24" }
+rococo-runtime-constants = { git = "https://github.com/paritytech/polkadot", branch = "release-v0.9.24" }
+xcm-emulator = { git = "https://github.com/shaunxw/xcm-simulator", rev = "651af78d6d7521dc76e1f6bb257af485f8a454c7" } # this rev is for polkadot v0.9.24
+
+[dev-dependencies]
+env_logger = "0.9.0"
+kusama-runtime = { git = "https://github.com/paritytech/polkadot", branch = "release-v0.9.24" }
+kusama-runtime-constants = { git = "https://github.com/paritytech/polkadot", branch = "release-v0.9.24" }
+
+rococo-runtime = { git = "https://github.com/paritytech/polkadot", branch = "release-v0.9.24" }
+rococo-runtime-constants = { git = "https://github.com/paritytech/polkadot", branch = "release-v0.9.24" }
+xcm-emulator = { git = "https://github.com/shaunxw/xcm-simulator", rev = "651af78d6d7521dc76e1f6bb257af485f8a454c7" } # this rev is for polkadot v0.9.24

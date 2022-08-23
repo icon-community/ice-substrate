@@ -5,13 +5,16 @@
     "nodes": [
       {
         "name": "alice",
-        "wsPort": 9988,
-        "port": 30488
+        "wsPort": 9947,
+        "port": 30444
       },
       {
         "name": "bob",
         "wsPort": 9955,
-        "port": 30555
+        "port": 30555,
+        "flags": [
+          "--log=xcm=trace"
+        ]
       },
       {
         "name": "charlie",
@@ -23,13 +26,48 @@
         "wsPort": 9977,
         "port": 30777
       }
-    ]
+    ],
+    "genesis": {
+      "runtime": {
+        "runtime_genesis_config": {
+          "configuration": {
+            "config": {
+              "validation_upgrade_frequency": 1,
+              "validation_upgrade_delay": 10
+            }
+          }
+        }
+      }
+    }
   },
   "parachains": [
     {
+      "bin": "../../Acala/target/release/acala",
+      "chain": "karura-dev",
+      "balance": "1000000000000000000000",
+      "nodes": [
+        {
+          "wsPort": 9988,
+          "port": 31300,
+          "name": "alice",
+          "flags": [
+            "--unsafe-ws-external",
+            "--unsafe-rpc-external",
+            "--rpc-external",
+            "--ws-external",
+            "--rpc-cors=all",
+            "--rpc-methods=Unsafe",
+            "--log=xcm=trace",
+            "--",
+            "--execution=wasm"
+          ]
+        }
+      ]
+    },
+    {
       "bin": "../target/release/ice-node",
       "chain": "arctic-dev",
-      "balance": 100000000000000000,
+      "balance": "1000000000000000000000",
       "nodes": [
         {
           "wsPort": 9944,
@@ -41,16 +79,15 @@
             "--unsafe-rpc-external",
             "--rpc-cors=all",
             "--rpc-methods=Unsafe",
-            "--log=cumulus-collator=trace",
+            "--log=xcm=trace,xcm-executor=trace",
             "--",
             "--execution=wasm"
           ]
         }
-				
       ]
     }
   ],
-  "hrmpChannels": [],
+  "simpleParachains": [],
   "types": {},
   "finalization": false
 }

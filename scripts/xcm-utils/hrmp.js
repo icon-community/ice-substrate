@@ -214,15 +214,20 @@ async function main() {
   
   //console.log( await api.query.hrmp.hrmpChannels({"sender":3015, "recepient": 2000}) )
   // Fund parachains soveriegn account on relay chain
-  await fund(api, get_parachain_soveriegn_account(2000), new BN(9*1e15))
+  await fund(api, get_parachain_soveriegn_account(2000), new BN(9*1e15)) // *
   await fund(api, get_parachain_soveriegn_account(3015), new BN(9*1e15))
+  await fund(api, get_parachain_soveriegn_account(2001), new BN(9*1e15)) // *
   
   await open(3015, 2000, "ws://127.0.0.1:9944")
+  await open(2001, 2000, "ws://127.0.0.1:9944") // *
   // wait for hrmpInitOpenChannel notification
   await accept(3015, 2000,  "ws://127.0.0.1:9988")
+  await accept(2001, 2000,  "ws://127.0.0.1:9988") // *
   
-  //await open(2000, 3015, "ws://127.0.0.1:9988")
-  //await accept(2000, 3015, "ws://127.0.0.1:9944")
+  await open(2001, 3015, "ws://127.0.0.1:9988")
+  await open(2000, 2001, "ws://127.0.0.1:9988") // *
+  await accept(2000, 3015, "ws://127.0.0.1:9944")
+  await accept(2000, 2001, "ws://127.0.0.1:9944") // *
   
   process.exit(0);
 }

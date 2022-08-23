@@ -135,7 +135,7 @@ impl ExtBuilder {
 		self
 	}
 
-	pub fn vesting_genesis_config(mut self, config: Vec<(u64, u64, u64, u64)>) -> Self {
+	pub fn _vesting_genesis_config(mut self, config: Vec<(u64, u64, u64, u64)>) -> Self {
 		self.vesting_genesis_config = Some(config);
 		self
 	}

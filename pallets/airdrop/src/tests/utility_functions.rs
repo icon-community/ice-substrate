@@ -106,8 +106,6 @@ fn get_vesting_amounts_split() {
 
 #[test]
 fn get_vesting_amounts_split_no_vesting() {
-	use sp_runtime::ArithmeticError;
-
 	minimal_test_ext().execute_with(|| {
 		let get_split_amounts: _ = utils::get_split_amounts::<Test>;
 		let defi_instant = 100;

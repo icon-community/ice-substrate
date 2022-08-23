@@ -64,17 +64,17 @@
         }
       ]
     },
-  {
-   "bin": "../target/release/ice-node",
-   "chain": "arctic-dev",
-   "id": "3015",
-   "balance": "1000000000000000000000",
-   "nodes": [
-      {
-        "wsPort": 9944,
-        "port": 31200,
-        "name": "alice",
-        "flags": [
+    {
+      "bin": "../target/release/ice-node",
+      "chain": "arctic-dev",
+      "balance": "1000000000000000000000",
+      "nodes": [
+        {
+          "wsPort": 9944,
+          "rpcPort": 9933,
+          "port": 31200,
+          "name": "alice",
+          "flags": [
             "--unsafe-ws-external",
             "--unsafe-rpc-external",
             "--rpc-cors=all",
