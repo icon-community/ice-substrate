@@ -80,7 +80,7 @@ fn transfer_to_sibling() {
 
 	Arctic::execute_with(|| {
 		assert_ok!(Tokens::deposit(
-			CurrencyId::Token(TokenSymbol::KAR),
+			CurrencyId::Token(TokenSymbol::KSM),
 			&AccountId::from(ALICE),
 			100_000_000_000_000
 		));
@@ -88,7 +88,7 @@ fn transfer_to_sibling() {
 
 	Sibling::execute_with(|| {
 		assert_ok!(Tokens::deposit(
-			CurrencyId::Token(TokenSymbol::KAR),
+			CurrencyId::Token(TokenSymbol::KSM),
 			&arctic_reserve_account(),
 			100_000_000_000_000
 		));
@@ -97,7 +97,7 @@ fn transfer_to_sibling() {
 	Arctic::execute_with(|| {
 		assert_ok!(XTokens::transfer(
 			Origin::signed(ALICE.into()),
-			CurrencyId::Token(TokenSymbol::KAR),
+			CurrencyId::Token(TokenSymbol::KSM),
 			10_000_000_000_000,
 			Box::new(
 				MultiLocation::new(
@@ -116,7 +116,7 @@ fn transfer_to_sibling() {
 		));
 
 		assert_eq!(
-			Tokens::free_balance(CurrencyId::Token(TokenSymbol::KAR), &AccountId::from(ALICE)),
+			Tokens::free_balance(CurrencyId::Token(TokenSymbol::KSM), &AccountId::from(ALICE)),
 			90_000_000_000_000
 		);
 	});
