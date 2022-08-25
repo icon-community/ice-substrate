@@ -1,30 +1,37 @@
 use super::{
 	AccountId, Assets, Balance, Balances, Call, Currencies, CurrencyId, Event, Origin,
-	ParachainInfo, ParachainSystem, PolkadotXcm, RelativeCurrencyIdConvert, Runtime, UnknownTokens,
-	XcmpQueue,
+	ParachainInfo, ParachainSystem, PolkadotXcm, RelativeCurrencyIdConvert, Runtime, Tokens,
+	Treasury, UnknownTokens, XcmpQueue,
 };
+use crate::constants::fee::{icz_per_second, ksm_per_second};
+use crate::TokenSymbol::*;
+use codec::Encode;
 use frame_support::{
 	match_types, parameter_types,
 	traits::{Everything, Nothing, PalletInfoAccess},
 	weights::Weight,
 };
+use orml_traits::{BasicCurrency, MultiCurrency};
 use pallet_xcm::XcmPassthrough;
 use polkadot_parachain::primitives::Sibling;
 use xcm::latest::prelude::*;
 use xcm_builder::{
 	AccountId32Aliases, AllowKnownQueryResponses, AllowSubscriptionsFrom,
 	AllowTopLevelPaidExecutionFrom, AllowUnpaidExecutionFrom, AsPrefixedGeneralIndex,
-	ConvertedConcreteAssetId, CurrencyAdapter, EnsureXcmOrigin, FixedWeightBounds,
-	FungiblesAdapter, IsConcrete, LocationInverter, ParentAsSuperuser, ParentIsPreset,
-	RelayChainAsNative, SiblingParachainAsNative, SiblingParachainConvertsVia,
-	SignedAccountId32AsNative, SignedToAccountId32, SovereignSignedViaLocation, TakeWeightCredit,
+	ConvertedConcreteAssetId, CurrencyAdapter, EnsureXcmOrigin, FixedRateOfFungible,
+	FixedWeightBounds, FungiblesAdapter, IsConcrete, LocationInverter, ParentAsSuperuser,
+	ParentIsPreset, RelayChainAsNative, SiblingParachainAsNative, SiblingParachainConvertsVia,
+	SignedAccountId32AsNative, SignedToAccountId32, SovereignSignedViaLocation, TakeRevenue,
+	TakeWeightCredit,
 };
 use xcm_executor::{
-	traits::{FilterAssetLocation, JustTry, WeightTrader},
+	traits::{FilterAssetLocation, JustTry},
 	XcmExecutor,
 };
 
+use crate::{AdaptedBasicCurrency, NativeCurrencyId};
 use orml_xcm_support::{IsNativeConcrete, MultiCurrencyAdapter};
+use sp_runtime::traits::Convert;
 
 parameter_types! {
 	pub const RelayLocation: MultiLocation = MultiLocation::parent();
@@ -126,8 +133,16 @@ pub type XcmOriginToTransactDispatchOrigin = (
 );
 
 parameter_types! {
-	pub const UnitWeightCost: Weight = 0;
+	pub UnitWeightCost: Weight = 200_000_000;
 	pub const MaxInstructions: u32 = 100;
+	pub KsmPerSecond: (AssetId, u128) = (MultiLocation::parent().into(), ksm_per_second());
+	pub IczPerSecond: (AssetId, u128) = (
+		MultiLocation::new(
+			0,
+			X1(GeneralKey(ICZ.encode())),
+		).into(),
+		icz_per_second()
+	);
 }
 
 match_types! {
@@ -163,46 +178,34 @@ impl FilterAssetLocation for ReserveAssetFilter {
 	}
 }
 
-pub struct AllTokensAreCreatedEqualToWeight(MultiLocation);
-impl WeightTrader for AllTokensAreCreatedEqualToWeight {
-	fn new() -> Self {
-		Self(MultiLocation::parent())
-	}
-
-	fn buy_weight(
-		&mut self,
-		_weight: Weight,
-		payment: xcm_executor::Assets,
-	) -> Result<xcm_executor::Assets, XcmError> {
-		let asset_id = payment
-			.fungible
-			.iter()
-			.next()
-			.expect("Payment must be something; qed")
-			.0;
-		let required = MultiAsset {
-			id: asset_id.clone(),
-			fun: Fungible(0),
-		};
-
+pub struct ToTreasury;
+impl TakeRevenue for ToTreasury {
+	fn take_revenue(revenue: MultiAsset) {
 		if let MultiAsset {
-			fun: _,
-			id: Concrete(ref id),
-		} = &required
+			id: Concrete(location),
+			fun: Fungible(amount),
+		} = revenue
 		{
-			self.0 = id.clone();
+			if amount == 0 {
+				return;
+			}
+
+			if let Some(currency_id) = RelativeCurrencyIdConvert::convert(location) {
+				let treasury = &Treasury::account_id();
+				if currency_id == NativeCurrencyId::get() {
+					let _ = AdaptedBasicCurrency::deposit(treasury, amount);
+				} else {
+					let _ = Tokens::deposit(currency_id, treasury, amount);
+				}
+			}
 		}
-
-		let unused = payment
-			.checked_sub(required)
-			.map_err(|_| XcmError::TooExpensive)?;
-		Ok(unused)
-	}
-
-	fn refund_weight(&mut self, _weight: Weight) -> Option<MultiAsset> {
-		None
 	}
 }
+
+pub type Trader = (
+	FixedRateOfFungible<KsmPerSecond, ToTreasury>,
+	FixedRateOfFungible<IczPerSecond, ToTreasury>,
+);
 
 pub struct XcmConfig;
 impl xcm_executor::Config for XcmConfig {
@@ -216,7 +219,7 @@ impl xcm_executor::Config for XcmConfig {
 	type LocationInverter = LocationInverter<Ancestry>;
 	type Barrier = XcmBarrier;
 	type Weigher = FixedWeightBounds<UnitWeightCost, Call, MaxInstructions>;
-	type Trader = AllTokensAreCreatedEqualToWeight;
+	type Trader = Trader;
 	type ResponseHandler = PolkadotXcm;
 	type AssetTrap = PolkadotXcm;
 	type AssetClaims = PolkadotXcm;

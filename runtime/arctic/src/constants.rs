@@ -43,6 +43,7 @@ pub mod time {
 /// Fee-related.
 pub mod fee {
 	use crate::{Balance, ExtrinsicBaseWeight};
+	use frame_support::weights::constants::WEIGHT_PER_SECOND;
 	use frame_support::weights::{
 		WeightToFeeCoefficient, WeightToFeeCoefficients, WeightToFeePolynomial,
 	};
@@ -67,8 +68,8 @@ pub mod fee {
 		type Balance = Balance;
 		fn polynomial() -> WeightToFeeCoefficients<Self::Balance> {
 			// in Arctic, extrinsic base weight (smallest non-zero weight) is mapped to 1/10 CENT:
-			let p = super::currency::CENTS;
-			let q = 10 * Balance::from(ExtrinsicBaseWeight::get());
+			let p = base_tx_in_icz();
+			let q = Balance::from(ExtrinsicBaseWeight::get());
 			smallvec![WeightToFeeCoefficient {
 				degree: 1,
 				negative: false,
@@ -76,5 +77,19 @@ pub mod fee {
 				coeff_integer: p / q,
 			}]
 		}
+	}
+
+	pub fn base_tx_in_icz() -> Balance {
+		super::currency::CENTS / 10
+	}
+
+	pub fn icz_per_second() -> u128 {
+		let base_weight = Balance::from(ExtrinsicBaseWeight::get());
+		let base_tx_per_second = (WEIGHT_PER_SECOND as u128) / base_weight;
+		base_tx_per_second * base_tx_in_icz()
+	}
+
+	pub fn ksm_per_second() -> u128 {
+		icz_per_second() / 1_000_000 / 2_500
 	}
 }
