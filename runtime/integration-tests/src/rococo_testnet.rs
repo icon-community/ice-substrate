@@ -201,7 +201,7 @@ impl ExtBuilder {
 		.unwrap();
 
 		pallet_membership::GenesisConfig::<Runtime, pallet_membership::Instance1> {
-			members: vec![],
+			members: vec![].try_into().unwrap(),
 			phantom: Default::default(),
 		}
 		.assimilate_storage(&mut t)
