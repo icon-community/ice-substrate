@@ -22,13 +22,14 @@ pub fn wasm_binary_unwrap() -> &'static [u8] {
 pub mod xcm_config;
 use bstringify::bstringify;
 use codec::{Decode, Encode, MaxEncodedLen};
+use orml_traits::parameter_type_with_key;
 use pallet_evm::FeeCalculator;
 use scale_info::TypeInfo;
 
 use frame_support::{
 	pallet_prelude::ConstU32,
 	traits::{
-		ConstU64, EnsureOneOf, EnsureOrigin, EnsureOriginWithArg, EqualPrivilegeOnly, Everything,
+		EnsureOneOf, EnsureOrigin, EnsureOriginWithArg, EqualPrivilegeOnly, Everything,
 		InstanceFilter, LockIdentifier,
 	},
 	RuntimeDebug,
@@ -73,8 +74,6 @@ pub type NegativeImbalance = <Balances as Currency<AccountId>>::NegativeImbalanc
 use xcm_config::{XcmConfig, XcmOriginToTransactDispatchOrigin};
 
 // XCM Imports
-use orml_traits::location::AbsoluteReserveProvider;
-use orml_traits::parameter_type_with_key;
 use xcm::latest::prelude::AssetId::Concrete;
 use xcm::latest::prelude::BodyId;
 use xcm::latest::prelude::GeneralKey;
@@ -84,7 +83,6 @@ use xcm::latest::prelude::MultiLocation;
 use xcm::latest::prelude::NetworkId;
 use xcm::latest::prelude::Parachain;
 use xcm::latest::prelude::{X1, X2};
-use xcm_builder::{FixedWeightBounds, LocationInverter};
 use xcm_executor::XcmExecutor;
 
 // A few exports that help ease life for downstream crates.
@@ -1102,24 +1100,6 @@ impl pallet_airdrop::Config for Runtime {
 	const VESTING_TERMS: pallet_airdrop::VestingTerms = AIRDROP_VESTING_TERMS;
 }
 
-// xtokens impl
-parameter_type_with_key! {
-	/*
-	pub ParachainMinFee: |location: MultiLocation| -> Option<u128> {
-		#[allow(clippy::match_ref_pats)] // false positive
-		match (location.parents, location.first_interior()) {
-			// TODO abhi: use PARA_ID here instead of 2001, also change the fees returned
-			(1, Some(Parachain(2001))) => Some(40),
-			_ => None,
-		}
-	};
-	*/
-
-	pub ParachainMinFee: |_location: MultiLocation| -> Option<u128> {
-		Some(u128::MAX)
-	};
-}
-
 #[derive(
 	Encode,
 	Decode,
@@ -1234,29 +1214,6 @@ impl Convert<AccountId, MultiLocation> for AccountIdToMultiLocation {
 	}
 }
 
-parameter_types! {
-	pub SelfLocation: MultiLocation = MultiLocation::new(1, X1(Parachain(ParachainInfo::parachain_id().into())));
-	pub Ancestry: MultiLocation = Parachain(ParachainInfo::parachain_id().into()).into();
-	pub const MaxAssetsForTransfer: usize = 2;
-}
-
-impl orml_xtokens::Config for Runtime {
-	type Event = Event;
-	type Balance = Balance;
-	type CurrencyId = CurrencyId;
-	type CurrencyIdConvert = RelativeCurrencyIdConvert;
-	type AccountIdToMultiLocation = AccountIdToMultiLocation;
-	type SelfLocation = SelfLocation;
-	type MultiLocationsFilter = frame_support::traits::Everything; // ParentOrParachains;
-	type MinXcmFee = ParachainMinFee;
-	type XcmExecutor = XcmExecutor<XcmConfig>;
-	type Weigher = FixedWeightBounds<ConstU64<2000_000_000>, Call, ConstU32<100>>;
-	type BaseXcmWeight = ConstU64<100_000_000>;
-	type LocationInverter = LocationInverter<Ancestry>;
-	type MaxAssetsForTransfer = MaxAssetsForTransfer;
-	type ReserveProvider = AbsoluteReserveProvider; // RelativeReserveProvider;
-}
-
 /// Asset-registry impl
 pub struct AssetAuthority;
 impl EnsureOriginWithArg<Origin, Option<u32>> for AssetAuthority {
@@ -1288,18 +1245,9 @@ impl orml_asset_registry::Config for Runtime {
 }
 
 parameter_type_with_key! {
-	pub ExistentialDeposits: |currency_id: CurrencyId| -> Balance {
-		// every currency has a zero existential deposit
-		match currency_id {
-			_ => 0,
-		}
+	pub ExistentialDeposits: |_currency_id: CurrencyId| -> Balance {
+		0
 	};
-}
-
-parameter_types! {
-	pub ORMLMaxLocks: u32 = 2;
-	// pub NativeTreasuryAccount: AccountId = TreasuryPalletId::get().into_account();
-
 }
 
 type Amount = i128;

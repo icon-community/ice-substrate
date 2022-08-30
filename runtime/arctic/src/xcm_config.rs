@@ -11,6 +11,8 @@ use frame_support::{
 	traits::{Everything, Nothing, PalletInfoAccess},
 	weights::Weight,
 };
+use orml_traits::location::AbsoluteReserveProvider;
+use orml_traits::parameter_type_with_key;
 use orml_traits::{BasicCurrency, MultiCurrency};
 use pallet_xcm::XcmPassthrough;
 use polkadot_parachain::primitives::Sibling;
@@ -29,7 +31,7 @@ use xcm_executor::{
 	XcmExecutor,
 };
 
-use crate::{AdaptedBasicCurrency, NativeCurrencyId};
+use crate::{AccountIdToMultiLocation, AdaptedBasicCurrency, NativeCurrencyId};
 use orml_xcm_support::{IsNativeConcrete, MultiCurrencyAdapter};
 use sp_runtime::traits::Convert;
 
@@ -140,9 +142,8 @@ parameter_types! {
 		MultiLocation::new(
 			0,
 			X1(GeneralKey(ICZ.encode())),
-		).into(),
-		icz_per_second()
-	);
+		 //TODO: figure out why icz_per_second() instead of 0 results in Err::TooExpensive
+		).into(), 0);
 }
 
 match_types! {
@@ -255,11 +256,39 @@ impl pallet_xcm::Config for Runtime {
 	type Call = Call;
 
 	const VERSION_DISCOVERY_QUEUE_SIZE: u32 = 100;
-	// ^ Override for AdvertisedXcmVersion default
 	type AdvertisedXcmVersion = pallet_xcm::CurrentXcmVersion;
 }
 
 impl cumulus_pallet_xcm::Config for Runtime {
 	type Event = Event;
 	type XcmExecutor = XcmExecutor<XcmConfig>;
+}
+
+parameter_types! {
+	pub SelfLocation: MultiLocation = MultiLocation::new(1, X1(Parachain(ParachainInfo::parachain_id().into())));
+	pub const MaxAssetsForTransfer: usize = 3;
+	pub const BaseXcmWeight: Weight = 100_000_000;
+}
+
+parameter_type_with_key! {
+	pub ParachainMinFee: |_location: MultiLocation| -> Option<u128> {
+		None
+	};
+}
+
+impl orml_xtokens::Config for Runtime {
+	type Event = Event;
+	type Balance = Balance;
+	type CurrencyId = CurrencyId;
+	type CurrencyIdConvert = RelativeCurrencyIdConvert;
+	type AccountIdToMultiLocation = AccountIdToMultiLocation;
+	type SelfLocation = SelfLocation;
+	type MinXcmFee = ParachainMinFee;
+	type XcmExecutor = XcmExecutor<XcmConfig>;
+	type MultiLocationsFilter = Everything;
+	type Weigher = FixedWeightBounds<UnitWeightCost, Call, MaxInstructions>;
+	type BaseXcmWeight = BaseXcmWeight;
+	type LocationInverter = LocationInverter<Ancestry>;
+	type MaxAssetsForTransfer = MaxAssetsForTransfer;
+	type ReserveProvider = AbsoluteReserveProvider;
 }
