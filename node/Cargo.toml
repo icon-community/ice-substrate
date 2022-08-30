@@ -20,7 +20,7 @@ async-trait = "0.1"
 serde = { version = "1.0", features = [ "derive" ] }
 clap = { version = "3.2", features = ["derive"] }
 jsonrpc-pubsub = "18.0.0"
-jsonrpsee = { version = "0.13.0", features = ["server"] }
+jsonrpsee = { version = "0.14.0", features = ["server"] }
 futures = "0.3"
 log = "0.4.8"
 serde_json = "1.0"
@@ -115,7 +115,7 @@ fp-consensus = {  git = "https://github.com/web3labs/frontier", branch = "polkad
 fp-storage = { git = "https://github.com/web3labs/frontier", branch = "polkadot-v0.9.25" }
 
 fc-rpc = {  git = "https://github.com/web3labs/frontier", branch = "polkadot-v0.9.25" }
-fp-rpc = { git = "https://github.com/web3labs/frontier", branch = "polkadot-v0.9.25"}
+# fp-rpc = { git = "https://github.com/web3labs/frontier", branch = "polkadot-v0.9.25"}
 fc-rpc-core = {  git = "https://github.com/web3labs/frontier", branch = "polkadot-v0.9.25" }
 fc-db = {  git = "https://github.com/web3labs/frontier", branch = "polkadot-v0.9.25" }
 fc-mapping-sync = {  git = "https://github.com/web3labs/frontier", branch = "polkadot-v0.9.25" }
