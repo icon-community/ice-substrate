@@ -3723,6 +3723,7 @@ dependencies = [
  "fc-rpc",
  "fc-rpc-core",
  "fp-consensus",
+ "fp-rpc",
  "fp-storage",
  "frame-benchmarking",
  "frame-benchmarking-cli",

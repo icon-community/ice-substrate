@@ -148,7 +148,7 @@ pub mod pallet {
 
 	#[pallet::type_value]
 	pub(super) fn DefaultStorageVersion<T: Config>() -> u32 {
-		1_u32.into()
+		1_u32
 	}
 
 	#[pallet::storage]

@@ -17,7 +17,7 @@ use pallet_grandpa::{
 
 use frame_support::{
 	pallet_prelude::ConstU32,
-	traits::{EnsureOneOf, EqualPrivilegeOnly, InstanceFilter, LockIdentifier},
+	traits::{EitherOfDiverse, EqualPrivilegeOnly, InstanceFilter, LockIdentifier},
 	RuntimeDebug,
 };
 use frame_system::{
@@ -116,13 +116,13 @@ pub type SlowAdjustingFeeUpdate<R> =
 
 pub type TechnicalCollective = pallet_collective::Instance2;
 
-pub type MoreThanHalfCouncil = EnsureOneOf<
+pub type MoreThanHalfCouncil = EitherOfDiverse<
 	EnsureRoot<AccountId>,
 	pallet_collective::EnsureProportionMoreThan<AccountId, CouncilCollective, 1, 2>,
 >;
 
 // Technical Committee Council
-pub type EnsureRootOrAllTechnicalCommittee = EnsureOneOf<
+pub type EnsureRootOrAllTechnicalCommittee = EitherOfDiverse<
 	EnsureRoot<AccountId>,
 	pallet_collective::EnsureProportionAtLeast<AccountId, TechnicalCollective, 1, 1>,
 >;
@@ -957,7 +957,7 @@ impl pallet_democracy::Config for Runtime {
 	type BlacklistOrigin = EnsureRoot<AccountId>;
 	// To cancel a proposal before it has been passed, the technical committee must be unanimous or
 	// Root must agree.
-	type CancelProposalOrigin = EnsureOneOf<
+	type CancelProposalOrigin = EitherOfDiverse<
 		EnsureRoot<AccountId>,
 		pallet_collective::EnsureProportionAtLeast<AccountId, TechnicalCollective, 1, 1>,
 	>;

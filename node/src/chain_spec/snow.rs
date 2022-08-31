@@ -1,3 +1,5 @@
+#![allow(clippy::too_many_arguments)]
+
 use cumulus_primitives_core::ParaId;
 use hex_literal::hex;
 use sc_chain_spec::Properties;
@@ -59,14 +61,14 @@ pub fn get_dev_chain_spec() -> SnowChainSpec {
 	];
 
 	let endowed_accounts = vec![
-		((
+		(
 			get_account_id_from_seed::<sr25519::Public>("Alice"),
 			ICY * 300_000_000,
-		)),
-		((
+		),
+		(
 			get_account_id_from_seed::<sr25519::Public>("Bob"),
 			ICY * 300_000_000,
-		)),
+		),
 	];
 
 	let council_members = vec![get_account_id_from_seed::<sr25519::Public>("Alice")];

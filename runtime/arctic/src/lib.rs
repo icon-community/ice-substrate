@@ -1,6 +1,7 @@
 //! The Substrate Node Template runtime. This can be compiled with `#[no_std]`, ready for Wasm.
 #![allow(clippy::identity_op)]
 #![allow(clippy::unnecessary_cast)]
+#![allow(clippy::from_over_into)]
 #![cfg_attr(not(feature = "std"), no_std)]
 // `construct_runtime!` does a lot of recursion and requires us to increase the limit to 256.
 #![recursion_limit = "256"]
@@ -28,7 +29,7 @@ use scale_info::TypeInfo;
 use frame_support::{
 	pallet_prelude::ConstU32,
 	traits::{
-		ConstU64, EnsureOneOf, EnsureOrigin, EnsureOriginWithArg, EqualPrivilegeOnly, Everything,
+		ConstU64, EitherOfDiverse, EnsureOrigin, EnsureOriginWithArg, EqualPrivilegeOnly, Everything,
 		InstanceFilter, LockIdentifier,
 	},
 	RuntimeDebug,
@@ -146,13 +147,13 @@ pub type Hash = H256;
 pub type SlowAdjustingFeeUpdate<R> =
 	TargetedFeeAdjustment<R, TargetBlockFullness, AdjustmentVariable, MinimumMultiplier>;
 
-pub type MoreThanHalfCouncil = EnsureOneOf<
+pub type MoreThanHalfCouncil = EitherOfDiverse<
 	EnsureRoot<AccountId>,
 	pallet_collective::EnsureProportionMoreThan<AccountId, CouncilCollective, 1, 2>,
 >;
 
 // Technical Committee Council
-pub type EnsureRootOrAllTechnicalCommittee = EnsureOneOf<
+pub type EnsureRootOrAllTechnicalCommittee = EitherOfDiverse<
 	EnsureRoot<AccountId>,
 	pallet_collective::EnsureProportionAtLeast<AccountId, TechnicalCollective, 1, 1>,
 >;
@@ -1023,7 +1024,7 @@ impl pallet_democracy::Config for Runtime {
 	type BlacklistOrigin = EnsureRoot<AccountId>;
 	// To cancel a proposal before it has been passed, the technical committee must be unanimous or
 	// Root must agree.
-	type CancelProposalOrigin = EnsureOneOf<
+	type CancelProposalOrigin = EitherOfDiverse<
 		EnsureRoot<AccountId>,
 		pallet_collective::EnsureProportionAtLeast<AccountId, TechnicalCollective, 1, 1>,
 	>;
@@ -1252,7 +1253,7 @@ impl orml_xtokens::Config for Runtime {
 	type MultiLocationsFilter = frame_support::traits::Everything; // ParentOrParachains;
 	type MinXcmFee = ParachainMinFee;
 	type XcmExecutor = XcmExecutor<XcmConfig>;
-	type Weigher = FixedWeightBounds<ConstU64<2000_000_000>, Call, ConstU32<100>>;
+	type Weigher = FixedWeightBounds<ConstU64<2_000_000_000>, Call, ConstU32<100>>;
 	type BaseXcmWeight = ConstU64<100_000_000>;
 	type LocationInverter = LocationInverter<Ancestry>;
 	type MaxAssetsForTransfer = MaxAssetsForTransfer;
@@ -1290,11 +1291,9 @@ impl orml_asset_registry::Config for Runtime {
 }
 
 parameter_type_with_key! {
-	pub ExistentialDeposits: |currency_id: CurrencyId| -> Balance {
+	pub ExistentialDeposits: |_currency_id: CurrencyId| -> Balance {
 		// every currency has a zero existential deposit
-		match currency_id {
-			_ => 0,
-		}
+		0
 	};
 }
 

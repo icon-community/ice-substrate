@@ -115,7 +115,7 @@ fp-consensus = {  git = "https://github.com/web3labs/frontier", branch = "polkad
 fp-storage = { git = "https://github.com/web3labs/frontier", branch = "polkadot-v0.9.25" }
 
 fc-rpc = {  git = "https://github.com/web3labs/frontier", branch = "polkadot-v0.9.25" }
-# fp-rpc = { git = "https://github.com/web3labs/frontier", branch = "polkadot-v0.9.25"}
+fp-rpc = { git = "https://github.com/web3labs/frontier", branch = "polkadot-v0.9.25"}
 fc-rpc-core = {  git = "https://github.com/web3labs/frontier", branch = "polkadot-v0.9.25" }
 fc-db = {  git = "https://github.com/web3labs/frontier", branch = "polkadot-v0.9.25" }
 fc-mapping-sync = {  git = "https://github.com/web3labs/frontier", branch = "polkadot-v0.9.25" }

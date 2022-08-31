@@ -118,9 +118,7 @@ impl SubstrateCli for Cli {
 	}
 
 	fn native_runtime_version(chain_spec: &Box<dyn ChainSpec>) -> &'static RuntimeVersion {
-		if chain_spec.is_snow() {
-			&arctic_runtime::VERSION
-		} else if chain_spec.is_arctic() {
+		if chain_spec.is_snow() || chain_spec.is_arctic() {
 			&arctic_runtime::VERSION
 		} else if chain_spec.is_dev() {
 			&frost_runtime::VERSION
@@ -682,8 +680,7 @@ fn set_default_ss58_version(spec: &Box<dyn sc_service::ChainSpec>) {
 	} else {
 		// Ss58AddressFormatRegistry::PolkadotAccount
 		sp_core::crypto::Ss58AddressFormat::custom(42)
-	}
-	.into();
+	};
 
 	sp_core::crypto::set_default_ss58_version(ss58_version);
 }
