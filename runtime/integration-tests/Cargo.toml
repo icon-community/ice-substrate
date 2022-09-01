@@ -36,7 +36,7 @@ polkadot-primitives = { git = "https://github.com/paritytech/polkadot", branch =
 
 rococo-runtime = { git = "https://github.com/paritytech/polkadot", branch = "release-v0.9.25" }
 rococo-runtime-constants = { git = "https://github.com/paritytech/polkadot", branch = "release-v0.9.25" }
-xcm-emulator = { git = "https://github.com/shaunxw/xcm-simulator", rev = "8b640e894208e45176b7827c5d349f06d8c34350" } # this rev is for polkadot v0.9.25
+xcm-emulator = { git = "https://github.com/web3labs/xcm-simulator", rev = "8b640e894208e45176b7827c5d349f06d8c34350" } # this rev is for polkadot v0.9.25
 
 [dev-dependencies]
 env_logger = "0.9.0"
@@ -45,4 +45,4 @@ kusama-runtime-constants = { git = "https://github.com/paritytech/polkadot", bra
 
 rococo-runtime = { git = "https://github.com/paritytech/polkadot", branch = "release-v0.9.25" }
 rococo-runtime-constants = { git = "https://github.com/paritytech/polkadot", branch = "release-v0.9.25" }
-xcm-emulator = { git = "https://github.com/shaunxw/xcm-simulator", rev = "8b640e894208e45176b7827c5d349f06d8c34350" } # this rev is for polkadot v0.9.25
+xcm-emulator = { git = "https://github.com/web3labs/xcm-simulator", rev = "8b640e894208e45176b7827c5d349f06d8c34350" } # this rev is for polkadot v0.9.25
