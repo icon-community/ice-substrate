@@ -9,9 +9,9 @@ use xcm::{latest::prelude::*, VersionedMultiAssets, VersionedMultiLocation};
 use xcm_emulator::{Junctions::Here, NetworkId, TestExt};
 
 use crate::{
-	dollar,
-	rococo_testnet::{Arctic, RococoNet, Sibling, TestNet},
-	ALICE, BOB,
+	xcm::dollar,
+	xcm::rococo_testnet::{Arctic, RococoNet, Sibling, TestNet},
+	xcm::ALICE, xcm::BOB,
 };
 
 #[test]

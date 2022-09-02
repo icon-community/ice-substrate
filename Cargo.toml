@@ -7,7 +7,6 @@ members = [
     "runtime/snow",
     "runtime/arctic",
     "runtime/frost",
-    "runtime/integration-tests",
     "pallets/airdrop",
     "pallets/fees-split",
     "pallets/simple-inflation",

@@ -9,7 +9,7 @@ use polkadot_runtime_parachains::configuration::HostConfiguration;
 use sp_runtime::traits::AccountIdConversion;
 use xcm_emulator::{decl_test_network, decl_test_parachain, decl_test_relay_chain};
 
-use crate::{dollar, get_all_module_accounts, ALICE};
+use crate::xcm::{dollar, get_all_module_accounts, ALICE};
 
 decl_test_relay_chain! {
 	pub struct RococoNet {

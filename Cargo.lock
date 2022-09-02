@@ -3914,12 +3914,28 @@ dependencies = [
 name = "integration-tests"
 version = "0.0.2"
 dependencies = [
+ "arctic-runtime",
+ "cumulus-primitives-core",
+ "env_logger",
  "frame-support",
  "frame-system",
+ "kusama-runtime",
+ "kusama-runtime-constants",
+ "orml-asset-registry",
+ "orml-tokens",
+ "orml-traits",
  "pallet-assets",
  "pallet-balances",
+ "pallet-membership",
  "pallet-vesting",
+ "pallet-xcm",
+ "parachain-info",
  "parity-scale-codec",
+ "polkadot-parachain",
+ "polkadot-primitives",
+ "polkadot-runtime-parachains",
+ "rococo-runtime",
+ "rococo-runtime-constants",
  "scale-info",
  "serde",
  "sp-core",
@@ -3927,6 +3943,8 @@ dependencies = [
  "sp-runtime",
  "sp-std",
  "substrate-wasm-builder",
+ "xcm",
+ "xcm-emulator",
 ]
 
 [[package]]
@@ -9225,35 +9243,6 @@ dependencies = [
  "netlink-proto",
  "nix",
  "thiserror",
-]
-
-[[package]]
-name = "runtime-integration-tests"
-version = "0.0.1"
-dependencies = [
- "arctic-runtime",
- "cumulus-primitives-core",
- "env_logger",
- "frame-support",
- "frame-system",
- "kusama-runtime",
- "kusama-runtime-constants",
- "orml-asset-registry",
- "orml-tokens",
- "orml-traits",
- "pallet-balances",
- "pallet-membership",
- "pallet-xcm",
- "parachain-info",
- "polkadot-parachain",
- "polkadot-primitives",
- "polkadot-runtime-parachains",
- "rococo-runtime",
- "rococo-runtime-constants",
- "sp-io",
- "sp-runtime",
- "xcm",
- "xcm-emulator",
 ]
 
 [[package]]
