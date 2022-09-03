@@ -5,7 +5,7 @@ use frame_support::assert_ok;
 use orml_traits::MultiCurrency;
 // use xcm::{VersionedMultiLocation, v0::{MultiLocation::X1, Junction::{Parachain, self}}, VersionedMultiAssets};
 use xcm::{latest::prelude::*, VersionedMultiAssets, VersionedMultiLocation};
-use xcm_emulator::{Junctions::Here, NetworkId, TestExt};
+use xcm_simulator::{Junctions::Here, NetworkId, TestExt};
 
 use crate::{
 	dollar,
