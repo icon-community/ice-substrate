@@ -9249,7 +9249,7 @@ dependencies = [
  "sp-io",
  "sp-runtime",
  "xcm",
- "xcm-emulator",
+ "xcm-simulator",
 ]
 
 [[package]]
@@ -13289,30 +13289,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "xcm-emulator"
-version = "0.1.0"
-source = "git+https://github.com/shaunxw/xcm-simulator?rev=651af78d6d7521dc76e1f6bb257af485f8a454c7#651af78d6d7521dc76e1f6bb257af485f8a454c7"
-dependencies = [
- "cumulus-pallet-dmp-queue",
- "cumulus-pallet-parachain-system",
- "cumulus-pallet-xcmp-queue",
- "cumulus-primitives-core",
- "cumulus-primitives-parachain-inherent",
- "cumulus-test-relay-sproof-builder",
- "frame-support",
- "frame-system",
- "parachain-info",
- "parity-scale-codec",
- "paste",
- "polkadot-primitives",
- "polkadot-runtime-parachains",
- "sp-io",
- "sp-std",
- "xcm",
- "xcm-executor",
-]
-
-[[package]]
 name = "xcm-executor"
 version = "0.9.24"
 source = "git+https://github.com/paritytech/polkadot?branch=release-v0.9.24#22836e55d41eef24ed5917fd654ee82a683a7cfe"
@@ -13339,6 +13315,23 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
+]
+
+[[package]]
+name = "xcm-simulator"
+version = "0.9.24"
+source = "git+https://github.com/paritytech/polkadot?branch=release-v0.9.24#22836e55d41eef24ed5917fd654ee82a683a7cfe"
+dependencies = [
+ "frame-support",
+ "parity-scale-codec",
+ "paste",
+ "polkadot-core-primitives",
+ "polkadot-parachain",
+ "polkadot-runtime-parachains",
+ "sp-io",
+ "sp-std",
+ "xcm",
+ "xcm-executor",
 ]
 
 [[package]]
