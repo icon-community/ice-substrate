@@ -1,6 +1,6 @@
 use arctic_runtime::{
-	AccountId, Balance, CurrencyId, ExistentialDeposit, NativeCurrencyId, RelayCurrencyId,
-	Runtime, System, TokenSymbol,
+	AccountId, Balance, CurrencyId, ExistentialDeposit, NativeCurrencyId, RelayCurrencyId, Runtime,
+	System, TokenSymbol,
 };
 use cumulus_primitives_core::ParaId;
 use frame_support::traits::GenesisBuild;

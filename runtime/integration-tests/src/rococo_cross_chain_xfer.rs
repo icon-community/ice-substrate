@@ -84,21 +84,42 @@ fn transfer_to_sibling() {
 			&AccountId::from(ALICE),
 			100_000_000_000_000
 		));
+
+		assert_eq!(
+			Tokens::free_balance(CurrencyId::Token(TokenSymbol::KSM), &AccountId::from(ALICE)),
+			110_000_000_000_000
+		);
 	});
 
 	Sibling::execute_with(|| {
+		assert_eq!(
+			Tokens::free_balance(
+				CurrencyId::Token(TokenSymbol::KSM),
+				&arctic_reserve_account()
+			),
+			0
+		);
+
 		assert_ok!(Tokens::deposit(
 			CurrencyId::Token(TokenSymbol::KSM),
 			&arctic_reserve_account(),
 			100_000_000_000_000
 		));
+
+		assert_eq!(
+			Tokens::free_balance(
+				CurrencyId::Token(TokenSymbol::KSM),
+				&arctic_reserve_account()
+			),
+			100_000_000_000_000
+		);
 	});
 
 	Arctic::execute_with(|| {
 		assert_ok!(XTokens::transfer(
 			Origin::signed(ALICE.into()),
 			CurrencyId::Token(TokenSymbol::KSM),
-			10_000_000_000_000,
+			20_000_000_000_000,
 			Box::new(
 				MultiLocation::new(
 					1,
