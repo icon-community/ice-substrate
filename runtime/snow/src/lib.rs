@@ -21,11 +21,12 @@ pub fn wasm_binary_unwrap() -> &'static [u8] {
 
 pub mod xcm_config;
 use codec::{Decode, Encode, MaxEncodedLen};
+use cumulus_pallet_parachain_system::AnyRelayNumber;
 use pallet_evm::FeeCalculator;
 
 use frame_support::{
 	pallet_prelude::ConstU32,
-	traits::{EnsureOneOf, EqualPrivilegeOnly, InstanceFilter, LockIdentifier},
+	traits::{EitherOfDiverse, EqualPrivilegeOnly, InstanceFilter, LockIdentifier},
 	RuntimeDebug,
 };
 use frame_system::{
@@ -70,6 +71,7 @@ use xcm_executor::XcmExecutor;
 
 // A few exports that help ease life for downstream crates.
 use fp_rpc::TransactionStatus;
+use frame_support::traits::NeverEnsureOrigin;
 pub use frame_support::{
 	construct_runtime, parameter_types,
 	traits::{Currency, FindAuthor, KeyOwnerProofSystem, Randomness},
@@ -127,13 +129,13 @@ pub type Hash = H256;
 pub type SlowAdjustingFeeUpdate<R> =
 	TargetedFeeAdjustment<R, TargetBlockFullness, AdjustmentVariable, MinimumMultiplier>;
 
-pub type MoreThanHalfCouncil = EnsureOneOf<
+pub type MoreThanHalfCouncil = EitherOfDiverse<
 	EnsureRoot<AccountId>,
 	pallet_collective::EnsureProportionMoreThan<AccountId, CouncilCollective, 1, 2>,
 >;
 
 // Technical Committee Council
-pub type EnsureRootOrAllTechnicalCommittee = EnsureOneOf<
+pub type EnsureRootOrAllTechnicalCommittee = EitherOfDiverse<
 	EnsureRoot<AccountId>,
 	pallet_collective::EnsureProportionAtLeast<AccountId, TechnicalCollective, 1, 1>,
 >;
@@ -267,6 +269,7 @@ impl cumulus_pallet_parachain_system::Config for Runtime {
 	type ReservedDmpWeight = ReservedDmpWeight;
 	type XcmpMessageHandler = XcmpQueue;
 	type ReservedXcmpWeight = ReservedXcmpWeight;
+	type CheckAssociatedRelayNumber = AnyRelayNumber;
 }
 
 impl parachain_info::Config for Runtime {}
@@ -389,6 +392,7 @@ impl pallet_contracts::Config for Runtime {
 	type AddressGenerator = pallet_contracts::DefaultAddressGenerator;
 	type MaxCodeLen = ConstU32<{ 128 * 1024 }>;
 	type RelaxedMaxCodeLen = ConstU32<{ 256 * 1024 }>;
+	type MaxStorageKeyLen = ConstU32<128>;
 }
 
 parameter_types! {
@@ -449,6 +453,7 @@ parameter_types! {
 pub type WeightToFee = constants::fee::WeightToFee;
 
 impl pallet_transaction_payment::Config for Runtime {
+	type Event = Event;
 	type OnChargeTransaction = CurrencyAdapter<Balances, DealWithFees>;
 	type OperationalFeeMultiplier = OperationalFeeMultiplier;
 	type WeightToFee = constants::fee::WeightToFee;
@@ -628,6 +633,7 @@ impl pallet_treasury::Config for Runtime {
 	type WeightInfo = pallet_treasury::weights::SubstrateWeight<Runtime>;
 	type SpendFunds = ();
 	type MaxApprovals = MaxApprovals;
+	type SpendOrigin = NeverEnsureOrigin<u128>;
 }
 
 pub struct Beneficiary();
@@ -1002,7 +1008,7 @@ impl pallet_democracy::Config for Runtime {
 	type BlacklistOrigin = EnsureRoot<AccountId>;
 	// To cancel a proposal before it has been passed, the technical committee must be unanimous or
 	// Root must agree.
-	type CancelProposalOrigin = EnsureOneOf<
+	type CancelProposalOrigin = EitherOfDiverse<
 		EnsureRoot<AccountId>,
 		pallet_collective::EnsureProportionAtLeast<AccountId, TechnicalCollective, 1, 1>,
 	>;
@@ -1043,6 +1049,7 @@ impl pallet_dynamic_fee::Config for Runtime {
 parameter_types! {
 	pub IsActive: bool = true;
 	pub DefaultBaseFeePerGas: U256 = U256::from(1_000_000_000);
+	pub DefaultElasticity: Permill = Permill::from_parts(125_000);
 }
 
 pub struct BaseFeeThreshold;
@@ -1061,8 +1068,8 @@ impl pallet_base_fee::BaseFeeThreshold for BaseFeeThreshold {
 impl pallet_base_fee::Config for Runtime {
 	type Event = Event;
 	type Threshold = BaseFeeThreshold;
-	type IsActive = IsActive;
 	type DefaultBaseFeePerGas = DefaultBaseFeePerGas;
+	type DefaultElasticity = DefaultElasticity;
 }
 
 impl pallet_randomness_collective_flip::Config for Runtime {}
@@ -1105,7 +1112,7 @@ construct_runtime!(
 		Balances: pallet_balances::{Pallet, Call, Storage, Config<T>, Event<T>} = 20,
 		Assets: pallet_assets::{Pallet, Call, Storage, Config<T>, Event<T>} = 21,
 		Vesting: pallet_vesting::{Pallet, Call, Storage, Config<T>, Event<T>} = 22,
-		TransactionPayment: pallet_transaction_payment::{Pallet, Storage} = 23,
+		TransactionPayment: pallet_transaction_payment::{Pallet, Storage, Event<T>} = 23,
 		SimpleInflation: pallet_simple_inflation::{Pallet, Call, Storage, Config<T>} = 24,
 		FeesSplit: pallet_fees_split::{Pallet, Call, Storage, Config<T>} = 25,
 		Airdrop: pallet_airdrop::{Pallet, Call, Storage, Config<T>, Event<T>} = 26,
@@ -1618,7 +1625,7 @@ impl_runtime_apis! {
 
 		fn get_storage(
 			address: AccountId,
-			key: [u8; 32],
+			key: Vec<u8>,
 		) -> pallet_contracts_primitives::GetStorageResult {
 			Contracts::get_storage(address, key)
 		}

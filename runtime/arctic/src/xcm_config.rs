@@ -139,10 +139,9 @@ parameter_types! {
 	pub IczPerSecond: (AssetId, u128) = (
 		MultiLocation::new(
 			0,
-			X1(GeneralKey(ICZ.encode())),
-		).into(),
-		0
-	);
+			X1(GeneralKey(ICZ.encode().try_into().unwrap())),
+		 //TODO: figure out why icz_per_second() instead of 0 results in Err::TooExpensive
+		).into(), 0);
 }
 
 match_types! {

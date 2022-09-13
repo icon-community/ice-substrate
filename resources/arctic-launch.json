@@ -1,6 +1,6 @@
 {
   "relaychain": {
-    "bin": "../../polkadot/target/release/polkadot",
+    "bin": "/Users/maple/Github/polkadot/target/release/polkadot",
     "chain": "rococo-local",
     "nodes": [
       {
@@ -42,7 +42,7 @@
   },
   "parachains": [
     {
-      "bin": "../../Acala/target/release/acala",
+      "bin": "/Users/maple/Github/Acala/target/release/acala",
       "chain": "karura-dev",
       "balance": "1000000000000000000000",
       "nodes": [
@@ -65,7 +65,7 @@
       ]
     },
     {
-      "bin": "../target/release/ice-node",
+      "bin": "/Users/maple/Github/ice-substrate/target/release/ice-node",
       "chain": "arctic-dev",
       "balance": "1000000000000000000000",
       "nodes": [

@@ -12,6 +12,7 @@ use snow_runtime::{
 };
 use sp_core::{crypto::UncheckedInto, sr25519, Pair, Public};
 use sp_runtime::traits::{AccountIdConversion, IdentifyAccount, Verify};
+use sp_runtime::BoundedVec;
 use std::collections::BTreeMap;
 
 use super::{get_from_seed, Extensions};
@@ -238,7 +239,7 @@ fn make_genesis(
 		base_fee: Default::default(),
 		assets: Default::default(),
 		council_membership: CouncilMembershipConfig {
-			members: council_members,
+			members: BoundedVec::truncate_from(council_members),
 			phantom: Default::default(),
 		},
 		council: CouncilConfig {
@@ -259,7 +260,7 @@ fn make_genesis(
 			merkle_root: AIRDROP_MERKLE_ROOT,
 		},
 		technical_membership: TechnicalMembershipConfig {
-			members: technical_committee,
+			members: BoundedVec::truncate_from(technical_committee),
 			phantom: Default::default(),
 		},
 		phragmen_election: Default::default(),

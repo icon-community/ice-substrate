@@ -14,6 +14,7 @@ use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 use sp_core::{sr25519, Pair, Public};
 use sp_finality_grandpa::AuthorityId as GrandpaId;
 use sp_runtime::traits::{AccountIdConversion, IdentifyAccount, Verify};
+use sp_runtime::BoundedVec;
 use std::collections::BTreeMap;
 
 /// Specialized `ChainSpec`. This is a specialization of the general Substrate ChainSpec type.
@@ -172,7 +173,7 @@ fn testnet_genesis(
 		vesting: Default::default(),
 		assets: Default::default(),
 		council_membership: CouncilMembershipConfig {
-			members: council_members,
+			members: BoundedVec::truncate_from(council_members),
 			phantom: Default::default(),
 		},
 		council: CouncilConfig {
@@ -187,7 +188,7 @@ fn testnet_genesis(
 			merkle_root: AIRDROP_MERKLE_ROOT,
 		},
 		technical_membership: TechnicalMembershipConfig {
-			members: technical_committee_membership,
+			members: BoundedVec::truncate_from(technical_committee_membership),
 			phantom: Default::default(),
 		},
 		technical_committee: TechnicalCommitteeConfig {
