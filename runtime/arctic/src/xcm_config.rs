@@ -3,7 +3,7 @@ use super::{
 	ParachainInfo, ParachainSystem, PolkadotXcm, RelativeCurrencyIdConvert, Runtime, Tokens,
 	Treasury, UnknownTokens, XcmpQueue,
 };
-use crate::constants::fee::{icz_per_second, ksm_per_second};
+use crate::constants::fee::ksm_per_second;
 use crate::TokenSymbol::*;
 use codec::Encode;
 use frame_support::{
@@ -141,7 +141,7 @@ parameter_types! {
 			0,
 			X1(GeneralKey(ICZ.encode())),
 		).into(),
-		icz_per_second()
+		0
 	);
 }
 
