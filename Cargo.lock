@@ -1173,9 +1173,9 @@ dependencies = [
 
 [[package]]
 name = "clap"
-version = "3.2.20"
+version = "3.2.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "23b71c3ce99b7611011217b366d923f1d0a7e07a92bb2dbf1e84508c673ca3bd"
+checksum = "1ed5341b2301a26ab80be5cbdced622e80ed808483c52e45e3310a877d3b37d7"
 dependencies = [
  "atty",
  "bitflags",
@@ -1548,7 +1548,7 @@ name = "cumulus-client-cli"
 version = "0.1.0"
 source = "git+https://github.com/paritytech/cumulus?branch=polkadot-v0.9.24#95ca5a085727c1494ddeeae4a2b2e69c4ee1933b"
 dependencies = [
- "clap 3.2.20",
+ "clap 3.2.21",
  "sc-cli",
  "sc-service",
  "url",
@@ -2876,7 +2876,7 @@ source = "git+https://github.com/paritytech/substrate?branch=polkadot-v0.9.24#81
 dependencies = [
  "Inflector",
  "chrono",
- "clap 3.2.20",
+ "clap 3.2.21",
  "comfy-table",
  "frame-benchmarking",
  "frame-support",
@@ -3689,7 +3689,7 @@ version = "0.4.54"
 dependencies = [
  "arctic-runtime",
  "async-trait",
- "clap 3.2.20",
+ "clap 3.2.21",
  "cumulus-client-cli",
  "cumulus-client-consensus-aura",
  "cumulus-client-consensus-common",
@@ -7440,7 +7440,7 @@ name = "polkadot-cli"
 version = "0.9.24"
 source = "git+https://github.com/paritytech/polkadot?branch=release-v0.9.24#22836e55d41eef24ed5917fd654ee82a683a7cfe"
 dependencies = [
- "clap 3.2.20",
+ "clap 3.2.21",
  "frame-benchmarking-cli",
  "futures 0.3.23",
  "log",
@@ -9496,7 +9496,7 @@ version = "0.10.0-dev"
 source = "git+https://github.com/paritytech/substrate?branch=polkadot-v0.9.24#814752f60ab8cce7e2ece3ce0c1b10799b4eab28"
 dependencies = [
  "chrono",
- "clap 3.2.20",
+ "clap 3.2.21",
  "fdlimit",
  "futures 0.3.23",
  "hex",
@@ -12407,7 +12407,7 @@ name = "try-runtime-cli"
 version = "0.10.0-dev"
 source = "git+https://github.com/paritytech/substrate?branch=polkadot-v0.9.24#814752f60ab8cce7e2ece3ce0c1b10799b4eab28"
 dependencies = [
- "clap 3.2.20",
+ "clap 3.2.21",
  "jsonrpsee",
  "log",
  "parity-scale-codec",
