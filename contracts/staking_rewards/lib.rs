@@ -10,7 +10,7 @@ mod staking_rewards {
 	};
 
 	const MIL: u128 = 1_000_000;
-	const MAX_PERCENT: u128 = 100;
+	const MAX_PERCENT: u128 = 100_000;
 
 	#[ink(event)]
 	pub struct DepositSuccessful {
@@ -66,7 +66,9 @@ mod staking_rewards {
 		deposit_deadline: u64,
 		base_interest: u128,
 		stakers_rate_permil: u128,
+		stakers_sample: u128,
 		liquidity_rate_permil: u128,
+		liquidity_sample: u128,
 		lock_box_counter: u128,
 		total_liquidity: u128,
 		lock_boxes: Mapping<u128, LockBox>,
@@ -82,7 +84,9 @@ mod staking_rewards {
 			deposit_deadline: u64,
 			base_interest: u128,
 			stakers_rate_permil: u128,
+			stakers_sample: u128,
 			liquidity_rate_permil: u128,
+			liquidity_sample: u128,
 		) -> Self {
 			ink_lang::utils::initialize_contract(|contract: &mut Self| {
 				contract.owner = Self::env().caller();
@@ -91,7 +95,9 @@ mod staking_rewards {
 				contract.deposit_deadline = deposit_deadline;
 				contract.base_interest = base_interest;
 				contract.stakers_rate_permil = stakers_rate_permil;
+				contract.stakers_sample = stakers_sample;
 				contract.liquidity_rate_permil = liquidity_rate_permil;
+				contract.liquidity_sample = liquidity_sample;
 				contract.total_liquidity = 0;
 				contract.stakers_len = 0;
 			})
@@ -234,10 +240,16 @@ mod staking_rewards {
 			Ok(())
 		}
 
+		#[ink(message)]
+		pub fn get_lock_box(&self, box_index: u128) -> Option<LockBox> {
+			self.lock_boxes.get(box_index)
+		}
+
 		fn interest_percent(&mut self) -> u128 {
 			(self.base_interest
-				- self.stakers_rate_permil * self.stakers_len / MIL
-				- self.liquidity_rate_permil * self.total_liquidity / MIL) as u128
+				- self.stakers_len / self.stakers_sample * self.stakers_rate_permil / MIL
+				- self.total_liquidity / self.liquidity_sample * self.liquidity_rate_permil / MIL)
+				as u128
 		}
 
 		fn add_staker(&mut self, account: &AccountId) {
@@ -293,7 +305,7 @@ mod staking_rewards {
 
 		use ink_env::{test, AccountId, DefaultEnvironment};
 
-		const MAX_DEPOSIT_VALUE: u128 = u128::MAX / 105;
+		const MAX_DEPOSIT_VALUE: u128 = u128::MAX / 5_000;
 		const INITIAL_BALANCE: u128 = 5;
 
 		#[derive(scale::Encode, scale::Decode, Debug, PartialEq, Eq, Copy, Clone)]
@@ -354,7 +366,7 @@ mod staking_rewards {
 		fn build_contract() -> StakingRewards {
 			set_caller(owner_id());
 			set_account_balance(contract_id(), INITIAL_BALANCE);
-			StakingRewards::new(MAX_DEPOSIT_VALUE, 6, 12, 5, 0, 0)
+			StakingRewards::new(MAX_DEPOSIT_VALUE, 6, 12, 5_000, 0, 10, 0, 10)
 		}
 
 		#[test]
