@@ -46,25 +46,26 @@ It also uses samples to, for example, treat the first 100 users exactly the same
 Deposit is the endpoint that the user must call in order to lock his tokens. The 
 AccountId that calls this endpoint must not be the address itself, preventing any 
 reentrancy attacks. The transferred value cannot be 0 or greater than the configured
-max. Upon deposit, a ```LockBox``` is created and a new index is given. Based on the given id,
-the user can either: redeem or withdraw the funds in the lock box.
+max. Upon deposit, a ```LockBox``` is created and added under a user mapping.
+
+### Get Lock Boxes
+
+Returns all the lock boxes owned by a user.
 
 ### Redeem
 
 Redeem is the endpoint that the user must call in order to unlock his initial tokens
 and to also gain the reward interest. It has the same reentrancy check as deposit
 endpoint and most importantly it must be called only after the ```release``` in the
-```LockBox``` has passed. Redeem is done using a LockBox index and the caller must be
-the owner of the box, aka same AccountId that deposited and is present as ```beneficiary```
-in the struct.
+```LockBox``` has passed. The desired box to be unlocked is identified using its index
+in the array of boxes returned by the endpoint above.
 
 ### Early Withdraw
 
 EarlyWithdraw is the endpoint that the user must call in order to immediately claim
 his previously locked token. It has the same reentrancy check as the deposit endpoint
 and it can be called at anytime. The most important thing is that no interest is given
-when early withdrawing. A LockBox index is needed to use this endpoint and, aside from the ```release```
-it has the same constraints as redeem endpoint.
+when early withdrawing.
 
 ### Refund
 
