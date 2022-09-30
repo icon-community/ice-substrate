@@ -50,7 +50,8 @@ mod staking_rewards {
 	pub enum Error {
 		DepositDeadlinePassed,
 		DepositWithoutValue,
-		DepositTooBigWouldOverflow,
+		DepositTooBig,
+		MaxTotalLiquidityReached,
 		LockBoxNotFound,
 		LockBoxNotReleased,
 	}
@@ -60,6 +61,7 @@ mod staking_rewards {
 	pub struct StakingRewards {
 		owner: AccountId,
 		max_deposit_value: u128,
+		max_total_liquidity: u128,
 		locking_duration: u64,
 		deposit_deadline: u64,
 		base_interest: u128,
@@ -76,6 +78,7 @@ mod staking_rewards {
 		#[ink(constructor, payable)]
 		pub fn new(
 			max_deposit_value: u128,
+			max_total_liquidity: u128,
 			locking_duration: u64,
 			deposit_deadline: u64,
 			base_interest: u128,
@@ -87,6 +90,7 @@ mod staking_rewards {
 			ink_lang::utils::initialize_contract(|contract: &mut Self| {
 				contract.owner = Self::env().caller();
 				contract.max_deposit_value = max_deposit_value;
+				contract.max_total_liquidity = max_total_liquidity;
 				contract.locking_duration = locking_duration;
 				contract.deposit_deadline = deposit_deadline;
 				contract.base_interest = base_interest;
@@ -113,9 +117,11 @@ mod staking_rewards {
 			if value == 0 {
 				return Err(Error::DepositWithoutValue);
 			}
-
 			if value > self.max_deposit_value {
-				return Err(Error::DepositTooBigWouldOverflow);
+				return Err(Error::DepositTooBig);
+			}
+			if value > self.max_total_liquidity - self.total_liquidity {
+				return Err(Error::MaxTotalLiquidityReached);
 			}
 
 			let lock_box = LockBox {

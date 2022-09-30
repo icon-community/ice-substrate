@@ -15,6 +15,7 @@ The ```new``` function acts as a constructor and is used to initialize a contrac
 by parametrizing it with the following values:
 
 - ```max_deposit_value``` - The maximum value a user can send while making a deposit
+- ```max_total_liquidity``` - The maximum total liquidity from deposits allowed to be held in this contract
 - ```locking_duration``` - The duration after which the tokens and interest can be redeemed
 - ```deposit_deadline``` - The deadline after which users cannot make further deposits
 - ```base_interest```
