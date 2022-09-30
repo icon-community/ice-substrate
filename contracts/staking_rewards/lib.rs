@@ -202,17 +202,21 @@ mod staking_rewards {
 		}
 
 		#[ink(message)]
-		pub fn get_boxes(&self) -> Option<Vec<LockBox>> {
-			let caller = Self::env().caller();
-
-			self.lock_boxes.get(&caller)
+		pub fn get_boxes(&self, account_id: AccountId) -> Option<Vec<LockBox>> {
+			self.lock_boxes.get(&account_id)
 		}
 
 		fn interest_percent(&mut self) -> u128 {
-			(self.base_interest
-				- self.stakers_count / self.stakers_sample * self.stakers_rate_permil / MIL
-				- self.total_liquidity / self.liquidity_sample * self.liquidity_rate_permil / MIL)
-				as u128
+			let negative_interest =
+				self.stakers_count / self.stakers_sample * self.stakers_rate_permil / MIL
+					+ self.total_liquidity / self.liquidity_sample * self.liquidity_rate_permil
+						/ MIL;
+
+			if self.base_interest >= negative_interest {
+				self.base_interest - negative_interest
+			} else {
+				0
+			}
 		}
 
 		fn add_box(&mut self, account: &AccountId, lock_box: LockBox) {
