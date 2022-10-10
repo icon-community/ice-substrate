@@ -58,8 +58,7 @@ Returns all the lock boxes owned by a user.
 Redeem is the endpoint that the user must call in order to unlock his initial tokens
 and to also gain the reward interest. It has the same reentrancy check as deposit
 endpoint and most importantly it must be called only after the ```release``` in the
-```LockBox``` has passed. The desired box to be unlocked is identified using its index
-in the array of boxes returned by the endpoint above.
+```LockBox``` has passed. The desired box to be unlocked is identified using its unique id.
 
 ### Early Withdraw
 

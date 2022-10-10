@@ -39,6 +39,7 @@ mod staking_rewards {
 		derive(scale_info::TypeInfo, ink_storage::traits::StorageLayout)
 	)]
 	pub struct LockBox {
+		id: u128,
 		created_at: Timestamp,
 		deposit: Balance,
 		interest: Balance,
@@ -71,7 +72,27 @@ mod staking_rewards {
 		liquidity_sample: u128,
 		total_liquidity: u128,
 		stakers_count: u128,
-		lock_boxes: Mapping<AccountId, Vec<LockBox>>,
+		user_boxes: Mapping<AccountId, Vec<u128>>,
+		lock_boxes: Mapping<u128, LockBox>,
+		lock_box_counter: u128,
+	}
+
+	#[derive(Clone, Copy, Debug, PartialEq, scale::Decode, scale::Encode)]
+	#[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
+	pub struct Metadata {
+		owner: AccountId,
+		max_deposit_value: u128,
+		max_total_liquidity: u128,
+		locking_duration: u64,
+		deposit_deadline: u64,
+		base_interest: u128,
+		stakers_rate_permil: u128,
+		stakers_sample: u128,
+		liquidity_rate_permil: u128,
+		liquidity_sample: u128,
+		total_liquidity: u128,
+		stakers_count: u128,
+		dynamic_interest_percent: u128,
 	}
 
 	impl StakingRewards {
@@ -100,6 +121,7 @@ mod staking_rewards {
 				contract.liquidity_sample = liquidity_sample;
 				contract.total_liquidity = 0;
 				contract.stakers_count = 0;
+				contract.lock_box_counter = 0;
 			})
 		}
 
@@ -125,6 +147,7 @@ mod staking_rewards {
 			}
 
 			let lock_box = LockBox {
+				id: self.lock_box_counter,
 				created_at: now,
 				deposit: value,
 				interest: value * self.interest_percent() / MAX_PERCENT,
@@ -134,6 +157,7 @@ mod staking_rewards {
 			self.add_box(&caller, lock_box.clone());
 
 			self.total_liquidity += value;
+			self.lock_box_counter += 1;
 
 			self.env().emit_event(DepositSuccessful {
 				staker: caller,
@@ -144,11 +168,11 @@ mod staking_rewards {
 		}
 
 		#[ink(message)]
-		pub fn redeem(&mut self, box_index: u128) -> Result<Balance, Error> {
+		pub fn redeem(&mut self, lock_box_id: u128) -> Result<Balance, Error> {
 			let caller = self.env().caller();
 			self.ensure_not_self_account(&caller);
 
-			let lock_box = self.remove_box(&caller, box_index as usize, true);
+			let lock_box = self.remove_box(&caller, lock_box_id, true);
 			if lock_box.is_err() {
 				return Err(Error::LockBoxNotFound);
 			}
@@ -170,11 +194,11 @@ mod staking_rewards {
 		}
 
 		#[ink(message)]
-		pub fn early_withdraw(&mut self, box_index: u128) -> Result<Balance, Error> {
+		pub fn early_withdraw(&mut self, lock_box_id: u128) -> Result<Balance, Error> {
 			let caller = self.env().caller();
 			self.ensure_not_self_account(&caller);
 
-			let lock_box = self.remove_box(&caller, box_index as usize, false);
+			let lock_box = self.remove_box(&caller, lock_box_id, false);
 			if lock_box.is_err() {
 				return Err(Error::LockBoxNotFound);
 			}
@@ -208,11 +232,44 @@ mod staking_rewards {
 		}
 
 		#[ink(message)]
-		pub fn get_boxes(&self, account_id: AccountId) -> Option<Vec<LockBox>> {
-			self.lock_boxes.get(&account_id)
+		pub fn get_box_ids(&self, account_id: AccountId) -> Option<Vec<u128>> {
+			self.user_boxes.get(&account_id)
 		}
 
-		fn interest_percent(&mut self) -> u128 {
+		#[ink(message)]
+		pub fn get_boxes(&self, account_id: AccountId) -> Option<Vec<LockBox>> {
+			let box_ids = self.user_boxes.get(&account_id);
+
+			match box_ids {
+				Some(vec) => Some(
+					vec.iter()
+						.map(|lock_box_id| self.lock_boxes.get(lock_box_id).unwrap())
+						.collect(),
+				),
+				None => None,
+			}
+		}
+
+		#[ink(message)]
+		pub fn get_metadata(&self) -> Metadata {
+			Metadata {
+				owner: self.owner,
+				max_deposit_value: self.max_deposit_value,
+				max_total_liquidity: self.max_total_liquidity,
+				locking_duration: self.locking_duration,
+				deposit_deadline: self.deposit_deadline,
+				base_interest: self.base_interest,
+				stakers_rate_permil: self.stakers_rate_permil,
+				stakers_sample: self.stakers_sample,
+				liquidity_rate_permil: self.liquidity_rate_permil,
+				liquidity_sample: self.liquidity_sample,
+				total_liquidity: self.total_liquidity,
+				stakers_count: self.stakers_count,
+				dynamic_interest_percent: self.interest_percent(),
+			}
+		}
+
+		fn interest_percent(&self) -> u128 {
 			let negative_interest =
 				self.stakers_count / self.stakers_sample * self.stakers_rate_permil / MIL
 					+ self.total_liquidity / self.liquidity_sample * self.liquidity_rate_permil
@@ -226,54 +283,64 @@ mod staking_rewards {
 		}
 
 		fn add_box(&mut self, account: &AccountId, lock_box: LockBox) {
-			let boxes = self.lock_boxes.get(&account);
+			let boxes = self.user_boxes.get(&account);
 
 			match boxes {
 				Some(mut boxes) => {
-					boxes.push(lock_box);
-					self.lock_boxes.insert(&account, &boxes);
+					boxes.push(lock_box.id);
+					self.user_boxes.insert(&account, &boxes);
 				}
 				None => {
 					self.stakers_count += 1;
-					self.lock_boxes.insert(&account, &vec![lock_box]);
+					self.user_boxes.insert(&account, &vec![lock_box.id]);
 				}
 			}
+
+			self.lock_boxes.insert(lock_box.id, &lock_box);
 		}
 
 		fn remove_box(
 			&mut self,
 			account: &AccountId,
-			box_index: usize,
+			lock_box_id: u128,
 			should_check_release: bool,
 		) -> Result<LockBox, Error> {
-			let boxes = self.lock_boxes.get(&account);
+			let user_box_ids = self.user_boxes.get(&account);
 
-			if boxes.is_none() {
+			if user_box_ids.is_none() {
 				return Err(Error::LockBoxNotFound);
 			}
 
-			let mut boxes = boxes.unwrap();
+			let mut user_box_ids = user_box_ids.unwrap();
 
-			if box_index >= boxes.len() {
+			let box_index = user_box_ids
+				.iter()
+				.position(|&element| element == lock_box_id);
+			if box_index.is_none() {
 				return Err(Error::LockBoxNotFound);
 			}
 
-			let lock_box = boxes[box_index];
+			let box_index = box_index.unwrap();
+
 			if should_check_release {
 				let now = self.env().block_timestamp();
 
+				let lock_box = self.lock_boxes.get(lock_box_id).unwrap();
 				if now < lock_box.release {
 					return Err(Error::LockBoxNotReleased);
 				}
 			}
 
-			if boxes.len() != 1 {
-				boxes.swap_remove(box_index);
-				self.lock_boxes.insert(&account, &boxes);
+			if user_box_ids.len() != 1 {
+				user_box_ids.swap_remove(box_index);
+				self.user_boxes.insert(&account, &user_box_ids);
 			} else {
 				self.stakers_count -= 1;
-				self.lock_boxes.remove(&account);
+				self.user_boxes.remove(&account);
 			};
+
+			let lock_box = self.lock_boxes.get(lock_box_id).unwrap();
+			self.lock_boxes.remove(lock_box_id);
 
 			Ok(lock_box)
 		}
@@ -364,7 +431,17 @@ mod staking_rewards {
 		fn build_contract() -> StakingRewards {
 			set_caller(owner_id());
 			set_account_balance(contract_id(), INITIAL_BALANCE);
-			StakingRewards::new(MAX_DEPOSIT_VALUE, 6, 12, 5_000, 0, 10, 0, 10)
+			StakingRewards::new(
+				MAX_DEPOSIT_VALUE,
+				MAX_DEPOSIT_VALUE,
+				6,
+				12,
+				5_000,
+				0,
+				10,
+				0,
+				10,
+			)
 		}
 
 		#[test]
@@ -415,7 +492,7 @@ mod staking_rewards {
 			set_caller(bob_id());
 			set_callee(contract_id());
 			set_value_transferred(MAX_DEPOSIT_VALUE + 1);
-			assert_eq!(sc.deposit(), Err(Error::DepositTooBigWouldOverflow));
+			assert_eq!(sc.deposit(), Err(Error::DepositTooBig));
 		}
 	}
 }
