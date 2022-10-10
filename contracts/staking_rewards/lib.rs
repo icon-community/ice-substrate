@@ -71,6 +71,7 @@ mod staking_rewards {
 		liquidity_rate_permil: u128,
 		liquidity_sample: u128,
 		total_liquidity: u128,
+		unclaimed_rewards: u128,
 		stakers_count: u128,
 		user_boxes: Mapping<AccountId, Vec<u128>>,
 		lock_boxes: Mapping<u128, LockBox>,
@@ -91,6 +92,7 @@ mod staking_rewards {
 		liquidity_rate_permil: u128,
 		liquidity_sample: u128,
 		total_liquidity: u128,
+		unclaimed_rewards: u128,
 		stakers_count: u128,
 		dynamic_interest_percent: u128,
 	}
@@ -120,6 +122,7 @@ mod staking_rewards {
 				contract.liquidity_rate_permil = liquidity_rate_permil;
 				contract.liquidity_sample = liquidity_sample;
 				contract.total_liquidity = 0;
+				contract.unclaimed_rewards = 0;
 				contract.stakers_count = 0;
 				contract.lock_box_counter = 0;
 			})
@@ -157,6 +160,7 @@ mod staking_rewards {
 			self.add_box(&caller, lock_box.clone());
 
 			self.total_liquidity += value;
+			self.unclaimed_rewards += lock_box.interest;
 			self.lock_box_counter += 1;
 
 			self.env().emit_event(DepositSuccessful {
@@ -182,6 +186,7 @@ mod staking_rewards {
 			let amount = lock_box.deposit + lock_box.interest;
 
 			self.total_liquidity -= &lock_box.deposit;
+			self.unclaimed_rewards -= &lock_box.interest;
 
 			self.transfer(caller.clone(), amount);
 
@@ -208,6 +213,7 @@ mod staking_rewards {
 			let amount = lock_box.deposit;
 
 			self.total_liquidity -= &lock_box.deposit;
+			self.unclaimed_rewards -= &lock_box.interest;
 
 			self.transfer(caller.clone(), amount);
 
@@ -269,6 +275,7 @@ mod staking_rewards {
 				liquidity_rate_permil: self.liquidity_rate_permil,
 				liquidity_sample: self.liquidity_sample,
 				total_liquidity: self.total_liquidity,
+				unclaimed_rewards: self.unclaimed_rewards,
 				stakers_count: self.stakers_count,
 				dynamic_interest_percent: self.interest_percent(),
 			}
