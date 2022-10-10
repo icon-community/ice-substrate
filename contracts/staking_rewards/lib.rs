@@ -251,6 +251,11 @@ mod staking_rewards {
 		}
 
 		#[ink(message)]
+		pub fn get_box(&self, lock_box_id: u128) -> Option<LockBox> {
+			self.lock_boxes.get(lock_box_id)
+		}
+
+		#[ink(message)]
 		pub fn get_metadata(&self) -> Metadata {
 			Metadata {
 				owner: self.owner,
