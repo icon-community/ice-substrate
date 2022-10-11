@@ -18,11 +18,11 @@ by parametrizing it with the following values:
 - ```max_total_liquidity``` - The maximum total liquidity from deposits allowed to be held in this contract
 - ```locking_duration``` - The duration after which the tokens and interest can be redeemed
 - ```deposit_deadline``` - The deadline after which users cannot make further deposits
-- ```base_interest```
-- ```stakers_rate_permil```
-- ```stakers_sample```
-- ```liquidity_rate_permil```
-- ```liquidity_sample```
+- ```base_interest``` - The base interest and also the max interest
+- ```stakers_rate_permil``` - The rate with which the interest decreases based on how many stakers there are
+- ```stakers_sample``` - The size of the chunk of stakers which can make the interest change
+- ```liquidity_rate_permil``` - The rate with which the interest decreases based on how much liquidity there is
+- ```liquidity_sample``` - The size of the chunk of tokens which can make the interest change
 
 The interest is dynamic and not constant. Its formula is the following:
 
@@ -41,6 +41,17 @@ by the time the tokens are unlocked and the interest is redeemed.
 
 It also uses samples to, for example, treat the first 100 users exactly the same when 
 ```stakers_sample``` is 100.
+
+Because the formula might be confusing, we can take a look at the following example:
+Say we configure base_interest as 10_000 (10%) and the stakers_rate_permil 2_000_000 (2%),
+stakers_sample 500, liquidity_rate_permil 3_000_000 (3%) and liquidity_sample 10_000_000.
+This efectively means that the base interest is 10% and with every 500 new stakers,
+the interest will decrease by 2% and with every 10_000_000 tokens staked, the interest
+will decrease by 3%.
+
+For testing, some default values might be: base_interest 10_000 (10%), stakers_rate_permil 0 (0%),
+stakers_sample 1, liquidity_rate_permil 0 (0%) and liquidity_sample 1. This will make the interest
+constant of 10%.
 
 ### Deposit
 
