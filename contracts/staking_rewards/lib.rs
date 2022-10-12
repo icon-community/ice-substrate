@@ -11,7 +11,6 @@ mod staking_rewards {
 	};
 
 	const MIL: u128 = 1_000_000;
-	const MAX_PERCENT: u128 = 100_000;
 
 	#[ink(event)]
 	pub struct DepositSuccessful {
@@ -65,7 +64,7 @@ mod staking_rewards {
 		max_total_liquidity: u128,
 		locking_duration: u64,
 		deposit_deadline: u64,
-		base_interest: u128,
+		base_interest_permil: u128,
 		stakers_rate_permil: u128,
 		stakers_sample: u128,
 		liquidity_rate_permil: u128,
@@ -87,7 +86,7 @@ mod staking_rewards {
 		max_total_liquidity: u128,
 		locking_duration: u64,
 		deposit_deadline: u64,
-		base_interest: u128,
+		base_interest_permil: u128,
 		stakers_rate_permil: u128,
 		stakers_sample: u128,
 		liquidity_rate_permil: u128,
@@ -96,7 +95,7 @@ mod staking_rewards {
 		claimed_rewards: u128,
 		unclaimed_rewards: u128,
 		stakers_count: u128,
-		dynamic_interest_percent: u128,
+		dynamic_interest_permil: u128,
 	}
 
 	impl StakingRewards {
@@ -106,7 +105,7 @@ mod staking_rewards {
 			max_total_liquidity: u128,
 			locking_duration: u64,
 			deposit_deadline: u64,
-			base_interest: u128,
+			base_interest_permil: u128,
 			stakers_rate_permil: u128,
 			stakers_sample: u128,
 			liquidity_rate_permil: u128,
@@ -118,7 +117,7 @@ mod staking_rewards {
 				contract.max_total_liquidity = max_total_liquidity;
 				contract.locking_duration = locking_duration;
 				contract.deposit_deadline = deposit_deadline;
-				contract.base_interest = base_interest;
+				contract.base_interest_permil = base_interest_permil;
 				contract.stakers_rate_permil = stakers_rate_permil;
 				contract.stakers_sample = stakers_sample;
 				contract.liquidity_rate_permil = liquidity_rate_permil;
@@ -156,7 +155,7 @@ mod staking_rewards {
 				id: self.lock_box_counter,
 				created_at: now,
 				deposit: value,
-				interest: value * self.interest_percent() / MAX_PERCENT,
+				interest: value * self.interest_permil() / MIL,
 				release: now + self.locking_duration,
 			};
 
@@ -242,6 +241,59 @@ mod staking_rewards {
 		}
 
 		#[ink(message)]
+		pub fn configure_contract(
+			&mut self,
+			max_deposit_value_opt: Option<u128>,
+			max_total_liquidity_opt: Option<u128>,
+			locking_duration_opt: Option<u64>,
+			deposit_deadline_opt: Option<u64>,
+			base_interest_permil_opt: Option<u128>,
+			stakers_rate_permil_opt: Option<u128>,
+			stakers_sample_opt: Option<u128>,
+			liquidity_rate_permil_opt: Option<u128>,
+			liquidity_sample_opt: Option<u128>,
+		) {
+			let caller = Self::env().caller();
+			self.ensure_owner(&caller);
+
+			if let Some(max_deposit_value) = max_deposit_value_opt {
+				self.max_deposit_value = max_deposit_value;
+			}
+
+			if let Some(max_total_liquidity) = max_total_liquidity_opt {
+				self.max_total_liquidity = max_total_liquidity;
+			}
+
+			if let Some(locking_duration) = locking_duration_opt {
+				self.locking_duration = locking_duration;
+			}
+
+			if let Some(deposit_deadline) = deposit_deadline_opt {
+				self.deposit_deadline = deposit_deadline;
+			}
+
+			if let Some(base_interest_permil) = base_interest_permil_opt {
+				self.base_interest_permil = base_interest_permil;
+			}
+
+			if let Some(stakers_rate_permil) = stakers_rate_permil_opt {
+				self.stakers_rate_permil = stakers_rate_permil;
+			}
+
+			if let Some(stakers_sample) = stakers_sample_opt {
+				self.stakers_sample = stakers_sample;
+			}
+
+			if let Some(liquidity_rate_permil) = liquidity_rate_permil_opt {
+				self.liquidity_rate_permil = liquidity_rate_permil;
+			}
+
+			if let Some(liquidity_sample) = liquidity_sample_opt {
+				self.liquidity_sample = liquidity_sample;
+			}
+		}
+
+		#[ink(message)]
 		pub fn get_box_ids(&self, account_id: AccountId) -> Option<Vec<u128>> {
 			self.user_boxes.get(&account_id)
 		}
@@ -273,7 +325,7 @@ mod staking_rewards {
 				max_total_liquidity: self.max_total_liquidity,
 				locking_duration: self.locking_duration,
 				deposit_deadline: self.deposit_deadline,
-				base_interest: self.base_interest,
+				base_interest_permil: self.base_interest_permil,
 				stakers_rate_permil: self.stakers_rate_permil,
 				stakers_sample: self.stakers_sample,
 				liquidity_rate_permil: self.liquidity_rate_permil,
@@ -282,18 +334,19 @@ mod staking_rewards {
 				claimed_rewards: self.claimed_rewards,
 				unclaimed_rewards: self.unclaimed_rewards,
 				stakers_count: self.stakers_count,
-				dynamic_interest_percent: self.interest_percent(),
+				dynamic_interest_permil: self.interest_permil(),
 			}
 		}
 
-		fn interest_percent(&self) -> u128 {
-			let negative_interest =
-				self.stakers_count / self.stakers_sample * self.stakers_rate_permil / MIL
-					+ self.total_liquidity / self.liquidity_sample * self.liquidity_rate_permil
-						/ MIL;
+		fn interest_permil(&self) -> u128 {
+			let negative_interest_permil = self.stakers_count / self.stakers_sample
+				* self.stakers_rate_permil
+				+ self.log2_permil(1 + self.total_liquidity / self.liquidity_sample)
+					* self.liquidity_rate_permil
+					/ MIL;
 
-			if self.base_interest >= negative_interest {
-				self.base_interest - negative_interest
+			if self.base_interest_permil >= negative_interest_permil {
+				self.base_interest_permil - negative_interest_permil
 			} else {
 				0
 			}
@@ -379,6 +432,45 @@ mod staking_rewards {
 		fn ensure_owner(&mut self, account: &AccountId) {
 			assert_eq!(account, &self.owner, "account is not owner");
 		}
+
+		fn log2_permil(&self, num: u128) -> u128 {
+			match num {
+				1 => 0,
+				2 => 1000000,
+				3 => 1584963,
+				4 => 2000000,
+				5 => 2321928,
+				6 => 2584963,
+				7 => 2807355,
+				8 => 3000000,
+				9 => 3169925,
+				10 => 3321928,
+				11 => 3459432,
+				12 => 3584963,
+				13 => 3700440,
+				14 => 3807355,
+				15 => 3906891,
+				16 => 4000000,
+				17 => 4087463,
+				18 => 4169925,
+				19 => 4247928,
+				20 => 4321928,
+				21 => 4392317,
+				22 => 4459432,
+				23 => 4584963,
+				24 => 4643856,
+				25 => 4700440,
+				26 => 4754888,
+				27 => 4807355,
+				28 => 4857981,
+				30 => 4906891,
+				31 => 4954196,
+				32 => 5000000,
+				_ => {
+					panic!("Could not perform log2");
+				}
+			}
+		}
 	}
 
 	#[cfg(test)]
@@ -387,7 +479,7 @@ mod staking_rewards {
 
 		use ink_env::{test, AccountId, DefaultEnvironment};
 
-		const MAX_DEPOSIT_VALUE: u128 = u128::MAX / 5_000;
+		const MAX_DEPOSIT_VALUE: u128 = u128::MAX / MIL;
 		const INITIAL_BALANCE: u128 = 5;
 
 		#[derive(scale::Encode, scale::Decode, Debug, PartialEq, Eq, Copy, Clone)]
@@ -453,7 +545,7 @@ mod staking_rewards {
 				MAX_DEPOSIT_VALUE,
 				6,
 				12,
-				5_000,
+				50_000,
 				0,
 				10,
 				0,

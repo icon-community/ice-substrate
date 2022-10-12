@@ -2,7 +2,7 @@
 
 ## Abstract
 
-This contract allows users to make deposits and to gain interest by doing so. It is
+This contract allows users to make deposits and to gain rewards by doing so. It is
 designed as a way to give users who trust the project that issued the token the
 possibility of locking (staking) it for a fixed period of time and gaining more
 tokens by doing so.
@@ -18,21 +18,21 @@ by parametrizing it with the following values:
 - ```max_total_liquidity``` - The maximum total liquidity from deposits allowed to be held in this contract
 - ```locking_duration``` - The duration after which the tokens and interest can be redeemed
 - ```deposit_deadline``` - The deadline after which users cannot make further deposits
-- ```base_interest``` - The base interest and also the max interest
+- ```base_interest_permil``` - The base interest and also the max interest
 - ```stakers_rate_permil``` - The rate with which the interest decreases based on how many stakers there are
 - ```stakers_sample``` - The size of the chunk of stakers which can make the interest change
 - ```liquidity_rate_permil``` - The rate with which the interest decreases based on how much liquidity there is
-- ```liquidity_sample``` - The size of the chunk of tokens which can make the interest change
+- ```liquidity_sample``` - The size of the chunk of tokens which can make the interest change. Keep in mind that this value should contain the decimals too
 
 The interest is dynamic and not constant. Its formula is the following:
 
 ```
-interest = base_interest - num_stakers / stakers_sample * stakers_rate_permil / 1_000_000 - total_liquidity / liquidity_sample * liquidity_rate_permil / 1_000_000;
+interest = base_interest - num_stakers / stakers_sample * stakers_rate_permil  - log2_permil(1 + total_liquidity / liquidity_sample) * liquidity_rate_permil / 1_000_000;
 ```
 
 This formula allows early users to have a better interest than later users. That's
 because the more stakers and the more liquidity it is, the interest rate diminishes.
-The reason we want to incentivize early users is because they assume a greater risk.
+The reason we want to incentive early users is that they assume a greater risk.
 
 The first user that stakes must have had a much greater trust in the project than 
 the one that already sees a lot of other users that trust the project and chose to
@@ -43,9 +43,9 @@ It also uses samples to, for example, treat the first 100 users exactly the same
 ```stakers_sample``` is 100.
 
 Because the formula might be confusing, we can take a look at the following example:
-Say we configure base_interest as 10_000 (10%) and the stakers_rate_permil 2_000_000 (2%),
-stakers_sample 500, liquidity_rate_permil 3_000_000 (3%) and liquidity_sample 10_000_000.
-This efectively means that the base interest is 10% and with every 500 new stakers,
+Say we configure base_interest_permil as 100_000 (10%) and the stakers_rate_permil 20_000 (2%),
+stakers_sample 500, liquidity_rate_permil 30_000 (3%) and liquidity_sample 10_000_000.
+This effectively means that the base interest is 10% and with every 500 new stakers,
 the interest will decrease by 2% and with every 10_000_000 tokens staked, the interest
 will decrease by 3%.
 
@@ -81,6 +81,6 @@ when early withdrawing.
 ### Refund
 
 Refund is the endpoint that the ```owner``` of the contract can call in order to
-make withdrawals from the contract. Be mindful that he can withdraw as much as it likes
+make withdrawals from the contract. Be mindful that he can withdraw as much as it likes,
 but it is meant to be used to handle the cases where the owner accidentally sends more
 tokens (that will be claimed by the users as reward interest) than he intended.
