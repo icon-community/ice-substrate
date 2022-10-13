@@ -49,7 +49,7 @@ mod staking_rewards {
 	#[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
 	pub enum Error {
 		DepositDeadlinePassed,
-		DepositWithoutValue,
+		DepositTooLow,
 		DepositTooBig,
 		MaxTotalLiquidityReached,
 		LockBoxNotFound,
@@ -61,14 +61,14 @@ mod staking_rewards {
 	pub struct StakingRewards {
 		owner: AccountId,
 		max_deposit_value: u128,
+		min_deposit_value: u128,
 		max_total_liquidity: u128,
 		locking_duration: u64,
 		deposit_deadline: u64,
-		base_interest_permil: u128,
-		stakers_rate_permil: u128,
+		base_interest_percent_permil: u128,
 		stakers_sample: u128,
-		liquidity_rate_permil: u128,
 		liquidity_sample: u128,
+		negative_interest_multiplier_permil: u128,
 		total_liquidity: u128,
 		claimed_rewards: u128,
 		unclaimed_rewards: u128,
@@ -83,45 +83,45 @@ mod staking_rewards {
 	pub struct Metadata {
 		owner: AccountId,
 		max_deposit_value: u128,
+		min_deposit_value: u128,
 		max_total_liquidity: u128,
 		locking_duration: u64,
 		deposit_deadline: u64,
-		base_interest_permil: u128,
-		stakers_rate_permil: u128,
+		base_interest_percent_permil: u128,
 		stakers_sample: u128,
-		liquidity_rate_permil: u128,
 		liquidity_sample: u128,
+		negative_interest_multiplier_permil: u128,
 		total_liquidity: u128,
 		claimed_rewards: u128,
 		unclaimed_rewards: u128,
 		stakers_count: u128,
-		dynamic_interest_permil: u128,
+		dynamic_interest_percent_permil: u128,
 	}
 
 	impl StakingRewards {
 		#[ink(constructor, payable)]
 		pub fn new(
 			max_deposit_value: u128,
+			min_deposit_value: u128,
 			max_total_liquidity: u128,
 			locking_duration: u64,
 			deposit_deadline: u64,
-			base_interest_permil: u128,
-			stakers_rate_permil: u128,
+			base_interest_percent_permil: u128,
 			stakers_sample: u128,
-			liquidity_rate_permil: u128,
 			liquidity_sample: u128,
+			negative_interest_multiplier_permil: u128,
 		) -> Self {
 			ink_lang::utils::initialize_contract(|contract: &mut Self| {
 				contract.owner = Self::env().caller();
 				contract.max_deposit_value = max_deposit_value;
+				contract.min_deposit_value = min_deposit_value;
 				contract.max_total_liquidity = max_total_liquidity;
 				contract.locking_duration = locking_duration;
 				contract.deposit_deadline = deposit_deadline;
-				contract.base_interest_permil = base_interest_permil;
-				contract.stakers_rate_permil = stakers_rate_permil;
+				contract.base_interest_percent_permil = base_interest_percent_permil;
 				contract.stakers_sample = stakers_sample;
-				contract.liquidity_rate_permil = liquidity_rate_permil;
 				contract.liquidity_sample = liquidity_sample;
+				contract.negative_interest_multiplier_permil = negative_interest_multiplier_permil;
 				contract.total_liquidity = 0;
 				contract.claimed_rewards = 0;
 				contract.unclaimed_rewards = 0;
@@ -141,8 +141,8 @@ mod staking_rewards {
 			}
 
 			let value = self.env().transferred_value();
-			if value == 0 {
-				return Err(Error::DepositWithoutValue);
+			if value < self.min_deposit_value {
+				return Err(Error::DepositTooLow);
 			}
 			if value > self.max_deposit_value {
 				return Err(Error::DepositTooBig);
@@ -155,7 +155,7 @@ mod staking_rewards {
 				id: self.lock_box_counter,
 				created_at: now,
 				deposit: value,
-				interest: value * self.interest_permil() / MIL,
+				interest: value * self.interest_percent_permil() / MIL / 100,
 				release: now + self.locking_duration,
 			};
 
@@ -247,11 +247,10 @@ mod staking_rewards {
 			max_total_liquidity_opt: Option<u128>,
 			locking_duration_opt: Option<u64>,
 			deposit_deadline_opt: Option<u64>,
-			base_interest_permil_opt: Option<u128>,
-			stakers_rate_permil_opt: Option<u128>,
+			base_interest_percent_permil_opt: Option<u128>,
 			stakers_sample_opt: Option<u128>,
-			liquidity_rate_permil_opt: Option<u128>,
 			liquidity_sample_opt: Option<u128>,
+			negative_interest_multiplier_permil_opt: Option<u128>,
 		) {
 			let caller = Self::env().caller();
 			self.ensure_owner(&caller);
@@ -272,24 +271,22 @@ mod staking_rewards {
 				self.deposit_deadline = deposit_deadline;
 			}
 
-			if let Some(base_interest_permil) = base_interest_permil_opt {
-				self.base_interest_permil = base_interest_permil;
-			}
-
-			if let Some(stakers_rate_permil) = stakers_rate_permil_opt {
-				self.stakers_rate_permil = stakers_rate_permil;
+			if let Some(base_interest_percent_permil) = base_interest_percent_permil_opt {
+				self.base_interest_percent_permil = base_interest_percent_permil;
 			}
 
 			if let Some(stakers_sample) = stakers_sample_opt {
 				self.stakers_sample = stakers_sample;
 			}
 
-			if let Some(liquidity_rate_permil) = liquidity_rate_permil_opt {
-				self.liquidity_rate_permil = liquidity_rate_permil;
-			}
-
 			if let Some(liquidity_sample) = liquidity_sample_opt {
 				self.liquidity_sample = liquidity_sample;
+			}
+
+			if let Some(negative_interest_multiplier_permil) =
+				negative_interest_multiplier_permil_opt
+			{
+				self.negative_interest_multiplier_permil = negative_interest_multiplier_permil;
 			}
 		}
 
@@ -322,31 +319,31 @@ mod staking_rewards {
 			Metadata {
 				owner: self.owner,
 				max_deposit_value: self.max_deposit_value,
+				min_deposit_value: self.min_deposit_value,
 				max_total_liquidity: self.max_total_liquidity,
 				locking_duration: self.locking_duration,
 				deposit_deadline: self.deposit_deadline,
-				base_interest_permil: self.base_interest_permil,
-				stakers_rate_permil: self.stakers_rate_permil,
+				base_interest_percent_permil: self.base_interest_percent_permil,
 				stakers_sample: self.stakers_sample,
-				liquidity_rate_permil: self.liquidity_rate_permil,
 				liquidity_sample: self.liquidity_sample,
+				negative_interest_multiplier_permil: self.negative_interest_multiplier_permil,
 				total_liquidity: self.total_liquidity,
 				claimed_rewards: self.claimed_rewards,
 				unclaimed_rewards: self.unclaimed_rewards,
 				stakers_count: self.stakers_count,
-				dynamic_interest_permil: self.interest_permil(),
+				dynamic_interest_percent_permil: self.interest_percent_permil(),
 			}
 		}
 
-		fn interest_permil(&self) -> u128 {
-			let negative_interest_permil = self.stakers_count / self.stakers_sample
-				* self.stakers_rate_permil
-				+ self.log2_permil(1 + self.total_liquidity / self.liquidity_sample)
-					* self.liquidity_rate_permil
-					/ MIL;
+		fn interest_percent_permil(&self) -> u128 {
+			let negative_interest_percent_permil = self.negative_interest_multiplier_permil
+				* self.log2_permil(
+					1 + self.stakers_count / self.stakers_sample
+						+ self.total_liquidity / self.liquidity_sample,
+				) / MIL;
 
-			if self.base_interest_permil >= negative_interest_permil {
-				self.base_interest_permil - negative_interest_permil
+			if self.base_interest_percent_permil >= negative_interest_percent_permil {
+				self.base_interest_percent_permil - negative_interest_percent_permil
 			} else {
 				0
 			}
@@ -542,14 +539,14 @@ mod staking_rewards {
 			set_account_balance(contract_id(), INITIAL_BALANCE);
 			StakingRewards::new(
 				MAX_DEPOSIT_VALUE,
+				1,
 				MAX_DEPOSIT_VALUE,
 				6,
 				12,
 				50_000,
+				1,
+				1,
 				0,
-				10,
-				0,
-				10,
 			)
 		}
 

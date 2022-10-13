@@ -15,19 +15,22 @@ The ```new``` function acts as a constructor and is used to initialize a contrac
 by parametrizing it with the following values:
 
 - ```max_deposit_value``` - The maximum value a user can send while making a deposit
+- ```min_deposit_value``` - The minimum value a user can send while making a deposit
 - ```max_total_liquidity``` - The maximum total liquidity from deposits allowed to be held in this contract
 - ```locking_duration``` - The duration after which the tokens and interest can be redeemed
 - ```deposit_deadline``` - The deadline after which users cannot make further deposits
-- ```base_interest_permil``` - The base interest and also the max interest
-- ```stakers_rate_permil``` - The rate with which the interest decreases based on how many stakers there are
+- ```base_interest_percent_permil``` - The base interest percent and also the max interest
 - ```stakers_sample``` - The size of the chunk of stakers which can make the interest change
-- ```liquidity_rate_permil``` - The rate with which the interest decreases based on how much liquidity there is
 - ```liquidity_sample``` - The size of the chunk of tokens which can make the interest change. Keep in mind that this value should contain the decimals too
+- ```negative_interest_multiplier_permil``` - The multiplier for the negative interest factor in dynamic interest formula
 
 The interest is dynamic and not constant. Its formula is the following:
 
 ```
-interest = base_interest - num_stakers / stakers_sample * stakers_rate_permil  - log2_permil(1 + total_liquidity / liquidity_sample) * liquidity_rate_permil / 1_000_000;
+interest = base_interest - 
+    negative_interest_multiplier_permil * 
+        log2_permil(1 + total_liquidity / liquidity_sample + num_stakers / stakers_sample) / 
+        1_000_000;
 ```
 
 This formula allows early users to have a better interest than later users. That's
@@ -43,15 +46,12 @@ It also uses samples to, for example, treat the first 100 users exactly the same
 ```stakers_sample``` is 100.
 
 Because the formula might be confusing, we can take a look at the following example:
-Say we configure base_interest_permil as 100_000 (10%) and the stakers_rate_permil 20_000 (2%),
-stakers_sample 500, liquidity_rate_permil 30_000 (3%) and liquidity_sample 10_000_000.
-This effectively means that the base interest is 10% and with every 500 new stakers,
-the interest will decrease by 2% and with every 10_000_000 tokens staked, the interest
-will decrease by 3%.
+Say we configure base_interest_permil as 10_000_000 (10%), stakers_sample 500, liquidity_sample 10_000_000
+and negative_interest_multiplier_permil 1_000_000. This effectively means that the base interest is 10%
+and with every 500 new stakers and every 10_000_000 tokens staked, the interest will decrease.
 
-For testing, some default values might be: base_interest 10_000 (10%), stakers_rate_permil 0 (0%),
-stakers_sample 1, liquidity_rate_permil 0 (0%) and liquidity_sample 1. This will make the interest
-constant of 10%.
+For testing, some default values might be: base_interest_percent_permil 10_000_000 (10%), stakers_sample 1,
+liquidity_sample 1 and negative_interest_multiplier_permil 0. This will make the interest constant of 10%.
 
 ### Deposit
 
