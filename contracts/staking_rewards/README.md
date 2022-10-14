@@ -17,6 +17,7 @@ by parametrizing it with the following values:
 - ```max_deposit_value``` - The maximum value a user can send while making a deposit
 - ```min_deposit_value``` - The minimum value a user can send while making a deposit
 - ```max_total_liquidity``` - The maximum total liquidity from deposits allowed to be held in this contract
+- ```max_stakers``` - The maximum unique stakers allowed to deposit at once
 - ```locking_duration``` - The duration after which the tokens and interest can be redeemed
 - ```deposit_deadline``` - The deadline after which users cannot make further deposits
 - ```base_interest_percent_permil``` - The base interest percent and also the max interest

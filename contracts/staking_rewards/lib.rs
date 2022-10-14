@@ -54,6 +54,7 @@ mod staking_rewards {
 		MaxTotalLiquidityReached,
 		LockBoxNotFound,
 		LockBoxNotReleased,
+		TooManyStakers,
 	}
 
 	#[ink(storage)]
@@ -63,6 +64,7 @@ mod staking_rewards {
 		max_deposit_value: u128,
 		min_deposit_value: u128,
 		max_total_liquidity: u128,
+		max_stakers: u128,
 		locking_duration: u64,
 		deposit_deadline: u64,
 		base_interest_percent_permil: u128,
@@ -76,6 +78,7 @@ mod staking_rewards {
 		user_boxes: Mapping<AccountId, Vec<u128>>,
 		lock_boxes: Mapping<u128, LockBox>,
 		lock_box_counter: u128,
+		is_paused: bool,
 	}
 
 	#[derive(Clone, Copy, Debug, PartialEq, scale::Decode, scale::Encode)]
@@ -85,6 +88,7 @@ mod staking_rewards {
 		max_deposit_value: u128,
 		min_deposit_value: u128,
 		max_total_liquidity: u128,
+		max_stakers: u128,
 		locking_duration: u64,
 		deposit_deadline: u64,
 		base_interest_percent_permil: u128,
@@ -96,6 +100,7 @@ mod staking_rewards {
 		unclaimed_rewards: u128,
 		stakers_count: u128,
 		dynamic_interest_percent_permil: u128,
+		is_paused: bool,
 	}
 
 	impl StakingRewards {
@@ -104,6 +109,7 @@ mod staking_rewards {
 			max_deposit_value: u128,
 			min_deposit_value: u128,
 			max_total_liquidity: u128,
+			max_stakers: u128,
 			locking_duration: u64,
 			deposit_deadline: u64,
 			base_interest_percent_permil: u128,
@@ -116,6 +122,7 @@ mod staking_rewards {
 				contract.max_deposit_value = max_deposit_value;
 				contract.min_deposit_value = min_deposit_value;
 				contract.max_total_liquidity = max_total_liquidity;
+				contract.max_stakers = max_stakers;
 				contract.locking_duration = locking_duration;
 				contract.deposit_deadline = deposit_deadline;
 				contract.base_interest_percent_permil = base_interest_percent_permil;
@@ -127,6 +134,7 @@ mod staking_rewards {
 				contract.unclaimed_rewards = 0;
 				contract.stakers_count = 0;
 				contract.lock_box_counter = 0;
+				contract.is_paused = false;
 			})
 		}
 
@@ -134,6 +142,8 @@ mod staking_rewards {
 		pub fn deposit(&mut self) -> Result<LockBox, Error> {
 			let caller = self.env().caller();
 			self.ensure_not_self_account(&caller);
+
+			self.ensure_not_paused();
 
 			let now = self.env().block_timestamp();
 			if now > self.deposit_deadline {
@@ -159,7 +169,7 @@ mod staking_rewards {
 				release: now + self.locking_duration,
 			};
 
-			self.add_box(&caller, lock_box.clone());
+			self.add_box(&caller, &lock_box)?;
 
 			self.total_liquidity += value;
 			self.unclaimed_rewards += lock_box.interest;
@@ -177,6 +187,8 @@ mod staking_rewards {
 		pub fn redeem(&mut self, lock_box_id: u128) -> Result<Balance, Error> {
 			let caller = self.env().caller();
 			self.ensure_not_self_account(&caller);
+
+			self.ensure_not_paused();
 
 			let lock_box = self.remove_box(&caller, lock_box_id, true);
 			if lock_box.is_err() {
@@ -205,6 +217,8 @@ mod staking_rewards {
 		pub fn early_withdraw(&mut self, lock_box_id: u128) -> Result<Balance, Error> {
 			let caller = self.env().caller();
 			self.ensure_not_self_account(&caller);
+
+			self.ensure_not_paused();
 
 			let lock_box = self.remove_box(&caller, lock_box_id, false);
 			if lock_box.is_err() {
@@ -291,12 +305,33 @@ mod staking_rewards {
 		}
 
 		#[ink(message)]
-		pub fn get_box_ids(&self, account_id: AccountId) -> Option<Vec<u128>> {
+		pub fn set_box(&mut self, lock_box: LockBox) {
+			let caller = Self::env().caller();
+			self.ensure_owner(&caller);
+			self.lock_boxes.insert(lock_box.id, &lock_box);
+		}
+
+		#[ink(message)]
+		pub fn pause_contract(&mut self) {
+			let caller = Self::env().caller();
+			self.ensure_owner(&caller);
+			self.is_paused = true;
+		}
+
+		#[ink(message)]
+		pub fn resume_contract(&mut self) {
+			let caller = Self::env().caller();
+			self.ensure_owner(&caller);
+			self.is_paused = false;
+		}
+
+		#[ink(message)]
+		pub fn get_box_ids_for_account(&self, account_id: AccountId) -> Option<Vec<u128>> {
 			self.user_boxes.get(&account_id)
 		}
 
 		#[ink(message)]
-		pub fn get_boxes(&self, account_id: AccountId) -> Option<Vec<LockBox>> {
+		pub fn get_boxes_for_account(&self, account_id: AccountId) -> Option<Vec<LockBox>> {
 			let box_ids = self.user_boxes.get(&account_id);
 
 			match box_ids {
@@ -304,6 +339,20 @@ mod staking_rewards {
 					vec.iter()
 						.map(|lock_box_id| self.lock_boxes.get(lock_box_id).unwrap())
 						.collect(),
+				),
+				None => None,
+			}
+		}
+
+		#[ink(message)]
+		pub fn get_total_staked_by_account(&self, account_id: AccountId) -> Option<u128> {
+			let box_ids = self.user_boxes.get(&account_id);
+
+			match box_ids {
+				Some(vec) => Some(
+					vec.iter()
+						.map(|lock_box_id| self.lock_boxes.get(lock_box_id).unwrap().deposit)
+						.sum(),
 				),
 				None => None,
 			}
@@ -321,6 +370,7 @@ mod staking_rewards {
 				max_deposit_value: self.max_deposit_value,
 				min_deposit_value: self.min_deposit_value,
 				max_total_liquidity: self.max_total_liquidity,
+				max_stakers: self.max_stakers,
 				locking_duration: self.locking_duration,
 				deposit_deadline: self.deposit_deadline,
 				base_interest_percent_permil: self.base_interest_percent_permil,
@@ -332,6 +382,7 @@ mod staking_rewards {
 				unclaimed_rewards: self.unclaimed_rewards,
 				stakers_count: self.stakers_count,
 				dynamic_interest_percent_permil: self.interest_percent_permil(),
+				is_paused: self.is_paused,
 			}
 		}
 
@@ -349,7 +400,7 @@ mod staking_rewards {
 			}
 		}
 
-		fn add_box(&mut self, account: &AccountId, lock_box: LockBox) {
+		fn add_box(&mut self, account: &AccountId, lock_box: &LockBox) -> Result<(), Error> {
 			let boxes = self.user_boxes.get(&account);
 
 			match boxes {
@@ -358,12 +409,17 @@ mod staking_rewards {
 					self.user_boxes.insert(&account, &boxes);
 				}
 				None => {
+					if self.stakers_count == self.max_stakers {
+						return Err(Error::TooManyStakers);
+					}
+
 					self.stakers_count += 1;
 					self.user_boxes.insert(&account, &vec![lock_box.id]);
 				}
 			}
 
-			self.lock_boxes.insert(lock_box.id, &lock_box);
+			self.lock_boxes.insert(lock_box.id, lock_box);
+			Ok(())
 		}
 
 		fn remove_box(
@@ -430,6 +486,10 @@ mod staking_rewards {
 			assert_eq!(account, &self.owner, "account is not owner");
 		}
 
+		fn ensure_not_paused(&self) {
+			assert!(!self.is_paused, "contract is paused");
+		}
+
 		fn log2_permil(&self, num: u128) -> u128 {
 			match num {
 				1 => 0,
@@ -463,6 +523,38 @@ mod staking_rewards {
 				30 => 4906891,
 				31 => 4954196,
 				32 => 5000000,
+				33 => 5044394,
+				34 => 5087463,
+				35 => 5129283,
+				36 => 5169925,
+				37 => 5209453,
+				38 => 5247928,
+				39 => 5285402,
+				40 => 5321928,
+				41 => 5357552,
+				42 => 5392317,
+				43 => 5426265,
+				44 => 5459432,
+				45 => 5491853,
+				46 => 5523562,
+				47 => 5554589,
+				48 => 5584963,
+				49 => 5614710,
+				50 => 5643856,
+				51 => 5672425,
+				52 => 5700440,
+				53 => 5727920,
+				54 => 5754888,
+				55 => 5781360,
+				56 => 5807355,
+				57 => 5832890,
+				58 => 5857981,
+				59 => 5882643,
+				60 => 5906891,
+				61 => 5930737,
+				62 => 5954196,
+				63 => 5977280,
+				64 => 6000000,
 				_ => {
 					panic!("Could not perform log2");
 				}
@@ -476,8 +568,9 @@ mod staking_rewards {
 
 		use ink_env::{test, AccountId, DefaultEnvironment};
 
-		const MAX_DEPOSIT_VALUE: u128 = u128::MAX / MIL;
+		const MAX_DEPOSIT_VALUE: u128 = u128::MAX / MIL / 100;
 		const INITIAL_BALANCE: u128 = 5;
+		const MAX_STAKERS: u128 = 10_000;
 
 		#[derive(scale::Encode, scale::Decode, Debug, PartialEq, Eq, Copy, Clone)]
 		#[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
@@ -541,9 +634,10 @@ mod staking_rewards {
 				MAX_DEPOSIT_VALUE,
 				1,
 				MAX_DEPOSIT_VALUE,
+				MAX_STAKERS,
 				6,
 				12,
-				50_000,
+				5_000_000,
 				1,
 				1,
 				0,
