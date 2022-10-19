@@ -73,7 +73,7 @@ jobs:
       - name: Check the metadata diff
         shell: bash
         run: |
-          subwasm get wss://arctic-rpc.icenetwork.io:9944 --output ${{ github.event.inputs.chain }}-live.wasm
+          subwasm get wss://${{ github.event.inputs.chain }}-rpc.icenetwork.io:9944 --output ${{ github.event.inputs.chain }}-live.wasm
           subwasm diff ${{ steps.srtool_build.outputs.wasm }} ${{ github.event.inputs.chain }}-live.wasm | \
             tee ${{ matrix.chain }}-diff.txt
       - name: Archive Subwasm results
