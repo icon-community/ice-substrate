@@ -7,7 +7,7 @@ homepage = 'https://substrate.dev'
 license = 'Apache-2.0'
 name = 'arctic-runtime'
 repository = 'https://github.com/web3labs/ice-substrate/'
-version = '0.4.55'
+version = '0.4.56'
 publish = false
 
 [package.metadata.docs.rs]
