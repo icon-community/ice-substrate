@@ -1,11 +1,11 @@
 [package]
-name = "time_lock"
+name = "staking_rewards"
 version = "0.1.0"
 authors = ["[your_name] <[your_email]>"]
 edition = "2021"
 
 [lib]
-name = "time_lock"
+name = "staking_rewards"
 path = "lib.rs"
 crate-type = [
 	"cdylib",

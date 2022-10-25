@@ -1,0 +1,54 @@
+# Deployment parameters
+
+max_deposit_value: 5M ICZ
+5_000_000_000_000_000_000_000_000
+
+min_deposit_value: 5 ICZ
+5_000_000_000_000_000_000
+
+max_total_liquidity: 150M ICZ
+150_000_000_000_000_000_000_000_000
+
+max_stakers: 5k
+5_000
+
+locking_duration: 6 Months in milliseconds
+15_552_000_000
+
+deposit_deadline: TBD in milliseconds
+_
+
+base_interest_percent_permil: 10% (20% APR)
+10_000_000
+
+stakers_sample: 250
+250
+
+liquidity_sample: 5M ICZ
+5_000_000_000_000_000_000_000_000
+
+negative_interest_multiplier_permil: 1.68
+1_680_000
+
+
+
+Maximum dynamic interest:
+10 - 1.68 * log2(1) = 10
+
+Minimum dynamic interest:
+1 + 150M/5M + 5_000/250 = 51
+10 - 1.68 * log2(1 + 150M/5M + 5_000/250) = 0.4703
+
+Target average interest:
+x = [0:1:50]
+mean(10 - 1.68 * log2(1 + x)) = 2.7569
+
+Worse average interest:
+x = [0:1:30]
+mean(10 - 1.68 * log2(1 + x)) = 3.8944
+
+Target Rewards:
+2.7569 * 150M / 100 = 4_135_350
+
+Worse Rewards:
+3.8944 * 150M / 100 = 5_841_600
