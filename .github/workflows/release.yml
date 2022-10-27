@@ -24,7 +24,7 @@ jobs:
       SUBWASM_VERSION: 0.17.0
     strategy:
       matrix:
-        chain: ['${{ github.event.inputs.chain }}']
+        chain: ["arctic", "snow"]
     steps:
       - uses: actions/checkout@v3
         with:
@@ -73,8 +73,8 @@ jobs:
       - name: Check the metadata diff
         shell: bash
         run: |
-          subwasm get wss://${{ github.event.inputs.chain }}-rpc.icenetwork.io:9944 --output ${{ github.event.inputs.chain }}-live.wasm
-          subwasm diff ${{ steps.srtool_build.outputs.wasm }} ${{ github.event.inputs.chain }}-live.wasm | \
+          subwasm get wss://${{ matrix.chain }}-rpc.icenetwork.io:9944 --output ${{ matrix.chain }}-live.wasm
+          subwasm diff ${{ steps.srtool_build.outputs.wasm }} ${{ matrix.chain }}-live.wasm | \
             tee ${{ matrix.chain }}-diff.txt
       - name: Archive Subwasm results
         uses: actions/upload-artifact@v2
@@ -85,6 +85,7 @@ jobs:
             ${{ matrix.chain }}-compressed-info.json
             ${{ matrix.chain }}-metadata.json
             ${{ matrix.chain }}-diff.txt
+
   build-binary:
     name: Build binary
     runs-on: ubuntu-20.04
@@ -100,30 +101,38 @@ jobs:
         target: x86_64-unknown-linux-gnu
         components: rustfmt, clippy
         default: true
-
     - name: Install WASM target (for runtime building)
       shell: bash
       run: rustup target add wasm32-unknown-unknown --toolchain nightly-2022-01-16
-
     - name: Build optimized binary
       uses: actions-rs/cargo@v1
       with:
         command: build
         args: --release --locked --target x86_64-unknown-linux-gnu
+    - name: try-runtime-arctic
+      uses: actions-rs/cargo@v1
+      with:
+        command: run
+        args: --bin ice-node --release --features try-runtime -- try-runtime --chain arctic --wasm-execution=compiled on-runtime-upgrade live --uri=wss://arctic-rpc.icenetwork.io:9944
+
+    - name: try-runtime-snow
+      uses: actions-rs/cargo@v1
+      with:
+        command: run
+        args: --bin ice-node --release --features try-runtime -- try-runtime --chain snow-testnet --wasm-execution=compiled on-runtime-upgrade live --uri=wss://snow-rpc.icenetwork.io:9944 
 
     - name: Upload build artifacts
       uses: actions/upload-artifact@master
       with:
         name: x86_64-unknown-linux-gnu
         path: target/x86_64-unknown-linux-gnu/release/ice-node
-
+  
   release:
     name: Release
     needs:
     - build-binary
     - build-runtime
     runs-on: ubuntu-latest
-
     steps:
     - name: Checkout the source code
       uses: actions/checkout@v3
@@ -132,7 +141,7 @@ jobs:
       run: |
         mkdir -p release/tmp/
         cd release/tmp/
-        mkdir  ${{ github.event.inputs.chain }} x86_64
+        mkdir arctic snow runtimes x86_64
     - name: get x86_64 binary
       uses: actions/download-artifact@v2
       with:
@@ -140,22 +149,27 @@ jobs:
         path: release/tmp/x86_64/
     - uses: actions/download-artifact@v2
       with:
-        name: ${{ github.event.inputs.chain }}-runtime
-        path: release/tmp/${{ github.event.inputs.chain }}/
+        name: arctic-runtime
+        path: release/tmp/arctic/
+    - uses: actions/download-artifact@v2
+      with:
+        name: snow-runtime
+        path: release/tmp/snow/
     - id: compress_artifacts
       shell: bash
       run: |
         cd release/
-        echo "::set-output name=${{ github.event.inputs.chain }}::$(jq -r '.core_version' tmp/${{ github.event.inputs.chain }}/${{ github.event.inputs.chain }}-info.json | awk '{print $1}')"
         chmod +x tmp/x86_64/ice-node
         tar -czvf ice-node.tar.gz -C tmp/x86_64/ ice-node
-        cd tmp/${{ github.event.inputs.chain }};tar -czvf ../../runtime-"$(jq -r '.core_version' ${{ github.event.inputs.chain }}-info.json | awk '{print $1}')".tar.gz *;cd ../../
+        cp -R tmp/arctic tmp/runtimes/
+        cp -R tmp/snow tmp/runtimes/
+        cd tmp/runtimes;tar -czvf ../../runtimes.tar.gz *;cd ../../
         sha256sum *.tar.gz > sha256sum
         rm -rf tmp/
 
     - name: Upload assets to release
       uses: softprops/action-gh-release@v1
       with:
-        name: ${{ github.event.inputs.chain }} ${{ github.event.inputs.release-version }}
+        name: runtimes ${{ github.event.inputs.release-version }}
         files: ./release/*
         draft: true
