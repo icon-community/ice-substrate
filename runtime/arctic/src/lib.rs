@@ -1413,6 +1413,10 @@ construct_runtime!(
 		AssetRegistry: orml_asset_registry::{Pallet, Call, Storage, Event<T>} = 90,
 		UnknownTokens: orml_unknown_tokens::{Pallet, Storage, Event} = 91,
 		Currencies: orml_currencies::{Pallet, Call, Storage} = 92,
+
+		// Crust Xstorage
+		XstorageClient: xstorage_client::{Pallet, Storage, Call, Event<T>} = 128,
+
 	}
 );
 

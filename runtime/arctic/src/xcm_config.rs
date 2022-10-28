@@ -263,3 +263,21 @@ impl cumulus_pallet_xcm::Config for Runtime {
 	type Event = Event;
 	type XcmExecutor = XcmExecutor<XcmConfig>;
 }
+
+parameter_types! {
+	pub FeePerSecond: u128 = 1_000_000;
+}
+
+impl xstorage_client::Config for Runtime {
+	type Event = Event;
+	type XcmpMessageSender = XcmRouter;
+	type AssetTransactor = AssetTransactors;
+	type CurrencyId = CurrencyId;
+	type AccountIdToMultiLocation = AccountIdToMultiLocation;
+	type CurrencyIdToMultiLocation = // There should be one convert
+	type LocationInverter = LocationInverter<Ancestry>;
+	type CrustNativeToken = xstorage_client::primitives::CrustShadowLocation;
+	type SelfNativeToken = AssetsPalletLocation;
+	type FeePerSecond = FeePerSecond;
+	type Destination = xstorage_client::primitives::CsmMultiloaction;
+}

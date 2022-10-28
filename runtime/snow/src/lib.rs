@@ -1151,8 +1151,6 @@ construct_runtime!(
 		CumulusXcm: cumulus_pallet_xcm::{Pallet, Event<T>, Origin} = 82,
 		DmpQueue: cumulus_pallet_dmp_queue::{Pallet, Call, Storage, Event<T>} = 83,
 
-		// Crust Xstorage
-		XstorageClient: xstorage_client::{Pallet, Storage, Call, Event<T>} = 128,
 	}
 );
 

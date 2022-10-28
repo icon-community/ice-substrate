@@ -120,9 +120,6 @@ xcm = { git = "https://github.com/paritytech/polkadot", default-features = false
 xcm-builder = { git = "https://github.com/paritytech/polkadot", default-features = false, branch = "release-v0.9.24" }
 xcm-executor = { git = "https://github.com/paritytech/polkadot", default-features = false, branch = "release-v0.9.24" }
 
-# Crust Dependency
-xstorage-client = { git = "https://github.com/crustio/xstorage", package = "xstorage-client", branch = "polkadot-v0.9.24" }
-
 [dev-dependencies]
 separator = "0.4.1"
 keyring = { package = "sp-keyring", git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.24" }
