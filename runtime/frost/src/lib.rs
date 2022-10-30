@@ -418,12 +418,11 @@ impl<F: FindAuthor<u32>> FindAuthor<H160> for FindAuthorTruncated<F> {
 	}
 }
 
-//https://github.com/AstarNetwork/Astar/blob/master/runtime/astar/src/lib.rs#L658
 pub const GAS_PER_SECOND: u64 = 40_000_000;
 pub const WEIGHT_PER_GAS: u64 = WEIGHT_PER_SECOND / GAS_PER_SECOND;
 
 parameter_types! {
-	pub const ChainId: u64 = 553;
+	pub const ChainId: u64 = 554;
 	pub BlockGasLimit: U256 = U256::from(NORMAL_DISPATCH_RATIO * 2 * WEIGHT_PER_SECOND / WEIGHT_PER_GAS);
 	pub PrecompilesValue: FrontierPrecompiles<Runtime> = FrontierPrecompiles::<_>::new();
 }
