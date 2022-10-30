@@ -6,7 +6,7 @@ max_deposit_value: 5M ICZ
 min_deposit_value: 5 ICZ
 5_000_000_000_000_000_000
 
-max_total_liquidity: 150M ICZ
+max_total_liquidity: 100M ICZ
 100_000_000_000_000_000_000_000_000
 
 max_stakers: 5k
@@ -15,8 +15,8 @@ max_stakers: 5k
 locking_duration: 3 Months in milliseconds
 7_776_000_000
 
-deposit_deadline: TBD in milliseconds
-_
+deposit_deadline: 1 Month in milliseconds
+2_629_800_000
 
 base_interest_percent_permil: 5% (20% APR)
 5_000_000
