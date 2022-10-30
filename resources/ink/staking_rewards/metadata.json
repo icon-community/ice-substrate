@@ -1,0 +1,1352 @@
+{
+  "source": {
+    "hash": "0x68de79bec509425515ee9a76aa408ca8dd6131e15751a47b04ffae3cf5ac0420",
+    "language": "ink! 3.3.1",
+    "compiler": "rustc 1.66.0-nightly"
+  },
+  "contract": {
+    "name": "staking_rewards",
+    "version": "0.1.0",
+    "authors": [
+      "[your_name] <[your_email]>"
+    ]
+  },
+  "V3": {
+    "spec": {
+      "constructors": [
+        {
+          "args": [
+            {
+              "label": "max_deposit_value",
+              "type": {
+                "displayName": [
+                  "u128"
+                ],
+                "type": 3
+              }
+            },
+            {
+              "label": "min_deposit_value",
+              "type": {
+                "displayName": [
+                  "u128"
+                ],
+                "type": 3
+              }
+            },
+            {
+              "label": "max_total_liquidity",
+              "type": {
+                "displayName": [
+                  "u128"
+                ],
+                "type": 3
+              }
+            },
+            {
+              "label": "max_stakers",
+              "type": {
+                "displayName": [
+                  "u128"
+                ],
+                "type": 3
+              }
+            },
+            {
+              "label": "locking_duration",
+              "type": {
+                "displayName": [
+                  "u64"
+                ],
+                "type": 4
+              }
+            },
+            {
+              "label": "deposit_deadline",
+              "type": {
+                "displayName": [
+                  "u64"
+                ],
+                "type": 4
+              }
+            },
+            {
+              "label": "base_interest_percent_permil",
+              "type": {
+                "displayName": [
+                  "u128"
+                ],
+                "type": 3
+              }
+            },
+            {
+              "label": "stakers_sample",
+              "type": {
+                "displayName": [
+                  "u128"
+                ],
+                "type": 3
+              }
+            },
+            {
+              "label": "liquidity_sample",
+              "type": {
+                "displayName": [
+                  "u128"
+                ],
+                "type": 3
+              }
+            },
+            {
+              "label": "negative_interest_multiplier_permil",
+              "type": {
+                "displayName": [
+                  "u128"
+                ],
+                "type": 3
+              }
+            }
+          ],
+          "docs": [],
+          "label": "new",
+          "payable": true,
+          "selector": "0x9bae9d5e"
+        }
+      ],
+      "docs": [],
+      "events": [
+        {
+          "args": [
+            {
+              "docs": [],
+              "indexed": false,
+              "label": "staker",
+              "type": {
+                "displayName": [
+                  "AccountId"
+                ],
+                "type": 0
+              }
+            },
+            {
+              "docs": [],
+              "indexed": false,
+              "label": "lock_box",
+              "type": {
+                "displayName": [
+                  "LockBox"
+                ],
+                "type": 9
+              }
+            }
+          ],
+          "docs": [],
+          "label": "DepositSuccessful"
+        },
+        {
+          "args": [
+            {
+              "docs": [],
+              "indexed": false,
+              "label": "staker",
+              "type": {
+                "displayName": [
+                  "AccountId"
+                ],
+                "type": 0
+              }
+            },
+            {
+              "docs": [],
+              "indexed": false,
+              "label": "lock_box",
+              "type": {
+                "displayName": [
+                  "LockBox"
+                ],
+                "type": 9
+              }
+            }
+          ],
+          "docs": [],
+          "label": "RedeemSuccessful"
+        },
+        {
+          "args": [
+            {
+              "docs": [],
+              "indexed": false,
+              "label": "staker",
+              "type": {
+                "displayName": [
+                  "AccountId"
+                ],
+                "type": 0
+              }
+            },
+            {
+              "docs": [],
+              "indexed": false,
+              "label": "lock_box",
+              "type": {
+                "displayName": [
+                  "LockBox"
+                ],
+                "type": 9
+              }
+            }
+          ],
+          "docs": [],
+          "label": "WithdrawSuccessful"
+        }
+      ],
+      "messages": [
+        {
+          "args": [],
+          "docs": [],
+          "label": "deposit",
+          "mutates": true,
+          "payable": true,
+          "returnType": {
+            "displayName": [
+              "Result"
+            ],
+            "type": 11
+          },
+          "selector": "0x2d10c9bd"
+        },
+        {
+          "args": [
+            {
+              "label": "lock_box_id",
+              "type": {
+                "displayName": [
+                  "u128"
+                ],
+                "type": 3
+              }
+            }
+          ],
+          "docs": [],
+          "label": "redeem",
+          "mutates": true,
+          "payable": false,
+          "returnType": {
+            "displayName": [
+              "Result"
+            ],
+            "type": 13
+          },
+          "selector": "0xec3e9290"
+        },
+        {
+          "args": [
+            {
+              "label": "lock_box_id",
+              "type": {
+                "displayName": [
+                  "u128"
+                ],
+                "type": 3
+              }
+            }
+          ],
+          "docs": [],
+          "label": "early_withdraw",
+          "mutates": true,
+          "payable": false,
+          "returnType": {
+            "displayName": [
+              "Result"
+            ],
+            "type": 13
+          },
+          "selector": "0x6d5d6604"
+        },
+        {
+          "args": [
+            {
+              "label": "amount",
+              "type": {
+                "displayName": [
+                  "u128"
+                ],
+                "type": 3
+              }
+            }
+          ],
+          "docs": [],
+          "label": "refund",
+          "mutates": true,
+          "payable": false,
+          "returnType": {
+            "displayName": [
+              "Result"
+            ],
+            "type": 14
+          },
+          "selector": "0xa5a47441"
+        },
+        {
+          "args": [
+            {
+              "label": "max_deposit_value_opt",
+              "type": {
+                "displayName": [
+                  "Option"
+                ],
+                "type": 16
+              }
+            },
+            {
+              "label": "max_total_liquidity_opt",
+              "type": {
+                "displayName": [
+                  "Option"
+                ],
+                "type": 16
+              }
+            },
+            {
+              "label": "locking_duration_opt",
+              "type": {
+                "displayName": [
+                  "Option"
+                ],
+                "type": 17
+              }
+            },
+            {
+              "label": "deposit_deadline_opt",
+              "type": {
+                "displayName": [
+                  "Option"
+                ],
+                "type": 17
+              }
+            },
+            {
+              "label": "base_interest_percent_permil_opt",
+              "type": {
+                "displayName": [
+                  "Option"
+                ],
+                "type": 16
+              }
+            },
+            {
+              "label": "stakers_sample_opt",
+              "type": {
+                "displayName": [
+                  "Option"
+                ],
+                "type": 16
+              }
+            },
+            {
+              "label": "liquidity_sample_opt",
+              "type": {
+                "displayName": [
+                  "Option"
+                ],
+                "type": 16
+              }
+            },
+            {
+              "label": "negative_interest_multiplier_permil_opt",
+              "type": {
+                "displayName": [
+                  "Option"
+                ],
+                "type": 16
+              }
+            }
+          ],
+          "docs": [],
+          "label": "configure_contract",
+          "mutates": true,
+          "payable": false,
+          "returnType": null,
+          "selector": "0x0daefd36"
+        },
+        {
+          "args": [
+            {
+              "label": "lock_box",
+              "type": {
+                "displayName": [
+                  "LockBox"
+                ],
+                "type": 9
+              }
+            }
+          ],
+          "docs": [],
+          "label": "set_box",
+          "mutates": true,
+          "payable": false,
+          "returnType": null,
+          "selector": "0x676987ad"
+        },
+        {
+          "args": [],
+          "docs": [],
+          "label": "pause_contract",
+          "mutates": true,
+          "payable": false,
+          "returnType": null,
+          "selector": "0x1cef9351"
+        },
+        {
+          "args": [],
+          "docs": [],
+          "label": "resume_contract",
+          "mutates": true,
+          "payable": false,
+          "returnType": null,
+          "selector": "0x62bdedce"
+        },
+        {
+          "args": [
+            {
+              "label": "account_id",
+              "type": {
+                "displayName": [
+                  "AccountId"
+                ],
+                "type": 0
+              }
+            }
+          ],
+          "docs": [],
+          "label": "get_box_ids_for_account",
+          "mutates": false,
+          "payable": false,
+          "returnType": {
+            "displayName": [
+              "Option"
+            ],
+            "type": 18
+          },
+          "selector": "0xf801c2c0"
+        },
+        {
+          "args": [
+            {
+              "label": "account_id",
+              "type": {
+                "displayName": [
+                  "AccountId"
+                ],
+                "type": 0
+              }
+            }
+          ],
+          "docs": [],
+          "label": "get_boxes_for_account",
+          "mutates": false,
+          "payable": false,
+          "returnType": {
+            "displayName": [
+              "Option"
+            ],
+            "type": 19
+          },
+          "selector": "0xf0478f60"
+        },
+        {
+          "args": [
+            {
+              "label": "account_id",
+              "type": {
+                "displayName": [
+                  "AccountId"
+                ],
+                "type": 0
+              }
+            }
+          ],
+          "docs": [],
+          "label": "get_total_staked_by_account",
+          "mutates": false,
+          "payable": false,
+          "returnType": {
+            "displayName": [
+              "Option"
+            ],
+            "type": 16
+          },
+          "selector": "0x84726e23"
+        },
+        {
+          "args": [
+            {
+              "label": "lock_box_id",
+              "type": {
+                "displayName": [
+                  "u128"
+                ],
+                "type": 3
+              }
+            }
+          ],
+          "docs": [],
+          "label": "get_box",
+          "mutates": false,
+          "payable": false,
+          "returnType": {
+            "displayName": [
+              "Option"
+            ],
+            "type": 21
+          },
+          "selector": "0x52fa3250"
+        },
+        {
+          "args": [],
+          "docs": [],
+          "label": "get_metadata",
+          "mutates": false,
+          "payable": false,
+          "returnType": {
+            "displayName": [
+              "Metadata"
+            ],
+            "type": 22
+          },
+          "selector": "0x928198d3"
+        }
+      ]
+    },
+    "storage": {
+      "struct": {
+        "fields": [
+          {
+            "layout": {
+              "cell": {
+                "key": "0x0000000000000000000000000000000000000000000000000000000000000000",
+                "ty": 0
+              }
+            },
+            "name": "owner"
+          },
+          {
+            "layout": {
+              "cell": {
+                "key": "0x0100000000000000000000000000000000000000000000000000000000000000",
+                "ty": 3
+              }
+            },
+            "name": "max_deposit_value"
+          },
+          {
+            "layout": {
+              "cell": {
+                "key": "0x0200000000000000000000000000000000000000000000000000000000000000",
+                "ty": 3
+              }
+            },
+            "name": "min_deposit_value"
+          },
+          {
+            "layout": {
+              "cell": {
+                "key": "0x0300000000000000000000000000000000000000000000000000000000000000",
+                "ty": 3
+              }
+            },
+            "name": "max_total_liquidity"
+          },
+          {
+            "layout": {
+              "cell": {
+                "key": "0x0400000000000000000000000000000000000000000000000000000000000000",
+                "ty": 3
+              }
+            },
+            "name": "max_stakers"
+          },
+          {
+            "layout": {
+              "cell": {
+                "key": "0x0500000000000000000000000000000000000000000000000000000000000000",
+                "ty": 4
+              }
+            },
+            "name": "locking_duration"
+          },
+          {
+            "layout": {
+              "cell": {
+                "key": "0x0600000000000000000000000000000000000000000000000000000000000000",
+                "ty": 4
+              }
+            },
+            "name": "deposit_deadline"
+          },
+          {
+            "layout": {
+              "cell": {
+                "key": "0x0700000000000000000000000000000000000000000000000000000000000000",
+                "ty": 3
+              }
+            },
+            "name": "base_interest_percent_permil"
+          },
+          {
+            "layout": {
+              "cell": {
+                "key": "0x0800000000000000000000000000000000000000000000000000000000000000",
+                "ty": 3
+              }
+            },
+            "name": "stakers_sample"
+          },
+          {
+            "layout": {
+              "cell": {
+                "key": "0x0900000000000000000000000000000000000000000000000000000000000000",
+                "ty": 3
+              }
+            },
+            "name": "liquidity_sample"
+          },
+          {
+            "layout": {
+              "cell": {
+                "key": "0x0a00000000000000000000000000000000000000000000000000000000000000",
+                "ty": 3
+              }
+            },
+            "name": "negative_interest_multiplier_permil"
+          },
+          {
+            "layout": {
+              "cell": {
+                "key": "0x0b00000000000000000000000000000000000000000000000000000000000000",
+                "ty": 3
+              }
+            },
+            "name": "total_liquidity"
+          },
+          {
+            "layout": {
+              "cell": {
+                "key": "0x0c00000000000000000000000000000000000000000000000000000000000000",
+                "ty": 3
+              }
+            },
+            "name": "claimed_rewards"
+          },
+          {
+            "layout": {
+              "cell": {
+                "key": "0x0d00000000000000000000000000000000000000000000000000000000000000",
+                "ty": 3
+              }
+            },
+            "name": "unclaimed_rewards"
+          },
+          {
+            "layout": {
+              "cell": {
+                "key": "0x0e00000000000000000000000000000000000000000000000000000000000000",
+                "ty": 3
+              }
+            },
+            "name": "stakers_count"
+          },
+          {
+            "layout": {
+              "cell": {
+                "key": "0x0f00000000000000000000000000000000000000000000000000000000000000",
+                "ty": 5
+              }
+            },
+            "name": "user_boxes"
+          },
+          {
+            "layout": {
+              "cell": {
+                "key": "0x1000000000000000000000000000000000000000000000000000000000000000",
+                "ty": 8
+              }
+            },
+            "name": "lock_boxes"
+          },
+          {
+            "layout": {
+              "cell": {
+                "key": "0x1100000000000000000000000000000000000000000000000000000000000000",
+                "ty": 3
+              }
+            },
+            "name": "lock_box_counter"
+          },
+          {
+            "layout": {
+              "cell": {
+                "key": "0x1200000000000000000000000000000000000000000000000000000000000000",
+                "ty": 10
+              }
+            },
+            "name": "is_paused"
+          }
+        ]
+      }
+    },
+    "types": [
+      {
+        "id": 0,
+        "type": {
+          "def": {
+            "composite": {
+              "fields": [
+                {
+                  "type": 1,
+                  "typeName": "[u8; 32]"
+                }
+              ]
+            }
+          },
+          "path": [
+            "ink_env",
+            "types",
+            "AccountId"
+          ]
+        }
+      },
+      {
+        "id": 1,
+        "type": {
+          "def": {
+            "array": {
+              "len": 32,
+              "type": 2
+            }
+          }
+        }
+      },
+      {
+        "id": 2,
+        "type": {
+          "def": {
+            "primitive": "u8"
+          }
+        }
+      },
+      {
+        "id": 3,
+        "type": {
+          "def": {
+            "primitive": "u128"
+          }
+        }
+      },
+      {
+        "id": 4,
+        "type": {
+          "def": {
+            "primitive": "u64"
+          }
+        }
+      },
+      {
+        "id": 5,
+        "type": {
+          "def": {
+            "composite": {
+              "fields": [
+                {
+                  "name": "offset_key",
+                  "type": 7,
+                  "typeName": "Key"
+                }
+              ]
+            }
+          },
+          "params": [
+            {
+              "name": "K",
+              "type": 0
+            },
+            {
+              "name": "V",
+              "type": 6
+            }
+          ],
+          "path": [
+            "ink_storage",
+            "lazy",
+            "mapping",
+            "Mapping"
+          ]
+        }
+      },
+      {
+        "id": 6,
+        "type": {
+          "def": {
+            "sequence": {
+              "type": 3
+            }
+          }
+        }
+      },
+      {
+        "id": 7,
+        "type": {
+          "def": {
+            "composite": {
+              "fields": [
+                {
+                  "type": 1,
+                  "typeName": "[u8; 32]"
+                }
+              ]
+            }
+          },
+          "path": [
+            "ink_primitives",
+            "Key"
+          ]
+        }
+      },
+      {
+        "id": 8,
+        "type": {
+          "def": {
+            "composite": {
+              "fields": [
+                {
+                  "name": "offset_key",
+                  "type": 7,
+                  "typeName": "Key"
+                }
+              ]
+            }
+          },
+          "params": [
+            {
+              "name": "K",
+              "type": 3
+            },
+            {
+              "name": "V",
+              "type": 9
+            }
+          ],
+          "path": [
+            "ink_storage",
+            "lazy",
+            "mapping",
+            "Mapping"
+          ]
+        }
+      },
+      {
+        "id": 9,
+        "type": {
+          "def": {
+            "composite": {
+              "fields": [
+                {
+                  "name": "id",
+                  "type": 3,
+                  "typeName": "u128"
+                },
+                {
+                  "name": "created_at",
+                  "type": 4,
+                  "typeName": "Timestamp"
+                },
+                {
+                  "name": "deposit",
+                  "type": 3,
+                  "typeName": "Balance"
+                },
+                {
+                  "name": "interest",
+                  "type": 3,
+                  "typeName": "Balance"
+                },
+                {
+                  "name": "release",
+                  "type": 4,
+                  "typeName": "Timestamp"
+                }
+              ]
+            }
+          },
+          "path": [
+            "staking_rewards",
+            "staking_rewards",
+            "LockBox"
+          ]
+        }
+      },
+      {
+        "id": 10,
+        "type": {
+          "def": {
+            "primitive": "bool"
+          }
+        }
+      },
+      {
+        "id": 11,
+        "type": {
+          "def": {
+            "variant": {
+              "variants": [
+                {
+                  "fields": [
+                    {
+                      "type": 9
+                    }
+                  ],
+                  "index": 0,
+                  "name": "Ok"
+                },
+                {
+                  "fields": [
+                    {
+                      "type": 12
+                    }
+                  ],
+                  "index": 1,
+                  "name": "Err"
+                }
+              ]
+            }
+          },
+          "params": [
+            {
+              "name": "T",
+              "type": 9
+            },
+            {
+              "name": "E",
+              "type": 12
+            }
+          ],
+          "path": [
+            "Result"
+          ]
+        }
+      },
+      {
+        "id": 12,
+        "type": {
+          "def": {
+            "variant": {
+              "variants": [
+                {
+                  "index": 0,
+                  "name": "DepositDeadlinePassed"
+                },
+                {
+                  "index": 1,
+                  "name": "DepositTooLow"
+                },
+                {
+                  "index": 2,
+                  "name": "DepositTooBig"
+                },
+                {
+                  "index": 3,
+                  "name": "MaxTotalLiquidityReached"
+                },
+                {
+                  "index": 4,
+                  "name": "LockBoxNotFound"
+                },
+                {
+                  "index": 5,
+                  "name": "LockBoxNotReleased"
+                },
+                {
+                  "index": 6,
+                  "name": "TooManyStakers"
+                }
+              ]
+            }
+          },
+          "path": [
+            "staking_rewards",
+            "staking_rewards",
+            "Error"
+          ]
+        }
+      },
+      {
+        "id": 13,
+        "type": {
+          "def": {
+            "variant": {
+              "variants": [
+                {
+                  "fields": [
+                    {
+                      "type": 3
+                    }
+                  ],
+                  "index": 0,
+                  "name": "Ok"
+                },
+                {
+                  "fields": [
+                    {
+                      "type": 12
+                    }
+                  ],
+                  "index": 1,
+                  "name": "Err"
+                }
+              ]
+            }
+          },
+          "params": [
+            {
+              "name": "T",
+              "type": 3
+            },
+            {
+              "name": "E",
+              "type": 12
+            }
+          ],
+          "path": [
+            "Result"
+          ]
+        }
+      },
+      {
+        "id": 14,
+        "type": {
+          "def": {
+            "variant": {
+              "variants": [
+                {
+                  "fields": [
+                    {
+                      "type": 15
+                    }
+                  ],
+                  "index": 0,
+                  "name": "Ok"
+                },
+                {
+                  "fields": [
+                    {
+                      "type": 12
+                    }
+                  ],
+                  "index": 1,
+                  "name": "Err"
+                }
+              ]
+            }
+          },
+          "params": [
+            {
+              "name": "T",
+              "type": 15
+            },
+            {
+              "name": "E",
+              "type": 12
+            }
+          ],
+          "path": [
+            "Result"
+          ]
+        }
+      },
+      {
+        "id": 15,
+        "type": {
+          "def": {
+            "tuple": []
+          }
+        }
+      },
+      {
+        "id": 16,
+        "type": {
+          "def": {
+            "variant": {
+              "variants": [
+                {
+                  "index": 0,
+                  "name": "None"
+                },
+                {
+                  "fields": [
+                    {
+                      "type": 3
+                    }
+                  ],
+                  "index": 1,
+                  "name": "Some"
+                }
+              ]
+            }
+          },
+          "params": [
+            {
+              "name": "T",
+              "type": 3
+            }
+          ],
+          "path": [
+            "Option"
+          ]
+        }
+      },
+      {
+        "id": 17,
+        "type": {
+          "def": {
+            "variant": {
+              "variants": [
+                {
+                  "index": 0,
+                  "name": "None"
+                },
+                {
+                  "fields": [
+                    {
+                      "type": 4
+                    }
+                  ],
+                  "index": 1,
+                  "name": "Some"
+                }
+              ]
+            }
+          },
+          "params": [
+            {
+              "name": "T",
+              "type": 4
+            }
+          ],
+          "path": [
+            "Option"
+          ]
+        }
+      },
+      {
+        "id": 18,
+        "type": {
+          "def": {
+            "variant": {
+              "variants": [
+                {
+                  "index": 0,
+                  "name": "None"
+                },
+                {
+                  "fields": [
+                    {
+                      "type": 6
+                    }
+                  ],
+                  "index": 1,
+                  "name": "Some"
+                }
+              ]
+            }
+          },
+          "params": [
+            {
+              "name": "T",
+              "type": 6
+            }
+          ],
+          "path": [
+            "Option"
+          ]
+        }
+      },
+      {
+        "id": 19,
+        "type": {
+          "def": {
+            "variant": {
+              "variants": [
+                {
+                  "index": 0,
+                  "name": "None"
+                },
+                {
+                  "fields": [
+                    {
+                      "type": 20
+                    }
+                  ],
+                  "index": 1,
+                  "name": "Some"
+                }
+              ]
+            }
+          },
+          "params": [
+            {
+              "name": "T",
+              "type": 20
+            }
+          ],
+          "path": [
+            "Option"
+          ]
+        }
+      },
+      {
+        "id": 20,
+        "type": {
+          "def": {
+            "sequence": {
+              "type": 9
+            }
+          }
+        }
+      },
+      {
+        "id": 21,
+        "type": {
+          "def": {
+            "variant": {
+              "variants": [
+                {
+                  "index": 0,
+                  "name": "None"
+                },
+                {
+                  "fields": [
+                    {
+                      "type": 9
+                    }
+                  ],
+                  "index": 1,
+                  "name": "Some"
+                }
+              ]
+            }
+          },
+          "params": [
+            {
+              "name": "T",
+              "type": 9
+            }
+          ],
+          "path": [
+            "Option"
+          ]
+        }
+      },
+      {
+        "id": 22,
+        "type": {
+          "def": {
+            "composite": {
+              "fields": [
+                {
+                  "name": "owner",
+                  "type": 0,
+                  "typeName": "AccountId"
+                },
+                {
+                  "name": "max_deposit_value",
+                  "type": 3,
+                  "typeName": "u128"
+                },
+                {
+                  "name": "min_deposit_value",
+                  "type": 3,
+                  "typeName": "u128"
+                },
+                {
+                  "name": "max_total_liquidity",
+                  "type": 3,
+                  "typeName": "u128"
+                },
+                {
+                  "name": "max_stakers",
+                  "type": 3,
+                  "typeName": "u128"
+                },
+                {
+                  "name": "locking_duration",
+                  "type": 4,
+                  "typeName": "u64"
+                },
+                {
+                  "name": "deposit_deadline",
+                  "type": 4,
+                  "typeName": "u64"
+                },
+                {
+                  "name": "base_interest_percent_permil",
+                  "type": 3,
+                  "typeName": "u128"
+                },
+                {
+                  "name": "stakers_sample",
+                  "type": 3,
+                  "typeName": "u128"
+                },
+                {
+                  "name": "liquidity_sample",
+                  "type": 3,
+                  "typeName": "u128"
+                },
+                {
+                  "name": "negative_interest_multiplier_permil",
+                  "type": 3,
+                  "typeName": "u128"
+                },
+                {
+                  "name": "total_liquidity",
+                  "type": 3,
+                  "typeName": "u128"
+                },
+                {
+                  "name": "claimed_rewards",
+                  "type": 3,
+                  "typeName": "u128"
+                },
+                {
+                  "name": "unclaimed_rewards",
+                  "type": 3,
+                  "typeName": "u128"
+                },
+                {
+                  "name": "stakers_count",
+                  "type": 3,
+                  "typeName": "u128"
+                },
+                {
+                  "name": "dynamic_interest_percent_permil",
+                  "type": 3,
+                  "typeName": "u128"
+                },
+                {
+                  "name": "is_paused",
+                  "type": 10,
+                  "typeName": "bool"
+                }
+              ]
+            }
+          },
+          "path": [
+            "staking_rewards",
+            "staking_rewards",
+            "Metadata"
+          ]
+        }
+      }
+    ]
+  }
+}

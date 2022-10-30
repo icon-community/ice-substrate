@@ -16,7 +16,7 @@ locking_duration: 6 Months in milliseconds
 15_552_000_000
 
 deposit_deadline: TBD in milliseconds
-_
+2_629_800_000
 
 base_interest_percent_permil: 10% (20% APR)
 10_000_000
