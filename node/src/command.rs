@@ -89,7 +89,7 @@ fn load_spec(id: &str) -> std::result::Result<Box<dyn sc_service::ChainSpec>, St
 
 impl SubstrateCli for Cli {
 	fn impl_name() -> String {
-		"Snow".into()
+		"SNOW".into()
 	}
 
 	fn impl_version() -> String {
@@ -118,7 +118,7 @@ impl SubstrateCli for Cli {
 
 	fn native_runtime_version(chain_spec: &Box<dyn ChainSpec>) -> &'static RuntimeVersion {
 		if chain_spec.is_snow() {
-			&arctic_runtime::VERSION
+			&snow_runtime::VERSION
 		} else if chain_spec.is_arctic() {
 			&arctic_runtime::VERSION
 		} else if chain_spec.is_dev() {
@@ -131,7 +131,7 @@ impl SubstrateCli for Cli {
 
 impl SubstrateCli for RelayChainCli {
 	fn impl_name() -> String {
-		"Snow Collator".into()
+		"SNOW Collator".into()
 	}
 
 	fn impl_version() -> String {
