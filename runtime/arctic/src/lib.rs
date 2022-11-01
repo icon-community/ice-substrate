@@ -184,7 +184,7 @@ pub const VERSION: RuntimeVersion = RuntimeVersion {
 	spec_name: create_runtime_str!("arctic-testnet"),
 	impl_name: create_runtime_str!("arctic-testnet"),
 	authoring_version: 1,
-	spec_version: 2,
+	spec_version: 3,
 	impl_version: 1,
 	apis: RUNTIME_API_VERSIONS,
 	transaction_version: 1,
@@ -621,7 +621,7 @@ impl pallet_collective::Config<TechnicalCollective> for Runtime {
 parameter_types! {
 	pub const ProposalBond: Permill = Permill::from_percent(5);
 	pub const ProposalBondMinimum: Balance = 10 * currency::DOLLARS;
-	pub const SpendPeriod: BlockNumber = DAYS;
+	pub const SpendPeriod: BlockNumber = 1 * DAYS;
 	pub const Burn: Permill = Permill::from_percent(0);
 	pub const TreasuryPalletId: PalletId = PalletId(*b"py/trsry");
 
@@ -644,7 +644,7 @@ impl pallet_treasury::Config for Runtime {
 	type PalletId = TreasuryPalletId;
 	type BurnDestination = ();
 	type WeightInfo = pallet_treasury::weights::SubstrateWeight<Runtime>;
-	type SpendFunds = ();
+	type SpendFunds = Bounties;
 	type MaxApprovals = MaxApprovals;
 }
 
@@ -882,10 +882,10 @@ parameter_types! {
 	pub const BountyUpdatePeriod: BlockNumber = 90 * DAYS;
 	pub const MaximumReasonLength: u32 = 16384;
 	pub const BountyCuratorDeposit: Permill = Permill::from_percent(50);
-	pub BountyValueMinimum: Balance = 10 * currency::DOLLARS;
 	pub const CuratorDepositMultiplier: Permill = Permill::from_percent(50);
-	pub CuratorDepositMin: Balance = 1 * currency::DOLLARS;
-	pub CuratorDepositMax: Balance = 100 * currency::DOLLARS;
+	pub BountyValueMinimum: Balance = 10 * currency::DOLLARS;
+	pub CuratorDepositMin: Balance = 10 * currency::DOLLARS;
+	pub CuratorDepositMax: Balance = 200 * currency::DOLLARS;
 }
 
 impl pallet_bounties::Config for Runtime {
