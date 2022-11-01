@@ -1,0 +1,38 @@
+name: Try Runtime
+on:
+   workflow_dispatch:
+
+jobs:
+  try-runtime:
+    name: Try runtime
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout the source code
+      uses: actions/checkout@v3
+      with:
+        submodules: true
+
+    - name: Install Rust toolchain
+      uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: nightly-2022-10-27
+        target: x86_64-unknown-linux-gnu
+        components: rustfmt, clippy
+        default: true
+
+    - name: Install WASM target (for runtime building)
+      shell: bash
+      run: rustup target add wasm32-unknown-unknown --toolchain nightly-2022-10-27
+
+    - name: try-runtime-arctic
+      uses: actions-rs/cargo@v1
+      with:
+        command: run
+        args: --bin ice-node --release --features try-runtime -- try-runtime --chain arctic --wasm-execution=compiled on-runtime-upgrade live --uri=wss://arctic-rpc.icenetwork.io:9944
+
+    - name: try-runtime-snow
+      uses: actions-rs/cargo@v1
+      with:
+        command: run
+        args: --bin ice-node --release --features try-runtime -- try-runtime --chain snow --wasm-execution=compiled on-runtime-upgrade live --uri=https://snow-rpc.icenetwork.io:9933
