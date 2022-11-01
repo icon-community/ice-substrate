@@ -6,7 +6,7 @@ jobs:
   build-runtime:
     runs-on: ubuntu-latest
     env:
-      SUBWASM_VERSION: 0.17.0
+      SUBWASM_VERSION: 0.18.0
     strategy:
       matrix:
         chain: ["arctic", "snow"]
