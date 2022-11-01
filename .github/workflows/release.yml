@@ -10,7 +10,7 @@ jobs:
     strategy:
       matrix:
         chain: ["arctic", "snow"]
-        endpoint: ["arctic-rpc.icenetwork.io:9944", "snow-rpc.icenetwork.io"]
+        endpoint: ["arctic-rpc.icenetwork.io:9933", "snow-rpc.icenetwork.io:9933"]
 
     steps:
       - uses: actions/checkout@v3
@@ -64,7 +64,7 @@ jobs:
       - name: Check the metadata diff
         shell: bash
         run: |
-          subwasm get wss://${{ matrix.endpoint }} --output ${{ matrix.chain }}-live.wasm
+          subwasm get https://${{ matrix.endpoint }} --output ${{ matrix.chain }}-live.wasm
           subwasm diff ${{ steps.srtool_build.outputs.wasm }} ${{ matrix.chain }}-live.wasm | \
             tee ${{ matrix.chain }}-diff.txt
 
