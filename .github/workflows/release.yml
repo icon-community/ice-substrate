@@ -10,7 +10,7 @@ jobs:
     strategy:
       matrix:
         chain: ["arctic", "snow"]
-        endpoint: ["arctic-rpc.icenetwork:9944", "snow-rpc.icenetwork"]
+        endpoint: ["arctic-rpc.icenetwork.io:9944", "snow-rpc.icenetwork.io"]
 
     steps:
       - uses: actions/checkout@v3
@@ -101,6 +101,7 @@ jobs:
       with:
         command: build
         args: --release --locked --target x86_64-unknown-linux-gnu
+
     - name: try-runtime-arctic
       uses: actions-rs/cargo@v1
       with:
