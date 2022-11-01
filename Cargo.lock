@@ -123,7 +123,7 @@ dependencies = [
 
 [[package]]
 name = "arctic-runtime"
-version = "0.4.55"
+version = "0.4.56"
 dependencies = [
  "bstringify",
  "cumulus-pallet-aura-ext",
@@ -3691,7 +3691,7 @@ dependencies = [
 
 [[package]]
 name = "ice-node"
-version = "0.4.55"
+version = "0.4.56"
 dependencies = [
  "arctic-runtime",
  "async-trait",
@@ -11048,7 +11048,7 @@ dependencies = [
 
 [[package]]
 name = "snow-runtime"
-version = "0.4.55"
+version = "0.4.56"
 dependencies = [
  "cumulus-pallet-aura-ext",
  "cumulus-pallet-dmp-queue",
