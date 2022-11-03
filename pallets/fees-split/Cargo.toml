@@ -11,7 +11,7 @@ description = "FRAME pallet for runtime configuration"
 [dependencies]
 codec = { package = "parity-scale-codec", version = "3.0.0", default-features = false, features = ["derive"] }
 scale-info = { version = "2.0.1", default-features = false, features = ["derive"] }
-serde = { version = "1.0.138", features = [ "derive" ], optional = true }
+serde = { version = "1.0.147", features = [ "derive" ], optional = true }
 
 frame-support = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.24" }
 frame-system = { default-features = false, package = "frame-system", git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.24" }
