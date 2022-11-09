@@ -15,7 +15,7 @@ max_stakers: 5k
 locking_duration: 3 Months in milliseconds
 7_776_000_000
 
-deposit_deadline: 1 Month in milliseconds
+duration_until_deposit_deadline: 1 Month in milliseconds
 2_629_800_000
 
 base_interest_percent_permil: 5% (20% APR)

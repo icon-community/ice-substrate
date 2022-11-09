@@ -111,7 +111,7 @@ mod staking_rewards {
 			max_total_liquidity: u128,
 			max_stakers: u128,
 			locking_duration: u64,
-			deposit_deadline: u64,
+			duration_until_deposit_deadline: u64,
 			base_interest_percent_permil: u128,
 			stakers_sample: u128,
 			liquidity_sample: u128,
@@ -124,7 +124,8 @@ mod staking_rewards {
 				contract.max_total_liquidity = max_total_liquidity;
 				contract.max_stakers = max_stakers;
 				contract.locking_duration = locking_duration;
-				contract.deposit_deadline = deposit_deadline;
+				contract.deposit_deadline =
+					Self::env().block_timestamp() + duration_until_deposit_deadline;
 				contract.base_interest_percent_permil = base_interest_percent_permil;
 				contract.stakers_sample = stakers_sample;
 				contract.liquidity_sample = liquidity_sample;
@@ -323,6 +324,20 @@ mod staking_rewards {
 			let caller = Self::env().caller();
 			self.ensure_owner(&caller);
 			self.is_paused = false;
+		}
+
+		#[ink(message)]
+		pub fn set_code(&mut self, code_hash: [u8; 32]) {
+			let caller = Self::env().caller();
+			self.ensure_owner(&caller);
+
+			ink_env::set_code_hash(&code_hash).unwrap_or_else(|err| {
+				panic!(
+					"Failed to `set_code_hash` to {:?} due to {:?}",
+					code_hash, err
+				)
+			});
+			ink_env::debug_println!("Switched code hash to {:?}.", code_hash);
 		}
 
 		#[ink(message)]
