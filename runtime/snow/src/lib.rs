@@ -269,7 +269,6 @@ impl cumulus_pallet_parachain_system::Config for Runtime {
 	type XcmpMessageHandler = XcmpQueue;
 	type ReservedXcmpWeight = ReservedXcmpWeight;
 	type CheckAssociatedRelayNumber = AnyRelayNumber;
-;
 }
 
 impl parachain_info::Config for Runtime {}
@@ -458,7 +457,7 @@ impl pallet_transaction_payment::Config for Runtime {
 	type LengthToFee = ConstantMultiplier<Balance, TransactionByteFee>;
 	type FeeMultiplierUpdate =
 		TargetedFeeAdjustment<Self, TargetBlockFullness, AdjustmentVariable, MinimumMultiplier>;
-	type RuntimeEvent = Event;
+	type RuntimeEvent = RuntimeEvent;
 }
 
 impl pallet_sudo::Config for Runtime {
@@ -595,7 +594,7 @@ parameter_types! {
 type TechnicalCollective = pallet_collective::Instance2;
 impl pallet_collective::Config<TechnicalCollective> for Runtime {
 	type RuntimeOrigin = RuntimeOrigin;
-	type Proposal = Call;
+	type Proposal = RuntimeCall;
 	type RuntimeEvent = RuntimeEvent;
 	type MotionDuration = TechnicalMotionDuration;
 	type MaxProposals = TechnicalMaxProposals;
@@ -632,7 +631,7 @@ impl pallet_treasury::Config for Runtime {
 	type WeightInfo = pallet_treasury::weights::SubstrateWeight<Runtime>;
 	type SpendFunds = Bounties;
 	type MaxApprovals = MaxApprovals;
-	type SpendOrigin = Origin;
+	type SpendOrigin = frame_support::traits::NeverEnsureOrigin<Balance>;
 }
 
 pub struct Beneficiary();
@@ -736,56 +735,56 @@ impl Default for ProxyType {
 		Self::Any
 	}
 }
-impl InstanceFilter<Call> for ProxyType {
-	fn filter(&self, c: &Call) -> bool {
+impl InstanceFilter<RuntimeCall> for ProxyType {
+	fn filter(&self, c: &RuntimeCall) -> bool {
 		match self {
 			ProxyType::Any => true,
 			ProxyType::NonTransfer => matches!(
 				c,
-				Call::System(..) |
-				Call::Scheduler(..) |
-				Call::Preimage(_) |
-				Call::Timestamp(..) |
-				Call::Indices(pallet_indices::Call::claim{..}) |
-				Call::Indices(pallet_indices::Call::free{..}) |
-				Call::Indices(pallet_indices::Call::freeze{..}) |
+				RuntimeCall::System(..) |
+				RuntimeCall::Scheduler(..) |
+				RuntimeCall::Preimage(_) |
+				RuntimeCall::Timestamp(..) |
+				RuntimeCall::Indices(pallet_indices::Call::claim{..}) |
+				RuntimeCall::Indices(pallet_indices::Call::free{..}) |
+				RuntimeCall::Indices(pallet_indices::Call::freeze{..}) |
 				// Specifically omitting Indices `transfer`, `force_transfer`
 				// Specifically omitting the entire Balances pallet
-				Call::Authorship(..) |
-				Call::Session(..) |
-				Call::Democracy(..) |
-				Call::Council(..) |
-				Call::TechnicalCommittee(..) |
-				Call::PhragmenElection(..) |
-				Call::TechnicalMembership(..) |
-				Call::Treasury(..) |
-				Call::Bounties(..) |
-				Call::Tips(..) |
-				Call::Vesting(pallet_vesting::Call::vest{..}) |
-				Call::Vesting(pallet_vesting::Call::vest_other{..}) |
+				RuntimeCall::Authorship(..) |
+				RuntimeCall::Session(..) |
+				RuntimeCall::Democracy(..) |
+				RuntimeCall::Council(..) |
+				RuntimeCall::TechnicalCommittee(..) |
+				RuntimeCall::PhragmenElection(..) |
+				RuntimeCall::TechnicalMembership(..) |
+				RuntimeCall::Treasury(..) |
+				RuntimeCall::Bounties(..) |
+				RuntimeCall::Tips(..) |
+				RuntimeCall::Vesting(pallet_vesting::Call::vest{..}) |
+				RuntimeCall::Vesting(pallet_vesting::Call::vest_other{..}) |
 				// Specifically omitting Vesting `vested_transfer`, and `force_vested_transfer`
-				Call::Utility(..) |
-				Call::Proxy(..) |
-				Call::Multisig(..)
+				RuntimeCall::Utility(..) |
+				RuntimeCall::Proxy(..) |
+				RuntimeCall::Multisig(..)
 			),
 			// ProxyType::Staking => matches!(c, Call::ParachainStaking(..) | Call::Utility(..)),
 			ProxyType::Governance => matches!(
 				c,
-				Call::Democracy(..)
-					| Call::Council(..) | Call::TechnicalCommittee(..)
-					| Call::PhragmenElection(..)
-					| Call::Treasury(..) | Call::Bounties(..)
-					| Call::Tips(..) | Call::Utility(..)
+				RuntimeCall::Democracy(..)
+					| RuntimeCall::Council(..) | RuntimeCall::TechnicalCommittee(..)
+					| RuntimeCall::PhragmenElection(..)
+					| RuntimeCall::Treasury(..) | RuntimeCall::Bounties(..)
+					| RuntimeCall::Tips(..) | RuntimeCall::Utility(..)
 			),
 			ProxyType::CancelProxy => {
 				matches!(
 					c,
-					Call::Proxy(pallet_proxy::Call::reject_announcement { .. })
+					RuntimeCall::Proxy(pallet_proxy::Call::reject_announcement { .. })
 				)
 			}
 			ProxyType::IdentityJudgement => matches!(
 				c,
-				Call::Identity(pallet_identity::Call::provide_judgement { .. }) | Call::Utility(..)
+				RuntimeCall::Identity(pallet_identity::Call::provide_judgement { .. }) | RuntimeCall::Utility(..)
 			),
 		}
 	}
@@ -976,7 +975,7 @@ parameter_types! {
 }
 
 impl pallet_democracy::Config for Runtime {
-	type Proposal = Call;
+	type Proposal = RuntimeCall;
 	type RuntimeEvent = RuntimeEvent;
 	type Currency = Balances;
 	type EnactmentPeriod = EnactmentPeriod;
@@ -1068,7 +1067,6 @@ impl pallet_base_fee::BaseFeeThreshold for BaseFeeThreshold {
 impl pallet_base_fee::Config for Runtime {
 	type RuntimeEvent = RuntimeEvent;
 	type Threshold = BaseFeeThreshold;
-	type IsActive = IsActive;
 	type DefaultBaseFeePerGas = DefaultBaseFeePerGas;
 	type DefaultElasticity = ();
 }
@@ -1113,7 +1111,7 @@ construct_runtime!(
 		Balances: pallet_balances::{Pallet, Call, Storage, Config<T>, Event<T>} = 20,
 		Assets: pallet_assets::{Pallet, Call, Storage, Config<T>, Event<T>} = 21,
 		Vesting: pallet_vesting::{Pallet, Call, Storage, Config<T>, Event<T>} = 22,
-		TransactionPayment: pallet_transaction_payment::{Pallet, Storage} = 23,
+		TransactionPayment: pallet_transaction_payment::{Pallet, Storage, Event<T>} = 23,
 		SimpleInflation: pallet_simple_inflation::{Pallet, Call, Storage, Config<T>} = 24,
 		FeesSplit: pallet_fees_split::{Pallet, Call, Storage, Config<T>} = 25,
 		Airdrop: pallet_airdrop::{Pallet, Call, Storage, Config<T>, Event<T>} = 26,
@@ -1207,9 +1205,9 @@ pub type SignedExtra = (
 );
 /// Unchecked extrinsic type as expected by this runtime.
 pub type UncheckedExtrinsic =
-	fp_self_contained::UncheckedExtrinsic<Address, Call, Signature, SignedExtra>;
+	fp_self_contained::UncheckedExtrinsic<Address, RuntimeCall, Signature, SignedExtra>;
 /// Extrinsic type that has already been checked.
-pub type CheckedExtrinsic = fp_self_contained::CheckedExtrinsic<AccountId, Call, SignedExtra, H160>;
+pub type CheckedExtrinsic = fp_self_contained::CheckedExtrinsic<AccountId, RuntimeCall, SignedExtra, H160>;
 /// Executive: handles dispatch to the various modules.
 pub type Executive = frame_executive::Executive<
 	Runtime,
@@ -1224,14 +1222,14 @@ impl fp_self_contained::SelfContainedCall for RuntimeCall {
 
 	fn is_self_contained(&self) -> bool {
 		match self {
-			Call::Ethereum(call) => call.is_self_contained(),
+			RuntimeCall::Ethereum(call) => call.is_self_contained(),
 			_ => false,
 		}
 	}
 
 	fn check_self_contained(&self) -> Option<Result<Self::SignedInfo, TransactionValidityError>> {
 		match self {
-			Call::Ethereum(call) => call.check_self_contained(),
+			RuntimeCall::Ethereum(call) => call.check_self_contained(),
 			_ => None,
 		}
 	}
@@ -1243,7 +1241,7 @@ impl fp_self_contained::SelfContainedCall for RuntimeCall {
 		len: usize,
 	) -> Option<TransactionValidity> {
 		match self {
-			Call::Ethereum(call) => call.validate_self_contained(info, dispatch_info, len),
+			RuntimeCall::Ethereum(call) => call.validate_self_contained(info, dispatch_info, len),
 			_ => None,
 		}
 	}
@@ -1255,7 +1253,7 @@ impl fp_self_contained::SelfContainedCall for RuntimeCall {
 		len: usize,
 	) -> Option<Result<(), TransactionValidityError>> {
 		match self {
-			Call::Ethereum(call) => call.pre_dispatch_self_contained(info, dispatch_info, len),
+			RuntimeCall::Ethereum(call) => call.pre_dispatch_self_contained(info, dispatch_info, len),
 			_ => None,
 		}
 	}
@@ -1265,7 +1263,7 @@ impl fp_self_contained::SelfContainedCall for RuntimeCall {
 		info: Self::SignedInfo,
 	) -> Option<sp_runtime::DispatchResultWithInfo<PostDispatchInfoOf<Self>>> {
 		match self {
-			call @ Call::Ethereum(pallet_ethereum::Call::transact { .. }) => Some(call.dispatch(
+			call @ RuntimeCall::Ethereum(pallet_ethereum::Call::transact { .. }) => Some(call.dispatch(
 				RuntimeOrigin::from(pallet_ethereum::RawOrigin::EthereumTransaction(info)),
 			)),
 			_ => None,
@@ -1478,7 +1476,7 @@ impl_runtime_apis! {
 			xts: Vec<<Block as BlockT>::Extrinsic>,
 		) -> Vec<EthereumTransaction> {
 			xts.into_iter().filter_map(|xt| match xt.0.function {
-				Call::Ethereum(transact { transaction }) => Some(transaction),
+				RuntimeCall::Ethereum(transact { transaction }) => Some(transaction),
 				_ => None
 			}).collect::<Vec<EthereumTransaction>>()
 		}
