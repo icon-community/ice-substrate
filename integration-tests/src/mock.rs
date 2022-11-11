@@ -1,6 +1,7 @@
 use frame_support::{
 	parameter_types,
 	traits::{ConstU32, ConstU64, GenesisBuild},
+	weights::Weight,
 };
 
 use sp_core::H256;
