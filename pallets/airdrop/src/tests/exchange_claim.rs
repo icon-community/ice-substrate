@@ -25,7 +25,7 @@ fn claim_success() {
 		set_creditor_balance(10_000_0000);
 
 		assert_ok!(AirdropModule::dispatch_exchange_claim(
-			Origin::root(),
+			RuntimeOrigin::root(),
 			icon_wallet,
 			ice_address.encode().try_into().unwrap(),
 			amount.into(),
@@ -68,7 +68,7 @@ fn insufficient_balance() {
 		let creditor_account = force_get_creditor_account::<Test>();
 		pallet_airdrop::ExchangeAccountsMap::<Test>::insert(&icon_wallet, amount);
 		<Test as pallet_airdrop::Config>::Currency::set_balance(
-			mock::Origin::root(),
+			mock::RuntimeOrigin::root(),
 			creditor_account,
 			10_u32.into(),
 			10_u32.into(),
@@ -77,7 +77,7 @@ fn insufficient_balance() {
 
 		assert_err!(
 			AirdropModule::dispatch_exchange_claim(
-				Origin::root(),
+				RuntimeOrigin::root(),
 				icon_wallet,
 				ice_address.clone(),
 				amount,
@@ -104,7 +104,7 @@ fn double_exchange() {
 		pallet_airdrop::ExchangeAccountsMap::<Test>::insert(&icon_wallet, amount);
 
 		AirdropModule::dispatch_exchange_claim(
-			Origin::root(),
+			RuntimeOrigin::root(),
 			icon_wallet,
 			ice_address.clone(),
 			amount,
@@ -150,7 +150,7 @@ fn already_claimed() {
 
 		assert_err!(
 			AirdropModule::dispatch_exchange_claim(
-				Origin::root(),
+				RuntimeOrigin::root(),
 				icon_wallet,
 				ice_address.clone(),
 				amount,
@@ -180,7 +180,7 @@ fn only_whitelisted_claim() {
 		pallet_airdrop::IconSnapshotMap::<Test>::insert(&icon_wallet, snapshot);
 		let creditor_account = force_get_creditor_account::<Test>();
 		<Test as pallet_airdrop::Config>::Currency::set_balance(
-			mock::Origin::root(),
+			mock::RuntimeOrigin::root(),
 			creditor_account,
 			10_000_0000_u32.into(),
 			10_000_00_u32.into(),
@@ -189,7 +189,7 @@ fn only_whitelisted_claim() {
 
 		assert_err!(
 			AirdropModule::dispatch_exchange_claim(
-				Origin::root(),
+				RuntimeOrigin::root(),
 				icon_wallet,
 				ice_address.clone(),
 				amount,
@@ -222,7 +222,7 @@ fn invalid_claim_amount() {
 		let creditor_account = force_get_creditor_account::<Test>();
 		pallet_airdrop::ExchangeAccountsMap::<Test>::insert(&icon_wallet, amount);
 		<Test as pallet_airdrop::Config>::Currency::set_balance(
-			mock::Origin::root(),
+			mock::RuntimeOrigin::root(),
 			creditor_account,
 			10_000_0000_u32.into(),
 			10_000_00_u32.into(),
@@ -231,7 +231,7 @@ fn invalid_claim_amount() {
 
 		assert_err!(
 			AirdropModule::dispatch_exchange_claim(
-				Origin::root(),
+				RuntimeOrigin::root(),
 				icon_wallet,
 				ice_address.clone(),
 				amount + 10000,
