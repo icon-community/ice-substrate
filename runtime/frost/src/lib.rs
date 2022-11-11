@@ -63,8 +63,9 @@ pub use frame_support::{
 	traits::{Currency, FindAuthor, KeyOwnerProofSystem, Randomness},
 	weights::{
 		constants::{BlockExecutionWeight, ExtrinsicBaseWeight, RocksDbWeight, WEIGHT_PER_SECOND},
-		ConstantMultiplier, DispatchClass, IdentityFee, Weight,
+		ConstantMultiplier, IdentityFee, Weight,
 	},
+	dispatch::DispatchClass,
 	ConsensusEngineId, PalletId, StorageValue,
 };
 
@@ -285,10 +286,10 @@ parameter_types! {
 		.unwrap_or(RuntimeBlockWeights::get().max_block);
 	// The weight needed for decoding the queue should be less or equal than a fifth
 	// of the overall weight dedicated to the lazy deletion.
-	pub DeletionQueueDepth: u32 = ((DeletionWeightLimit::get().div((
+	pub DeletionQueueDepth: u32 = ((DeletionWeightLimit::get().div(
 			<Runtime as pallet_contracts::Config>::WeightInfo::on_initialize_per_queue_item(1).ref_time() -
 			<Runtime as pallet_contracts::Config>::WeightInfo::on_initialize_per_queue_item(0).ref_time()
-		)))).div(5).ref_time() as u32;
+		))).div(5).ref_time() as u32;
 	pub Schedule: pallet_contracts::Schedule<Runtime> = Default::default();
 }
 

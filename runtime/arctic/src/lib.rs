@@ -95,8 +95,9 @@ pub use frame_support::{
 	traits::{Currency, FindAuthor, KeyOwnerProofSystem, Randomness},
 	weights::{
 		constants::{BlockExecutionWeight, ExtrinsicBaseWeight, RocksDbWeight, WEIGHT_PER_SECOND},
-		ConstantMultiplier, DispatchClass, Weight,
+		ConstantMultiplier, Weight,
 	},
+	dispatch::DispatchClass,
 	ConsensusEngineId, PalletId, StorageValue,
 };
 

@@ -34,7 +34,8 @@ mod tests {
 		AdjustmentVariable, MinimumMultiplier, Runtime, RuntimeBlockWeights, System,
 		TargetBlockFullness, TransactionPayment,
 	};
-	use frame_support::weights::{DispatchClass, Weight};
+	use frame_support::weights::Weight;
+	use frame_support::dispatch::DispatchClass;
 	use pallet_transaction_payment::{Multiplier, TargetedFeeAdjustment};
 	use sp_runtime::{
 		assert_eq_error_rate,

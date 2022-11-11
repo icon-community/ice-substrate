@@ -9,7 +9,6 @@ use codec::Encode;
 use frame_support::{
 	match_types, parameter_types,
 	traits::{Everything, Nothing, PalletInfoAccess},
-	weights::Weight,
 };
 use orml_traits::{BasicCurrency, MultiCurrency};
 use pallet_xcm::XcmPassthrough;

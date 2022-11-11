@@ -681,8 +681,7 @@ fn set_default_ss58_version(spec: &Box<dyn sc_service::ChainSpec>) {
 	} else {
 		// Ss58AddressFormatRegistry::PolkadotAccount
 		sp_core::crypto::Ss58AddressFormat::custom(42)
-	}
-	.into();
+	};
 
 	sp_core::crypto::set_default_ss58_version(ss58_version);
 }

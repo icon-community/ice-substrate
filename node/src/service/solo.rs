@@ -6,7 +6,7 @@ use fc_consensus::FrontierBlockImport;
 use fc_rpc_core::types::{FeeHistoryCache, FilterPool};
 use futures::StreamExt;
 use pallet_contracts_rpc::ContractsApiServer;
-use sc_client_api::{BlockBackend, BlockchainEvents, ExecutorProvider};
+use sc_client_api::{BlockBackend, BlockchainEvents};
 use sc_consensus_aura::{ImportQueueParams, SlotProportion, StartAuraParams};
 use sc_executor::NativeElseWasmExecutor;
 use sc_finality_grandpa::SharedVoterState;
