@@ -35,8 +35,8 @@ mod tests {
 		AdjustmentVariable, MinimumMultiplier, Runtime, RuntimeBlockWeights, System,
 		TargetBlockFullness, TransactionPayment,
 	};
-	use frame_support::weights::Weight;
 	use frame_support::dispatch::DispatchClass;
+	use frame_support::weights::Weight;
 	use pallet_transaction_payment::{Multiplier, TargetedFeeAdjustment};
 	use sp_runtime::{
 		assert_eq_error_rate,
@@ -247,7 +247,8 @@ mod tests {
 		let block_weight = RuntimeBlockWeights::get()
 			.get(DispatchClass::Normal)
 			.max_total
-			.unwrap().sub(100);
+			.unwrap()
+			.sub(100);
 
 		// Default substrate weight.
 		let tx_weight = frame_support::weights::constants::ExtrinsicBaseWeight::get();

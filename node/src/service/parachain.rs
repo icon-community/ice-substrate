@@ -229,7 +229,7 @@ async fn build_relay_chain_interface(
 				Arc::new(RelayChainRpcInterface::new(client)) as Arc<_>,
 				None,
 			))
-		},
+		}
 		None => build_inprocess_relay_chain(
 			polkadot_config,
 			parachain_config,

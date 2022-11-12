@@ -4,7 +4,10 @@ use super::prelude::*;
 fn update_server_account() {
 	minimal_test_ext().execute_with(|| {
 		assert_noop!(
-			AirdropModule::set_airdrop_server_account(RuntimeOrigin::none(), samples::ACCOUNT_ID[1]),
+			AirdropModule::set_airdrop_server_account(
+				RuntimeOrigin::none(),
+				samples::ACCOUNT_ID[1]
+			),
 			PalletError::DeniedOperation
 		);
 

@@ -25,7 +25,7 @@ use pallet_evm::FeeCalculator;
 
 use frame_support::{
 	pallet_prelude::ConstU32,
-	traits::{EqualPrivilegeOnly, InstanceFilter, LockIdentifier, EitherOfDiverse},
+	traits::{EitherOfDiverse, EqualPrivilegeOnly, InstanceFilter, LockIdentifier},
 	RuntimeDebug,
 };
 use frame_system::{
@@ -62,8 +62,8 @@ pub use impls::DealWithFees;
 pub type NegativeImbalance = <Balances as Currency<AccountId>>::NegativeImbalance;
 
 // Cumulus
-use xcm_config::{XcmConfig, XcmOriginToTransactDispatchOrigin};
 use cumulus_pallet_parachain_system::AnyRelayNumber;
+use xcm_config::{XcmConfig, XcmOriginToTransactDispatchOrigin};
 
 // XCM Imports
 use xcm::latest::prelude::BodyId;
@@ -72,13 +72,14 @@ use xcm_executor::XcmExecutor;
 // A few exports that help ease life for downstream crates.
 use fp_rpc::TransactionStatus;
 pub use frame_support::{
-	construct_runtime, parameter_types,
+	construct_runtime,
+	dispatch::DispatchClass,
+	parameter_types,
 	traits::{Currency, FindAuthor, KeyOwnerProofSystem, Randomness},
 	weights::{
 		constants::{BlockExecutionWeight, ExtrinsicBaseWeight, RocksDbWeight, WEIGHT_PER_SECOND},
 		ConstantMultiplier, Weight,
 	},
-	dispatch::DispatchClass,
 	ConsensusEngineId, PalletId, StorageValue,
 };
 
@@ -772,10 +773,13 @@ impl InstanceFilter<RuntimeCall> for ProxyType {
 			ProxyType::Governance => matches!(
 				c,
 				RuntimeCall::Democracy(..)
-					| RuntimeCall::Council(..) | RuntimeCall::TechnicalCommittee(..)
+					| RuntimeCall::Council(..)
+					| RuntimeCall::TechnicalCommittee(..)
 					| RuntimeCall::PhragmenElection(..)
-					| RuntimeCall::Treasury(..) | RuntimeCall::Bounties(..)
-					| RuntimeCall::Tips(..) | RuntimeCall::Utility(..)
+					| RuntimeCall::Treasury(..)
+					| RuntimeCall::Bounties(..)
+					| RuntimeCall::Tips(..)
+					| RuntimeCall::Utility(..)
 			),
 			ProxyType::CancelProxy => {
 				matches!(
@@ -785,7 +789,8 @@ impl InstanceFilter<RuntimeCall> for ProxyType {
 			}
 			ProxyType::IdentityJudgement => matches!(
 				c,
-				RuntimeCall::Identity(pallet_identity::Call::provide_judgement { .. }) | RuntimeCall::Utility(..)
+				RuntimeCall::Identity(pallet_identity::Call::provide_judgement { .. })
+					| RuntimeCall::Utility(..)
 			),
 		}
 	}
@@ -1208,7 +1213,8 @@ pub type SignedExtra = (
 pub type UncheckedExtrinsic =
 	fp_self_contained::UncheckedExtrinsic<Address, RuntimeCall, Signature, SignedExtra>;
 /// Extrinsic type that has already been checked.
-pub type CheckedExtrinsic = fp_self_contained::CheckedExtrinsic<AccountId, RuntimeCall, SignedExtra, H160>;
+pub type CheckedExtrinsic =
+	fp_self_contained::CheckedExtrinsic<AccountId, RuntimeCall, SignedExtra, H160>;
 /// Executive: handles dispatch to the various modules.
 pub type Executive = frame_executive::Executive<
 	Runtime,
@@ -1254,7 +1260,9 @@ impl fp_self_contained::SelfContainedCall for RuntimeCall {
 		len: usize,
 	) -> Option<Result<(), TransactionValidityError>> {
 		match self {
-			RuntimeCall::Ethereum(call) => call.pre_dispatch_self_contained(info, dispatch_info, len),
+			RuntimeCall::Ethereum(call) => {
+				call.pre_dispatch_self_contained(info, dispatch_info, len)
+			}
 			_ => None,
 		}
 	}
@@ -1264,9 +1272,11 @@ impl fp_self_contained::SelfContainedCall for RuntimeCall {
 		info: Self::SignedInfo,
 	) -> Option<sp_runtime::DispatchResultWithInfo<PostDispatchInfoOf<Self>>> {
 		match self {
-			call @ RuntimeCall::Ethereum(pallet_ethereum::Call::transact { .. }) => Some(call.dispatch(
-				RuntimeOrigin::from(pallet_ethereum::RawOrigin::EthereumTransaction(info)),
-			)),
+			call @ RuntimeCall::Ethereum(pallet_ethereum::Call::transact { .. }) => {
+				Some(call.dispatch(RuntimeOrigin::from(
+					pallet_ethereum::RawOrigin::EthereumTransaction(info),
+				)))
+			}
 			_ => None,
 		}
 	}
