@@ -50,8 +50,8 @@ impl system::Config for Test {
 	type BaseCallFilter = frame_support::traits::Everything;
 	type BlockWeights = ();
 	type BlockLength = ();
-	type Origin = Origin;
-	type Call = Call;
+	type RuntimeOrigin = RuntimeOrigin;
+	type RuntimeCall = RuntimeCall;
 	type Index = Index;
 	type BlockNumber = BlockNumber;
 	type Hash = H256;
@@ -59,7 +59,7 @@ impl system::Config for Test {
 	type AccountId = sp_core::sr25519::Public;
 	type Lookup = IdentityLookup<Self::AccountId>;
 	type Header = Header;
-	type Event = Event;
+	type RuntimeEvent = RuntimeEvent;
 	type BlockHashCount = BlockHashCount;
 	type DbWeight = ();
 	type Version = ();
@@ -80,7 +80,7 @@ parameter_types! {
 }
 
 impl pallet_airdrop::Config for Test {
-	type Event = Event;
+	type RuntimeEvent = RuntimeEvent;
 	type Currency = Balances;
 	type AirdropWeightInfo = pallet_airdrop::weights::AirDropWeightInfo<Test>;
 	type BalanceTypeConversion = sp_runtime::traits::ConvertInto;
@@ -99,7 +99,7 @@ impl pallet_airdrop::Config for Test {
 impl pallet_balances::Config for Test {
 	type Balance = Balance;
 	type DustRemoval = ();
-	type Event = Event;
+	type RuntimeEvent = RuntimeEvent;
 	type ExistentialDeposit = ExistentialDeposit;
 	type AccountStore = System;
 	type WeightInfo = ();
@@ -109,7 +109,7 @@ impl pallet_balances::Config for Test {
 }
 
 impl pallet_vesting::Config for Test {
-	type Event = Event;
+	type RuntimeEvent = RuntimeEvent;
 	type Currency = <Test as pallet_airdrop::Config>::Currency;
 	type BlockNumberToBalance = sp_runtime::traits::ConvertInto;
 	type MinVestedTransfer = VestingMinTransfer;

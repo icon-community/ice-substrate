@@ -9,7 +9,7 @@ use crate::{
 	service::solo,
 };
 use codec::Encode;
-use cumulus_client_service::genesis::generate_genesis_block;
+use cumulus_client_cli::generate_genesis_block;
 use cumulus_primitives_core::ParaId;
 use log::info;
 use sc_cli::{
@@ -434,7 +434,7 @@ pub fn run() -> Result<()> {
 			let spec = cli.load_spec(&params.chain.clone().unwrap_or_default())?;
 			let state_version = Cli::native_runtime_version(&spec).state_version();
 
-			let block: Block = generate_genesis_block(&spec, state_version)?;
+			let block: Block = generate_genesis_block(&*spec, state_version)?;
 			let raw_header = block.header().encode();
 			let output_buf = if params.raw {
 				raw_header
@@ -633,7 +633,7 @@ pub fn run() -> Result<()> {
 				let id = ParaId::from(para_id);
 
 				let state_version = Cli::native_runtime_version(&config.chain_spec).state_version();
-				let block: Block = generate_genesis_block(&config.chain_spec, state_version)
+				let block: Block = generate_genesis_block(&*config.chain_spec, state_version)
 					.map_err(|e| format!("{:?}", e))?;
 				let genesis_state = format!("0x{:?}", HexDisplay::from(&block.header().encode()));
 
@@ -681,8 +681,7 @@ fn set_default_ss58_version(spec: &Box<dyn sc_service::ChainSpec>) {
 	} else {
 		// Ss58AddressFormatRegistry::PolkadotAccount
 		sp_core::crypto::Ss58AddressFormat::custom(42)
-	}
-	.into();
+	};
 
 	sp_core::crypto::set_default_ss58_version(ss58_version);
 }
@@ -725,7 +724,7 @@ impl CliConfiguration<Self> for RelayChainCli {
 	fn base_path(&self) -> Result<Option<BasePath>> {
 		Ok(self
 			.shared_params()
-			.base_path()
+			.base_path()?
 			.or_else(|| self.base_path.clone().map(Into::into)))
 	}
 
@@ -733,12 +732,11 @@ impl CliConfiguration<Self> for RelayChainCli {
 		self.base.base.role(is_frost)
 	}
 
-	fn transaction_pool(&self) -> Result<sc_service::config::TransactionPoolOptions> {
-		self.base.base.transaction_pool()
-	}
-
-	fn state_cache_child_ratio(&self) -> Result<Option<usize>> {
-		self.base.base.state_cache_child_ratio()
+	fn transaction_pool(
+		&self,
+		_is_dev: bool,
+	) -> Result<sc_service::config::TransactionPoolOptions> {
+		self.base.base.transaction_pool(_is_dev)
 	}
 
 	fn chain_id(&self, is_frost: bool) -> Result<String> {

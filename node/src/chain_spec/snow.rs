@@ -59,14 +59,14 @@ pub fn get_dev_chain_spec() -> SnowChainSpec {
 	];
 
 	let endowed_accounts = vec![
-		((
+		(
 			get_account_id_from_seed::<sr25519::Public>("Alice"),
 			ICY * 300_000_000,
-		)),
-		((
+		),
+		(
 			get_account_id_from_seed::<sr25519::Public>("Bob"),
 			ICY * 300_000_000,
-		)),
+		),
 	];
 
 	let council_members = vec![get_account_id_from_seed::<sr25519::Public>("Alice")];
@@ -238,7 +238,7 @@ fn make_genesis(
 		base_fee: Default::default(),
 		assets: Default::default(),
 		council_membership: CouncilMembershipConfig {
-			members: council_members,
+			members: council_members.try_into().unwrap(),
 			phantom: Default::default(),
 		},
 		council: CouncilConfig {
@@ -259,7 +259,7 @@ fn make_genesis(
 			merkle_root: AIRDROP_MERKLE_ROOT,
 		},
 		technical_membership: TechnicalMembershipConfig {
-			members: technical_committee,
+			members: technical_committee.try_into().unwrap(),
 			phantom: Default::default(),
 		},
 		phragmen_election: Default::default(),

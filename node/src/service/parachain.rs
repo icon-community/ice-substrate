@@ -14,16 +14,16 @@ use cumulus_client_service::{
 use cumulus_primitives_core::ParaId;
 use cumulus_relay_chain_inprocess_interface::build_inprocess_relay_chain;
 use cumulus_relay_chain_interface::{RelayChainError, RelayChainInterface, RelayChainResult};
-use cumulus_relay_chain_rpc_interface::RelayChainRPCInterface;
+use cumulus_relay_chain_rpc_interface::{create_client_and_start_worker, RelayChainRpcInterface};
 use fc_consensus::FrontierBlockImport;
 use fc_rpc_core::types::{FeeHistoryCache, FilterPool};
 use futures::StreamExt;
 use polkadot_service::CollatorPair;
-use sc_client_api::{BlockchainEvents, ExecutorProvider};
+use sc_client_api::BlockchainEvents;
 use sc_consensus::import_queue::BasicQueue;
 use sc_executor::NativeElseWasmExecutor;
-use sc_network::NetworkService;
-use sc_service::{Configuration, PartialComponents, Role, TFullBackend, TFullClient, TaskManager};
+use sc_network::{NetworkBlock, NetworkService};
+use sc_service::{Configuration, PartialComponents, TFullBackend, TFullClient, TaskManager};
 use sc_telemetry::{Telemetry, TelemetryHandle, TelemetryWorker, TelemetryWorkerHandle};
 use sp_api::ConstructRuntimeApi;
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
@@ -186,7 +186,7 @@ where
 		client.clone(),
 	);
 
-	let frontier_backend = crate::rpc::open_frontier_backend(config)?;
+	let frontier_backend = crate::rpc::open_frontier_backend(client.clone(), config)?;
 	let frontier_block_import =
 		FrontierBlockImport::new(client.clone(), client.clone(), frontier_backend.clone());
 
@@ -223,10 +223,13 @@ async fn build_relay_chain_interface(
 	Option<CollatorPair>,
 )> {
 	match collator_options.relay_chain_rpc_url {
-		Some(relay_chain_url) => Ok((
-			Arc::new(RelayChainRPCInterface::new(relay_chain_url).await?) as Arc<_>,
-			None,
-		)),
+		Some(relay_chain_url) => {
+			let client = create_client_and_start_worker(relay_chain_url, task_manager).await?;
+			Ok((
+				Arc::new(RelayChainRpcInterface::new(client)) as Arc<_>,
+				None,
+			))
+		}
 		None => build_inprocess_relay_chain(
 			polkadot_config,
 			parachain_config,
@@ -306,10 +309,6 @@ where
 		bool,
 	) -> Result<Box<dyn ParachainConsensus<Block>>, sc_service::Error>,
 {
-	if matches!(parachain_config.role, Role::Light) {
-		return Err("Light client not supported!".into());
-	}
-
 	let parachain_config = prepare_node_config(parachain_config);
 
 	let params = new_partial::<RuntimeApi, Executor, BIQ>(&parachain_config, build_import_queue)?;
@@ -338,7 +337,7 @@ where
 	let prometheus_registry = parachain_config.prometheus_registry().cloned();
 	let transaction_pool = params.transaction_pool.clone();
 	let import_queue = cumulus_client_service::SharedImportQueue::new(params.import_queue);
-	let (network, system_rpc_tx, start_network) =
+	let (network, system_rpc_tx, tx_handler_controller, start_network) =
 		sc_service::build_network(sc_service::BuildNetworkParams {
 			config: &parachain_config,
 			client: client.clone(),
@@ -384,12 +383,6 @@ where
 			filter_pool.clone(),
 			FILTER_RETAIN_THRESHOLD,
 		),
-	);
-
-	task_manager.spawn_essential_handle().spawn(
-		"frontier-schema-cache-task",
-		Some("frontier"),
-		fc_rpc::EthTask::ethereum_schema_cache_task(client.clone(), frontier_backend.clone()),
 	);
 
 	const FEE_HISTORY_LIMIT: u64 = 2048;
@@ -448,6 +441,7 @@ where
 		backend: backend.clone(),
 		network: network.clone(),
 		system_rpc_tx,
+		tx_handler_controller,
 		telemetry: telemetry.as_mut(),
 	})?;
 
@@ -553,7 +547,6 @@ where
 			sp_consensus_aura::sr25519::AuthorityPair,
 			_,
 			_,
-			_,
 		>(cumulus_client_consensus_aura::BuildVerifierParams {
 			client: client2.clone(),
 			create_inherent_data_providers: move |_, _| async move {
@@ -565,11 +558,8 @@ where
                         slot_duration,
                     );
 
-				Ok((time, slot))
+				Ok((slot, time))
 			},
-			can_author_with: sp_consensus::CanAuthorWithNativeVersion::new(
-				client2.executor().clone(),
-			),
 			telemetry: telemetry_handle,
 		})) as Box<_>
 	};
@@ -617,11 +607,9 @@ pub async fn start_arctic_node(
          telemetry,
          task_manager| {
             let slot_duration = cumulus_client_consensus_aura::slot_duration(&*client)?;
-            let can_author_with = sp_consensus::CanAuthorWithNativeVersion::new(client.executor().clone());
 
             cumulus_client_consensus_aura::import_queue::<
                 sp_consensus_aura::sr25519::AuthorityPair,
-                _,
                 _,
                 _,
                 _,
@@ -639,10 +627,9 @@ pub async fn start_arctic_node(
                             slot_duration,
                         );
 
-                    Ok((time, slot))
+                    Ok((slot, time))
                 },
                 registry: config.prometheus_registry(),
-                can_author_with,
                 spawner: &task_manager.spawn_essential_handle(),
                 telemetry,
             })
@@ -706,7 +693,7 @@ pub async fn start_arctic_node(
                                     "Failed to create parachain inherent",
                                 )
                             })?;
-                            Ok((time, slot, parachain_inherent))
+                            Ok((slot, time, parachain_inherent))
                         }
                     },
                 block_import: client.clone(),
@@ -747,11 +734,9 @@ pub async fn start_snow_node(
          telemetry,
          task_manager| {
             let slot_duration = cumulus_client_consensus_aura::slot_duration(&*client)?;
-            let can_author_with = sp_consensus::CanAuthorWithNativeVersion::new(client.executor().clone());
 
             cumulus_client_consensus_aura::import_queue::<
                 sp_consensus_aura::sr25519::AuthorityPair,
-                _,
                 _,
                 _,
                 _,
@@ -769,10 +754,9 @@ pub async fn start_snow_node(
                             slot_duration,
                         );
 
-                    Ok((time, slot))
+                    Ok((slot, time))
                 },
                 registry: config.prometheus_registry(),
-                can_author_with,
                 spawner: &task_manager.spawn_essential_handle(),
                 telemetry,
             })
@@ -836,7 +820,7 @@ pub async fn start_snow_node(
                                     "Failed to create parachain inherent",
                                 )
                             })?;
-                            Ok((time, slot, parachain_inherent))
+                            Ok((slot, time, parachain_inherent))
                         }
                     },
                 block_import: client.clone(),

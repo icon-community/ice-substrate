@@ -69,7 +69,7 @@ pub mod fee {
 		fn polynomial() -> WeightToFeeCoefficients<Self::Balance> {
 			// in Arctic, extrinsic base weight (smallest non-zero weight) is mapped to 1/10 CENT:
 			let p = base_tx_in_icz();
-			let q = Balance::from(ExtrinsicBaseWeight::get());
+			let q = Balance::from(ExtrinsicBaseWeight::get().ref_time());
 			smallvec![WeightToFeeCoefficient {
 				degree: 1,
 				negative: false,
@@ -84,8 +84,8 @@ pub mod fee {
 	}
 
 	pub fn icz_per_second() -> u128 {
-		let base_weight = Balance::from(ExtrinsicBaseWeight::get());
-		let base_tx_per_second = (WEIGHT_PER_SECOND as u128) / base_weight;
+		let base_weight = Balance::from(ExtrinsicBaseWeight::get().ref_time());
+		let base_tx_per_second = (WEIGHT_PER_SECOND.ref_time() as u128) / base_weight;
 		base_tx_per_second * base_tx_in_icz()
 	}
 

@@ -172,7 +172,7 @@ fn testnet_genesis(
 		vesting: Default::default(),
 		assets: Default::default(),
 		council_membership: CouncilMembershipConfig {
-			members: council_members,
+			members: council_members.try_into().unwrap(),
 			phantom: Default::default(),
 		},
 		council: CouncilConfig {
@@ -187,7 +187,7 @@ fn testnet_genesis(
 			merkle_root: AIRDROP_MERKLE_ROOT,
 		},
 		technical_membership: TechnicalMembershipConfig {
-			members: technical_committee_membership,
+			members: technical_committee_membership.try_into().unwrap(),
 			phantom: Default::default(),
 		},
 		technical_committee: TechnicalCommitteeConfig {

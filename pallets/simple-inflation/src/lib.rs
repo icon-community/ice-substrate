@@ -81,7 +81,7 @@ pub mod pallet {
 		fn on_initialize(_now: T::BlockNumber) -> Weight {
 			let inflation = T::Currency::issue(<IssuingAmount<T>>::get());
 			T::Beneficiary::treasury(inflation);
-			0
+			Weight::zero()
 		}
 	}
 
@@ -102,6 +102,6 @@ pub mod pallet {
 pub struct WeightInfo<T>(PhantomData<T>);
 impl<T: frame_system::Config> WeightInfo<T> {
 	pub fn set_config_with_balance() -> Weight {
-		(10_000_000 as Weight).saturating_add(T::DbWeight::get().writes(1 as Weight))
+		Weight::from_ref_time(10_000_000).saturating_add(T::DbWeight::get().writes(1))
 	}
 }

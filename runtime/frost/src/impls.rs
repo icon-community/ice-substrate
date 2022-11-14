@@ -35,7 +35,8 @@ mod tests {
 		AdjustmentVariable, MinimumMultiplier, Runtime, RuntimeBlockWeights, System,
 		TargetBlockFullness, TransactionPayment,
 	};
-	use frame_support::weights::{DispatchClass, Weight};
+	use frame_support::dispatch::DispatchClass;
+	use frame_support::weights::Weight;
 	use pallet_transaction_payment::{Multiplier, TargetedFeeAdjustment};
 	use sp_runtime::{
 		assert_eq_error_rate,
@@ -131,13 +132,13 @@ mod tests {
 		let previous_float = previous_float.max(min_multiplier().into_inner() as f64 / accuracy);
 
 		// maximum tx weight
-		let m = max_normal() as f64;
+		let m = max_normal().ref_time() as f64;
 		// block weight always truncated to max weight
-		let block_weight = (block_weight as f64).min(m);
+		let block_weight = (block_weight.ref_time() as f64).min(m);
 		let v: f64 = AdjustmentVariable::get().to_float();
 
 		// Ideal saturation in terms of weight
-		let ss = target() as f64;
+		let ss = target().ref_time() as f64;
 		// Current saturation in terms of weight
 		let s = block_weight;
 
@@ -165,17 +166,17 @@ mod tests {
 	fn truth_value_update_poc_works() {
 		let fm = Multiplier::saturating_from_rational(1, 2);
 		let test_set = vec![
-			(0, fm.clone()),
-			(100, fm.clone()),
-			(1000, fm.clone()),
-			(target(), fm.clone()),
-			(max_normal() / 2, fm.clone()),
-			(max_normal(), fm.clone()),
+			(0u64, fm.clone()),
+			(100u64, fm.clone()),
+			(1000u64, fm.clone()),
+			(target().ref_time(), fm.clone()),
+			(max_normal().ref_time() / 2, fm.clone()),
+			(max_normal().ref_time(), fm.clone()),
 		];
 		test_set.into_iter().for_each(|(w, fm)| {
-			run_with_system_weight(w, || {
+			run_with_system_weight(Weight::from_ref_time(w), || {
 				assert_eq_error_rate!(
-					truth_value_update(w, fm),
+					truth_value_update(Weight::from_ref_time(w), fm),
 					runtime_multiplier_update(fm),
 					// Error is only 1 in 100^18
 					Multiplier::from_inner(100),
@@ -202,7 +203,7 @@ mod tests {
 	#[test]
 	fn multiplier_cannot_go_below_limit() {
 		// will not go any further below even if block is empty.
-		run_with_system_weight(0, || {
+		run_with_system_weight(Weight::zero(), || {
 			let next = runtime_multiplier_update(min_multiplier());
 			assert_eq!(next, min_multiplier());
 		})
@@ -221,7 +222,7 @@ mod tests {
 		// 1 < 0.00001 * k * 0.1875
 		// 10^9 / 1875 < k
 		// k > 533_333 ~ 18,5 days.
-		run_with_system_weight(0, || {
+		run_with_system_weight(Weight::zero(), || {
 			// start from 1, the default.
 			let mut fm = Multiplier::one();
 			let mut iterations: u64 = 0;
@@ -246,7 +247,8 @@ mod tests {
 		let block_weight = RuntimeBlockWeights::get()
 			.get(DispatchClass::Normal)
 			.max_total
-			.unwrap() - 100;
+			.unwrap()
+			.sub(100);
 
 		// Default substrate weight.
 		let tx_weight = frame_support::weights::constants::ExtrinsicBaseWeight::get();
@@ -302,7 +304,7 @@ mod tests {
 
 	#[test]
 	fn weight_to_fee_should_not_overflow_on_large_weights() {
-		let kb = 1024 as Weight;
+		let kb = 1024u64;
 		let mb = kb * kb;
 		let max_fm = Multiplier::saturating_from_integer(i128::MAX);
 
@@ -319,24 +321,24 @@ mod tests {
 			10 * mb,
 			2147483647,
 			4294967295,
-			RuntimeBlockWeights::get().max_block / 2,
-			RuntimeBlockWeights::get().max_block,
-			Weight::MAX / 2,
-			Weight::MAX,
+			RuntimeBlockWeights::get().max_block.ref_time() / 2,
+			RuntimeBlockWeights::get().max_block.ref_time(),
+			Weight::MAX.ref_time() / 2,
+			Weight::MAX.ref_time(),
 		]
 		.into_iter()
 		.for_each(|i| {
-			run_with_system_weight(i, || {
+			run_with_system_weight(Weight::from_ref_time(i), || {
 				let next = runtime_multiplier_update(Multiplier::one());
-				let truth = truth_value_update(i, Multiplier::one());
+				let truth = truth_value_update(Weight::from_ref_time(i), Multiplier::one());
 				assert_eq_error_rate!(truth, next, Multiplier::from_inner(50_000_000));
 			});
 		});
 
 		// Some values that are all above the target and will cause an increase.
-		let t = target();
+		let t = target().ref_time();
 		vec![t + 100, t * 2, t * 4].into_iter().for_each(|i| {
-			run_with_system_weight(i, || {
+			run_with_system_weight(Weight::from_ref_time(i), || {
 				let fm = runtime_multiplier_update(max_fm);
 				// won't grow. The convert saturates everything.
 				assert_eq!(fm, max_fm);

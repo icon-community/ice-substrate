@@ -80,6 +80,6 @@ pub mod pallet {
 pub struct WeightInfo<T>(PhantomData<T>);
 impl<T: Config> WeightInfo<T> {
 	pub fn set_config_with_u32() -> Weight {
-		(10_000_000 as Weight).saturating_add(T::DbWeight::get().writes(1 as Weight))
+		Weight::from_ref_time(10_000_000).saturating_add(T::DbWeight::get().writes(1))
 	}
 }

@@ -16,7 +16,7 @@ pub mod prelude {
 		assert_storage_noop,
 	};
 	pub use hex_literal::hex as decode_hex;
-	pub use mock::{AirdropModule, Origin, Test};
+	pub use mock::{AirdropModule, RuntimeOrigin, Test};
 	pub use pallet_airdrop::{tests, transfer, types, utils};
 	pub use sp_core::bytes;
 	pub use sp_runtime::traits::{Bounded, IdentifyAccount, Saturating};
@@ -136,7 +136,7 @@ pub fn run_to_block(n: types::BlockNumberOf<Test>) {
 	}
 }
 
-pub fn get_last_event() -> Option<<Test as frame_system::Config>::Event> {
+pub fn get_last_event() -> Option<<Test as frame_system::Config>::RuntimeEvent> {
 	<frame_system::Pallet<Test>>::events()
 		.pop()
 		.map(|v| v.event)
@@ -145,7 +145,7 @@ pub fn get_last_event() -> Option<<Test as frame_system::Config>::Event> {
 pub fn set_creditor_balance(balance: u64) {
 	let creditor_account = force_get_creditor_account::<Test>();
 	let deposit_res = <Test as pallet_airdrop::Config>::Currency::set_balance(
-		mock::Origin::root(),
+		mock::RuntimeOrigin::root(),
 		creditor_account,
 		balance.into(),
 		0u32.into(),
@@ -178,7 +178,7 @@ pub fn to_test_case(
 
 pub fn transfer_to_creditor(sponsor: &types::AccountIdOf<Test>, amount: types::BalanceOf<Test>) {
 	assert_ok!(<Test as pallet_airdrop::Config>::Currency::transfer(
-		Origin::signed(sponsor.clone()),
+		RuntimeOrigin::signed(sponsor.clone()),
 		force_get_creditor_account::<Test>(),
 		amount,
 	));

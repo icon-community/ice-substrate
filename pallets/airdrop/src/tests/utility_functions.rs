@@ -4,20 +4,23 @@ use super::prelude::*;
 fn update_server_account() {
 	minimal_test_ext().execute_with(|| {
 		assert_noop!(
-			AirdropModule::set_airdrop_server_account(Origin::none(), samples::ACCOUNT_ID[1]),
+			AirdropModule::set_airdrop_server_account(
+				RuntimeOrigin::none(),
+				samples::ACCOUNT_ID[1]
+			),
 			PalletError::DeniedOperation
 		);
 
 		assert_noop!(
 			AirdropModule::set_airdrop_server_account(
-				Origin::signed(samples::ACCOUNT_ID[1]),
+				RuntimeOrigin::signed(samples::ACCOUNT_ID[1]),
 				samples::ACCOUNT_ID[2]
 			),
 			PalletError::DeniedOperation
 		);
 
 		assert_ok!(AirdropModule::set_airdrop_server_account(
-			Origin::root(),
+			RuntimeOrigin::root(),
 			samples::ACCOUNT_ID[1]
 		));
 		assert_eq!(
@@ -35,27 +38,27 @@ fn ensure_root_or_server() {
 		// Set server account to be ACCOUNT_ID[0]
 		let server_account = samples::ACCOUNT_ID[0];
 		assert_ok!(AirdropModule::set_airdrop_server_account(
-			Origin::root(),
+			RuntimeOrigin::root(),
 			server_account.clone()
 		));
 
 		// root origin should pass
-		assert_ok!(AirdropModule::ensure_root_or_server(Origin::root()));
+		assert_ok!(AirdropModule::ensure_root_or_server(RuntimeOrigin::root()));
 
 		// Any signed other than server account should fail
 		assert_err!(
-			AirdropModule::ensure_root_or_server(Origin::signed(samples::ACCOUNT_ID[2])),
+			AirdropModule::ensure_root_or_server(RuntimeOrigin::signed(samples::ACCOUNT_ID[2])),
 			BadOrigin
 		);
 
 		// Unsigned origin should fail
 		assert_err!(
-			AirdropModule::ensure_root_or_server(Origin::none()),
+			AirdropModule::ensure_root_or_server(RuntimeOrigin::none()),
 			BadOrigin
 		);
 
 		// Signed with server account should pass
-		assert_ok!(AirdropModule::ensure_root_or_server(Origin::signed(
+		assert_ok!(AirdropModule::ensure_root_or_server(RuntimeOrigin::signed(
 			server_account
 		)));
 	});
@@ -376,7 +379,7 @@ fn respect_airdrop_state() {
 
 		// Set the state to block incoming request
 		assert_ok!(AirdropModule::update_airdrop_state(
-			Origin::root(),
+			RuntimeOrigin::root(),
 			types::AirdropState {
 				block_exchange_request: false,
 				block_claim_request: true,
@@ -392,7 +395,7 @@ fn respect_airdrop_state() {
 		// Call the actual dispatchable
 		assert_err!(
 			AirdropModule::dispatch_user_claim(
-				Origin::root(),
+				RuntimeOrigin::root(),
 				Default::default(),
 				Default::default(),
 				[0; 289],
@@ -413,7 +416,7 @@ fn respect_airdrop_state() {
 
 		// Set the state to block incoming request
 		assert_ok!(AirdropModule::update_airdrop_state(
-			Origin::root(),
+			RuntimeOrigin::root(),
 			types::AirdropState {
 				block_exchange_request: true,
 				block_claim_request: false,
@@ -429,7 +432,7 @@ fn respect_airdrop_state() {
 		// Call teh actual dispatchable
 		assert_noop!(
 			AirdropModule::dispatch_exchange_claim(
-				Origin::root(),
+				RuntimeOrigin::root(),
 				Default::default(),
 				Default::default(),
 				Default::default(),

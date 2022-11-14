@@ -42,7 +42,7 @@ pub fn do_transfer<T: airdrop::Config>(snapshot: &mut types::SnapshotInfo<T>) ->
 			.ok_or(sp_runtime::ArithmeticError::Overflow)?
 	};
 
-	let creditor_origin = <T as frame_system::Config>::Origin::from(
+	let creditor_origin = <T as frame_system::Config>::RuntimeOrigin::from(
 		frame_system::RawOrigin::Signed(creditor.clone()),
 	);
 	let claimer_origin = <T::Lookup as sp_runtime::traits::StaticLookup>::unlookup(claimer.clone());

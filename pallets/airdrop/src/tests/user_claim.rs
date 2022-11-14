@@ -13,7 +13,7 @@ fn claim_success() {
 		case.amount = 12_017_332_u64.into();
 
 		assert_ok!(AirdropModule::dispatch_user_claim(
-			Origin::signed(AirdropModule::get_airdrop_server_account().unwrap()),
+			RuntimeOrigin::signed(AirdropModule::get_airdrop_server_account().unwrap()),
 			case.icon_address,
 			case.ice_address,
 			case.message,
@@ -58,7 +58,7 @@ fn insufficient_balance() {
 	let mut test_ext = minimal_test_ext();
 	test_ext.execute_with(|| {
 		assert_ok!(AirdropModule::set_airdrop_server_account(
-			Origin::root(),
+			RuntimeOrigin::root(),
 			ofw_account
 		));
 
@@ -66,7 +66,7 @@ fn insufficient_balance() {
 		case.amount = 10017332_u64.into();
 		let creditor_account = force_get_creditor_account::<Test>();
 		<Test as Config>::Currency::set_balance(
-			mock::Origin::root(),
+			mock::RuntimeOrigin::root(),
 			creditor_account,
 			10_u32.into(),
 			10_u32.into(),
@@ -75,7 +75,7 @@ fn insufficient_balance() {
 
 		assert_err!(
 			AirdropModule::dispatch_user_claim(
-				Origin::signed(AirdropModule::get_airdrop_server_account().unwrap()),
+				RuntimeOrigin::signed(AirdropModule::get_airdrop_server_account().unwrap()),
 				case.icon_address,
 				case.ice_address.clone(),
 				case.message,
@@ -96,7 +96,7 @@ fn already_claimed() {
 	let mut test_ext = minimal_test_ext();
 	test_ext.execute_with(|| {
 		assert_ok!(AirdropModule::set_airdrop_server_account(
-			Origin::root(),
+			RuntimeOrigin::root(),
 			ofw_account
 		));
 		let mut case = UserClaimTestCase::default();
@@ -111,7 +111,7 @@ fn already_claimed() {
 		let creditor_account = force_get_creditor_account::<Test>();
 
 		<Test as Config>::Currency::set_balance(
-			mock::Origin::root(),
+			mock::RuntimeOrigin::root(),
 			creditor_account,
 			10_000_0000_u32.into(),
 			10_000_00_u32.into(),
@@ -120,7 +120,7 @@ fn already_claimed() {
 
 		assert_err!(
 			AirdropModule::dispatch_user_claim(
-				Origin::signed(AirdropModule::get_airdrop_server_account().unwrap()),
+				RuntimeOrigin::signed(AirdropModule::get_airdrop_server_account().unwrap()),
 				case.icon_address,
 				case.ice_address.clone(),
 				case.message,
@@ -141,7 +141,7 @@ fn invalid_payload() {
 	let mut test_ext = minimal_test_ext();
 	test_ext.execute_with(|| {
         assert_ok!(AirdropModule::set_airdrop_server_account(
-			Origin::root(),
+			RuntimeOrigin::root(),
 			ofw_account
 		));
 		let mut case = UserClaimTestCase::default();
@@ -150,7 +150,7 @@ fn invalid_payload() {
 		let creditor_account = force_get_creditor_account::<Test>();
 
 		<Test as Config>::Currency::set_balance(
-			mock::Origin::root(),
+			mock::RuntimeOrigin::root(),
 			creditor_account,
 			10_000_0000_u32.into(),
 			10_000_00_u32.into(),
@@ -159,7 +159,7 @@ fn invalid_payload() {
 
 		assert_err!(
 			AirdropModule::dispatch_user_claim(
-				Origin::signed(AirdropModule::get_airdrop_server_account().unwrap()),
+				RuntimeOrigin::signed(AirdropModule::get_airdrop_server_account().unwrap()),
 				case.icon_address,
 				case.ice_address.clone(),
 				case.message,
@@ -180,7 +180,7 @@ fn invalid_ice_signature() {
 	let mut test_ext = minimal_test_ext();
 	test_ext.execute_with(|| {
 		assert_ok!(AirdropModule::set_airdrop_server_account(
-			Origin::root(),
+			RuntimeOrigin::root(),
 			ofw_account
 		));
 		let mut case = UserClaimTestCase::default();
@@ -188,7 +188,7 @@ fn invalid_ice_signature() {
 
 		let creditor_account = force_get_creditor_account::<Test>();
 		<Test as Config>::Currency::set_balance(
-			mock::Origin::root(),
+			mock::RuntimeOrigin::root(),
 			creditor_account,
 			10_000_0000_u32.into(),
 			10_000_00_u32.into(),
@@ -197,7 +197,7 @@ fn invalid_ice_signature() {
 
 		assert_err!(
 			AirdropModule::dispatch_user_claim(
-				Origin::signed(AirdropModule::get_airdrop_server_account().unwrap()),
+				RuntimeOrigin::signed(AirdropModule::get_airdrop_server_account().unwrap()),
 				case.icon_address,
 				case.ice_address.clone(),
 				case.message,
@@ -218,7 +218,7 @@ fn invalid_icon_signature() {
 	let mut test_ext = minimal_test_ext();
 	test_ext.execute_with(|| {
 		assert_ok!(AirdropModule::set_airdrop_server_account(
-			Origin::root(),
+			RuntimeOrigin::root(),
 			ofw_account
 		));
 		let mut case = UserClaimTestCase::default();
@@ -226,7 +226,7 @@ fn invalid_icon_signature() {
 
 		let creditor_account = force_get_creditor_account::<Test>();
 		<Test as Config>::Currency::set_balance(
-			mock::Origin::root(),
+			mock::RuntimeOrigin::root(),
 			creditor_account,
 			10_000_0000_u32.into(),
 			10_000_00_u32.into(),
@@ -235,7 +235,7 @@ fn invalid_icon_signature() {
 
 		assert_err!(
 			AirdropModule::dispatch_user_claim(
-				Origin::signed(AirdropModule::get_airdrop_server_account().unwrap()),
+				RuntimeOrigin::signed(AirdropModule::get_airdrop_server_account().unwrap()),
 				case.icon_address,
 				case.ice_address.clone(),
 				case.message,
@@ -314,7 +314,7 @@ fn partial_transfer_can_reclaim() {
 			let mut amount_consumed = 0;
 			for i in 0..vesting_count_limit {
 				let res = pallet_vesting::Pallet::<Test>::vested_transfer(
-					Origin::signed(force_get_creditor_account::<Test>()),
+					RuntimeOrigin::signed(force_get_creditor_account::<Test>()),
 					ice_account.clone(),
 					types::VestingInfoOf::<Test>::new(10_000, 2000, 5),
 				)
@@ -333,7 +333,7 @@ fn partial_transfer_can_reclaim() {
 		{
 			let case = case.clone();
 			assert_ok!(AirdropModule::dispatch_user_claim(
-				Origin::root(),
+				RuntimeOrigin::root(),
 				case.icon_address,
 				case.ice_address,
 				case.message,
@@ -360,13 +360,13 @@ fn partial_transfer_can_reclaim() {
 		// Release the streams vesting schedules put previously
 		{
 			run_to_block(12);
-			assert_ok!(pallet_vesting::Pallet::<Test>::vest(Origin::signed(
+			assert_ok!(pallet_vesting::Pallet::<Test>::vest(RuntimeOrigin::signed(
 				ice_account.clone()
 			)));
 		}
 
 		let reclaim_res = AirdropModule::dispatch_user_claim(
-			Origin::root(),
+			RuntimeOrigin::root(),
 			case.icon_address,
 			case.ice_address,
 			case.message,
