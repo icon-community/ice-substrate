@@ -1,6 +1,10 @@
 name: Release
 on:
    workflow_dispatch:
+     inputs:
+      tag:
+        description: 'Release version (e.g. v0.1.0)'
+        required: true
 
 env:
   BUILD_PROFILE: debug
@@ -13,7 +17,7 @@ jobs:
       SUBWASM_VERSION: 0.18.0
     strategy:
       matrix:
-        chain: [ "arctic" ]
+        chain: [ "arctic" , "snow" ]
 
     steps:
       - uses: actions/checkout@v3
@@ -74,21 +78,16 @@ jobs:
             ${{ matrix.chain }}-compressed-info.json
             ${{ matrix.chain }}-metadata.json
             ${{ matrix.chain }}-diff.txt
-
+  
   build_binary:
-    strategy:
-      matrix:
-        os:
-          - ubuntu-latest
-
-    runs-on: ${{ matrix.os }}
+    name: Build binary
+    runs-on: ubuntu-latest
     steps:
-
       - name: Checkout
         uses: actions/checkout@v3
         with:
           submodules: true
-      
+
       - name: Install nightly toolchain
         uses: actions-rs/toolchain@v1
         with:
@@ -96,7 +95,7 @@ jobs:
           toolchain: ${{ env.RUST_TOOLCHAIN }}
           target: wasm32-unknown-unknown
           override: true
-          
+
       - name: Install Rust Toolchain
         uses: actions-rs/toolchain@v1
         with:
@@ -105,54 +104,116 @@ jobs:
           target: wasm32-unknown-unknown
           toolchain: stable
 
-      - name: Build binary
-        run: cargo build
+      - name: Install WASM target (for runtime building)
+        shell: bash
+        run: rustup target add wasm32-unknown-unknown --toolchain ${{ env.RUST_TOOLCHAIN }}
+      
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v1
+        with:
+          version: '3.x'
+
+      - name: Build optimized binary
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --release --locked --target x86_64-unknown-linux-gnu
+          
+      - name: Collect binary
+        run: |
+          mkdir -p binary
+          mv target/x86_64-unknown-linux-gnu/release/ice-node binary/
 
       - name: Upload binary
         uses: actions/upload-artifact@v2
         with:
-          name: ice-binary-${{ matrix.os }}
-          path: target/release/ice-node
-
+          name: ice-binary
+          path: binary
+ 
   release:
     name: Build and publish Runtime
     runs-on: ubuntu-latest
     
     needs:
-      - build_binary
       - build_runtime
-
+      - build_binary
     steps:
-    
       - name: Create Tag
         uses: laputansoft/github-tag-action@v4.6
         with:
           tag: ${{ github.event.inputs.tag }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
+       
+      - name: Checkout the source code
+        uses: actions/checkout@v3
+
+      - name: Create dir
+        shell: bash
+        run: |
+          mkdir -p release/tmp/arctic
+          mkdir -p binary
+          mkdir -p release/tmp/snow
+       
+      - uses: actions/download-artifact@v2
+        with:
+          name: ice-binary
+          path: binary
+          
+      - uses: actions/download-artifact@v2
+        with: 
+          name: arctic-runtime
+          path: release/tmp/arctic
+          
+      - uses: actions/download-artifact@v2
+        with: 
+          name: snow-runtime
+          path: release/tmp/snow
           
       - name: Generate template data
         run: |
+            chmod +x binary/ice-node 
+            mkdir -p wasm
+            ls -lrt
+            ls -lrt binary/
+            mv release/tmp/arctic/runtime/arctic/target/srtool/release/wbuild/arctic-runtime/*.compact.compressed.wasm wasm/
+            mv release/tmp/arctic/runtime/arctic/target/srtool/release/wbuild/arctic-runtime/*.compact.wasm wasm/
+            mv release/tmp/snow/runtime/snow/target/srtool/release/wbuild/snow-runtime/*.compact.compressed.wasm wasm/
+            mv release/tmp/snow/runtime/snow/target/srtool/release/wbuild/snow-runtime/*.compact.wasm wasm/
+            mv release/tmp/arctic/arctic-diff.txt wasm/
+            mv release/tmp/snow/snow-diff.txt wasm/
+            cd release/tmp/
             TAG=${{ github.event.inputs.tag }}
-            SRTOOL_DETAILS=$(cat arctic-srtool-digest.json)
-            SUBWASM_DETAILS=$(cat arctic-subwam-info.json)
+            ARCTIC_SRTOOL_DETAILS=$(cat arctic/arctic-srtool-digest.json)
+            ARCTIC_SUBWASM_DETAILS=$(cat arctic/arctic-info.json)
+            SNOW_SRTOOL_DETAILS=$(cat snow/snow-srtool-digest.json)
+            SNOW_SUBWASM_DETAILS=$(cat snow/snow-info.json)
             echo 'Template data:'
             jq -n \
               --arg tag "$TAG" \
-              --arg srtool_details "$SRTOOL_DETAILS" \
-              --arg subwasm_details "$SUBWASM_DETAILS" \
+              --arg arctic_srtool_details "$ARCTIC_SRTOOL_DETAILS" \
+              --arg arctic_subwasm_details "$ARCTIC_SUBWASM_DETAILS" \
+              --arg snow_srtool_details "$SNOW_SRTOOL_DETAILS" \
+              --arg snow_subwasm_details "$SNOW_SUBWASM_DETAILS" \
               '{
                 tag: $tag,
-                srtool_details: $srtool_details,
-                subwasm_details: $subwasm_details
+                snow_srtool_details: $snow_srtool_details,
+                snow_subwasm_details: $snow_subwasm_details,
+                arctic_srtool_details: $arctic_srtool_details,
+                artic_subwasm_details: $arctic_subwasm_details
               }' | tee template_data.json
+            cd ../../
+      - name: Render release page
+        uses: jayamanikharyono/jinja-action@v0.1
+        with:
+          datafile: release/tmp/template_data.json
+          path: .github/release-template.md
 
       - name: Publish github release
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            ice-node
-            ${{ steps.srtool_build.outputs.wasm }}
-            ${{ steps.srtool_build.outputs.wasm_compressed }}
+            binary/*
+            wasm/*
           body_path: ".github/release-template.md"
           tag_name: ${{ github.event.inputs.tag }}
           name: "${{ github.event.inputs.tag }}"
