@@ -2,15 +2,18 @@ name: Release
 on:
    workflow_dispatch:
 
+env:
+  BUILD_PROFILE: debug
+  RUST_TOOLCHAIN: nightly-2022-10-25  
+  
 jobs:
-  build-runtime:
+  build_runtime:
     runs-on: ubuntu-latest
     env:
       SUBWASM_VERSION: 0.18.0
     strategy:
       matrix:
-        chain: ["arctic", "snow"]
-        endpoint: ["arctic-rpc.icenetwork.io:9933", "snow-rpc.icenetwork.io:9933"]
+        chain: [ "arctic" ]
 
     steps:
       - uses: actions/checkout@v3
@@ -30,15 +33,6 @@ jobs:
           cat ${{ matrix.chain }}-srtool-digest.json
           echo "Compact Runtime: ${{ steps.srtool_build.outputs.wasm }}"
           echo "Compressed Runtime: ${{ steps.srtool_build.outputs.wasm_compressed }}"
-
-      - name: Archive Artifacts for ${{ matrix.chain }}
-        uses: actions/upload-artifact@v3
-        with:
-          name: ${{ matrix.chain }}-runtime
-          path: |
-            ${{ steps.srtool_build.outputs.wasm }}
-            ${{ steps.srtool_build.outputs.wasm_compressed }}
-            ${{ matrix.chain }}-srtool-digest.json
 
       - name: Install subwasm
         shell: bash
@@ -64,7 +58,7 @@ jobs:
       - name: Check the metadata diff
         shell: bash
         run: |
-          subwasm get https://${{ matrix.endpoint }} --output ${{ matrix.chain }}-live.wasm
+          subwasm get https://${{ matrix.chain }}-rpc.icenetwork.io:9933 --output ${{ matrix.chain }}-live.wasm
           subwasm diff ${{ steps.srtool_build.outputs.wasm }} ${{ matrix.chain }}-live.wasm | \
             tee ${{ matrix.chain }}-diff.txt
 
@@ -73,87 +67,93 @@ jobs:
         with:
           name: ${{ matrix.chain }}-runtime
           path: |
+            ${{ steps.srtool_build.outputs.wasm }}
+            ${{ steps.srtool_build.outputs.wasm_compressed }}
+            ${{ matrix.chain }}-srtool-digest.json
             ${{ matrix.chain }}-info.json
             ${{ matrix.chain }}-compressed-info.json
             ${{ matrix.chain }}-metadata.json
             ${{ matrix.chain }}-diff.txt
 
-  build-binary:
-    name: Build binary
-    runs-on: ubuntu-latest
+  build_binary:
+    strategy:
+      matrix:
+        os:
+          - ubuntu-latest
+
+    runs-on: ${{ matrix.os }}
     steps:
-    - name: Checkout the source code
-      uses: actions/checkout@v3
-      with:
-        submodules: true
 
-    - name: Install Rust toolchain
-      uses: actions-rs/toolchain@v1
-      with:
-        profile: minimal
-        toolchain: nightly-2022-10-27
-        target: x86_64-unknown-linux-gnu
-        components: rustfmt, clippy
-        default: true
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          submodules: true
+      
+      - name: Install nightly toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: ${{ env.RUST_TOOLCHAIN }}
+          target: wasm32-unknown-unknown
+          override: true
+          
+      - name: Install Rust Toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          default: true
+          profile: minimal
+          target: wasm32-unknown-unknown
+          toolchain: stable
 
-    - name: Install WASM target (for runtime building)
-      shell: bash
-      run: rustup target add wasm32-unknown-unknown --toolchain nightly-2022-10-27
-    - name: Build optimized binary
-      uses: actions-rs/cargo@v1
-      with:
-        command: build
-        args: --release --locked --target x86_64-unknown-linux-gnu
+      - name: Build binary
+        run: cargo build
 
-    - name: Upload build artifacts
-      uses: actions/upload-artifact@master
-      with:
-        name: x86_64-unknown-linux-gnu
-        path: target/x86_64-unknown-linux-gnu/release/ice-node
-  
+      - name: Upload binary
+        uses: actions/upload-artifact@v2
+        with:
+          name: ice-binary-${{ matrix.os }}
+          path: target/release/ice-node
+
   release:
-    name: Release
-    needs:
-    - build-binary
-    - build-runtime
+    name: Build and publish Runtime
     runs-on: ubuntu-latest
-    steps:
-    - name: Checkout the source code
-      uses: actions/checkout@v3
-    - name: Create dir
-      shell: bash
-      run: |
-        mkdir -p release/tmp/
-        cd release/tmp/
-        mkdir arctic snow runtimes x86_64
-    - name: get x86_64 binary
-      uses: actions/download-artifact@v2
-      with:
-        name: x86_64-unknown-linux-gnu
-        path: release/tmp/x86_64/
-    - uses: actions/download-artifact@v2
-      with:
-        name: arctic-runtime
-        path: release/tmp/arctic/
-    - uses: actions/download-artifact@v2
-      with:
-        name: snow-runtime
-        path: release/tmp/snow/
-    - id: compress_artifacts
-      shell: bash
-      run: |
-        cd release/
-        chmod +x tmp/x86_64/ice-node
-        tar -czvf ice-node.tar.gz -C tmp/x86_64/ ice-node
-        cp -R tmp/arctic tmp/runtimes/
-        cp -R tmp/snow tmp/runtimes/
-        cd tmp/runtimes;tar -czvf ../../runtimes.tar.gz *;cd ../../
-        sha256sum *.tar.gz > sha256sum
-        rm -rf tmp/
+    
+    needs:
+      - build_binary
+      - build_runtime
 
-    - name: Upload assets to release
-      uses: softprops/action-gh-release@v1
-      with:
-        name: runtimes ${{ github.event.inputs.release-version }}
-        files: ./release/*
-        draft: true
+    steps:
+    
+      - name: Create Tag
+        uses: laputansoft/github-tag-action@v4.6
+        with:
+          tag: ${{ github.event.inputs.tag }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Generate template data
+        run: |
+            TAG=${{ github.event.inputs.tag }}
+            SRTOOL_DETAILS=$(cat arctic-srtool-digest.json)
+            SUBWASM_DETAILS=$(cat arctic-subwam-info.json)
+            echo 'Template data:'
+            jq -n \
+              --arg tag "$TAG" \
+              --arg srtool_details "$SRTOOL_DETAILS" \
+              --arg subwasm_details "$SUBWASM_DETAILS" \
+              '{
+                tag: $tag,
+                srtool_details: $srtool_details,
+                subwasm_details: $subwasm_details
+              }' | tee template_data.json
+
+      - name: Publish github release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            ice-node
+            ${{ steps.srtool_build.outputs.wasm }}
+            ${{ steps.srtool_build.outputs.wasm_compressed }}
+          body_path: ".github/release-template.md"
+          tag_name: ${{ github.event.inputs.tag }}
+          name: "${{ github.event.inputs.tag }}"
+          token: ${{ secrets.GITHUB_TOKEN }}

@@ -1,8 +1,8 @@
 {
   "source": {
-    "hash": "0x68de79bec509425515ee9a76aa408ca8dd6131e15751a47b04ffae3cf5ac0420",
-    "language": "ink! 3.3.1",
-    "compiler": "rustc 1.66.0-nightly"
+    "hash": "0xa77b3ca8633247cfb06398db08c8049d6bf87ef9ede68c0c519eb2dbff0cefc4",
+    "language": "ink! 3.4.0",
+    "compiler": "rustc 1.67.0-nightly"
   },
   "contract": {
     "name": "staking_rewards",
@@ -62,7 +62,7 @@
               }
             },
             {
-              "label": "deposit_deadline",
+              "label": "duration_until_deposit_deadline",
               "type": {
                 "displayName": [
                   "u64"
@@ -405,6 +405,23 @@
           "payable": false,
           "returnType": null,
           "selector": "0x62bdedce"
+        },
+        {
+          "args": [
+            {
+              "label": "code_hash",
+              "type": {
+                "displayName": [],
+                "type": 1
+              }
+            }
+          ],
+          "docs": [],
+          "label": "set_code",
+          "mutates": true,
+          "payable": false,
+          "returnType": null,
+          "selector": "0x694fb50f"
         },
         {
           "args": [
