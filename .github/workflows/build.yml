@@ -35,5 +35,5 @@ jobs:
       
       - name: Build
         run: |
-            apt install protobuf3-compiler
+            sudo apt install protobuf3-compiler
             CARGO_INCREMENTAL=0 cargo build
