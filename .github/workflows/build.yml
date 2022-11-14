@@ -32,8 +32,12 @@ jobs:
           profile: minimal
           target: wasm32-unknown-unknown
           toolchain: stable
-      
+          
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v1
+        with:
+          version: '3.x'
+          
       - name: Build
         run: |
-            sudo apt install protobuf3-compiler
             CARGO_INCREMENTAL=0 cargo build
