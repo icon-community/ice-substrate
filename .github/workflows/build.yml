@@ -35,4 +35,5 @@ jobs:
       
       - name: Build
         run: |
-            CARGO_INCREMENTAL=0 RUSTFLAGS="-D warnings" cargo build
+            apt install protobuf3-compiler
+            CARGO_INCREMENTAL=0 cargo build
