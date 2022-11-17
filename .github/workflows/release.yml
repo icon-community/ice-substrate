@@ -179,27 +179,21 @@ jobs:
             mv release/tmp/arctic/runtime/arctic/target/srtool/release/wbuild/arctic-runtime/*.compact.wasm wasm/
             mv release/tmp/snow/runtime/snow/target/srtool/release/wbuild/snow-runtime/*.compact.compressed.wasm wasm/
             mv release/tmp/snow/runtime/snow/target/srtool/release/wbuild/snow-runtime/*.compact.wasm wasm/
-            mv release/tmp/arctic/arctic-diff.txt wasm/
-            mv release/tmp/snow/snow-diff.txt wasm/
+            cp release/tmp/arctic/arctic-* wasm/
+            cp release/tmp/snow/snow-* wasm/
             cd release/tmp/
             TAG=${{ github.event.inputs.tag }}
-            ARCTIC_SRTOOL_DETAILS=$(cat arctic/arctic-srtool-digest.json)
-            ARCTIC_SUBWASM_DETAILS=$(cat arctic/arctic-info.json)
-            SNOW_SRTOOL_DETAILS=$(cat snow/snow-srtool-digest.json)
-            SNOW_SUBWASM_DETAILS=$(cat snow/snow-info.json)
+            SRTOOL_DETAILS=$(cat snow/snow-srtool-digest.json)
+            SUBWASM_DETAILS=$(cat snow/snow-info.json)
             echo 'Template data:'
             jq -n \
               --arg tag "$TAG" \
-              --arg arctic_srtool_details "$ARCTIC_SRTOOL_DETAILS" \
-              --arg arctic_subwasm_details "$ARCTIC_SUBWASM_DETAILS" \
-              --arg snow_srtool_details "$SNOW_SRTOOL_DETAILS" \
-              --arg snow_subwasm_details "$SNOW_SUBWASM_DETAILS" \
+              --arg srtool_details "$SRTOOL_DETAILS" \
+              --arg subwasm_details "$SUBWASM_DETAILS" \
               '{
                 tag: $tag,
-                snow_srtool_details: $snow_srtool_details,
-                snow_subwasm_details: $snow_subwasm_details,
-                arctic_srtool_details: $arctic_srtool_details,
-                artic_subwasm_details: $arctic_subwasm_details
+                srtool_details: $srtool_details,
+                subwasm_details: $subwasm_details
               }' | tee template_data.json
             cd ../../
       - name: Render release page
