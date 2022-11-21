@@ -411,7 +411,7 @@ impl pallet_contracts::Config for Runtime {
 	type DepositPerItem = DepositPerItem;
 	type AddressGenerator = pallet_contracts::DefaultAddressGenerator;
 	type MaxCodeLen = ConstU32<{ 128 * 1024 }>;
-	type MaxStorageKeyLen = ();
+	type MaxStorageKeyLen = ConstU32<128>;
 }
 
 parameter_types! {
@@ -535,7 +535,7 @@ impl pallet_evm::Config for Runtime {
 	type Runner = pallet_evm::runner::stack::Runner<Self>;
 	type OnChargeTransaction = ();
 	type FindAuthor = FindAuthorTruncated<Aura>;
-	type WeightPerGas = ();
+	type WeightPerGas = WEIGHT_PER_GAS;
 }
 
 impl pallet_ethereum::Config for Runtime {
@@ -936,6 +936,8 @@ parameter_types! {
 	pub const DesiredMembers: u32 = 7;
 	pub const DesiredRunnersUp: u32 = 7;
 	pub const PhragmenElectionPalletId: LockIdentifier = *b"phrelect";
+	pub const MAX_CANDIDATES: u32 = 1000;
+	pub const MAX_VOTERS: u32 = 1000;
 }
 
 // Make sure that there are no more than MaxMembers members elected via phragmen.
@@ -957,8 +959,8 @@ impl pallet_elections_phragmen::Config for Runtime {
 	type DesiredRunnersUp = DesiredRunnersUp;
 	type TermDuration = TermDuration;
 	type WeightInfo = ();
-	type MaxCandidates = ();
-	type MaxVoters = ();
+	type MaxCandidates = MAX_CANDIDATES;
+	type MaxVoters = MAX_VOTERS;
 }
 
 impl pallet_membership::Config<pallet_membership::Instance1> for Runtime {
@@ -1089,11 +1091,16 @@ impl pallet_base_fee::BaseFeeThreshold for BaseFeeThreshold {
 	}
 }
 
+parameter_types! {
+    // At the moment, we don't use dynamic fee calculation for arctic chain by default
+    pub DefaultElasticity: Permill = Permill::zero();
+}
+
 impl pallet_base_fee::Config for Runtime {
 	type RuntimeEvent = RuntimeEvent;
 	type Threshold = BaseFeeThreshold;
 	type DefaultBaseFeePerGas = DefaultBaseFeePerGas;
-	type DefaultElasticity = ();
+	type DefaultElasticity = DefaultElasticity;
 }
 
 impl pallet_randomness_collective_flip::Config for Runtime {}
