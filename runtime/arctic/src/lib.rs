@@ -501,22 +501,26 @@ impl<F: FindAuthor<u32>> FindAuthor<H160> for FindAuthorTruncated<F> {
 }
 
 pub const GAS_PER_SECOND: u64 = 40_000_000;
-pub const WEIGHT_PER_GAS: u64 = WEIGHT_PER_SECOND.ref_time() / GAS_PER_SECOND;
+pub const WEIGHT_PER_GAS: Weight = WEIGHT_PER_SECOND.saturating_div(GAS_PER_SECOND);
 
 parameter_types! {
 	pub const ChainId: u64 = 553;
-	pub BlockGasLimit: U256 = U256::from(NORMAL_DISPATCH_RATIO * WEIGHT_PER_SECOND.mul(2).ref_time() / WEIGHT_PER_GAS);
+	pub BlockGasLimit: U256 = U256::from(NORMAL_DISPATCH_RATIO * WEIGHT_PER_SECOND.mul(2).ref_time() / WEIGHT_PER_GAS.ref_time());
 	pub PrecompilesValue: FrontierPrecompiles<Runtime> = FrontierPrecompiles::<_>::new();
 }
 
 pub struct LocalGasWeightMapping;
 impl pallet_evm::GasWeightMapping for LocalGasWeightMapping {
 	fn gas_to_weight(gas: u64, _without_base_weight: bool) -> Weight {
-		Weight::from_ref_time(gas).saturating_mul(WEIGHT_PER_GAS)
+		Weight::from_ref_time(gas).saturating_mul(WEIGHT_PER_GAS.ref_time())
 	}
 	fn weight_to_gas(weight: Weight) -> u64 {
-		weight.div(WEIGHT_PER_GAS).ref_time()
+		weight.div(WEIGHT_PER_GAS.ref_time()).ref_time()
 	}
+}
+
+parameter_types! {
+	pub WeightPerGas: Weight = WEIGHT_PER_GAS;
 }
 
 impl pallet_evm::Config for Runtime {
@@ -535,7 +539,7 @@ impl pallet_evm::Config for Runtime {
 	type Runner = pallet_evm::runner::stack::Runner<Self>;
 	type OnChargeTransaction = ();
 	type FindAuthor = FindAuthorTruncated<Aura>;
-	type WeightPerGas = WEIGHT_PER_GAS;
+	type WeightPerGas = WeightPerGas;
 }
 
 impl pallet_ethereum::Config for Runtime {
@@ -936,8 +940,8 @@ parameter_types! {
 	pub const DesiredMembers: u32 = 7;
 	pub const DesiredRunnersUp: u32 = 7;
 	pub const PhragmenElectionPalletId: LockIdentifier = *b"phrelect";
-	pub const MAX_CANDIDATES: u32 = 1000;
-	pub const MAX_VOTERS: u32 = 1000;
+	pub const MaxCandidatesElection: u32 = 1000;
+	pub const MaxVotersElection: u32 = 10000;
 }
 
 // Make sure that there are no more than MaxMembers members elected via phragmen.
@@ -959,8 +963,8 @@ impl pallet_elections_phragmen::Config for Runtime {
 	type DesiredRunnersUp = DesiredRunnersUp;
 	type TermDuration = TermDuration;
 	type WeightInfo = ();
-	type MaxCandidates = MAX_CANDIDATES;
-	type MaxVoters = MAX_VOTERS;
+	type MaxCandidates = MaxCandidatesElection;
+	type MaxVoters = MaxVotersElection;
 }
 
 impl pallet_membership::Config<pallet_membership::Instance1> for Runtime {
