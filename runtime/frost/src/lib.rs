@@ -425,23 +425,15 @@ pub const WEIGHT_PER_GAS: u64 = WEIGHT_PER_SECOND.ref_time() / GAS_PER_SECOND;
 
 parameter_types! {
 	pub const ChainId: u64 = 554;
+	pub WeightPerGas: Weight = Weight::from_ref_time(WEIGHT_PER_GAS);
 	pub BlockGasLimit: U256 = U256::from(NORMAL_DISPATCH_RATIO * WEIGHT_PER_SECOND.mul(2).ref_time() / WEIGHT_PER_GAS);
 	pub PrecompilesValue: FrontierPrecompiles<Runtime> = FrontierPrecompiles::<_>::new();
 }
 
-pub struct LocalGasWeightMapping;
-impl pallet_evm::GasWeightMapping for LocalGasWeightMapping {
-	fn gas_to_weight(gas: u64, _without_base_weight: bool) -> Weight {
-		Weight::from_ref_time(gas).saturating_mul(WEIGHT_PER_GAS)
-	}
-	fn weight_to_gas(weight: Weight) -> u64 {
-		weight.div(WEIGHT_PER_GAS).ref_time()
-	}
-}
-
 impl pallet_evm::Config for Runtime {
 	type FeeCalculator = BaseFee;
-	type GasWeightMapping = LocalGasWeightMapping;
+	type GasWeightMapping = pallet_evm::FixedGasWeightMapping<Self>;
+	type WeightPerGas = WeightPerGas;
 	type BlockHashMapping = pallet_ethereum::EthereumBlockHashMapping<Self>;
 	type CallOrigin = EnsureAddressTruncated;
 	type WithdrawOrigin = EnsureAddressTruncated;
@@ -455,7 +447,6 @@ impl pallet_evm::Config for Runtime {
 	type Runner = pallet_evm::runner::stack::Runner<Self>;
 	type OnChargeTransaction = ();
 	type FindAuthor = FindAuthorTruncated<Aura>;
-	type WeightPerGas = ();
 }
 
 impl pallet_ethereum::Config for Runtime {
@@ -1005,7 +996,7 @@ impl pallet_dynamic_fee::Config for Runtime {
 
 parameter_types! {
 	pub IsActive: bool = true;
-	pub DefaultBaseFeePerGas: U256 = U256::from(1_000_000_000);
+	pub DefaultBaseFeePerGas: U256 = U256::from(2_000_000_000_000i64);
 }
 
 pub struct BaseFeeThreshold;
