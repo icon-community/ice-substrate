@@ -11,3 +11,6 @@
 /.idea/
 
 contracts/*/target
+
+**/node_modules/
+**/build/
