@@ -71,7 +71,7 @@ pub use frame_support::{
 };
 
 pub use pallet_balances::Call as BalancesCall;
-use pallet_contracts::weights::WeightInfo;
+use pallet_contracts::{weights::WeightInfo, Migration};
 use pallet_ethereum::{Call::transact, Transaction as EthereumTransaction};
 use pallet_evm::{Account as EVMAccount, EnsureAddressTruncated, HashedAddressMapping, Runner};
 pub use pallet_timestamp::Call as TimestampCall;
@@ -1137,6 +1137,7 @@ pub type Executive = frame_executive::Executive<
 	frame_system::ChainContext<Runtime>,
 	Runtime,
 	AllPalletsWithSystem,
+	Migration<Runtime>,
 >;
 
 impl fp_self_contained::SelfContainedCall for RuntimeCall {
