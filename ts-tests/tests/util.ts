@@ -2,12 +2,11 @@ import Web3 from "web3";
 import { ethers } from "ethers";
 import { JsonRpcResponse } from "web3-core-helpers";
 import { spawn, ChildProcess } from "child_process";
-
 import { NODE_BINARY_NAME, CHAIN_ID } from "./config";
 
 export const PORT = 19931;
-export const RPC_PORT = 19932;
-export const WS_PORT = 19933;
+export const RPC_PORT = 9933;
+export const WS_PORT = 9944;
 
 export const DISPLAY_LOG = process.env.ICE_LOG || false;
 export const ICE_LOG = process.env.ICE_LOG || "info";
@@ -16,7 +15,7 @@ export const ICE_BUILD = process.env.ICE_BUILD || "release";
 export const BINARY_PATH = `../target/${ICE_BUILD}/${NODE_BINARY_NAME}`;
 export const SPAWNING_TIME = 60000;
 
-export async function customRequest(web3: Web3, method: string, params: any[]) {
+export async function customRequest(web3: Web3, method: string, params: any[]): Promise<JsonRpcResponse> {
 	return new Promise<JsonRpcResponse>((resolve, reject) => {
 		(web3.currentProvider as any).send(
 			{
@@ -39,6 +38,34 @@ export async function customRequest(web3: Web3, method: string, params: any[]) {
 	});
 }
 
+export async function customRequestEther(ethersjs: ethers.providers.JsonRpcProvider, params: string) {
+	try {
+		const tx = await ethersjs.sendTransaction(params);
+		const op = await tx.wait();
+		console.log({ op });
+		return op;
+	} catch (e) {
+		console.log("this is error", e);
+	}
+}
+
+export async function isTransactionFinalized(web3: Web3, txHash: string) {
+	return new Promise((resolve, reject) => {
+		const interval = setInterval(async () => {
+			await web3.eth.getTransactionReceipt(txHash, (error: Error, transaction: any) => {
+				if (error) {
+					clearInterval(interval);
+					reject(`Failed to send custom request): ${error.message || error.toString()}`);
+				}
+				if (transaction?.blockNumber) {
+					clearInterval(interval);
+					resolve(transaction);
+				}
+			});
+		}, 2000);
+	});
+}
+
 // Create a block and finalize it.
 // It will include all previously executed transactions since the last finalized block.
 export async function createAndFinalizeBlock(web3: Web3, finalize: boolean = true) {
@@ -49,7 +76,6 @@ export async function createAndFinalizeBlock(web3: Web3, finalize: boolean = tru
 	await new Promise<void>((resolve) => setTimeout(() => resolve(), 500));
 }
 
-// Create a block and finalize it.
 // It will include all previously executed transactions since the last finalized block.
 export async function createAndFinalizeBlockNowait(web3: Web3) {
 	const response = await customRequest(web3, "engine_createBlock", [true, true, null]);
@@ -71,7 +97,7 @@ export async function startIceNode(provider?: string): Promise<{
 	const cmd = BINARY_PATH;
 
 	const args = [
-		`--chain=dev`,
+		`--dev`,
 		`--validator`, // Required by manual sealing to author the blocks
 		`--execution=Native`, // Faster execution using native
 		`--no-telemetry`,
@@ -144,7 +170,29 @@ export async function startIceNode(provider?: string): Promise<{
 	return { web3, binary, ethersjs };
 }
 
-export function describeWithIce(title: string, cb: (context: { web3: Web3 }) => void, provider?: string) {
+export async function connectToChain(provider) {
+	let web3: Web3;
+
+	if (!provider || provider == "http") {
+		web3 = new Web3(`http://127.0.0.1:${RPC_PORT}`);
+	}
+
+	if (provider == "ws") {
+		web3 = new Web3(`ws://127.0.0.1:${WS_PORT}`);
+	}
+
+	let ethersjs = new ethers.providers.StaticJsonRpcProvider(`http://127.0.0.1:${RPC_PORT}`, {
+		chainId: CHAIN_ID,
+		name: "ice-dev",
+	});
+	return { web3, ethersjs };
+}
+
+export function describeWithIce(
+	title: string,
+	cb: (context: { web3: Web3; ethersjs?: ethers.providers.JsonRpcProvider }) => void,
+	provider?: string
+) {
 	describe(title, () => {
 		let context: {
 			web3: Web3;
@@ -155,9 +203,13 @@ export function describeWithIce(title: string, cb: (context: { web3: Web3 }) => 
 		before("Starting Ice Test Node", async function () {
 			this.timeout(SPAWNING_TIME);
 			const init = await startIceNode(provider);
+			// const init = await connectToChain(provider);
 			context.web3 = init.web3;
 			context.ethersjs = init.ethersjs;
 			binary = init.binary;
+
+			//set balance in genesis accoun
+			// await loadGenesisBalance();
 		});
 
 		after(async function () {
@@ -171,4 +223,24 @@ export function describeWithIce(title: string, cb: (context: { web3: Web3 }) => 
 
 export function describeWithIceWs(title: string, cb: (context: { web3: Web3 }) => void) {
 	describeWithIce(title, cb, "ws");
+}
+
+// async function loadGenesisBalance() {
+// 	try {
+// 		// Construct the keyring after the API (crypto has an async init)
+// 		const keyring = new Keyring({ type: "sr25519" });
+
+// 		// Add Alice to our keyring with a hard-derivation path (empty phrase, so uses dev)
+// 		const alice = keyring.addFromUri("//Alice");
+
+// 		const provider = new HttpProvider(`http://127.0.0.1:${RPC_PORT}`);
+// 		const api = await ApiPromise.create({ provider });
+// 		const transfer = await api.tx.balances.transfer(PROXY_SUBSTRATE_ADDR, 2000).paymentInfo(alice);
+// 	} catch (e) {
+// 		console.log(e);
+// 	}
+// }
+
+export async function sleep(ms) {
+	return new Promise((resolve) => setTimeout(resolve, ms));
 }

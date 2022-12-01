@@ -1,48 +1,37 @@
 import { expect } from "chai";
+import { ethers } from "ethers";
 import { step } from "mocha-steps";
 
 import { GENESIS_ACCOUNT, GENESIS_ACCOUNT_PRIVATE_KEY, GENESIS_ACCOUNT_BALANCE, EXISTENTIAL_DEPOSIT } from "./config";
-import { createAndFinalizeBlock, describeWithIce, customRequest } from "./util";
+import { describeWithIce, customRequestEther, sleep } from "./util";
 
 describeWithIce("Ice RPC (Balance)", (context) => {
-	const TEST_ACCOUNT = "0x1111111111111111111111111111111111111111";
+	const TEST_ACCOUNT = "0x4ebaae1dce71f2536d502ab2a0d4dce7fc740140";
 
 	step("genesis balance is setup correctly", async function () {
-		const bal = await context.web3.eth.getBalance(GENESIS_ACCOUNT);
-		console.log({ bal });
 		expect(await context.web3.eth.getBalance(GENESIS_ACCOUNT)).to.equal(GENESIS_ACCOUNT_BALANCE);
 	});
 
 	step("balance to be updated after transfer", async function () {
-		await createAndFinalizeBlock(context.web3);
-		this.timeout(15000);
+		this.timeout(50000);
+		const value = "0x200000000000000000"; //balance should be greater than 10_000_000_000_000_000
+		const gasPrice = await context.ethersjs.getGasPrice();
 
-		const value = "0x200"; // 512, must be higher than ExistentialDeposit
-		const gasPrice = "0x3B9ACA00"; // 1000000000
-		const tx = await context.web3.eth.accounts.signTransaction(
-			{
-				from: GENESIS_ACCOUNT,
-				to: TEST_ACCOUNT,
-				value: value,
-				gasPrice: gasPrice,
-				gas: "0x100000",
-			},
-			GENESIS_ACCOUNT_PRIVATE_KEY
-		);
-		await customRequest(context.web3, "eth_sendRawTransaction", [tx.rawTransaction]);
+		const tx = await new ethers.Wallet(GENESIS_ACCOUNT_PRIVATE_KEY).signTransaction({
+			to: TEST_ACCOUNT,
+			value: value,
+			gasPrice: gasPrice,
+			gasLimit: "0x100000",
+		});
+		await customRequestEther(context.ethersjs, tx);
 
-		// GENESIS_ACCOUNT_BALANCE - (21000 * gasPrice) - value;
 		const expectedGenesisBalance = (
 			BigInt(GENESIS_ACCOUNT_BALANCE) -
-			BigInt(21000) * BigInt(gasPrice) -
+			BigInt(21000) * gasPrice.toBigInt() -
 			BigInt(value)
 		).toString();
-		const expectedTestBalance = (Number(value) - EXISTENTIAL_DEPOSIT).toString();
-		expect(await context.web3.eth.getBalance(GENESIS_ACCOUNT, "pending")).to.equal(expectedGenesisBalance);
-		expect(await context.web3.eth.getBalance(TEST_ACCOUNT, "pending")).to.equal(expectedTestBalance);
 
-		await createAndFinalizeBlock(context.web3);
-
+		const expectedTestBalance = (BigInt(value) - BigInt(EXISTENTIAL_DEPOSIT)).toString();
 		expect(await context.web3.eth.getBalance(GENESIS_ACCOUNT)).to.equal(expectedGenesisBalance);
 		expect(await context.web3.eth.getBalance(TEST_ACCOUNT)).to.equal(expectedTestBalance);
 	});

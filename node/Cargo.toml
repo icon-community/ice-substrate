@@ -119,6 +119,8 @@ fp-rpc = { git = "https://github.com/web3labs/frontier", branch = "polkadot-v0.9
 fc-rpc-core = {  git = "https://github.com/web3labs/frontier", branch = "polkadot-v0.9.30" }
 fc-db = {  git = "https://github.com/web3labs/frontier", branch = "polkadot-v0.9.30" }
 fc-mapping-sync = {  git = "https://github.com/web3labs/frontier", branch = "polkadot-v0.9.30" }
+fp-evm = { default-features = false, git = "https://github.com/web3labs/frontier", branch = "polkadot-v0.9.30"}
+
 
 pallet-evm = {  default-features = false, git = "https://github.com/web3labs/frontier", branch = "polkadot-v0.9.30" }
 pallet-ethereum = { default-features = false, git = "https://github.com/web3labs/frontier", branch = "polkadot-v0.9.30" }
