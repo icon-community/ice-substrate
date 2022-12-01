@@ -58,7 +58,7 @@ describeWithIce("Ice RPC (Log filtering)", (context) => {
 
 	step("EthFilterApi::getFilterLogs - should filter out non-matching cases.", async function () {
 		let tx = await sendTransaction(context);
-		await createAndFinalizeBlock(context.web3);
+		// await createAndFinalizeBlock(context.web3);
 		let receipt = await context.web3.eth.getTransactionReceipt(tx.transactionHash);
 
 		const nonMatchingCases = getNonMatchingCases(receipt);
@@ -73,7 +73,7 @@ describeWithIce("Ice RPC (Log filtering)", (context) => {
 
 	step("EthApi::getLogs - should filter out non-matching cases.", async function () {
 		let tx = await sendTransaction(context);
-		await createAndFinalizeBlock(context.web3);
+		// await createAndFinalizeBlock(context.web3);
 		let receipt = await context.web3.eth.getTransactionReceipt(tx.transactionHash);
 
 		const nonMatchingCases = getNonMatchingCases(receipt);

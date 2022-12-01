@@ -30,7 +30,7 @@ describeWithIce("Ice RPC (Log BlockNumber tags)", (context) => {
 	before("Send some transactions across blocks", async function () {
 		for (var i = 0; i < EXPECTED_LOGS; i++) {
 			await sendTransaction(context);
-			await createAndFinalizeBlock(context.web3);
+			// await createAndFinalizeBlock(context.web3);
 		}
 	});
 

@@ -25,7 +25,7 @@ describeWithIce("Ice RPC (Revert Reason)", (context) => {
 			GENESIS_ACCOUNT_PRIVATE_KEY
 		);
 		const r = await customRequest(context.web3, "eth_sendRawTransaction", [tx.rawTransaction]);
-		await createAndFinalizeBlock(context.web3);
+		// await createAndFinalizeBlock(context.web3);
 		const receipt = await context.web3.eth.getTransactionReceipt(r.result);
 		contractAddress = receipt.contractAddress;
 	});

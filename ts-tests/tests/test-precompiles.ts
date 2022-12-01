@@ -24,7 +24,7 @@ describeWithIce("Ice RPC (Precompile)", (context) => {
 			GENESIS_ACCOUNT_PRIVATE_KEY
 		);
 		await customRequest(context.web3, "eth_sendRawTransaction", [tx.rawTransaction]);
-		await createAndFinalizeBlock(context.web3);
+		// await createAndFinalizeBlock(context.web3);
 		// ensure native web3 sending works as well as truffle provider
 		web3.eth.accounts.wallet.add(GENESIS_ACCOUNT_PRIVATE_KEY);
 		web3.eth.defaultAccount = web3.eth.accounts.wallet[0].address;

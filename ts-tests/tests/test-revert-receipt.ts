@@ -35,7 +35,7 @@ describeWithIce("Ice RPC (Constructor Revert)", (context) => {
 		const txHash = (await customRequest(context.web3, "eth_sendRawTransaction", [tx.rawTransaction])).result;
 
 		// Verify the receipt exists after the block is created
-		await createAndFinalizeBlock(context.web3);
+		// await createAndFinalizeBlock(context.web3);
 		const receipt = await context.web3.eth.getTransactionReceipt(txHash);
 		expect(receipt).to.include({
 			from: GENESIS_ACCOUNT,
@@ -64,7 +64,7 @@ describeWithIce("Ice RPC (Constructor Revert)", (context) => {
 		const txHash = (await customRequest(context.web3, "eth_sendRawTransaction", [tx.rawTransaction])).result;
 
 		// Verify the receipt exists after the block is created
-		await createAndFinalizeBlock(context.web3);
+		// await createAndFinalizeBlock(context.web3);
 		const receipt = await context.web3.eth.getTransactionReceipt(txHash);
 		expect(receipt).to.include({
 			from: GENESIS_ACCOUNT,

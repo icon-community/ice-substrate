@@ -39,31 +39,13 @@ export async function customRequest(web3: Web3, method: string, params: any[]): 
 }
 
 export async function customRequestEther(ethersjs: ethers.providers.JsonRpcProvider, params: string) {
-	try {
-		const tx = await ethersjs.sendTransaction(params);
-		const op = await tx.wait();
-		console.log({ op });
-		return op;
-	} catch (e) {
-		console.log("this is error", e);
-	}
+	const tx = await ethersjs.sendTransaction(params);
+	return await tx.wait();
 }
 
-export async function isTransactionFinalized(web3: Web3, txHash: string) {
-	return new Promise((resolve, reject) => {
-		const interval = setInterval(async () => {
-			await web3.eth.getTransactionReceipt(txHash, (error: Error, transaction: any) => {
-				if (error) {
-					clearInterval(interval);
-					reject(`Failed to send custom request): ${error.message || error.toString()}`);
-				}
-				if (transaction?.blockNumber) {
-					clearInterval(interval);
-					resolve(transaction);
-				}
-			});
-		}, 2000);
-	});
+//wait for transaction to finish
+export async function isTransactionFinalized(ethersjs: ethers.providers.JsonRpcProvider, txHash: string) {
+	return ethersjs.waitForTransaction(txHash);
 }
 
 // Create a block and finalize it.
@@ -176,7 +158,6 @@ export async function connectToChain(provider) {
 	if (!provider || provider == "http") {
 		web3 = new Web3(`http://127.0.0.1:${RPC_PORT}`);
 	}
-
 	if (provider == "ws") {
 		web3 = new Web3(`ws://127.0.0.1:${WS_PORT}`);
 	}
@@ -203,13 +184,9 @@ export function describeWithIce(
 		before("Starting Ice Test Node", async function () {
 			this.timeout(SPAWNING_TIME);
 			const init = await startIceNode(provider);
-			// const init = await connectToChain(provider);
 			context.web3 = init.web3;
 			context.ethersjs = init.ethersjs;
 			binary = init.binary;
-
-			//set balance in genesis accoun
-			// await loadGenesisBalance();
 		});
 
 		after(async function () {
@@ -223,24 +200,4 @@ export function describeWithIce(
 
 export function describeWithIceWs(title: string, cb: (context: { web3: Web3 }) => void) {
 	describeWithIce(title, cb, "ws");
-}
-
-// async function loadGenesisBalance() {
-// 	try {
-// 		// Construct the keyring after the API (crypto has an async init)
-// 		const keyring = new Keyring({ type: "sr25519" });
-
-// 		// Add Alice to our keyring with a hard-derivation path (empty phrase, so uses dev)
-// 		const alice = keyring.addFromUri("//Alice");
-
-// 		const provider = new HttpProvider(`http://127.0.0.1:${RPC_PORT}`);
-// 		const api = await ApiPromise.create({ provider });
-// 		const transfer = await api.tx.balances.transfer(PROXY_SUBSTRATE_ADDR, 2000).paymentInfo(alice);
-// 	} catch (e) {
-// 		console.log(e);
-// 	}
-// }
-
-export async function sleep(ms) {
-	return new Promise((resolve) => setTimeout(resolve, ms));
 }

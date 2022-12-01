@@ -11,8 +11,8 @@ export const RUNTIME_SPEC_NAME = "node-ice-template";
 export const RUNTIME_SPEC_VERSION = 1;
 export const RUNTIME_IMPL_VERSION = 1;
 
-export const CHAIN_ID = 552;
+export const CHAIN_ID = 554;
 export const BLOCK_TIMESTAMP = 6; // 6 seconds per block
 export const BLOCK_HASH_COUNT = 256;
 export const EXISTENTIAL_DEPOSIT = 10_000_000_000_000_000; // The minimum amount required to keep an account open
-export const BLOCK_GAS_LIMIT = 75000000;
+export const BLOCK_GAS_LIMIT = 60000000;

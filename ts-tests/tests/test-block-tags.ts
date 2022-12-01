@@ -1,12 +1,12 @@
 import { expect } from "chai";
 import { step } from "mocha-steps";
 
-import { createAndFinalizeBlock, describeWithIce, customRequest } from "./util";
+import { describeWithIce } from "./util";
 
 describeWithIce("Ice RPC (BlockNumber tags)", (context) => {
 	// before("Send some transactions across blocks", async function () {
 	// 	// block #1 finalized
-	// 	await createAndFinalizeBlock(context.web3);
+	// 	// await createAndFinalizeBlock(context.web3);
 	// 	// block #2 not finalized
 	// 	await createAndFinalizeBlock(context.web3, false);
 	// });

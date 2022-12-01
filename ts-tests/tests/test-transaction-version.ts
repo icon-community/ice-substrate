@@ -30,7 +30,7 @@ describeWithIce("Ice RPC (Transaction Version)", (context) => {
 			chainId: CHAIN_ID,
 		};
 		const txHash = (await sendTransaction(context, tx)).hash;
-		await createAndFinalizeBlock(context.web3);
+		// await createAndFinalizeBlock(context.web3);
 		const latest = await context.web3.eth.getBlock("latest");
 		expect(latest.transactions.length).to.be.eq(1);
 		expect(latest.transactions[0]).to.be.eq(txHash);
@@ -57,7 +57,7 @@ describeWithIce("Ice RPC (Transaction Version)", (context) => {
 			chainId: CHAIN_ID,
 		};
 		const txHash = (await sendTransaction(context, tx)).hash;
-		await createAndFinalizeBlock(context.web3);
+		// await createAndFinalizeBlock(context.web3);
 		const latest = await context.web3.eth.getBlock("latest");
 		expect(latest.transactions.length).to.be.eq(1);
 		expect(latest.transactions[0]).to.be.eq(txHash);
@@ -85,7 +85,7 @@ describeWithIce("Ice RPC (Transaction Version)", (context) => {
 			chainId: CHAIN_ID,
 		};
 		const txHash = (await sendTransaction(context, tx)).hash;
-		await createAndFinalizeBlock(context.web3);
+		// await createAndFinalizeBlock(context.web3);
 		const latest = await context.web3.eth.getBlock("latest");
 		expect(latest.transactions.length).to.be.eq(1);
 		expect(latest.transactions[0]).to.be.eq(txHash);

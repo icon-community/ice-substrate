@@ -28,7 +28,7 @@ describeWithIceWs("Ice RPC (Subscription)", (context) => {
 	}
 
 	step("should connect", async function () {
-		await createAndFinalizeBlock(context.web3);
+		// await createAndFinalizeBlock(context.web3);
 		// @ts-ignore
 		const connected = context.web3.currentProvider.connected;
 		expect(connected).to.equal(true);
@@ -66,7 +66,7 @@ describeWithIceWs("Ice RPC (Subscription)", (context) => {
 			dataResolve();
 		});
 
-		await createAndFinalizeBlock(context.web3);
+		// await createAndFinalizeBlock(context.web3);
 		await dataPromise;
 
 		expect(data).to.include({
@@ -133,7 +133,7 @@ describeWithIceWs("Ice RPC (Subscription)", (context) => {
 			dataResolve();
 		});
 
-		await createAndFinalizeBlock(context.web3);
+		// await createAndFinalizeBlock(context.web3);
 		await dataPromise;
 
 		subscription.unsubscribe();
@@ -183,7 +183,7 @@ describeWithIceWs("Ice RPC (Subscription)", (context) => {
 			dataResolve();
 		});
 
-		await createAndFinalizeBlock(context.web3);
+		// await createAndFinalizeBlock(context.web3);
 		await dataPromise;
 
 		subscription.unsubscribe();
@@ -219,7 +219,7 @@ describeWithIceWs("Ice RPC (Subscription)", (context) => {
 			dataResolve();
 		});
 
-		await createAndFinalizeBlock(context.web3);
+		// await createAndFinalizeBlock(context.web3);
 		await dataPromise;
 
 		subscription.unsubscribe();
@@ -355,7 +355,7 @@ describeWithIceWs("Ice RPC (Subscription)", (context) => {
 			dataResolve();
 		});
 
-		await createAndFinalizeBlock(context.web3);
+		// await createAndFinalizeBlock(context.web3);
 		await dataPromise;
 
 		subscription.unsubscribe();
@@ -394,7 +394,7 @@ describeWithIceWs("Ice RPC (Subscription)", (context) => {
 			dataResolve();
 		});
 
-		await createAndFinalizeBlock(context.web3);
+		// await createAndFinalizeBlock(context.web3);
 		await dataPromise;
 
 		subscription.unsubscribe();
@@ -436,7 +436,7 @@ describeWithIceWs("Ice RPC (Subscription)", (context) => {
 			dataResolve();
 		});
 
-		await createAndFinalizeBlock(context.web3);
+		// await createAndFinalizeBlock(context.web3);
 		await dataPromise;
 
 		subscription.unsubscribe();
@@ -481,7 +481,7 @@ describeWithIceWs("Ice RPC (Subscription)", (context) => {
 			dataResolve();
 		});
 
-		await createAndFinalizeBlock(context.web3);
+		// await createAndFinalizeBlock(context.web3);
 		await dataPromise;
 
 		subscription.unsubscribe();
@@ -523,7 +523,7 @@ describeWithIceWs("Ice RPC (Subscription)", (context) => {
 			dataResolve();
 		});
 
-		await createAndFinalizeBlock(context.web3);
+		// await createAndFinalizeBlock(context.web3);
 		await dataPromise;
 
 		subscription.unsubscribe();

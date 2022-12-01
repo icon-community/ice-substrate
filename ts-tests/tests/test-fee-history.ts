@@ -48,7 +48,7 @@ describeWithIce("Ice RPC (Fee History)", (context) => {
 				});
 				nonce++;
 			}
-			await createAndFinalizeBlock(context.web3);
+			// await createAndFinalizeBlock(context.web3);
 		}
 	}
 

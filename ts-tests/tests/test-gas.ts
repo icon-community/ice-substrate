@@ -66,7 +66,7 @@ describeWithIce("Ice RPC (Gas)", (context) => {
 		this.timeout(15000);
 
 		const gasLimit = (await context.web3.eth.getBlock("latest")).gasLimit;
-		await createAndFinalizeBlock(context.web3);
+		// await createAndFinalizeBlock(context.web3);
 
 		// Gas limit is expected to have decreased as the gasUsed by the block is lower than 2/3 of the previous gas limit
 		const newGasLimit = (await context.web3.eth.getBlock("latest")).gasLimit;
@@ -154,7 +154,7 @@ describeWithIce("Ice RPC (Gas)", (context) => {
 			GENESIS_ACCOUNT_PRIVATE_KEY
 		);
 		const createReceipt = await customRequest(context.web3, "eth_sendRawTransaction", [tx.rawTransaction]);
-		await createAndFinalizeBlock(context.web3);
+		// await createAndFinalizeBlock(context.web3);
 		expect((createReceipt as any).transactionHash).to.be.not.null;
 		expect((createReceipt as any).blockHash).to.be.not.null;
 	});
@@ -169,7 +169,7 @@ describeWithIce("Ice RPC (Gas)", (context) => {
 			GENESIS_ACCOUNT_PRIVATE_KEY
 		);
 		const createReceipt = await customRequest(context.web3, "eth_sendRawTransaction", [tx.rawTransaction]);
-		await createAndFinalizeBlock(context.web3);
+		// await createAndFinalizeBlock(context.web3);
 		expect((createReceipt as any).transactionHash).to.be.not.null;
 		expect((createReceipt as any).blockHash).to.be.not.null;
 	});
@@ -184,7 +184,7 @@ describeWithIce("Ice RPC (Gas)", (context) => {
 			GENESIS_ACCOUNT_PRIVATE_KEY
 		);
 		const createReceipt = await customRequest(context.web3, "eth_sendRawTransaction", [tx.rawTransaction]);
-		await createAndFinalizeBlock(context.web3);
+		// await createAndFinalizeBlock(context.web3);
 		expect((createReceipt as any).error.message).to.equal("exceeds block gas limit");
 	});
 });
@@ -205,7 +205,7 @@ describeWithIce("Ice RPC (Invalid opcode estimate gas)", (context) => {
 			GENESIS_ACCOUNT_PRIVATE_KEY
 		);
 		const txHash = (await customRequest(context.web3, "eth_sendRawTransaction", [tx.rawTransaction])).result;
-		await createAndFinalizeBlock(context.web3);
+		// await createAndFinalizeBlock(context.web3);
 		contractAddess = (await context.web3.eth.getTransactionReceipt(txHash)).contractAddress;
 	});
 

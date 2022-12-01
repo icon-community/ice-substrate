@@ -41,7 +41,7 @@ describeWithIce("Ice RPC (Priority)", (context) => {
 		for (var gasPrice of gasPrices) {
 			await sendTransaction(context, gasPrice);
 		}
-		await createAndFinalizeBlock(context.web3);
+		// await createAndFinalizeBlock(context.web3);
 		const block = await context.web3.eth.getBlock("latest", true);
 		expect(block.transactions.length).to.be.eq(1);
 		expect(block.transactions[0].gasPrice).to.be.eq("1000000007");

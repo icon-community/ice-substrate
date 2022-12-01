@@ -29,7 +29,7 @@ describeWithIce("Ice RPC (Contract)", (context) => {
 			jsonrpc: "2.0",
 		});
 
-		await createAndFinalizeBlock(context.web3);
+		// await createAndFinalizeBlock(context.web3);
 		let receipt0 = await context.web3.eth.getTransactionReceipt(tx.transactionHash);
 		let contractAddress = receipt0.contractAddress;
 
@@ -70,7 +70,7 @@ describeWithIce("Ice RPC (Contract)", (context) => {
 
 		expect(getStoragePending.result).to.be.eq(expectedStorage);
 
-		await createAndFinalizeBlock(context.web3);
+		// await createAndFinalizeBlock(context.web3);
 
 		let getStorage1 = await customRequest(context.web3, "eth_getStorageAt", [
 			contractAddress,

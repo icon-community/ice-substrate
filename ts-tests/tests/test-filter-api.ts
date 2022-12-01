@@ -67,7 +67,7 @@ describeWithIce("Ice RPC (EthFilterApi)", (context) => {
 		expect(poll.result.length).to.be.eq(1);
 		expect(poll.result[0]).to.be.eq(block.hash);
 
-		await createAndFinalizeBlock(context.web3);
+		// await createAndFinalizeBlock(context.web3);
 
 		block = await context.web3.eth.getBlock(1);
 		poll = await customRequest(context.web3, "eth_getFilterChanges", ["0x3"]);
@@ -75,8 +75,8 @@ describeWithIce("Ice RPC (EthFilterApi)", (context) => {
 		expect(poll.result.length).to.be.eq(1);
 		expect(poll.result[0]).to.be.eq(block.hash);
 
-		await createAndFinalizeBlock(context.web3);
-		await createAndFinalizeBlock(context.web3);
+		// await createAndFinalizeBlock(context.web3);
+		// await createAndFinalizeBlock(context.web3);
 
 		block = await context.web3.eth.getBlock(2);
 		let block_b = await context.web3.eth.getBlock(3);
@@ -90,7 +90,7 @@ describeWithIce("Ice RPC (EthFilterApi)", (context) => {
 	step("should return responses for Log filter polling.", async function () {
 		// Create contract.
 		let tx = await sendTransaction(context);
-		await createAndFinalizeBlock(context.web3);
+		// await createAndFinalizeBlock(context.web3);
 		let receipt = await context.web3.eth.getTransactionReceipt(tx.transactionHash);
 
 		expect(receipt.logs.length).to.be.eq(1);
@@ -118,7 +118,7 @@ describeWithIce("Ice RPC (EthFilterApi)", (context) => {
 	step("should return response for raw Log filter request.", async function () {
 		// Create contract.
 		let tx = await sendTransaction(context);
-		await createAndFinalizeBlock(context.web3);
+		// await createAndFinalizeBlock(context.web3);
 		let receipt = await context.web3.eth.getTransactionReceipt(tx.transactionHash);
 
 		expect(receipt.logs.length).to.be.eq(1);

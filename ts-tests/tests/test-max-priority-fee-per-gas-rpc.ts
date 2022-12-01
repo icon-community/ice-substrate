@@ -34,7 +34,7 @@ describeWithIce("Ice RPC (Max Priority Fee Per Gas)", (context) => {
 				});
 				nonce++;
 			}
-			await createAndFinalizeBlock(context.web3);
+			// await createAndFinalizeBlock(context.web3);
 		}
 	}
 
@@ -44,7 +44,7 @@ describeWithIce("Ice RPC (Max Priority Fee Per Gas)", (context) => {
 	});
 
 	step("should default to zero on empty blocks", async function () {
-		await createAndFinalizeBlock(context.web3);
+		// await createAndFinalizeBlock(context.web3);
 		let result = await customRequest(context.web3, "eth_maxPriorityFeePerGas", []);
 		expect(result.result).to.be.eq("0x0");
 	});
@@ -84,7 +84,7 @@ describeWithIce("Ice RPC (Max Priority Fee Per Gas)", (context) => {
 		for (let i = 0; i < 10; i++) {
 			await createBlocks(1, [0, 1, 2, 3, 4, 5]);
 		}
-		await createAndFinalizeBlock(context.web3);
+		// await createAndFinalizeBlock(context.web3);
 		for (let i = 0; i < 9; i++) {
 			await createBlocks(1, [0, 1, 2, 3, 4, 5]);
 		}

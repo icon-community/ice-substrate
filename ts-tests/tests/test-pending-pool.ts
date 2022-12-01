@@ -35,7 +35,7 @@ describeWithIce("Ice RPC (Pending Pool)", (context) => {
 			v: "0x77",
 		});
 
-		await createAndFinalizeBlock(context.web3);
+		// await createAndFinalizeBlock(context.web3);
 
 		const processedTransaction = (await customRequest(context.web3, "eth_getTransactionByHash", [txHash])).result;
 		expect(processedTransaction).to.include({
@@ -91,7 +91,7 @@ describeWithIce("Ice RPC (Pending Transaction Count)", (context) => {
 			expect(pendingTransactionCount).to.eq("0x1");
 		}
 
-		await createAndFinalizeBlock(context.web3);
+		// await createAndFinalizeBlock(context.web3);
 
 		{
 			const pendingTransactionCount = (
@@ -116,7 +116,7 @@ describeWithIce("Ice RPC (Pending Transaction Count)", (context) => {
 			expect(pendingTransactionCount).to.eq("0x5");
 		}
 
-		await createAndFinalizeBlock(context.web3);
+		// await createAndFinalizeBlock(context.web3);
 
 		{
 			const pendingTransactionCount = (

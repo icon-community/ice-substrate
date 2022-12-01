@@ -15,7 +15,7 @@ describeWithIce("Ice RPC (Contract)", (context) => {
 	// to spin up a ice node, it saves a lot of time.
 
 	it("contract creation should return transaction hash", async function () {
-		await createAndFinalizeBlock(context.web3);
+		// await createAndFinalizeBlock(context.web3);
 		this.timeout(15000);
 		const tx = await context.web3.eth.accounts.signTransaction(
 			{
@@ -48,7 +48,7 @@ describeWithIce("Ice RPC (Contract)", (context) => {
 		});
 
 		// Verify the contract is stored after the block is produced
-		await createAndFinalizeBlock(context.web3);
+		// await createAndFinalizeBlock(context.web3);
 		expect(await customRequest(context.web3, "eth_getCode", [FIRST_CONTRACT_ADDRESS])).to.deep.equal({
 			id: 1,
 			jsonrpc: "2.0",

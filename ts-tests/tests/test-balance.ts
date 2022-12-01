@@ -3,7 +3,7 @@ import { ethers } from "ethers";
 import { step } from "mocha-steps";
 
 import { GENESIS_ACCOUNT, GENESIS_ACCOUNT_PRIVATE_KEY, GENESIS_ACCOUNT_BALANCE, EXISTENTIAL_DEPOSIT } from "./config";
-import { describeWithIce, customRequestEther, sleep } from "./util";
+import { describeWithIce, customRequestEther } from "./util";
 
 describeWithIce("Ice RPC (Balance)", (context) => {
 	const TEST_ACCOUNT = "0x4ebaae1dce71f2536d502ab2a0d4dce7fc740140";
