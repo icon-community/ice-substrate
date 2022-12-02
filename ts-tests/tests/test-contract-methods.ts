@@ -26,7 +26,7 @@ describeWithIce("Ice RPC (Contract Methods)", (context) => {
 	before("create the contract", async function () {
 		this.timeout(15000);
 		genesisAccount = new Wallet(GENESIS_ACCOUNT_PRIVATE_KEY, context.ethersjs);
-		let factory = new ContractFactory(TEST_CONTRACT_ABI, TEST_CONTRACT_BYTECODE, genesisAccount);
+		let factory = new ContractFactory(Test.abi, Test.bytecode, genesisAccount);
 		contract = await factory.deploy();
 	});
 

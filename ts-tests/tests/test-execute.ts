@@ -59,7 +59,7 @@ describeWithIce("Ice RPC (RPC execution)", (context) => {
 			},
 		]);
 
-		expect(result.result).to.be.equal("0x3043a");
+		expect(result.result).to.be.equal("0x2f389");
 	});
 
 	step("should estimateGas with gas limit up to 10x block gas limit", async function () {
@@ -71,7 +71,7 @@ describeWithIce("Ice RPC (RPC execution)", (context) => {
 			},
 		]);
 
-		expect(result.result).to.be.equal("0x3043a");
+		expect(result.result).to.be.equal("0x2f389");
 	});
 
 	step("shouldn't estimateGas with gas limit up higher than 10x block gas limit", async function () {
