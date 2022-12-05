@@ -7,7 +7,7 @@ export const FIRST_CONTRACT_ADDRESS = "0xc2bf5f29a4384b1ab0c063e1c666f02121b6084
 
 export const NODE_BINARY_NAME = "ice-node";
 
-export const RUNTIME_SPEC_NAME = "node-ice-template";
+export const RUNTIME_SPEC_NAME = "frost-testnet";
 export const RUNTIME_SPEC_VERSION = 1;
 export const RUNTIME_IMPL_VERSION = 1;
 

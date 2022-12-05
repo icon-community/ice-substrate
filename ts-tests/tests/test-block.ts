@@ -7,13 +7,13 @@ import { createAndFinalizeBlock, describeWithIce } from "./util";
 describeWithIce("Ice RPC (Block)", (context) => {
 	let previousBlock;
 
-	step("should be at block 0 at genesis", async function () {
-		expect(await context.web3.eth.getBlockNumber()).to.equal(0);
-	});
+	// step("should be at block 0 at genesis", async function () {
+	// 	expect(await context.web3.eth.getBlockNumber()).to.equal(0);
+	// });
 
-	it("should return genesis block by number", async function () {
-		expect(await context.web3.eth.getBlockNumber()).to.equal(0);
-	});
+	// it("should return genesis block by number", async function () {
+	// 	expect(await context.web3.eth.getBlockNumber()).to.equal(0);
+	// });
 
 	// it("check genesis block", async function () {
 	// 	// expect(await context.web3.eth.getBlockNumber()).to.equal(0);

@@ -45,7 +45,7 @@ describeWithIce("Ice RPC (Gas)", (context) => {
 
 	it("eth_estimateGas for contract creation", async function () {
 		// The value returned as an estimation by the evm with estimate mode ON.
-		let oneOffEstimation = 196657;
+		let oneOffEstimation = 193241;
 		let binarySearchEstimation = binarySearch(oneOffEstimation);
 		// Sanity check expect a variance of 10%.
 		expect(estimationVariance(binarySearchEstimation, oneOffEstimation)).to.be.lessThan(1);
@@ -58,6 +58,7 @@ describeWithIce("Ice RPC (Gas)", (context) => {
 	});
 
 	it.skip("block gas limit over 5M", async function () {
+		console.log(await context.web3.eth.getBlock("latest"));
 		expect((await context.web3.eth.getBlock("latest")).gasLimit).to.be.above(5000000);
 	});
 
@@ -69,6 +70,7 @@ describeWithIce("Ice RPC (Gas)", (context) => {
 		// await createAndFinalizeBlock(context.web3);
 
 		// Gas limit is expected to have decreased as the gasUsed by the block is lower than 2/3 of the previous gas limit
+		//ts-@ignore
 		const newGasLimit = (await context.web3.eth.getBlock("latest")).gasLimit;
 		expect(newGasLimit).to.be.below(gasLimit);
 	});
@@ -102,13 +104,15 @@ describeWithIce("Ice RPC (Gas)", (context) => {
 			from: GENESIS_ACCOUNT,
 		});
 
-		expect(await contract.methods.multiply(3).estimateGas()).to.equal(binarySearchEstimation);
+		const cc = await contract.methods.multiply(3).estimateGas();
+		console.log({ cc });
+		expect(cc).to.equal(binarySearchEstimation);
 	});
 
 	it("eth_estimateGas should handle AccessList alias", async function () {
 		// The value returned as an estimation by the evm with estimate mode ON.
 		// 4300 == 1900 for one key and 2400 for one storage.
-		let oneOffEstimation = 196657 + 4300;
+		let oneOffEstimation = 193241 + 4300;
 		let binarySearchEstimation = binarySearch(oneOffEstimation);
 		// Sanity check expect a variance of 10%.
 		expect(estimationVariance(binarySearchEstimation, oneOffEstimation)).to.be.lessThan(1);
@@ -135,12 +139,12 @@ describeWithIce("Ice RPC (Gas)", (context) => {
 			data: Test.bytecode,
 			gasPrice: "0x0",
 		});
-		expect(result).to.equal(197690);
+		expect(result).to.equal(193417);
 		result = await context.web3.eth.estimateGas({
 			from: GENESIS_ACCOUNT,
 			data: Test.bytecode,
 		});
-		expect(result).to.equal(197690);
+		expect(result).to.equal(193417);
 	});
 
 	it("tx gas limit below EXTRINSIC_GAS_LIMIT", async function () {
@@ -154,7 +158,7 @@ describeWithIce("Ice RPC (Gas)", (context) => {
 			GENESIS_ACCOUNT_PRIVATE_KEY
 		);
 		const createReceipt = await customRequest(context.web3, "eth_sendRawTransaction", [tx.rawTransaction]);
-		// await createAndFinalizeBlock(context.web3);
+		await // createAndFinalizeBlock(context.web3);
 		expect((createReceipt as any).transactionHash).to.be.not.null;
 		expect((createReceipt as any).blockHash).to.be.not.null;
 	});
@@ -169,7 +173,7 @@ describeWithIce("Ice RPC (Gas)", (context) => {
 			GENESIS_ACCOUNT_PRIVATE_KEY
 		);
 		const createReceipt = await customRequest(context.web3, "eth_sendRawTransaction", [tx.rawTransaction]);
-		// await createAndFinalizeBlock(context.web3);
+		await // createAndFinalizeBlock(context.web3);
 		expect((createReceipt as any).transactionHash).to.be.not.null;
 		expect((createReceipt as any).blockHash).to.be.not.null;
 	});
@@ -184,7 +188,7 @@ describeWithIce("Ice RPC (Gas)", (context) => {
 			GENESIS_ACCOUNT_PRIVATE_KEY
 		);
 		const createReceipt = await customRequest(context.web3, "eth_sendRawTransaction", [tx.rawTransaction]);
-		// await createAndFinalizeBlock(context.web3);
+		await // createAndFinalizeBlock(context.web3);
 		expect((createReceipt as any).error.message).to.equal("exceeds block gas limit");
 	});
 });
@@ -205,7 +209,7 @@ describeWithIce("Ice RPC (Invalid opcode estimate gas)", (context) => {
 			GENESIS_ACCOUNT_PRIVATE_KEY
 		);
 		const txHash = (await customRequest(context.web3, "eth_sendRawTransaction", [tx.rawTransaction])).result;
-		// await createAndFinalizeBlock(context.web3);
+		// await  createAndFinalizeBlock(context.web3);
 		contractAddess = (await context.web3.eth.getTransactionReceipt(txHash)).contractAddress;
 	});
 

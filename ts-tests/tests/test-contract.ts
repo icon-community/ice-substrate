@@ -3,8 +3,8 @@ import chaiAsPromised from "chai-as-promised";
 import { Contract, ContractFactory, Signer, Wallet } from "ethers";
 
 import Test from "../build/contracts/Test.json";
-import { GENESIS_ACCOUNT, GENESIS_ACCOUNT_PRIVATE_KEY, FIRST_CONTRACT_ADDRESS } from "./config";
-import { createAndFinalizeBlock, customRequest, describeWithIce } from "./util";
+import { GENESIS_ACCOUNT_PRIVATE_KEY } from "./config";
+import { describeWithIce } from "./util";
 
 chaiUse(chaiAsPromised);
 
