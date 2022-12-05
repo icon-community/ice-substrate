@@ -319,7 +319,7 @@ impl pallet_contracts::Config for Runtime {
 	type DepositPerItem = DepositPerItem;
 	type AddressGenerator = pallet_contracts::DefaultAddressGenerator;
 	type MaxCodeLen = ConstU32<{ 128 * 1024 }>;
-	type MaxStorageKeyLen = ();
+	type MaxStorageKeyLen = ConstU32<128>;
 }
 
 parameter_types! {
@@ -421,12 +421,12 @@ impl<F: FindAuthor<u32>> FindAuthor<H160> for FindAuthorTruncated<F> {
 }
 
 pub const GAS_PER_SECOND: u64 = 40_000_000;
-pub const WEIGHT_PER_GAS: u64 = WEIGHT_PER_SECOND.ref_time() / GAS_PER_SECOND;
+pub const WEIGHT_PER_GAS: Weight = WEIGHT_PER_SECOND.saturating_div(GAS_PER_SECOND);
 
 parameter_types! {
 	pub const ChainId: u64 = 554;
-	pub WeightPerGas: Weight = Weight::from_ref_time(WEIGHT_PER_GAS);
-	pub BlockGasLimit: U256 = U256::from(NORMAL_DISPATCH_RATIO * WEIGHT_PER_SECOND.mul(2).ref_time() / WEIGHT_PER_GAS);
+	pub BlockGasLimit: U256 = U256::from(NORMAL_DISPATCH_RATIO * WEIGHT_PER_SECOND.mul(2).ref_time() / WEIGHT_PER_GAS.ref_time());
+	pub WeightPerGas: Weight = WEIGHT_PER_GAS;
 	pub PrecompilesValue: FrontierPrecompiles<Runtime> = FrontierPrecompiles::<_>::new();
 }
 
@@ -843,6 +843,8 @@ parameter_types! {
 	pub const DesiredMembers: u32 = 7;
 	pub const DesiredRunnersUp: u32 = 7;
 	pub const PhragmenElectionPalletId: LockIdentifier = *b"phrelect";
+	pub const MaxCandidatesElection: u32 = 1000;
+	pub const MaxVotersElection: u32 = 10000;
 }
 
 // Make sure that there are no more than MaxMembers members elected via phragmen.
@@ -864,8 +866,8 @@ impl pallet_elections_phragmen::Config for Runtime {
 	type DesiredRunnersUp = DesiredRunnersUp;
 	type TermDuration = TermDuration;
 	type WeightInfo = ();
-	type MaxCandidates = ();
-	type MaxVoters = ();
+	type MaxCandidates = MaxCandidatesElection;
+	type MaxVoters = MaxVotersElection;
 }
 
 parameter_types! {
@@ -1012,11 +1014,16 @@ impl pallet_base_fee::BaseFeeThreshold for BaseFeeThreshold {
 	}
 }
 
+parameter_types! {
+	// At the moment, we don't use dynamic fee calculation for frost chain by default
+	pub DefaultElasticity: Permill = Permill::zero();
+}
+
 impl pallet_base_fee::Config for Runtime {
 	type RuntimeEvent = RuntimeEvent;
 	type Threshold = BaseFeeThreshold;
 	type DefaultBaseFeePerGas = DefaultBaseFeePerGas;
-	type DefaultElasticity = ();
+	type DefaultElasticity = DefaultElasticity;
 }
 
 impl pallet_randomness_collective_flip::Config for Runtime {}
