@@ -18,40 +18,6 @@ describeWithIce("Ice RPC (Fee History)", (context) => {
 		return tx;
 	}
 
-	let nonce = 0;
-
-	function getPercentile(percentile, array) {
-		array.sort(function (a, b) {
-			return a - b;
-		});
-		let index = (percentile / 100) * array.length - 1;
-		if (Math.floor(index) == index) {
-			return array[index];
-		} else {
-			return Math.ceil((array[Math.floor(index)] + array[Math.ceil(index)]) / 2);
-		}
-	}
-
-	async function createBlocks(block_count, priority_fees) {
-		for (var b = 0; b < block_count; b++) {
-			for (var p = 0; p < priority_fees.length; p++) {
-				await sendTransaction(context, {
-					from: GENESIS_ACCOUNT,
-					data: TEST_CONTRACT_BYTECODE,
-					value: "0x00",
-					maxFeePerGas: "0x3B9ACA00",
-					maxPriorityFeePerGas: context.web3.utils.numberToHex(priority_fees[p]),
-					accessList: [],
-					nonce: nonce,
-					gasLimit: "0x100000",
-					chainId: CHAIN_ID,
-				});
-				nonce++;
-			}
-			// await createAndFinalizeBlock(context.web3);
-		}
-	}
-
 	step("should return error on non-existent blocks", async function () {
 		this.timeout(100000);
 		let result = customRequest(context.web3, "eth_feeHistory", ["0x0", "0x1", []])
@@ -61,27 +27,5 @@ describeWithIce("Ice RPC (Fee History)", (context) => {
 				});
 			})
 			.catch((err) => expect(err.message).to.equal("Error getting header at BlockId::Number(1)"));
-	});
-
-	step("should calculate percentiles", async function () {
-		this.timeout(100000);
-		let blockCount = 11;
-		let rewardPercentiles = [20, 50, 70, 85, 100];
-		let priorityFees = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-		await createBlocks(blockCount, priorityFees);
-		let result = (await customRequest(context.web3, "eth_feeHistory", ["0xA", "latest", rewardPercentiles])).result;
-
-		// Calculate the percentiles in javascript.
-		let localRewards = [];
-		for (let i = 0; i < rewardPercentiles.length; i++) {
-			localRewards.push(getPercentile(rewardPercentiles[i], priorityFees));
-		}
-		// Compare the rpc result with the javascript percentiles.
-		for (let i = 0; i < result.reward.length; i++) {
-			expect(result.reward[i].length).to.be.eq(localRewards.length);
-			for (let j = 0; j < localRewards.length; j++) {
-				expect(context.web3.utils.hexToNumber(result.reward[i][j])).to.be.eq(localRewards[j]);
-			}
-		}
 	});
 });

@@ -130,7 +130,7 @@ describeWithIce("Ice RPC (Contract storage)", (context) => {
 	// 	tx2 = await tx2;
 	// 	tx3 = await tx3;
 
-	// 	// cost minus SSTORE
+	// 	// cost minus STORE
 	// 	const baseCost = 24029;
 
 	// 	// going from unset storage to some value (original = 0)
