@@ -71,7 +71,7 @@ pub use frame_support::{
 };
 
 pub use pallet_balances::Call as BalancesCall;
-use pallet_contracts::weights::WeightInfo;
+use pallet_contracts::{weights::WeightInfo, Migration};
 use pallet_ethereum::{Call::transact, Transaction as EthereumTransaction};
 use pallet_evm::{Account as EVMAccount, EnsureAddressTruncated, HashedAddressMapping, Runner};
 pub use pallet_timestamp::Call as TimestampCall;
@@ -426,26 +426,14 @@ pub const WEIGHT_PER_GAS: Weight = WEIGHT_PER_SECOND.saturating_div(GAS_PER_SECO
 parameter_types! {
 	pub const ChainId: u64 = 554;
 	pub BlockGasLimit: U256 = U256::from(NORMAL_DISPATCH_RATIO * WEIGHT_PER_SECOND.mul(2).ref_time() / WEIGHT_PER_GAS.ref_time());
-	pub PrecompilesValue: FrontierPrecompiles<Runtime> = FrontierPrecompiles::<_>::new();
-}
-
-pub struct LocalGasWeightMapping;
-impl pallet_evm::GasWeightMapping for LocalGasWeightMapping {
-	fn gas_to_weight(gas: u64, _without_base_weight: bool) -> Weight {
-		Weight::from_ref_time(gas).saturating_mul(WEIGHT_PER_GAS.ref_time())
-	}
-	fn weight_to_gas(weight: Weight) -> u64 {
-		weight.div(WEIGHT_PER_GAS.ref_time()).ref_time()
-	}
-}
-
-parameter_types! {
 	pub WeightPerGas: Weight = WEIGHT_PER_GAS;
+	pub PrecompilesValue: FrontierPrecompiles<Runtime> = FrontierPrecompiles::<_>::new();
 }
 
 impl pallet_evm::Config for Runtime {
 	type FeeCalculator = BaseFee;
-	type GasWeightMapping = LocalGasWeightMapping;
+	type GasWeightMapping = pallet_evm::FixedGasWeightMapping<Self>;
+	type WeightPerGas = WeightPerGas;
 	type BlockHashMapping = pallet_ethereum::EthereumBlockHashMapping<Self>;
 	type CallOrigin = EnsureAddressTruncated;
 	type WithdrawOrigin = EnsureAddressTruncated;
@@ -459,7 +447,6 @@ impl pallet_evm::Config for Runtime {
 	type Runner = pallet_evm::runner::stack::Runner<Self>;
 	type OnChargeTransaction = ();
 	type FindAuthor = FindAuthorTruncated<Aura>;
-	type WeightPerGas = WeightPerGas;
 }
 
 impl pallet_ethereum::Config for Runtime {
@@ -904,11 +891,11 @@ impl pallet_membership::Config<pallet_membership::Instance1> for Runtime {
 
 impl pallet_membership::Config<pallet_membership::Instance2> for Runtime {
 	type RuntimeEvent = RuntimeEvent;
-	type AddOrigin = MoreThanHalfCouncil;
+	type AddOrigin = EitherOfDiverse<MoreThanHalfCouncil, EnsureRootOrAllTechnicalCommittee>;
 	type RemoveOrigin = MoreThanHalfCouncil;
 	type SwapOrigin = MoreThanHalfCouncil;
 	type ResetOrigin = MoreThanHalfCouncil;
-	type PrimeOrigin = MoreThanHalfCouncil;
+	type PrimeOrigin = EitherOfDiverse<MoreThanHalfCouncil, EnsureRootOrAllTechnicalCommittee>;
 	type MembershipInitialized = TechnicalCommittee;
 	type MembershipChanged = TechnicalCommittee;
 	type MaxMembers = TechnicalMaxMembers;
@@ -1011,7 +998,7 @@ impl pallet_dynamic_fee::Config for Runtime {
 
 parameter_types! {
 	pub IsActive: bool = true;
-	pub DefaultBaseFeePerGas: U256 = U256::from(1_000_000_000);
+	pub DefaultBaseFeePerGas: U256 = U256::from(2_000_000_000_000i64);
 }
 
 pub struct BaseFeeThreshold;
@@ -1028,8 +1015,8 @@ impl pallet_base_fee::BaseFeeThreshold for BaseFeeThreshold {
 }
 
 parameter_types! {
-    // At the moment, we don't use dynamic fee calculation for frost chain by default
-    pub DefaultElasticity: Permill = Permill::zero();
+	// At the moment, we don't use dynamic fee calculation for frost chain by default
+	pub DefaultElasticity: Permill = Permill::zero();
 }
 
 impl pallet_base_fee::Config for Runtime {
@@ -1157,6 +1144,7 @@ pub type Executive = frame_executive::Executive<
 	frame_system::ChainContext<Runtime>,
 	Runtime,
 	AllPalletsWithSystem,
+	Migration<Runtime>,
 >;
 
 impl fp_self_contained::SelfContainedCall for RuntimeCall {
