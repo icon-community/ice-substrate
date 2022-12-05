@@ -6,7 +6,6 @@ import { describeWithIce, customRequest } from "./util";
 
 import Test from "../build/contracts/Test.json";
 
-// EXTRINSIC_GAS_LIMIT = [BLOCK_GAS_LIMIT - BLOCK_GAS_LIMIT * (NORMAL_DISPATCH_RATIO - AVERAGE_ON_INITIALIZE_RATIO) - EXTRINSIC_BASE_Weight] / WEIGHT_PER_GAS = (1_000_000_000_000 * 2 * (0.75-0.1) - 125_000_000) / 20000
 const EXTRINSIC_GAS_LIMIT = 64995685;
 const TEST_CONTRACT_BYTECODE = Test.bytecode;
 const TEST_CONTRACT_DEPLOYED_BYTECODE = Test.deployedBytecode;

@@ -63,26 +63,6 @@ describeWithIce("Ice RPC (Fee History)", (context) => {
 			.catch((err) => expect(err.message).to.equal("Error getting header at BlockId::Number(1)"));
 	});
 
-	// step("result length should match spec", async function () {
-	// 	this.timeout(100000);
-	// 	let blockCount = 2;
-	// 	let rewardPercentiles = [20, 50, 70];
-	// 	let priorityFees = [1, 2, 3];
-	// 	await createBlocks(blockCount, priorityFees);
-	// 	let result = (await customRequest(context.web3, "eth_feeHistory", ["0x2", "latest", rewardPercentiles])).result;
-
-	// 	// baseFeePerGas is always the requested block range + 1 (the next derived base fee).
-	// 	expect(result.baseFeePerGas.length).to.be.eq(blockCount + 1);
-	// 	// gasUsedRatio for the requested block range.
-	// 	expect(result.gasUsedRatio.length).to.be.eq(blockCount);
-	// 	// two-dimensional reward list for the requested block range.
-	// 	expect(result.reward.length).to.be.eq(blockCount);
-	// 	// each block has a reward list which's size is the requested percentile list.
-	// 	for (let i = 0; i < blockCount; i++) {
-	// 		expect(result.reward[i].length).to.be.eq(rewardPercentiles.length);
-	// 	}
-	// });
-
 	step("should calculate percentiles", async function () {
 		this.timeout(100000);
 		let blockCount = 11;

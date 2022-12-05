@@ -3,8 +3,8 @@ import { ContractFactory, Wallet } from "ethers";
 import { AbiItem } from "web3-utils";
 
 import Test from "../build/contracts/Storage.json";
-import { GENESIS_ACCOUNT, GENESIS_ACCOUNT_PRIVATE_KEY, FIRST_CONTRACT_ADDRESS } from "./config";
-import { createAndFinalizeBlock, customRequest, describeWithIce } from "./util";
+import { GENESIS_ACCOUNT_PRIVATE_KEY } from "./config";
+import { describeWithIce } from "./util";
 
 describeWithIce("Ice RPC (Contract storage)", (context) => {
 	it("eth_getStorageAt", async function () {
@@ -12,8 +12,6 @@ describeWithIce("Ice RPC (Contract storage)", (context) => {
 		const genesisAccount = new Wallet(GENESIS_ACCOUNT_PRIVATE_KEY, context.ethersjs);
 		let factory = new ContractFactory(Test.abi, Test.bytecode, genesisAccount);
 		const contract = await factory.deploy();
-
-		let contractAddress = contract.address;
 
 		expect(
 			await contract.getStorage("0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc")
@@ -100,7 +98,7 @@ describeWithIce("Ice RPC (Contract storage)", (context) => {
 		// expect(getStorage1.result).to.be.eq(expectedStorage);
 	});
 
-	// it("SSTORE cost should properly take into account transaction initial value", async function () {
+	// it("STORE cost should properly take into account transaction initial value", async function () {
 	// 	this.timeout(5000);
 
 	// 	let nonce = await context.web3.eth.getTransactionCount(GENESIS_ACCOUNT);

@@ -29,7 +29,6 @@
 // 	step("should prioritize transaction with the higher gasPrice", async function () {
 // 		this.timeout(30000);
 
-// 		await sleep(15000);
 // 		const gasPrices = [
 // 			"0x3B9ACA01",
 // 			"0x3B9ACA00",
@@ -46,6 +45,7 @@
 // 		}
 // 		// await createAndFinalizeBlock(context.web3);
 // 		const block = await context.web3.eth.getBlock("latest", true);
+// 		console.log({ block });
 // 		expect(block.transactions.length).to.be.eq(1);
 // 		expect(block.transactions[0].gasPrice).to.be.eq("1000000007");
 // 	});

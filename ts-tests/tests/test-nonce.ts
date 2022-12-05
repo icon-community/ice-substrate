@@ -2,8 +2,8 @@ import { expect } from "chai";
 import { ethers } from "ethers";
 import { step } from "mocha-steps";
 
-import { EXISTENTIAL_DEPOSIT, GENESIS_ACCOUNT, GENESIS_ACCOUNT_PRIVATE_KEY } from "./config";
-import { createAndFinalizeBlock, describeWithIce, customRequest, customRequestEther } from "./util";
+import { GENESIS_ACCOUNT, GENESIS_ACCOUNT_PRIVATE_KEY } from "./config";
+import { describeWithIce, customRequestEther } from "./util";
 
 describeWithIce("Ice RPC (Nonce)", (context) => {
 	const TEST_ACCOUNT = "0x1111111111111111111111111111111111111111";
@@ -26,9 +26,5 @@ describeWithIce("Ice RPC (Nonce)", (context) => {
 
 		expect(await context.web3.eth.getTransactionCount(GENESIS_ACCOUNT, "latest")).to.eq(1);
 		expect(await context.web3.eth.getTransactionCount(GENESIS_ACCOUNT, "earliest")).to.eq(0);
-		// expect(await context.web3.eth.getTransactionCount(GENESIS_ACCOUNT, "pending")).to.eq(1);
-
-		// expect(await context.web3.eth.getTransactionCount(GENESIS_ACCOUNT, "latest")).to.eq(1);
-		// expect(await context.web3.eth.getTransactionCount(GENESIS_ACCOUNT, "pending")).to.eq(1);
 	});
 });

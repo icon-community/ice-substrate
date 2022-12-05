@@ -15,21 +15,6 @@ describeWithIce("Ice RPC (Revert Reason)", (context) => {
 
 	before("create the contract", async function () {
 		this.timeout(15000);
-		// const tx = await context.web3.eth.accounts.signTransaction(
-		// 	{
-		// 		from: GENESIS_ACCOUNT,
-		// 		data: REVERT_W_MESSAGE_BYTECODE,
-		// 		value: "0x00",
-		// 		gasPrice: (await context.ethersjs.getGasPrice()).toString(),
-		// 		gas: "0x100000",
-		// 	},
-		// 	GENESIS_ACCOUNT_PRIVATE_KEY
-		// );
-		// const r = await customRequest(context.web3, "eth_sendRawTransaction", [tx.rawTransaction]);
-		// await createAndFinalizeBlock(context.web3);
-
-		// const receipt = await context.web3.eth.getTransactionReceipt(r.result);
-		// contractAddress = receipt.contractAddress;
 		let genesisAccount = new Wallet(GENESIS_ACCOUNT_PRIVATE_KEY, context.ethersjs);
 		let factory = new ContractFactory(TEST_CONTRACT_ABI, REVERT_W_MESSAGE_BYTECODE, genesisAccount);
 		let contract = await factory.deploy();

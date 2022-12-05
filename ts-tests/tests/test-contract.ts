@@ -4,7 +4,7 @@ import { Contract, ContractFactory, Signer, Wallet } from "ethers";
 
 import Test from "../build/contracts/Test.json";
 import { GENESIS_ACCOUNT_PRIVATE_KEY } from "./config";
-import { describeWithIce } from "./util";
+import { customRequest, describeWithIce } from "./util";
 
 chaiUse(chaiAsPromised);
 
@@ -23,19 +23,20 @@ describeWithIce("Ice RPC (Contract)", (context) => {
 		contract = await factory.deploy();
 
 		// // Verify the contract is not yet stored
-		// expect(await customRequest(context.web3, "eth_getCode", [FIRST_CONTRACT_ADDRESS])).to.deep.equal({
-		// 	id: 1,
-		// 	jsonrpc: "2.0",
-		// 	result: "0x",
-		// });
+		expect(await customRequest(context.web3, "eth_getCode", [contract.address])).to.deep.equal({
+			id: 1,
+			jsonrpc: "2.0",
+			result: "0x",
+		});
 
+		//wait until contract deployed
+		await contract.deployed();
 		// // Verify the contract is stored after the block is produced
-		// await createAndFinalizeBlock(context.web3);
-		// expect(await customRequest(context.web3, "eth_getCode", [FIRST_CONTRACT_ADDRESS])).to.deep.equal({
-		// 	id: 1,
-		// 	jsonrpc: "2.0",
-		// 	result: TEST_CONTRACT_DEPLOYED_BYTECODE,
-		// });
+		expect(await customRequest(context.web3, "eth_getCode", [contract.address])).to.deep.equal({
+			id: 1,
+			jsonrpc: "2.0",
+			result: TEST_CONTRACT_DEPLOYED_BYTECODE,
+		});
 	});
 
 	it("eth_call contract create should return code", async function () {

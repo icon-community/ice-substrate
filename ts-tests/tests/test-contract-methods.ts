@@ -30,14 +30,6 @@ describeWithIce("Ice RPC (Contract Methods)", (context) => {
 		contract = await factory.deploy();
 	});
 
-	// it("get transaction by hash", async () => {
-	// 	const latestBlock = await context.web3.eth.getBlock(1);
-	// 	expect(latestBlock.transactions.length).to.equal(1);
-	// 	const txHash = latestBlock.transactions[0];
-	// 	const tx = await context.ethersjs.getTransaction(txHash);
-	// 	expect(tx.hash).to.equal(txHash);
-	// });
-
 	it("should return contract method result", async function () {
 		this.timeout(15000);
 		expect((await contract.multiply(3)).toString()).to.equal("21");
