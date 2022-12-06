@@ -14,9 +14,13 @@ publish = false
 targets = ["x86_64-unknown-linux-gnu"]
 
 [dependencies]
-codec = { package = "parity-scale-codec", version = "3.0.0", default-features = false, features = ["derive"] }
+codec = { package = "parity-scale-codec", version = "3.0.0", default-features = false, features = [
+  "derive",
+] }
 serde = { version = "1.0.138", optional = true, features = ["derive"] }
-scale-info = { version = "2.0.1", default-features = false, features = ["derive"] }
+scale-info = { version = "2.0.1", default-features = false, features = [
+  "derive",
+] }
 smallvec = "1.9.0"
 static_assertions = "1.1.0"
 
@@ -35,13 +39,13 @@ pallet-sudo = { default-features = false, git = "https://github.com/paritytech/s
 pallet-timestamp = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30" }
 pallet-transaction-payment = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30" }
 pallet-transaction-payment-rpc-runtime-api = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30" }
-pallet-assets = {  default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30" }
+pallet-assets = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30" }
 pallet-collective = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30" }
-pallet-treasury = {  default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30" }
-pallet-vesting = {  default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30" }
-pallet-staking = {  default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30" }
-pallet-authorship = {  default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30" }
-pallet-session = {  default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30" }
+pallet-treasury = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30" }
+pallet-vesting = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30" }
+pallet-staking = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30" }
+pallet-authorship = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30" }
+pallet-session = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30" }
 pallet-utility = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30", default-features = false }
 pallet-scheduler = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30", default-features = false }
 pallet-preimage = { git = 'https://github.com/paritytech/substrate.git', branch = 'polkadot-v0.9.30', default-features = false }
@@ -62,10 +66,10 @@ pallet-contracts-rpc-runtime-api = { git = "https://github.com/paritytech/substr
 
 # sp dependencies from substrate 
 sp-api = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30" }
-sp-block-builder = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30"}
+sp-block-builder = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30" }
 sp-consensus-aura = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30" }
 sp-core = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30" }
-sp-inherents = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30"}
+sp-inherents = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30" }
 sp-io = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30" }
 sp-offchain = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30" }
 sp-runtime = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30" }
@@ -75,17 +79,17 @@ sp-transaction-pool = { default-features = false, git = "https://github.com/pari
 sp-version = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30" }
 
 # pallet dependencies from frontier 
-pallet-base-fee = { default-features = false, git = "https://github.com/web3labs/frontier",  branch = "polkadot-v0.9.30" }
-pallet-evm = { default-features = false, git = "https://github.com/web3labs/frontier",  branch = "polkadot-v0.9.30" }
-pallet-ethereum = {  default-features = false, git = "https://github.com/web3labs/frontier",  branch = "polkadot-v0.9.30" }
-pallet-dynamic-fee = { default-features = false, git = "https://github.com/web3labs/frontier",  branch = "polkadot-v0.9.30" }
-pallet-evm-precompile-modexp   = {  default-features = false, git = "https://github.com/web3labs/frontier",  branch = "polkadot-v0.9.30" }
-pallet-evm-precompile-sha3fips = {  default-features = false, git = "https://github.com/web3labs/frontier",  branch = "polkadot-v0.9.30" }
-pallet-evm-precompile-simple   = {  default-features = false,  git = "https://github.com/web3labs/frontier",  branch = "polkadot-v0.9.30" }
+pallet-base-fee = { default-features = false, git = "https://github.com/web3labs/frontier", branch = "polkadot-v0.9.30" }
+pallet-evm = { default-features = false, git = "https://github.com/web3labs/frontier", branch = "polkadot-v0.9.30" }
+pallet-ethereum = { default-features = false, git = "https://github.com/web3labs/frontier", branch = "polkadot-v0.9.30" }
+pallet-dynamic-fee = { default-features = false, git = "https://github.com/web3labs/frontier", branch = "polkadot-v0.9.30" }
+pallet-evm-precompile-modexp = { default-features = false, git = "https://github.com/web3labs/frontier", branch = "polkadot-v0.9.30" }
+pallet-evm-precompile-sha3fips = { default-features = false, git = "https://github.com/web3labs/frontier", branch = "polkadot-v0.9.30" }
+pallet-evm-precompile-simple = { default-features = false, git = "https://github.com/web3labs/frontier", branch = "polkadot-v0.9.30" }
 
 # fp dependencies from frontier 
-fp-rpc  = { default-features = false, git = "https://github.com/web3labs/frontier", branch = "polkadot-v0.9.30"}
-fp-self-contained = {default-features = false, git = "https://github.com/web3labs/frontier", branch = "polkadot-v0.9.30" }
+fp-rpc = { default-features = false, git = "https://github.com/web3labs/frontier", branch = "polkadot-v0.9.30" }
+fp-self-contained = { default-features = false, git = "https://github.com/web3labs/frontier", branch = "polkadot-v0.9.30" }
 
 # local pallet
 pallet-simple-inflation = { path = '../../pallets/simple-inflation', default-features = false, version = '0.0.2' }
@@ -115,111 +119,132 @@ default = ["std", "aura"]
 aura = []
 manual-seal = []
 std = [
-	"codec/std",
-	"serde",
-	"frame-executive/std",
-	"frame-support/std",
-	"frame-system-rpc-runtime-api/std",
-	"frame-system/std",
-	"fp-rpc/std",
-	"fp-self-contained/std",
+  "codec/std",
+  "serde",
+  "frame-executive/std",
+  "frame-support/std",
+  "frame-system-rpc-runtime-api/std",
+  "frame-system/std",
+  "fp-rpc/std",
+  "fp-self-contained/std",
 
-	"pallet-ethereum/std",
-	"pallet-evm/std",
-	"pallet-dynamic-fee/std",
-	"pallet-evm-precompile-simple/std",
-	"pallet-evm-precompile-sha3fips/std",
-	"pallet-aura/std",
-	"pallet-balances/std",
-	"pallet-grandpa/std",
-	"pallet-randomness-collective-flip/std",
-	"pallet-sudo/std",
-	"pallet-timestamp/std",
-	"pallet-transaction-payment-rpc-runtime-api/std",
-	"pallet-transaction-payment/std",
-	"pallet-base-fee/std",
-	"pallet-vesting/std",
-	"pallet-assets/std",
-	"pallet-treasury/std",
-    "pallet-collective/std",
-	"pallet-simple-inflation/std",
-	"pallet-contracts/std",
-	"pallet-contracts-primitives/std",
-	"pallet-contracts-rpc-runtime-api/std",
-	"pallet-staking/std",
-	"pallet-authorship/std",
-	"pallet-session/std",
-	"pallet-fees-split/std",
-	"pallet-airdrop/std",
-	"pallet-scheduler/std",
-	"pallet-preimage/std",
-	"pallet-proxy/std",
-	"pallet-multisig/std",
-	"pallet-identity/std",
-	"pallet-bounties/std",
-	"pallet-tips/std",
-	"pallet-elections-phragmen/std",
-	"pallet-membership/std",
-	"pallet-democracy/std",
-	"pallet-indices/std",
+  "pallet-ethereum/std",
+  "pallet-evm/std",
+  "pallet-dynamic-fee/std",
+  "pallet-evm-precompile-simple/std",
+  "pallet-evm-precompile-sha3fips/std",
+  "pallet-aura/std",
+  "pallet-balances/std",
+  "pallet-grandpa/std",
+  "pallet-randomness-collective-flip/std",
+  "pallet-sudo/std",
+  "pallet-timestamp/std",
+  "pallet-transaction-payment-rpc-runtime-api/std",
+  "pallet-transaction-payment/std",
+  "pallet-base-fee/std",
+  "pallet-vesting/std",
+  "pallet-assets/std",
+  "pallet-treasury/std",
+  "pallet-collective/std",
+  "pallet-simple-inflation/std",
+  "pallet-contracts/std",
+  "pallet-contracts-primitives/std",
+  "pallet-contracts-rpc-runtime-api/std",
+  "pallet-staking/std",
+  "pallet-authorship/std",
+  "pallet-session/std",
+  "pallet-fees-split/std",
+  "pallet-airdrop/std",
+  "pallet-scheduler/std",
+  "pallet-preimage/std",
+  "pallet-proxy/std",
+  "pallet-multisig/std",
+  "pallet-identity/std",
+  "pallet-bounties/std",
+  "pallet-tips/std",
+  "pallet-elections-phragmen/std",
+  "pallet-membership/std",
+  "pallet-democracy/std",
+  "pallet-indices/std",
 
-	"sp-api/std",
-	"sp-block-builder/std",
-	"sp-consensus-aura/std",
-	"sp-core/std",
-	"sp-inherents/std",
-	"sp-io/std",
-	"sp-offchain/std",
-	"sp-runtime/std",
-	"sp-session/std",
-	"sp-std/std",
-	"sp-transaction-pool/std",
-	"sp-version/std",
+  "sp-api/std",
+  "sp-block-builder/std",
+  "sp-consensus-aura/std",
+  "sp-core/std",
+  "sp-inherents/std",
+  "sp-io/std",
+  "sp-offchain/std",
+  "sp-runtime/std",
+  "sp-session/std",
+  "sp-std/std",
+  "sp-transaction-pool/std",
+  "sp-version/std",
 
-	"frame-benchmarking/std",
-	# "frame-system-benchmarking/std",
+  "frame-benchmarking/std",
+  # "frame-system-benchmarking/std",
 
-	"scale-info/std",
-	# "ice-runtime-common",
+  "scale-info/std",
+  # "ice-runtime-common",
 ]
 runtime-benchmarks = [
-	'sp-runtime/runtime-benchmarks',
-	'frame-support/runtime-benchmarks',
-	"frame-benchmarking",
-	"frame-system-benchmarking",
-	"frame-system/runtime-benchmarks",
-	'pallet-balances/runtime-benchmarks',
-	'pallet-timestamp/runtime-benchmarks',
-	"pallet-ethereum/runtime-benchmarks",
-	"pallet-evm/runtime-benchmarks",
-	"pallet-vesting/runtime-benchmarks",
-	"pallet-collective/runtime-benchmarks",
-    "pallet-treasury/runtime-benchmarks",
-	"pallet-airdrop/runtime-benchmarks",
-	"pallet-utility/runtime-benchmarks",
-	"pallet-scheduler/runtime-benchmarks",
-	"pallet-bounties/runtime-benchmarks",
-	"pallet-tips/runtime-benchmarks",
-	"pallet-elections-phragmen/runtime-benchmarks",
-	"pallet-membership/runtime-benchmarks",
-	"pallet-indices/runtime-benchmarks",
+  'sp-runtime/runtime-benchmarks',
+  'frame-support/runtime-benchmarks',
+  "frame-benchmarking",
+  "frame-system-benchmarking",
+  "frame-system/runtime-benchmarks",
+  'pallet-balances/runtime-benchmarks',
+  'pallet-timestamp/runtime-benchmarks',
+  "pallet-ethereum/runtime-benchmarks",
+  "pallet-evm/runtime-benchmarks",
+  "pallet-vesting/runtime-benchmarks",
+  "pallet-collective/runtime-benchmarks",
+  "pallet-treasury/runtime-benchmarks",
+  "pallet-airdrop/runtime-benchmarks",
+  "pallet-utility/runtime-benchmarks",
+  "pallet-scheduler/runtime-benchmarks",
+  "pallet-bounties/runtime-benchmarks",
+  "pallet-tips/runtime-benchmarks",
+  "pallet-elections-phragmen/runtime-benchmarks",
+  "pallet-membership/runtime-benchmarks",
+  "pallet-indices/runtime-benchmarks",
 ]
 
 try-runtime = [
-    "frame-try-runtime",
-    "frame-executive/try-runtime",
-    "frame-support/try-runtime",
-    "frame-system/try-runtime",
-    "pallet-aura/try-runtime",
-    "pallet-balances/try-runtime",
-    "pallet-contracts/try-runtime",
-    "pallet-grandpa/try-runtime",
-    "pallet-randomness-collective-flip/try-runtime",
-    "pallet-sudo/try-runtime",
-    "pallet-timestamp/try-runtime",
-    "pallet-transaction-payment/try-runtime",
-    "pallet-vesting/try-runtime",
-	"pallet-airdrop/try-runtime",
-	"pallet-scheduler/try-runtime",
-	"pallet-membership/try-runtime",
+  "frame-try-runtime",
+  "frame-executive/try-runtime",
+  "frame-support/try-runtime",
+  "frame-system/try-runtime",
+  "pallet-airdrop/try-runtime",
+  "pallet-assets/try-runtime",
+  "pallet-aura/try-runtime",
+  "pallet-authorship/try-runtime",
+  "pallet-balances/try-runtime",
+  "pallet-bounties/try-runtime",
+  "pallet-base-fee/try-runtime",
+  "pallet-collective/try-runtime",
+  "pallet-contracts/try-runtime",
+  "pallet-democracy/try-runtime",
+  "pallet-dynamic-fee/try-runtime",
+  "pallet-elections-phragmen/try-runtime",
+  "pallet-ethereum/try-runtime",
+  "pallet-evm/try-runtime",
+  "pallet-fees-split/try-runtime",
+  "pallet-grandpa/try-runtime",
+  "pallet-identity/try-runtime",
+  "pallet-indices/try-runtime",
+  "pallet-membership/try-runtime",
+  "pallet-multisig/try-runtime",
+  "pallet-preimage/try-runtime",
+  "pallet-proxy/try-runtime",
+  "pallet-randomness-collective-flip/try-runtime",
+  "pallet-scheduler/try-runtime",
+  "pallet-session/try-runtime",
+  "pallet-simple-inflation/try-runtime",
+  "pallet-sudo/try-runtime",
+  "pallet-timestamp/try-runtime",
+  "pallet-tips/try-runtime",
+  "pallet-transaction-payment/try-runtime",
+  "pallet-treasury/try-runtime",
+  "pallet-utility/try-runtime",
+  "pallet-vesting/try-runtime",
 ]
