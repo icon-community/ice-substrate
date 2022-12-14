@@ -16,26 +16,3 @@ export const BLOCK_TIMESTAMP = 6; // 6 seconds per block
 export const BLOCK_HASH_COUNT = 256;
 export const EXISTENTIAL_DEPOSIT = 10_000_000_000_000_000; // The minimum amount required to keep an account open
 export const BLOCK_GAS_LIMIT = 60000000;
-
-export const CHAINS = {
-    snow: {
-        RPC_ENDPOINT: "https://snow-rpc.icenetwork.io:9933",
-        CHAIN_ID: 552,
-        UPGRADE_CTX_ADDRESS: "0x3f71f31caf936b5b95fe1f207498fe798bd7723b",
-    },
-    arctic: {
-        RPC_ENDPOINT: "https://arctic-rpc.icenetwork.io:9933",
-        CHAIN_ID: 553,
-        UPGRADE_CTX_ADDRESS: "0x41897dad572342942d8e86572dd579cf3da16526",
-    },
-    snow_staging: {
-        RPC_ENDPOINT: "https://snow-staging-rpc.web3labs.com:9933",
-        CHAIN_ID: 552,
-        UPGRADE_CTX_ADDRESS: "0x5c1c61cb2d66bb77ae2df436cb5e3f92db065a3c",
-    },
-    local: {
-        RPC_ENDPOINT: "https://localhost:9933",
-        CHAIN_ID: 554,
-        UPGRADE_CTX_ADDRESS: "", // Update according to local env
-    },
-}
