@@ -59,28 +59,18 @@ jobs:
         with:
           version: "3.x"
 
-      - name: Set up cargo cache
-        uses: actions/cache@v3
-        continue-on-error: false
-        with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: ${{ runner.os }}-cargo-
-
       - name: Build optimized binary
         uses: actions-rs/cargo@v1
         with:
           command: build
-          args: --release
+          args: --release --locked
 
       - name: Binary executable
         shell: bash
         run: chmod +x ./target/release/ice-node
+
+      - name: Setup cmake
+        uses: jwlawson/actions-setup-cmake@v1.12
 
       - name: Use Node.js
         uses: actions/setup-node@v2
