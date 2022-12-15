@@ -164,7 +164,7 @@ fn testnet_genesis(
 				.collect::<Vec<_>>(),
 		},
 		evm: EVMConfig {
-			accounts: {
+			accounts: { 				
 				let mut map = BTreeMap::new();
 				map.insert(
 					// H160 address of Alice dev account
@@ -206,6 +206,7 @@ fn testnet_genesis(
 					},
 				);
 				map
+			
 			},
 		},
 		ethereum: EthereumConfig {},
