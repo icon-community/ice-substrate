@@ -12,7 +12,7 @@
   },
   "badBlocks": null,
   "relayChain": "westend_moonbase_relay_testnet",
-  "paraId": 2008,
+  "paraId": 2039,
   "codeSubstitutes": {},
   "genesis": {
     "runtime": {
