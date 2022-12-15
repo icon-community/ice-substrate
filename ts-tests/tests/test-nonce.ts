@@ -9,7 +9,7 @@ describeWithIce("Ice RPC (Nonce)", (context) => {
 	const TEST_ACCOUNT = "0x1111111111111111111111111111111111111111";
 
 	step("get nonce", async function () {
-		this.timeout(10_000);
+		this.timeout(20_000);
 		const value = "0x200000000000000000"; //balance should be greater than 10_000_000_000_000_000
 		const gasPrice = await context.ethersjs.getGasPrice();
 
