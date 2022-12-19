@@ -69,9 +69,6 @@ jobs:
         shell: bash
         run: chmod +x ./target/release/ice-node
 
-      - name: Setup cmake
-        uses: jwlawson/actions-setup-cmake@v1.12
-
       - name: Use Node.js
         uses: actions/setup-node@v2
         with:
