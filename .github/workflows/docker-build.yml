@@ -25,6 +25,6 @@ jobs:
       - name: Build and push Docker Image
         uses: docker/build-push-action@v3
         with:
-          context: scripts/docker/
+          context: scripts/
           push: true
           tags: icenetworkio/snow:${{ github.event.inputs.tags }}
