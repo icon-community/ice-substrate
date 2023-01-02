@@ -23,6 +23,8 @@ use sp_runtime::traits::BlakeTwo256;
 use std::collections::BTreeMap;
 use std::sync::Arc;
 use substrate_frame_rpc_system::{System, SystemApiServer};
+use pallet_contracts_rpc::{Contracts};
+use pallet_contracts_rpc::ContractsApiServer;
 
 use crate::primitives::*;
 
@@ -134,6 +136,7 @@ where
 		+ pallet_transaction_payment_rpc::TransactionPaymentRuntimeApi<Block, Balance>
 		+ fp_rpc::ConvertTransactionRuntimeApi<Block>
 		+ fp_rpc::EthereumRuntimeRPCApi<Block>
+		+ pallet_contracts_rpc::ContractsRuntimeApi<Block, AccountId, Balance, BlockNumber, Hash>
 		+ BlockBuilder<Block>,
 	P: TransactionPool<Block = Block> + Sync + Send + 'static,
 	BE: Backend<Block> + 'static,
@@ -159,6 +162,7 @@ where
 
 	io.merge(System::new(client.clone(), pool.clone(), deny_unsafe).into_rpc())?;
 	io.merge(TransactionPayment::new(client.clone()).into_rpc())?;
+	io.merge(Contracts::new(client.clone()).into_rpc())?;
 
 	io.merge(
 		Eth::new(
