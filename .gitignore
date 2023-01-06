@@ -11,3 +11,10 @@
 /.idea/
 
 contracts/*/target
+
+
+**/node_modules/
+**/build/
+
+**/.DS_Store
+
