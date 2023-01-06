@@ -18,9 +18,9 @@ codec = { package = "parity-scale-codec", version = "3.0.0" }
 structopt = "0.3.8"
 async-trait = "0.1.57"
 serde = { version = "1.0", features = [ "derive" ] }
-clap = { version = "3.2", features = ["derive"] }
+clap = { version = "4.0.9", features = ["derive"] }
 jsonrpc-pubsub = "18.0.0"
-jsonrpsee = { version = "0.15.1", features = ["server"] }
+jsonrpsee = { version = "0.16.2", features = ["server"] }
 futures = "0.3"
 log = "0.4.8"
 serde_json = "1.0"
@@ -45,8 +45,8 @@ sp-timestamp = { git = "https://github.com/paritytech/substrate", branch = "polk
 sp-transaction-pool = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.36" }
 
 
-sc-executor = { branch = "polkadot-v0.9.36", git = "https://github.com/paritytech/substrate", features = ["wasmtime"] }
-sc-service = { branch = "polkadot-v0.9.36", git = "https://github.com/paritytech/substrate", features = ["wasmtime"] }
+sc-executor = { branch = "polkadot-v0.9.36", git = "https://github.com/paritytech/substrate" }
+sc-service = { branch = "polkadot-v0.9.36", git = "https://github.com/paritytech/substrate" }
 sc-telemetry = {branch = "polkadot-v0.9.36",  git = "https://github.com/paritytech/substrate" }
 sc-keystore = { branch = "polkadot-v0.9.36", git = "https://github.com/paritytech/substrate" }
 sc-transaction-pool = {branch = "polkadot-v0.9.36",  git = "https://github.com/paritytech/substrate" }
@@ -69,7 +69,6 @@ sc-basic-authorship = { branch = "polkadot-v0.9.36", git = "https://github.com/p
 substrate-frame-rpc-system = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.36" }
 
 pallet-transaction-payment-rpc = { branch = "polkadot-v0.9.36", git = "https://github.com/paritytech/substrate" }
-pallet-contracts-rpc = { branch = "polkadot-v0.9.36", git = "https://github.com/paritytech/substrate" }
 
 # client dependencies
 sc-client-db = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.36", default-features = false }
@@ -89,6 +88,7 @@ cumulus-client-service = { git = "https://github.com/paritytech/cumulus", branch
 cumulus-client-consensus-aura = { git = "https://github.com/paritytech/cumulus", branch = "polkadot-v0.9.36" }
 cumulus-client-consensus-common = { git = "https://github.com/paritytech/cumulus", branch = "polkadot-v0.9.36" }
 cumulus-relay-chain-rpc-interface = { git = "https://github.com/paritytech/cumulus", branch = "polkadot-v0.9.36" }
+cumulus-relay-chain-minimal-node = { git = "https://github.com/paritytech/cumulus", branch = "polkadot-v0.9.36" }
 
 
 cumulus-client-consensus-relay-chain = { git = "https://github.com/paritytech/cumulus", branch = "polkadot-v0.9.36" }
@@ -100,11 +100,11 @@ cumulus-primitives-parachain-inherent = { git = "https://github.com/paritytech/c
 substrate-prometheus-endpoint = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.36" }
 
 # polkadot dependencies
-polkadot-primitives = { git = "https://github.com/paritytech/polkadot", branch = "release-v0.9.30" }
-polkadot-parachain = { git = "https://github.com/paritytech/polkadot", branch = "release-v0.9.30" }
-polkadot-service = { git = "https://github.com/paritytech/polkadot", branch = "release-v0.9.30" }
-polkadot-cli = { git = "https://github.com/paritytech/polkadot", branch = "release-v0.9.30", optional = true }
-xcm = { git = "https://github.com/paritytech/polkadot", default-features = false, branch = "release-v0.9.30" }
+polkadot-primitives = { git = "https://github.com/paritytech/polkadot", branch = "release-v0.9.36" }
+polkadot-parachain = { git = "https://github.com/paritytech/polkadot", branch = "release-v0.9.36" }
+polkadot-service = { git = "https://github.com/paritytech/polkadot", branch = "release-v0.9.36" }
+polkadot-cli = { git = "https://github.com/paritytech/polkadot", branch = "release-v0.9.36", optional = true }
+xcm = { git = "https://github.com/paritytech/polkadot", default-features = false, branch = "release-v0.9.36" }
 
 # These dependencies are used for runtime benchmarking
 frame-benchmarking = { branch = "polkadot-v0.9.36", git = "https://github.com/paritytech/substrate" }

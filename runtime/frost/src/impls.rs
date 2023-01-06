@@ -30,6 +30,7 @@ impl OnUnbalanced<NegativeImbalance> for DealWithFees {
 #[cfg(test)]
 mod tests {
 	use crate::sp_api_hidden_includes_construct_runtime::hidden_include::weights::WeightToFee;
+	use crate::MaximumMultiplier;
 	use crate::{
 		constants::{currency::*, time::*},
 		AdjustmentVariable, MinimumMultiplier, Runtime, RuntimeBlockWeights, System,
@@ -121,6 +122,7 @@ mod tests {
 			TargetBlockFullness,
 			AdjustmentVariable,
 			MinimumMultiplier,
+			MaximumMultiplier,
 		>::convert(fm)
 	}
 
