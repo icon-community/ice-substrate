@@ -194,7 +194,6 @@ export function describeWithIce(
 		});
 
 		after(async function () {
-			//console.log(`\x1b[31m Killing RPC\x1b[0m`);
 			binary.kill();
 		});
 

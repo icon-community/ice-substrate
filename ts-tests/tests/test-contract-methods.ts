@@ -38,10 +38,6 @@ describeWithIce("Ice RPC (Contract Methods)", (context) => {
 		expect(await contract.blockHash(number - 1)).to.not.eq(
 			"0x0000000000000000000000000000000000000000000000000000000000000000"
 		);
-
-		// expect(await contract.blockHash(number)).to.eq(
-		// 	"0x0000000000000000000000000000000000000000000000000000000000000000"
-		// );
 	});
 
 	it("should get correct environmental block gaslimit", async function () {
