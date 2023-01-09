@@ -3695,6 +3695,7 @@ dependencies = [
  "fc-rpc",
  "fc-rpc-core",
  "fp-consensus",
+ "fp-evm",
  "fp-rpc",
  "fp-storage",
  "frame-benchmarking",
