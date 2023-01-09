@@ -186,7 +186,7 @@ parameter_types! {
 	pub const BlockHashCount: BlockNumber = 256;
 	/// We allow for 2 seconds of compute with a 6 second average block time.
 	pub RuntimeBlockWeights: BlockWeights = BlockWeights
-			::with_sensible_defaults(Weight::from_ref_time(WEIGHT_REF_TIME_PER_SECOND.saturating_mul(2)), NORMAL_DISPATCH_RATIO);
+			::with_sensible_defaults(Weight::from_ref_time(WEIGHT_REF_TIME_PER_SECOND.saturating_mul(2)).set_proof_size(u64::MAX), NORMAL_DISPATCH_RATIO);
 	pub RuntimeBlockLength: BlockLength = BlockLength
 			::max_with_normal_ratio(5 * 1024 * 1024, NORMAL_DISPATCH_RATIO);
 	pub const SS58Prefix: u16 = 2208;

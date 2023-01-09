@@ -33,7 +33,7 @@
   "parachains": [
     {
       "bin": "/Users/abhi/code/ice-substrate/target/release/ice-node",
-      "chain": "arctic-dev",
+      "chain": "snow-dev",
       "balance": "1000000000000000000000",
       "nodes": [
         {
