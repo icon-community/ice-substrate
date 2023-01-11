@@ -21,7 +21,7 @@ serde = { version = "1.0.138", optional = true, features = ["derive"] }
 scale-info = { version = "2.1.0", default-features = false, features = [
   "derive",
 ] }
-smallvec = "1.9.0"
+smallvec = "1.10.0"
 static_assertions = "1.1.0"
 
 # frame dependencies
