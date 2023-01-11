@@ -23,6 +23,8 @@ mod exchange_accounts;
 
 pub mod transfer;
 
+pub use weights::*;
+
 #[cfg(not(test))]
 pub(crate) use log::{error, info};
 #[cfg(test)]

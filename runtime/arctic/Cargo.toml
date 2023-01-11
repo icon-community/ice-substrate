@@ -106,6 +106,9 @@ pallet-simple-inflation = { path = '../../pallets/simple-inflation', default-fea
 pallet-fees-split = { path = "../../pallets/fees-split", default-features = false, version = '0.0.1' }
 pallet-airdrop = { path = "../../pallets/airdrop", default-features = false }
 
+#local crates
+runtime-common={path="../common", default-features=false}
+
 # ice-runtime-fees-split = { default-features = false, path = "../fees-split", optional=true}
 
 # try-runtime
@@ -218,6 +221,7 @@ std = [
 
   # "ice-runtime-fees-split",
   "pallet-airdrop/std",
+  "runtime-common/std",
 
   "frame-benchmarking/std",
   # "frame-system-benchmarking/std",
@@ -242,7 +246,7 @@ std = [
 runtime-benchmarks = [
   'sp-runtime/runtime-benchmarks',
   "frame-benchmarking",
-  "frame-system-benchmarking",
+ "frame-system-benchmarking/runtime-benchmarks",
   "frame-system/runtime-benchmarks",
   "pallet-ethereum/runtime-benchmarks",
   "pallet-evm/runtime-benchmarks",

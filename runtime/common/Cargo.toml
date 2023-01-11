@@ -1,0 +1,53 @@
+[package]
+name = "runtime-common"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+# frame dependencies
+frame-support = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30" }
+frame-system = { default-features = false, package = "frame-system", git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30" }
+
+# sp dependencies from substrate 
+sp-std = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30" }
+
+# pallets dependencies from substrate 
+pallet-balances = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30" }
+pallet-timestamp = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30" }
+
+
+# local pallet
+pallet-airdrop = { path = "../../pallets/airdrop", default-features = false }
+
+#benchmarking
+frame-benchmarking = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30", default-features = false, optional = true }
+frame-system-benchmarking = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30", default-features = false, optional = true }
+
+
+
+[features]
+default = ["std", "aura"]
+aura = []
+manual-seal = []
+std = [
+  "frame-support/std",
+  "frame-system/std",
+
+ 
+  "pallet-balances/std",
+  "pallet-timestamp/std",
+ 
+
+  "sp-std/std",
+
+  "pallet-airdrop/std",
+  "frame-benchmarking/std",
+]
+
+runtime-benchmarks = [
+  "frame-benchmarking",
+  "frame-system-benchmarking/runtime-benchmarks",
+]
+

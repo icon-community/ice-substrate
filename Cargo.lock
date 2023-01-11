@@ -196,6 +196,7 @@ dependencies = [
  "parity-scale-codec",
  "polkadot-parachain",
  "polkadot-runtime-common",
+ "runtime-common",
  "scale-info",
  "separator",
  "serde",
@@ -3082,6 +3083,7 @@ dependencies = [
  "pallet-utility",
  "pallet-vesting",
  "parity-scale-codec",
+ "runtime-common",
  "scale-info",
  "separator",
  "serde",
@@ -6238,6 +6240,7 @@ dependencies = [
  "pallet-contracts-proc-macro",
  "parity-scale-codec",
  "rand 0.8.5",
+ "rand_pcg 0.3.1",
  "scale-info",
  "serde",
  "smallvec",
@@ -9332,6 +9335,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "runtime-common"
+version = "0.1.0"
+dependencies = [
+ "frame-benchmarking",
+ "frame-support",
+ "frame-system",
+ "frame-system-benchmarking",
+ "pallet-airdrop",
+ "pallet-balances",
+ "pallet-timestamp",
+ "sp-std",
+]
+
+[[package]]
 name = "rustc-demangle"
 version = "0.1.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -11035,6 +11052,7 @@ dependencies = [
  "parity-scale-codec",
  "polkadot-parachain",
  "polkadot-runtime-common",
+ "runtime-common",
  "scale-info",
  "separator",
  "serde",
