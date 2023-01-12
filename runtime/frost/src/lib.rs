@@ -29,7 +29,13 @@ use sp_api::impl_runtime_apis;
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 use sp_core::{crypto::KeyTypeId, OpaqueMetadata, H160, H256, U256};
 
-use runtime_common::{AirdropWeightInfo, BalancesWeightInfo, TimestampWeightInfo};
+use runtime_common::{
+	AirdropWeightInfo, AssetsWeightInfo, BalancesWeightInfo, CollectiveWeightInfo,
+	ContractsWeightInfo, DemocracyWeightInfo, GrandpaWeightInfo, IdentityWeightInfo,
+	IndicesWeightInfo, MembershipWeightInfo, MultisigWeightInfo, PreimageWeightInfo,
+	ProxyWeightInfo, SchedulerWeightInfo, SystemWeightInfo, TimestampWeightInfo, TipsWeightInfo,
+	UtilityWeightInfo, VestingWeightInfo,
+};
 use sp_runtime::{
 	create_runtime_str, generic, impl_opaque_keys,
 	traits::{
@@ -271,7 +277,7 @@ impl pallet_grandpa::Config for Runtime {
 
 	type HandleEquivocation = ();
 
-	type WeightInfo = ();
+	type WeightInfo = GrandpaWeightInfo<Self>;
 
 	type MaxAuthorities = MaxAuthorities;
 }
@@ -309,7 +315,7 @@ impl pallet_contracts::Config for Runtime {
 	/// is not allowed to change the indices of existing pallets, too.
 	type CallFilter = frame_support::traits::Nothing;
 	type WeightPrice = pallet_transaction_payment::Pallet<Self>;
-	type WeightInfo = pallet_contracts::weights::SubstrateWeight<Self>;
+	type WeightInfo = ContractsWeightInfo<Self>;
 	type ChainExtension = ();
 	type Schedule = Schedule;
 	type CallStack = [pallet_contracts::Frame<Self>; 31];
@@ -480,7 +486,7 @@ impl pallet_assets::Config for Runtime {
 	type StringLimit = AssetsStringLimit;
 	type Freezer = ();
 	type Extra = ();
-	type WeightInfo = pallet_assets::weights::SubstrateWeight<Runtime>;
+	type WeightInfo = AssetsWeightInfo<Runtime>;
 }
 
 parameter_types! {
@@ -492,7 +498,7 @@ impl pallet_vesting::Config for Runtime {
 	type Currency = Balances;
 	type BlockNumberToBalance = ConvertInto;
 	type MinVestedTransfer = MinVestedTransfer;
-	type WeightInfo = pallet_vesting::weights::SubstrateWeight<Runtime>;
+	type WeightInfo = VestingWeightInfo<Runtime>;
 	// `VestingInfo` encode length is 36bytes. 28 schedules gets encoded as 1009 bytes, which is the
 	// highest number of schedules that encodes less than 2^10.
 	const MAX_VESTING_SCHEDULES: u32 = 28;
@@ -514,7 +520,7 @@ impl pallet_collective::Config<CouncilCollective> for Runtime {
 	type MaxProposals = CouncilMaxProposals;
 	type MaxMembers = CouncilMaxMembers;
 	type DefaultVote = pallet_collective::PrimeDefaultVote;
-	type WeightInfo = pallet_collective::weights::SubstrateWeight<Runtime>;
+	type WeightInfo = CollectiveWeightInfo<Runtime>;
 }
 
 parameter_types! {
@@ -586,7 +592,7 @@ impl pallet_utility::Config for Runtime {
 	type RuntimeEvent = RuntimeEvent;
 	type RuntimeCall = RuntimeCall;
 	type PalletsOrigin = OriginCaller;
-	type WeightInfo = ();
+	type WeightInfo = UtilityWeightInfo<Self>;
 }
 
 parameter_types! {
@@ -605,7 +611,7 @@ impl pallet_scheduler::Config for Runtime {
 	type ScheduleOrigin = EnsureRoot<AccountId>;
 	type OriginPrivilegeCmp = EqualPrivilegeOnly;
 	type MaxScheduledPerBlock = MaxScheduledPerBlock;
-	type WeightInfo = ();
+	type WeightInfo = SchedulerWeightInfo<Self>;
 	type PreimageProvider = Preimage;
 	type NoPreimagePostponement = NoPreimagePostponement;
 }
@@ -618,7 +624,7 @@ parameter_types! {
 
 impl pallet_preimage::Config for Runtime {
 	type RuntimeEvent = RuntimeEvent;
-	type WeightInfo = pallet_preimage::weights::SubstrateWeight<Runtime>;
+	type WeightInfo = PreimageWeightInfo<Runtime>;
 	type Currency = Balances;
 	type ManagerOrigin = EnsureRoot<AccountId>;
 	type MaxSize = PreimageMaxSize;
@@ -741,7 +747,7 @@ impl pallet_proxy::Config for Runtime {
 	type ProxyDepositBase = ProxyDepositBase;
 	type ProxyDepositFactor = ProxyDepositFactor;
 	type MaxProxies = MaxProxies;
-	type WeightInfo = ();
+	type WeightInfo = ProxyWeightInfo<Self>;
 	type MaxPending = MaxPending;
 	type CallHasher = BlakeTwo256;
 	type AnnouncementDepositBase = AnnouncementDepositBase;
@@ -763,7 +769,7 @@ impl pallet_multisig::Config for Runtime {
 	type DepositBase = DepositBase;
 	type DepositFactor = DepositFactor;
 	type MaxSignatories = MaxSignatories;
-	type WeightInfo = ();
+	type WeightInfo = MultisigWeightInfo<Self>;
 }
 
 parameter_types! {
@@ -788,7 +794,7 @@ impl pallet_identity::Config for Runtime {
 	type Slashed = Treasury;
 	type ForceOrigin = MoreThanHalfCouncil;
 	type RegistrarOrigin = MoreThanHalfCouncil;
-	type WeightInfo = ();
+	type WeightInfo = IdentityWeightInfo<Self>;
 }
 
 parameter_types! {
@@ -1214,16 +1220,20 @@ pub mod benches {
 	define_benchmarks!(
 		[frame_benchmarking, BaselineBench::<Runtime>]
 		[frame_system, SystemBench::<Runtime>]
-		[ pallet_airdrop,Airdrop]
 		[ pallet_assets,Assets]
 		[ pallet_balances,Balances]
 		[ pallet_bounties,Bounties]
+		[ pallet_collective,Council]
+		[ pallet_collective,TechnicalCommittee]
 		[ pallet_contracts,Contracts]
 		[ pallet_democracy,Democracy]
+		[ pallet_elections_phragmen,PhragmenElection]
 		[ pallet_evm,EVM]
 		[ pallet_grandpa,Grandpa]
 		[ pallet_identity,Identity]
 		[ pallet_indices,Indices]
+		[ pallet_membership,CouncilMembership]
+		[ pallet_membership,TechnicalMembership]
 		[ pallet_multisig,Multisig]
 		[ pallet_preimage,Preimage]
 		[ pallet_proxy,Proxy]
@@ -1233,6 +1243,7 @@ pub mod benches {
 		[ pallet_treasury,Treasury]
 		[ pallet_utility,Utility]
 		[ pallet_vesting,Vesting]
+		[ pallet_airdrop,Airdrop]
 	);
 }
 

@@ -6,24 +6,46 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-# frame dependencies
-frame-support = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30" }
-frame-system = { default-features = false, package = "frame-system", git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30" }
 
-# sp dependencies from substrate 
-sp-std = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30" }
+
 
 # pallets dependencies from substrate 
-pallet-balances = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30" }
-pallet-timestamp = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30" }
-
-
-# local pallet
-pallet-airdrop = { path = "../../pallets/airdrop", default-features = false }
-
-#benchmarking
 frame-benchmarking = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30", default-features = false, optional = true }
+frame-support = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30" }
+frame-system = { default-features = false, package = "frame-system", git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30" }
 frame-system-benchmarking = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30", default-features = false, optional = true }
+pallet-airdrop = { path = "../../pallets/airdrop", default-features = false }
+pallet-assets={ default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30" }
+pallet-authorship={ default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30" }
+pallet-balances={ default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30" }
+pallet-base-fee = { default-features = false, git = "https://github.com/web3labs/frontier", branch = "polkadot-v0.9.30" }
+pallet-bounties={ default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30" }
+pallet-collective={ default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30" }
+pallet-contracts={ default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30" }
+pallet-democracy={ default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30" }
+pallet-dynamic-fee = { default-features = false, git = "https://github.com/web3labs/frontier", branch = "polkadot-v0.9.30" }
+pallet-elections-phragmen = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30", default-features = false }
+pallet-evm = { default-features = false, git = "https://github.com/web3labs/frontier", branch = "polkadot-v0.9.30" }
+pallet-fees-split = { path = "../../pallets/fees-split", default-features = false, version = '0.0.1' }
+pallet-grandpa={ default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30" }
+pallet-identity={ default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30" }
+pallet-indices={ default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30" }
+pallet-membership={ default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30" }
+pallet-multisig={ default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30" }
+pallet-preimage={ default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30" }
+pallet-proxy={ default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30" }
+pallet-randomness-collective-flip={ default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30" }
+pallet-scheduler={ default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30" }
+pallet-session={ default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30" }
+pallet-simple-inflation = { path = '../../pallets/simple-inflation', default-features = false, version = '0.0.2' }
+pallet-sudo={ default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30" }
+pallet-timestamp={ default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30" }
+pallet-tips={ default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30" }
+pallet-transaction-payment={ default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30" }
+pallet-treasury={ default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30" }
+pallet-utility={ default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30" }
+pallet-vesting={ default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30" }
+sp-std = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.30" }
 
 
 
@@ -32,18 +54,41 @@ default = ["std", "aura"]
 aura = []
 manual-seal = []
 std = [
-  "frame-support/std",
-  "frame-system/std",
-
- 
-  "pallet-balances/std",
-  "pallet-timestamp/std",
- 
-
-  "sp-std/std",
-
-  "pallet-airdrop/std",
-  "frame-benchmarking/std",
+"frame-benchmarking/std",
+"frame-support/std",
+"frame-system/std",
+"pallet-airdrop/std",
+"pallet-assets/std",
+"pallet-authorship/std",
+"pallet-balances/std",
+"pallet-base-fee/std",
+"pallet-bounties/std",
+"pallet-collective/std",
+"pallet-contracts/std",
+"pallet-democracy/std",
+"pallet-dynamic-fee/std",
+"pallet-elections-phragmen/std",
+"pallet-evm/std",
+"pallet-fees-split/std",
+"pallet-grandpa/std",
+"pallet-identity/std",
+"pallet-indices/std",
+"pallet-membership/std",
+"pallet-multisig/std",
+"pallet-preimage/std",
+"pallet-proxy/std",
+"pallet-randomness-collective-flip/std",
+"pallet-scheduler/std",
+"pallet-session/std",
+"pallet-simple-inflation/std",
+"pallet-sudo/std",
+"pallet-timestamp/std",
+"pallet-tips/std",
+"pallet-transaction-payment/std",
+"pallet-treasury/std",
+"pallet-utility/std",
+"pallet-vesting/std",
+"sp-std/std",
 ]
 
 runtime-benchmarks = [
