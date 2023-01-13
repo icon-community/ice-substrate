@@ -96,9 +96,6 @@ pallet-simple-inflation = { path = '../../pallets/simple-inflation', default-fea
 pallet-fees-split = { path = "../../pallets/fees-split", default-features = false, version = '0.0.1' }
 pallet-airdrop = { path = "../../pallets/airdrop", default-features = false }
 
-#local crates
-runtime-common={path="../common", default-features=false}
-
 # ice-runtime-common = { default-features = false, path = "../common", optional = true }
 
 # try-runtime
@@ -185,7 +182,6 @@ std = [
 
   "frame-benchmarking/std",
   # "frame-system-benchmarking/std",
-  "runtime-common/std",
 
   "scale-info/std",
   # "ice-runtime-common",
@@ -219,7 +215,6 @@ runtime-benchmarks = [
   "pallet-treasury/runtime-benchmarks",
   "pallet-utility/runtime-benchmarks",
   "pallet-vesting/runtime-benchmarks",
-  "runtime-common/runtime-benchmarks",
 ]
 
 try-runtime = [

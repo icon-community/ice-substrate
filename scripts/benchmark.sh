@@ -1,4 +1,4 @@
-cargo build --features runtime-benchmarks --release
+## cargo build --features runtime-benchmarks --release
  declare -a arr=(
 	     "frame_system" 
 		 "pallet_assets" 
@@ -35,15 +35,25 @@ cargo build --features runtime-benchmarks --release
 )
 
 ## now loop through the above array
+chain="${1:-dev}"
+folder="frost"
+if [ $1 = "snow-kusama" ]; then
+   folder="snow"
+elif [ $1 = "arctic" ]; then
+   folder="arctic"
+else
+   folder="frost"
+fi
+
 for i in "${arr[@]}"
 do
   ./target/release/ice-node benchmark pallet \
-    --chain dev \
+    --chain "$chain" \
     --execution=wasm \
     --wasm-execution=compiled \
     --pallet "$i" \
     --extrinsic "*" \
     --steps 50 \
     --repeat 20 \
-    --output runtime/common/src/weights/"$i"_weight.rs &
+    --output runtime/"$folder"/src/weights/"$i"_weight.rs &
 done

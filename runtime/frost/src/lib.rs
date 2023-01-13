@@ -8,6 +8,7 @@
 // Make the WASM binary available.
 #[cfg(feature = "std")]
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
+mod weights;
 
 use codec::{Decode, Encode, MaxEncodedLen};
 use pallet_evm::FeeCalculator;
@@ -29,7 +30,7 @@ use sp_api::impl_runtime_apis;
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 use sp_core::{crypto::KeyTypeId, OpaqueMetadata, H160, H256, U256};
 
-use runtime_common::{
+use weights::{
 	AirdropWeightInfo, AssetsWeightInfo, BalancesWeightInfo, CollectiveWeightInfo,
 	ContractsWeightInfo, DemocracyWeightInfo, GrandpaWeightInfo, IdentityWeightInfo,
 	IndicesWeightInfo, MembershipWeightInfo, MultisigWeightInfo, PreimageWeightInfo,
