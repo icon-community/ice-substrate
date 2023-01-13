@@ -1,4 +1,4 @@
-## cargo build --features runtime-benchmarks --release
+cargo build --features runtime-benchmarks --release
  declare -a arr=(
 	     "frame_system" 
 		 "pallet_assets" 

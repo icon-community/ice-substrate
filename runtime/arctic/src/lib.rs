@@ -1569,13 +1569,33 @@ impl fp_self_contained::SelfContainedCall for RuntimeCall {
 #[macro_use]
 extern crate frame_benchmarking;
 #[cfg(feature = "runtime-benchmarks")]
-mod benches {
+pub mod benches {
 	define_benchmarks!(
 		[frame_benchmarking, BaselineBench::<Runtime>]
 		[frame_system, SystemBench::<Runtime>]
-		[pallet_balances, Balances]
-		[pallet_timestamp, Timestamp]
-		[pallet_airdrop, Airdrop]
+		[ pallet_assets,Assets]
+		[ pallet_balances,Balances]
+		[ pallet_bounties,Bounties]
+		[ pallet_collective,Council]
+		[ pallet_collective,TechnicalCommittee]
+		[ pallet_contracts,Contracts]
+		[ pallet_democracy,Democracy]
+		[ pallet_elections_phragmen,PhragmenElection]
+		[ pallet_evm,EVM]
+		[ pallet_identity,Identity]
+		[ pallet_indices,Indices]
+		[ pallet_membership,CouncilMembership]
+		[ pallet_membership,TechnicalMembership]
+		[ pallet_multisig,Multisig]
+		[ pallet_preimage,Preimage]
+		[ pallet_proxy,Proxy]
+		[ pallet_scheduler,Scheduler]
+		[ pallet_timestamp,Timestamp]
+		[ pallet_tips,Tips]
+		[ pallet_treasury,Treasury]
+		[ pallet_utility,Utility]
+		[ pallet_vesting,Vesting]
+		[ pallet_airdrop,Airdrop]
 	);
 }
 
