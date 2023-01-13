@@ -244,7 +244,7 @@ impl frame_system::Config for Runtime {
 	/// What to do if an account is fully reaped from the system.
 	type OnKilledAccount = ();
 	/// Weight information for the extrinsics of this pallet.
-	type SystemWeightInfo = ();
+	type SystemWeightInfo = SystemWeightInfo<Self>;
 	/// This is used as an identifier of the chain. 42 is the generic substrate prefix.
 	type SS58Prefix = SS58Prefix;
 	/// The set code logic, just the default since we're not a parachain.
@@ -836,7 +836,7 @@ impl pallet_tips::Config for Runtime {
 	type TipFindersFee = TipFindersFee;
 	type TipReportDepositBase = TipReportDepositBase;
 	type Tippers = PhragmenElection;
-	type WeightInfo = ();
+	type WeightInfo = TipsWeightInfo<Self>;
 }
 
 parameter_types! {
@@ -893,7 +893,7 @@ impl pallet_membership::Config<pallet_membership::Instance1> for Runtime {
 	type MembershipInitialized = Council;
 	type MembershipChanged = Council;
 	type MaxMembers = CouncilMaxMembers;
-	type WeightInfo = ();
+	type WeightInfo = MembershipWeightInfo<Self>;
 }
 
 impl pallet_membership::Config<pallet_membership::Instance2> for Runtime {
@@ -906,7 +906,7 @@ impl pallet_membership::Config<pallet_membership::Instance2> for Runtime {
 	type MembershipInitialized = TechnicalCommittee;
 	type MembershipChanged = TechnicalCommittee;
 	type MaxMembers = TechnicalMaxMembers;
-	type WeightInfo = ();
+	type WeightInfo = MembershipWeightInfo<Self>;
 }
 
 impl pallet_collective::Config<TechnicalCollective> for Runtime {
@@ -979,7 +979,7 @@ impl pallet_democracy::Config for Runtime {
 	type Scheduler = Scheduler;
 	type PalletsOrigin = OriginCaller;
 	type MaxVotes = MaxVotes;
-	type WeightInfo = ();
+	type WeightInfo = DemocracyWeightInfo<Self>;
 	type MaxProposals = MaxProposals;
 }
 
@@ -992,7 +992,7 @@ impl pallet_indices::Config for Runtime {
 	type Currency = Balances;
 	type Deposit = IndexDeposit;
 	type RuntimeEvent = RuntimeEvent;
-	type WeightInfo = ();
+	type WeightInfo = IndicesWeightInfo<Self>;
 }
 
 parameter_types! {
