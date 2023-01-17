@@ -159,6 +159,7 @@ try-runtime = [
 	"frost-runtime/try-runtime",
 	"arctic-runtime/try-runtime",
 	"snow-runtime/try-runtime",
+	"try-runtime-cli/try-runtime"
 ]
 
 aura = [

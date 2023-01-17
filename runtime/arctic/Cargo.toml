@@ -313,4 +313,5 @@ try-runtime = [
   "orml-tokens/try-runtime",
   "orml-unknown-tokens/try-runtime",
   "orml-xtokens/try-runtime",
+  "fp-self-contained/try-runtime"
 ]

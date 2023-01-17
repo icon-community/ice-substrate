@@ -246,4 +246,5 @@ try-runtime = [
   "pallet-treasury/try-runtime",
   "pallet-utility/try-runtime",
   "pallet-vesting/try-runtime",
+  "fp-self-contained/try-runtime"
 ]

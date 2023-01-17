@@ -290,4 +290,5 @@ try-runtime = [
   "cumulus-pallet-xcm/try-runtime",
   "cumulus-pallet-xcmp-queue/try-runtime",
   "parachain-info/try-runtime",
+  "fp-self-contained/try-runtime"
 ]
