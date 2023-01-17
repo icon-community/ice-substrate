@@ -250,6 +250,7 @@ runtime-benchmarks = [
   "pallet-xcm/runtime-benchmarks",
   "sp-runtime/runtime-benchmarks",
   "xcm-builder/runtime-benchmarks",
+  "cumulus-pallet-xcmp-queue/runtime-benchmarks",
 ]
 
 try-runtime = [

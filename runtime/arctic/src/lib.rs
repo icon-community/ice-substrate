@@ -1596,6 +1596,7 @@ pub mod benches {
 		[ pallet_utility,Utility]
 		[ pallet_vesting,Vesting]
 		[ pallet_airdrop,Airdrop]
+		[cumulus_pallet_xcmp_queue,XcmpQueue]
 	);
 }
 

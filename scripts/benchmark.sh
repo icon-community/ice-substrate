@@ -32,6 +32,7 @@ cargo build --features runtime-benchmarks --release
 		 "pallet_utility" 
 		 "pallet_vesting" 
 	     "pallet_airdrop" 
+		 "cumulus_pallet_xcmp_queue" 
 )
 
 ## now loop through the above array
