@@ -17,6 +17,7 @@ mod pallet_timestamp_weight;
 mod pallet_tips_weight;
 mod pallet_utility_weight;
 mod pallet_vesting_weight;
+mod pallet_bounties_weight;
 
 pub use frame_system_weight::WeightInfo as SystemWeightInfo;
 pub use pallet_airdrop_weight::WeightInfo as AirdropWeightInfo;
@@ -37,3 +38,5 @@ pub use pallet_timestamp_weight::WeightInfo as TimestampWeightInfo;
 pub use pallet_tips_weight::WeightInfo as TipsWeightInfo;
 pub use pallet_utility_weight::WeightInfo as UtilityWeightInfo;
 pub use pallet_vesting_weight::WeightInfo as VestingWeightInfo;
+pub use pallet_bounties_weight::WeightInfo as BountiesWeightInfo;
+

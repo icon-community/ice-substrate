@@ -1,12 +1,12 @@
-cargo build --features runtime-benchmarks --release
+#cargo build --features runtime-benchmarks --release
  declare -a arr=(
-	     "frame_system" 
-		 "pallet_assets" 
+	     #"frame_system" 
+		 #"pallet_assets" 
 		 "pallet_authorship" 
-		 "pallet_balances" 
+		 #"pallet_balances" 
 		 "pallet_base_fee" 
-		 "pallet_bounties" 
-		 "pallet_collective" 
+		 #"pallet_bounties" 
+		 #"pallet_collective" 
 		 "pallet_contracts" 
 		 "pallet_democracy" 
 		 "pallet_dynamic_fee" 
@@ -56,5 +56,5 @@ do
     --extrinsic "*" \
     --steps 50 \
     --repeat 20 \
-    --output runtime/"$folder"/src/weights/"$i"_weight.rs &
+    --output runtime/"$folder"/src/weights/"$i"_weight.rs
 done
