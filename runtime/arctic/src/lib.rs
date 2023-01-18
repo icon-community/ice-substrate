@@ -43,7 +43,7 @@ use weights::{
 	ContractsWeightInfo, DemocracyWeightInfo, IdentityWeightInfo,
 	IndicesWeightInfo, MembershipWeightInfo, MultisigWeightInfo, PreimageWeightInfo,
 	ProxyWeightInfo, SchedulerWeightInfo, SystemWeightInfo, TimestampWeightInfo, TipsWeightInfo,
-	UtilityWeightInfo, VestingWeightInfo,BountiesWeightInfo
+	UtilityWeightInfo, VestingWeightInfo,BountiesWeightInfo,ElectionsPhragmenWeightInfo,XcmpQueueWeightInfo
 };
 
 use sp_api::impl_runtime_apis;
@@ -313,7 +313,7 @@ impl cumulus_pallet_xcmp_queue::Config for Runtime {
 	type ExecuteOverweightOrigin = EnsureRoot<AccountId>;
 	type ControllerOrigin = EnsureRoot<AccountId>;
 	type ControllerOriginConverter = XcmOriginToTransactDispatchOrigin;
-	type WeightInfo = ();
+	type WeightInfo =XcmpQueueWeightInfo<Self>;
 }
 
 impl cumulus_pallet_dmp_queue::Config for Runtime {
@@ -958,7 +958,7 @@ impl pallet_elections_phragmen::Config for Runtime {
 	type DesiredMembers = DesiredMembers;
 	type DesiredRunnersUp = DesiredRunnersUp;
 	type TermDuration = TermDuration;
-	type WeightInfo = ();
+	type WeightInfo = ElectionsPhragmenWeightInfo<Self>;
 	type MaxCandidates = MaxCandidatesElection;
 	type MaxVoters = MaxVotersElection;
 }

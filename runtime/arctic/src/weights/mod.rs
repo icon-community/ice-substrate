@@ -18,6 +18,8 @@ mod pallet_tips_weight;
 mod pallet_utility_weight;
 mod pallet_vesting_weight;
 mod pallet_bounties_weight;
+mod cumulus_pallet_xcmp_queue_weight;
+mod pallet_elections_phragmen_weight;
 
 pub use frame_system_weight::WeightInfo as SystemWeightInfo;
 pub use pallet_airdrop_weight::WeightInfo as AirdropWeightInfo;
@@ -39,4 +41,6 @@ pub use pallet_tips_weight::WeightInfo as TipsWeightInfo;
 pub use pallet_utility_weight::WeightInfo as UtilityWeightInfo;
 pub use pallet_vesting_weight::WeightInfo as VestingWeightInfo;
 pub use pallet_bounties_weight::WeightInfo as BountiesWeightInfo;
+pub use cumulus_pallet_xcmp_queue_weight::WeightInfo as XcmpQueueWeightInfo;
+pub use pallet_elections_phragmen_weight::WeightInfo as ElectionsPhragmenWeightInfo;
 
