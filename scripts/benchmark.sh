@@ -7,7 +7,7 @@
 		 "pallet_base_fee" 
 		 #"pallet_bounties" 
 		 #"pallet_collective" 
-		 "pallet_contracts" 
+		 #"pallet_contracts" 
 		 "pallet_democracy" 
 		 "pallet_dynamic_fee" 
 		 "pallet_elections_phragmen" 

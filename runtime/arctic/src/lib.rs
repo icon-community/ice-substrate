@@ -43,7 +43,7 @@ use weights::{
 	ContractsWeightInfo, DemocracyWeightInfo, IdentityWeightInfo,
 	IndicesWeightInfo, MembershipWeightInfo, MultisigWeightInfo, PreimageWeightInfo,
 	ProxyWeightInfo, SchedulerWeightInfo, SystemWeightInfo, TimestampWeightInfo, TipsWeightInfo,
-	UtilityWeightInfo, VestingWeightInfo,
+	UtilityWeightInfo, VestingWeightInfo,BountiesWeightInfo
 };
 
 use sp_api::impl_runtime_apis;
@@ -910,7 +910,7 @@ impl pallet_bounties::Config for Runtime {
 	type DataDepositPerByte = DataDepositPerByte;
 	type RuntimeEvent = RuntimeEvent;
 	type MaximumReasonLength = MaximumReasonLength;
-	type WeightInfo = ();
+	type WeightInfo = BountiesWeightInfo<Self>;
 	type ChildBountyManager = ();
 }
 
