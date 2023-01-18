@@ -1,6 +1,6 @@
 {
   "relaychain": {
-    "bin": "/Users/abhi/code/polkadot/target/release/polkadot",
+    "bin": "../../polkadot/target/release/polkadot",
     "chain": "rococo-local",
     "nodes": [
       {
@@ -32,8 +32,8 @@
   },
   "parachains": [
     {
-      "bin": "/Users/abhi/code/ice-substrate/target/release/ice-node",
-      "chain": "snow-dev",
+      "bin": "../target/release/ice-node",
+      "chain": "arctic-dev",
       "balance": "1000000000000000000000",
       "nodes": [
         {
