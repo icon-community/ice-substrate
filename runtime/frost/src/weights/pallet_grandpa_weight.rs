@@ -36,7 +36,7 @@ use sp_std::marker::PhantomData;
 pub struct WeightInfo<T>(PhantomData<T>);
 impl<T: frame_system::Config> pallet_grandpa::WeightInfo for WeightInfo<T> {
 	/// The range of component `x` is `[0, 1]`.
-	fn check_equivocation_proof(x: u32, ) -> Weight {
+	fn report_equivocation(x: u32, ) -> Weight {
 		Weight::from_ref_time(119_225_000 as u64)
 			// Standard Error: 107_227
 			.saturating_add(Weight::from_ref_time(203_300 as u64).saturating_mul(x as u64))
