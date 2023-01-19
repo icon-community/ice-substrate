@@ -19,16 +19,16 @@ pub fn wasm_binary_unwrap() -> &'static [u8] {
 	)
 }
 
-pub mod xcm_config;
 pub mod weights;
+pub mod xcm_config;
 use codec::{Decode, Encode, MaxEncodedLen};
 use pallet_evm::FeeCalculator;
 use weights::{
-	AirdropWeightInfo, AssetsWeightInfo, BalancesWeightInfo, CollectiveWeightInfo,
-	ContractsWeightInfo, DemocracyWeightInfo, IdentityWeightInfo,
-	IndicesWeightInfo, MembershipWeightInfo, MultisigWeightInfo, PreimageWeightInfo,
-	ProxyWeightInfo, SchedulerWeightInfo, SystemWeightInfo, TimestampWeightInfo, TipsWeightInfo,
-	UtilityWeightInfo, VestingWeightInfo,XcmpQueueWeightInfo,ElectionsPhragmenWeightInfo,BountiesWeightInfo
+	AirdropWeightInfo, AssetsWeightInfo, BalancesWeightInfo, BountiesWeightInfo,
+	CollectiveWeightInfo, ContractsWeightInfo, DemocracyWeightInfo, ElectionsPhragmenWeightInfo,
+	IdentityWeightInfo, IndicesWeightInfo, MembershipWeightInfo, MultisigWeightInfo,
+	PreimageWeightInfo, ProxyWeightInfo, SchedulerWeightInfo, SystemWeightInfo,
+	TimestampWeightInfo, TipsWeightInfo, UtilityWeightInfo, VestingWeightInfo, XcmpQueueWeightInfo,
 };
 
 use frame_support::{

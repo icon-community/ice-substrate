@@ -19,8 +19,8 @@ pub fn wasm_binary_unwrap() -> &'static [u8] {
 	)
 }
 
-pub mod xcm_config;
 pub mod weights;
+pub mod xcm_config;
 use bstringify::bstringify;
 use codec::{Decode, Encode, MaxEncodedLen};
 use pallet_evm::FeeCalculator;
@@ -39,11 +39,11 @@ use frame_system::{
 	EnsureRoot,
 };
 use weights::{
-	AirdropWeightInfo, AssetsWeightInfo, BalancesWeightInfo, CollectiveWeightInfo,
-	ContractsWeightInfo, DemocracyWeightInfo, IdentityWeightInfo,
-	IndicesWeightInfo, MembershipWeightInfo, MultisigWeightInfo, PreimageWeightInfo,
-	ProxyWeightInfo, SchedulerWeightInfo, SystemWeightInfo, TimestampWeightInfo, TipsWeightInfo,
-	UtilityWeightInfo, VestingWeightInfo,BountiesWeightInfo,ElectionsPhragmenWeightInfo,XcmpQueueWeightInfo
+	AirdropWeightInfo, AssetsWeightInfo, BalancesWeightInfo, BountiesWeightInfo,
+	CollectiveWeightInfo, ContractsWeightInfo, DemocracyWeightInfo, ElectionsPhragmenWeightInfo,
+	IdentityWeightInfo, IndicesWeightInfo, MembershipWeightInfo, MultisigWeightInfo,
+	PreimageWeightInfo, ProxyWeightInfo, SchedulerWeightInfo, SystemWeightInfo,
+	TimestampWeightInfo, TipsWeightInfo, UtilityWeightInfo, VestingWeightInfo, XcmpQueueWeightInfo,
 };
 
 use sp_api::impl_runtime_apis;
@@ -58,7 +58,6 @@ use sp_runtime::{
 	transaction_validity::{TransactionSource, TransactionValidity, TransactionValidityError},
 	ApplyExtrinsicResult, FixedPointNumber, MultiSignature, Perquintill,
 };
-
 
 use sp_std::{marker::PhantomData, prelude::*};
 #[cfg(feature = "std")]
@@ -313,7 +312,7 @@ impl cumulus_pallet_xcmp_queue::Config for Runtime {
 	type ExecuteOverweightOrigin = EnsureRoot<AccountId>;
 	type ControllerOrigin = EnsureRoot<AccountId>;
 	type ControllerOriginConverter = XcmOriginToTransactDispatchOrigin;
-	type WeightInfo =XcmpQueueWeightInfo<Self>;
+	type WeightInfo = XcmpQueueWeightInfo<Self>;
 }
 
 impl cumulus_pallet_dmp_queue::Config for Runtime {
