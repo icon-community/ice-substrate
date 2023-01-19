@@ -1723,6 +1723,7 @@ version = "0.1.0"
 source = "git+https://github.com/paritytech/cumulus?branch=polkadot-v0.9.30#7b1fc0ed107fe42bb7e6a5dfefb586f4c3ae4328"
 dependencies = [
  "cumulus-primitives-core",
+ "frame-benchmarking",
  "frame-support",
  "frame-system",
  "log",
@@ -6288,6 +6289,7 @@ dependencies = [
  "pallet-contracts-proc-macro",
  "parity-scale-codec",
  "rand 0.8.5",
+ "rand_pcg 0.3.1",
  "scale-info",
  "serde",
  "smallvec",

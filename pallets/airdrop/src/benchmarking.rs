@@ -184,7 +184,7 @@ pub const BENCHMARK_SAMPLES: [BenchmarkSample; 4] = [
 
 const CREDITOR_KEY: sr25519::Public = sr25519::Public([1; 32]);
 
-fn assert_last_event<T: Config>(generic_event: <T as Config>::Event) {
+fn assert_last_event<T: Config>(generic_event: <T as Config>::RuntimeEvent) {
 	frame_system::Pallet::<T>::assert_last_event(generic_event.into());
 }
 
@@ -218,13 +218,12 @@ benchmarks! {
 
 
 	dispatch_user_claim {
-		let x in 0 .. 3;
 		let caller: types::AccountIdOf<T> = frame_benchmarking::whitelisted_caller();
 		// let ofw_account = sr25519::Public([1; 32]).into_account();
-		Pallet::<T>::set_creditor_account(creditor_key);
+		Pallet::<T>::set_creditor_account(CREDITOR_KEY);
 		let system_account_id = Pallet::<T>::get_creditor_account().unwrap();
 		Pallet::<T>::init_balance(&system_account_id,10_000_000_000_000_000_000_000_000);
-		let case= UserClaimTestCase::<<T as pallet::Config>::MaxProofSize>::try_from(benchmark_samples[x as usize].clone()).unwrap();
+		let case= UserClaimTestCase::<<T as pallet::Config>::MaxProofSize>::try_from(BENCHMARK_SAMPLES[1].clone()).unwrap();
 		let amount = <T::BalanceTypeConversion as Convert<_, _>>::convert(case.amount);
 		 let icon_address=case.icon_address.clone();
 		 let mut new_state = types::AirdropState::default();
@@ -247,12 +246,11 @@ benchmarks! {
 	}
 
 	dispatch_exchange_claim {
-		let x in 0 .. 3;
 
-		Pallet::<T>::set_creditor_account(creditor_key);
+		Pallet::<T>::set_creditor_account(CREDITOR_KEY);
 		let system_account_id = Pallet::<T>::get_creditor_account().unwrap();
 		Pallet::<T>::init_balance(&system_account_id,10_000_000_000_000_000_000_000_000);
-		let case= UserClaimTestCase::<<T as pallet::Config>::MaxProofSize>::try_from(benchmark_samples[x as usize].clone()).unwrap();
+		let case= UserClaimTestCase::<<T as pallet::Config>::MaxProofSize>::try_from(BENCHMARK_SAMPLES[0].clone()).unwrap();
 		let amount = <T::BalanceTypeConversion as Convert<_, _>>::convert(case.amount);
 		let icon_address=case.icon_address.clone();
 		<ExchangeAccountsMap<T>>::insert(icon_address.clone(),amount);
@@ -274,8 +272,7 @@ benchmarks! {
 	}
 
 	change_merkle_root {
-		let p in 0..10;
-		let new_root = [p as u8;32];
+		let new_root = [1 as u8;32];
 		let last_root = [0u8;32];
 		MerkleRoot::<T>::put(last_root.clone());
 	}: change_merkle_root(
