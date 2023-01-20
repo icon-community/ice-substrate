@@ -183,7 +183,6 @@
         },
         "baseFee": {
           "baseFeePerGas": "0x3b9aca00",
-          "isActive": true,
           "elasticity": 125000,
           "marker": null
         },

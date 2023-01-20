@@ -16,13 +16,13 @@ targets = ["x86_64-unknown-linux-gnu"]
 [dependencies]
 codec = { package = "parity-scale-codec", version = "3.1.2", default-features = false, features = [
   "derive",
-  "max-encoded-len"
+  "max-encoded-len",
 ] }
-serde = { version = "1.0.138", optional = true, features = ["derive"] }
-scale-info = { version = "2.1.0", default-features = false, features = [
+serde = { version = "1.0.152", optional = true, features = ["derive"] }
+scale-info = { version = "2.3.1", default-features = false, features = [
   "derive",
 ] }
-smallvec = "1.9.0"
+smallvec = "1.10.0"
 static_assertions = "1.1.0"
 
 # frame dependencies
@@ -221,27 +221,35 @@ std = [
   "xcm/std",
 ]
 runtime-benchmarks = [
-  'sp-runtime/runtime-benchmarks',
   "frame-benchmarking",
-  "frame-system-benchmarking",
   "frame-system/runtime-benchmarks",
+  "pallet-airdrop/runtime-benchmarks",
+  "pallet-assets/runtime-benchmarks",
+  "pallet-balances/runtime-benchmarks",
+  "pallet-bounties/runtime-benchmarks",
+  "pallet-collective/runtime-benchmarks",
+  "pallet-contracts/runtime-benchmarks",
+  "pallet-democracy/runtime-benchmarks",
+  "pallet-elections-phragmen/runtime-benchmarks",
   "pallet-ethereum/runtime-benchmarks",
   "pallet-evm/runtime-benchmarks",
-  'pallet-balances/runtime-benchmarks',
-  'pallet-timestamp/runtime-benchmarks',
+  "pallet-identity/runtime-benchmarks",
+  "pallet-indices/runtime-benchmarks",
+  "pallet-membership/runtime-benchmarks",
+  "pallet-multisig/runtime-benchmarks",
+  "pallet-preimage/runtime-benchmarks",
+  "pallet-proxy/runtime-benchmarks",
+  "pallet-scheduler/runtime-benchmarks",
+  "pallet-timestamp/runtime-benchmarks",
+  "pallet-tips/runtime-benchmarks",
+  "pallet-treasury/runtime-benchmarks",
+  "pallet-utility/runtime-benchmarks",
   "pallet-vesting/runtime-benchmarks",
   "pallet-xcm/runtime-benchmarks",
-  "pallet-collective/runtime-benchmarks",
-  "pallet-treasury/runtime-benchmarks",
+  "sp-runtime/runtime-benchmarks",
   "xcm-builder/runtime-benchmarks",
-  "pallet-airdrop/runtime-benchmarks",
-  "pallet-utility/runtime-benchmarks",
-  "pallet-scheduler/runtime-benchmarks",
-  "pallet-bounties/runtime-benchmarks",
-  "pallet-tips/runtime-benchmarks",
-  "pallet-elections-phragmen/runtime-benchmarks",
-  "pallet-membership/runtime-benchmarks",
-  "pallet-indices/runtime-benchmarks",
+  "cumulus-pallet-xcmp-queue/runtime-benchmarks",
+  "frame-system-benchmarking/runtime-benchmarks",
 ]
 
 try-runtime = [
@@ -290,5 +298,5 @@ try-runtime = [
   "cumulus-pallet-xcm/try-runtime",
   "cumulus-pallet-xcmp-queue/try-runtime",
   "parachain-info/try-runtime",
-  "fp-self-contained/try-runtime"
+  "fp-self-contained/try-runtime",
 ]

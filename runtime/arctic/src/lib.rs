@@ -19,6 +19,7 @@ pub fn wasm_binary_unwrap() -> &'static [u8] {
 	)
 }
 
+pub mod weights;
 pub mod xcm_config;
 use bstringify::bstringify;
 use codec::{Decode, Encode, MaxEncodedLen};
@@ -37,6 +38,13 @@ use frame_support::{
 use frame_system::{
 	limits::{BlockLength, BlockWeights},
 	EnsureRoot, EnsureSigned,
+};
+use weights::{
+	AirdropWeightInfo, AssetsWeightInfo, BalancesWeightInfo, BountiesWeightInfo,
+	CollectiveWeightInfo, ContractsWeightInfo, DemocracyWeightInfo, ElectionsPhragmenWeightInfo,
+	IdentityWeightInfo, IndicesWeightInfo, MembershipWeightInfo, MultisigWeightInfo,
+	PreimageWeightInfo, ProxyWeightInfo, SchedulerWeightInfo, SystemWeightInfo,
+	TimestampWeightInfo, TipsWeightInfo, UtilityWeightInfo, VestingWeightInfo, XcmpQueueWeightInfo,
 };
 
 use sp_api::impl_runtime_apis;
@@ -295,7 +303,7 @@ impl frame_system::Config for Runtime {
 	/// What to do if an account is fully reaped from the system.
 	type OnKilledAccount = ();
 	/// Weight information for the extrinsics of this pallet.
-	type SystemWeightInfo = ();
+	type SystemWeightInfo = SystemWeightInfo<Self>;
 	/// This is used as an identifier of the chain. 42 is the generic substrate prefix.
 	type SS58Prefix = SS58Prefix;
 
@@ -332,7 +340,7 @@ impl cumulus_pallet_xcmp_queue::Config for Runtime {
 	type ExecuteOverweightOrigin = EnsureRoot<AccountId>;
 	type ControllerOrigin = EnsureRoot<AccountId>;
 	type ControllerOriginConverter = XcmOriginToTransactDispatchOrigin;
-	type WeightInfo = ();
+	type WeightInfo = XcmpQueueWeightInfo<Self>;
 }
 
 impl cumulus_pallet_dmp_queue::Config for Runtime {
@@ -428,7 +436,7 @@ impl pallet_contracts::Config for Runtime {
 	/// is not allowed to change the indices of existing pallets, too.
 	type CallFilter = frame_support::traits::Nothing;
 	type WeightPrice = pallet_transaction_payment::Pallet<Self>;
-	type WeightInfo = pallet_contracts::weights::SubstrateWeight<Self>;
+	type WeightInfo = ContractsWeightInfo<Self>;
 	type ChainExtension = ();
 	type Schedule = Schedule;
 	type CallStack = [pallet_contracts::Frame<Self>; 31];
@@ -455,7 +463,7 @@ impl pallet_timestamp::Config for Runtime {
 	#[cfg(feature = "manual-seal")]
 	type OnTimestampSet = ();
 	type MinimumPeriod = MinimumPeriod;
-	type WeightInfo = ();
+	type WeightInfo = TimestampWeightInfo<Self>;
 }
 
 parameter_types! {
@@ -484,7 +492,7 @@ impl pallet_balances::Config for Runtime {
 	type RuntimeEvent = RuntimeEvent;
 	type ExistentialDeposit = ExistentialDeposit;
 	type AccountStore = System;
-	type WeightInfo = ();
+	type WeightInfo = BalancesWeightInfo<Self>;
 	type MaxLocks = MaxLocks;
 	type MaxReserves = ();
 	type ReserveIdentifier = [u8; 8];
@@ -582,6 +590,7 @@ parameter_types! {
 	pub const MetadataDepositPerByte: Balance = currency::deposit(0, 1);
 	pub const AssetAccountDeposit: Balance = currency::deposit(1, 18);
 }
+
 impl pallet_assets::Config for Runtime {
 	type RuntimeEvent = RuntimeEvent;
 	type Balance = Balance;
@@ -596,10 +605,12 @@ impl pallet_assets::Config for Runtime {
 	type StringLimit = AssetsStringLimit;
 	type Freezer = ();
 	type Extra = ();
-	type WeightInfo = pallet_assets::weights::SubstrateWeight<Runtime>;
+	type WeightInfo = AssetsWeightInfo<Runtime>;
 	type RemoveItemsLimit = ConstU32<1000>;
-	type AssetIdParameter = codec::Compact<AssetId>;
+	type AssetIdParameter = AssetId; // codec::Compact<AssetId>;
 	type CreateOrigin = AsEnsureOriginWithArg<EnsureSigned<AccountId>>;
+	#[cfg(feature = "runtime-benchmarks")]
+	type BenchmarkHelper = ();
 }
 
 parameter_types! {
@@ -613,7 +624,7 @@ impl pallet_vesting::Config for Runtime {
 	type Currency = Balances;
 	type BlockNumberToBalance = ConvertInto;
 	type MinVestedTransfer = MinVestedTransfer;
-	type WeightInfo = pallet_vesting::weights::SubstrateWeight<Runtime>;
+	type WeightInfo = VestingWeightInfo<Runtime>;
 	// `VestingInfo` encode length is 36bytes. 28 schedules gets encoded as 1009 bytes, which is the
 	// highest number of schedules that encodes less than 2^10.
 	const MAX_VESTING_SCHEDULES: u32 = 28;
@@ -636,7 +647,7 @@ impl pallet_collective::Config<CouncilCollective> for Runtime {
 	type MaxProposals = CouncilMaxProposals;
 	type MaxMembers = CouncilMaxMembers;
 	type DefaultVote = pallet_collective::PrimeDefaultVote;
-	type WeightInfo = pallet_collective::weights::SubstrateWeight<Runtime>;
+	type WeightInfo = CollectiveWeightInfo<Runtime>;
 }
 
 parameter_types! {
@@ -654,7 +665,7 @@ impl pallet_collective::Config<TechnicalCollective> for Runtime {
 	type MaxProposals = TechnicalMaxProposals;
 	type MaxMembers = TechnicalMaxMembers;
 	type DefaultVote = pallet_collective::PrimeDefaultVote;
-	type WeightInfo = pallet_collective::weights::SubstrateWeight<Runtime>;
+	type WeightInfo = CollectiveWeightInfo<Runtime>;
 }
 
 parameter_types! {
@@ -711,7 +722,7 @@ impl pallet_utility::Config for Runtime {
 	type RuntimeEvent = RuntimeEvent;
 	type RuntimeCall = RuntimeCall;
 	type PalletsOrigin = OriginCaller;
-	type WeightInfo = ();
+	type WeightInfo = UtilityWeightInfo<Self>;
 }
 
 parameter_types! {
@@ -730,7 +741,7 @@ impl pallet_scheduler::Config for Runtime {
 	type ScheduleOrigin = EnsureRoot<AccountId>;
 	type OriginPrivilegeCmp = EqualPrivilegeOnly;
 	type MaxScheduledPerBlock = MaxScheduledPerBlock;
-	type WeightInfo = ();
+	type WeightInfo = SchedulerWeightInfo<Self>;
 	type Preimages = Preimage;
 }
 
@@ -742,7 +753,7 @@ parameter_types! {
 
 impl pallet_preimage::Config for Runtime {
 	type RuntimeEvent = RuntimeEvent;
-	type WeightInfo = pallet_preimage::weights::SubstrateWeight<Runtime>;
+	type WeightInfo = PreimageWeightInfo<Runtime>;
 	type Currency = Balances;
 	type ManagerOrigin = EnsureRoot<AccountId>;
 	type BaseDeposit = PreimageBaseDeposit;
@@ -864,7 +875,7 @@ impl pallet_proxy::Config for Runtime {
 	type ProxyDepositBase = ProxyDepositBase;
 	type ProxyDepositFactor = ProxyDepositFactor;
 	type MaxProxies = MaxProxies;
-	type WeightInfo = ();
+	type WeightInfo = ProxyWeightInfo<Self>;
 	type MaxPending = MaxPending;
 	type CallHasher = BlakeTwo256;
 	type AnnouncementDepositBase = AnnouncementDepositBase;
@@ -886,7 +897,7 @@ impl pallet_multisig::Config for Runtime {
 	type DepositBase = DepositBase;
 	type DepositFactor = DepositFactor;
 	type MaxSignatories = MaxSignatories;
-	type WeightInfo = ();
+	type WeightInfo = MultisigWeightInfo<Self>;
 }
 
 parameter_types! {
@@ -911,7 +922,7 @@ impl pallet_identity::Config for Runtime {
 	type Slashed = Treasury;
 	type ForceOrigin = MoreThanHalfCouncil;
 	type RegistrarOrigin = MoreThanHalfCouncil;
-	type WeightInfo = ();
+	type WeightInfo = IdentityWeightInfo<Self>;
 }
 
 parameter_types! {
@@ -941,7 +952,7 @@ impl pallet_bounties::Config for Runtime {
 	type DataDepositPerByte = DataDepositPerByte;
 	type RuntimeEvent = RuntimeEvent;
 	type MaximumReasonLength = MaximumReasonLength;
-	type WeightInfo = ();
+	type WeightInfo = BountiesWeightInfo<Self>;
 	type ChildBountyManager = ();
 }
 
@@ -953,7 +964,7 @@ impl pallet_tips::Config for Runtime {
 	type TipFindersFee = TipFindersFee;
 	type TipReportDepositBase = TipReportDepositBase;
 	type Tippers = PhragmenElection;
-	type WeightInfo = ();
+	type WeightInfo = TipsWeightInfo<Self>;
 }
 
 parameter_types! {
@@ -989,7 +1000,7 @@ impl pallet_elections_phragmen::Config for Runtime {
 	type DesiredMembers = DesiredMembers;
 	type DesiredRunnersUp = DesiredRunnersUp;
 	type TermDuration = TermDuration;
-	type WeightInfo = ();
+	type WeightInfo = ElectionsPhragmenWeightInfo<Self>;
 	type MaxCandidates = MaxCandidatesElection;
 	type MaxVoters = MaxVotersElection;
 }
@@ -1004,7 +1015,7 @@ impl pallet_membership::Config<pallet_membership::Instance1> for Runtime {
 	type MembershipInitialized = Council;
 	type MembershipChanged = Council;
 	type MaxMembers = CouncilMaxMembers;
-	type WeightInfo = ();
+	type WeightInfo = MembershipWeightInfo<Self>;
 }
 
 impl pallet_membership::Config<pallet_membership::Instance2> for Runtime {
@@ -1017,7 +1028,7 @@ impl pallet_membership::Config<pallet_membership::Instance2> for Runtime {
 	type MembershipInitialized = TechnicalCommittee;
 	type MembershipChanged = TechnicalCommittee;
 	type MaxMembers = TechnicalMaxMembers;
-	type WeightInfo = ();
+	type WeightInfo = MembershipWeightInfo<Self>;
 }
 
 parameter_types! {
@@ -1077,7 +1088,7 @@ impl pallet_democracy::Config for Runtime {
 	type Scheduler = Scheduler;
 	type PalletsOrigin = OriginCaller;
 	type MaxVotes = MaxVotes;
-	type WeightInfo = ();
+	type WeightInfo = DemocracyWeightInfo<Self>;
 	type MaxProposals = MaxProposals;
 	type Preimages = Preimage;
 	type MaxDeposits = ConstU32<100>;
@@ -1093,7 +1104,7 @@ impl pallet_indices::Config for Runtime {
 	type Currency = Balances;
 	type Deposit = IndexDeposit;
 	type RuntimeEvent = RuntimeEvent;
-	type WeightInfo = ();
+	type WeightInfo = IndicesWeightInfo<Self>;
 }
 
 parameter_types! {
@@ -1145,7 +1156,7 @@ const AIRDROP_VESTING_TERMS: pallet_airdrop::VestingTerms = pallet_airdrop::Vest
 impl pallet_airdrop::Config for Runtime {
 	type RuntimeEvent = RuntimeEvent;
 	type Currency = Balances;
-	type AirdropWeightInfo = pallet_airdrop::weights::AirDropWeightInfo<Runtime>;
+	type AirdropWeightInfo = AirdropWeightInfo<Runtime>;
 	type BalanceTypeConversion = ConvertInto;
 	type MerkelProofValidator = pallet_airdrop::merkle::AirdropMerkleValidator<Runtime>;
 	type MaxProofSize = ConstU32<21>;
@@ -1326,7 +1337,7 @@ impl EnsureOriginWithArg<RuntimeOrigin, Option<u32>> for AssetAuthority {
 	}
 
 	#[cfg(feature = "runtime-benchmarks")]
-	fn successful_origin(_asset_id: &Option<u32>) -> Origin {
+	fn successful_origin(_asset_id: &Option<u32>) -> RuntimeOrigin {
 		unimplemented!()
 	}
 }
@@ -1591,6 +1602,41 @@ impl fp_self_contained::SelfContainedCall for RuntimeCall {
 	}
 }
 
+#[cfg(feature = "runtime-benchmarks")]
+#[macro_use]
+extern crate frame_benchmarking;
+#[cfg(feature = "runtime-benchmarks")]
+pub mod benches {
+	define_benchmarks!(
+		[frame_benchmarking, BaselineBench::<Runtime>]
+		[frame_system, SystemBench::<Runtime>]
+		[ pallet_assets,Assets]
+		[ pallet_balances,Balances]
+		[ pallet_bounties,Bounties]
+		[ pallet_collective,Council]
+		[ pallet_collective,TechnicalCommittee]
+		[ pallet_contracts,Contracts]
+		[ pallet_democracy,Democracy]
+		[ pallet_elections_phragmen,PhragmenElection]
+		[ pallet_evm,EVM]
+		[ pallet_identity,Identity]
+		[ pallet_indices,Indices]
+		[ pallet_membership,CouncilMembership]
+		[ pallet_membership,TechnicalMembership]
+		[ pallet_multisig,Multisig]
+		[ pallet_preimage,Preimage]
+		[ pallet_proxy,Proxy]
+		[ pallet_scheduler,Scheduler]
+		[ pallet_timestamp,Timestamp]
+		[ pallet_tips,Tips]
+		[ pallet_treasury,Treasury]
+		[ pallet_utility,Utility]
+		[ pallet_vesting,Vesting]
+		[ pallet_airdrop,Airdrop]
+		[cumulus_pallet_xcmp_queue,XcmpQueue]
+	);
+}
+
 impl_runtime_apis! {
 	impl sp_api::Core<Block> for Runtime {
 		fn version() -> RuntimeVersion {
@@ -1849,46 +1895,42 @@ impl_runtime_apis! {
 
 	#[cfg(feature = "runtime-benchmarks")]
 	impl frame_benchmarking::Benchmark<Block> for Runtime {
-		fn dispatch_benchmark(
-			config: frame_benchmarking::BenchmarkConfig
-		) -> Result<Vec<frame_benchmarking::BenchmarkBatch>, sp_runtime::RuntimeString> {
-			use frame_benchmarking::{Benchmarking, BenchmarkBatch, add_benchmark, TrackedStorageKey};
-			use frame_system_benchmarking::Pallet as SystemBench;
-
-			impl frame_system_benchmarking::Config for Runtime {}
-			let whitelist: Vec<TrackedStorageKey> = vec![];
-
-			let mut batches = Vec::<BenchmarkBatch>::new();
-			let params = (&config, &whitelist);
-
-			add_benchmark!(params, batches, frame_system, SystemBench::<Runtime>);
-			add_benchmark!(params, batches, pallet_balances, Balances);
-			add_benchmark!(params, batches, pallet_timestamp, Timestamp);
-			add_benchmark!(params, batches, pallet_evm, EVM);
-			add_benchmark!(params, batches, pallet_vesting, Vesting);
-
-			if batches.is_empty() { return Err("Benchmark not found for this pallet.".into()) }
-			Ok(batches)
-		}
 		fn benchmark_metadata(extra: bool) -> (
 			Vec<frame_benchmarking::BenchmarkList>,
 			Vec<frame_support::traits::StorageInfo>,
 		) {
-			use frame_benchmarking::{list_benchmark, Benchmarking, BenchmarkList};
+			use frame_benchmarking::{baseline, Benchmarking, BenchmarkList};
 			use frame_support::traits::StorageInfoTrait;
 			use frame_system_benchmarking::Pallet as SystemBench;
+			use baseline::Pallet as BaselineBench;
 
 			let mut list = Vec::<BenchmarkList>::new();
-
-			list_benchmark!(list, extra, frame_system, SystemBench::<Runtime>);
-			list_benchmark!(list, extra, pallet_balances, Balances);
-			list_benchmark!(list, extra, pallet_timestamp, Timestamp);
-			list_benchmark!(list, extra, pallet_evm, EVM);
-			list_benchmark!(list, extra, pallet_vesting, Vesting);
+			list_benchmarks!(list, extra);
 
 			let storage_info = AllPalletsWithSystem::storage_info();
 
-			return (list, storage_info)
+			(list, storage_info)
+		}
+
+		fn dispatch_benchmark(
+			config: frame_benchmarking::BenchmarkConfig
+		) -> Result<Vec<frame_benchmarking::BenchmarkBatch>, sp_runtime::RuntimeString> {
+			use frame_benchmarking::{baseline, Benchmarking, BenchmarkBatch, TrackedStorageKey};
+
+			use frame_system_benchmarking::Pallet as SystemBench;
+			use baseline::Pallet as BaselineBench;
+
+			impl frame_system_benchmarking::Config for Runtime {}
+			impl baseline::Config for Runtime {}
+
+			use frame_support::traits::WhitelistedStorageKeys;
+			let whitelist: Vec<TrackedStorageKey> = AllPalletsWithSystem::whitelisted_storage_keys();
+
+			let mut batches = Vec::<BenchmarkBatch>::new();
+			let params = (&config, &whitelist);
+			add_benchmarks!(params, batches);
+
+			Ok(batches)
 		}
 	}
 

@@ -16,8 +16,8 @@ targets = ["x86_64-unknown-linux-gnu"]
 [dependencies]
 codec = { package = "parity-scale-codec", version = "3.0.0" }
 structopt = "0.3.8"
-async-trait = "0.1.57"
-serde = { version = "1.0", features = [ "derive" ] }
+async-trait = "0.1.61"
+serde = { version = "1.0", features = ["derive"] }
 clap = { version = "4.0.9", features = ["derive"] }
 jsonrpc-pubsub = "18.0.0"
 jsonrpsee = { version = "0.16.2", features = ["server"] }
@@ -34,10 +34,10 @@ sp-block-builder = { git = "https://github.com/paritytech/substrate", branch = "
 sp-blockchain = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.36" }
 sp-core = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.36" }
 sp-consensus-aura = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.36" }
-sp-trie= { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.36" }
+sp-trie = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.36" }
 sp-session = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.36" }
 sp-runtime = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.36" }
-sp-keystore= { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.36" }
+sp-keystore = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.36" }
 sp-offchain = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.36" }
 sp-inherents = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.36" }
 sp-consensus = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.36" }
@@ -47,17 +47,17 @@ sp-transaction-pool = { git = "https://github.com/paritytech/substrate", branch 
 
 sc-executor = { branch = "polkadot-v0.9.36", git = "https://github.com/paritytech/substrate" }
 sc-service = { branch = "polkadot-v0.9.36", git = "https://github.com/paritytech/substrate" }
-sc-telemetry = {branch = "polkadot-v0.9.36",  git = "https://github.com/paritytech/substrate" }
+sc-telemetry = { branch = "polkadot-v0.9.36", git = "https://github.com/paritytech/substrate" }
 sc-keystore = { branch = "polkadot-v0.9.36", git = "https://github.com/paritytech/substrate" }
-sc-transaction-pool = {branch = "polkadot-v0.9.36",  git = "https://github.com/paritytech/substrate" }
-sc-transaction-pool-api = {branch = "polkadot-v0.9.36",  git = "https://github.com/paritytech/substrate" }
+sc-transaction-pool = { branch = "polkadot-v0.9.36", git = "https://github.com/paritytech/substrate" }
+sc-transaction-pool-api = { branch = "polkadot-v0.9.36", git = "https://github.com/paritytech/substrate" }
 sc-consensus-aura = { branch = "polkadot-v0.9.36", git = "https://github.com/paritytech/substrate" }
 sc-consensus = { branch = "polkadot-v0.9.36", git = "https://github.com/paritytech/substrate" }
-sc-consensus-manual-seal = {branch = "polkadot-v0.9.36",  git = "https://github.com/paritytech/substrate" }
+sc-consensus-manual-seal = { branch = "polkadot-v0.9.36", git = "https://github.com/paritytech/substrate" }
 sc-network = { branch = "polkadot-v0.9.36", git = "https://github.com/paritytech/substrate" }
-sc-finality-grandpa = {branch = "polkadot-v0.9.36",  git = "https://github.com/paritytech/substrate" }
-sp-finality-grandpa = {branch = "polkadot-v0.9.36",  git = "https://github.com/paritytech/substrate" }
-sc-client-api = {branch = "polkadot-v0.9.36",  git = "https://github.com/paritytech/substrate" }
+sc-finality-grandpa = { branch = "polkadot-v0.9.36", git = "https://github.com/paritytech/substrate" }
+sp-finality-grandpa = { branch = "polkadot-v0.9.36", git = "https://github.com/paritytech/substrate" }
+sc-client-api = { branch = "polkadot-v0.9.36", git = "https://github.com/paritytech/substrate" }
 sc-sysinfo = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.36" }
 
 
@@ -110,29 +110,39 @@ xcm = { git = "https://github.com/paritytech/polkadot", default-features = false
 frame-benchmarking = { branch = "polkadot-v0.9.36", git = "https://github.com/paritytech/substrate" }
 frame-benchmarking-cli = { branch = "polkadot-v0.9.36", git = "https://github.com/paritytech/substrate" }
 
-fc-consensus = {  git = "https://github.com/web3labs/frontier", branch = "polkadot-v0.9.36"}
-fp-consensus = {  git = "https://github.com/web3labs/frontier", branch = "polkadot-v0.9.36"}
+fc-consensus = { git = "https://github.com/web3labs/frontier", branch = "polkadot-v0.9.36" }
+fp-consensus = { git = "https://github.com/web3labs/frontier", branch = "polkadot-v0.9.36" }
 fp-storage = { git = "https://github.com/web3labs/frontier", branch = "polkadot-v0.9.36" }
 
-fc-rpc = {  git = "https://github.com/web3labs/frontier", branch = "polkadot-v0.9.36" }
-fp-rpc = { git = "https://github.com/web3labs/frontier", branch = "polkadot-v0.9.36"}
-fc-rpc-core = {  git = "https://github.com/web3labs/frontier", branch = "polkadot-v0.9.36" }
-fc-db = {  git = "https://github.com/web3labs/frontier", branch = "polkadot-v0.9.36" }
-fc-mapping-sync = {  git = "https://github.com/web3labs/frontier", branch = "polkadot-v0.9.36" }
-fp-evm = { default-features = false, git = "https://github.com/web3labs/frontier", branch = "polkadot-v0.9.36"}
+fc-rpc = { git = "https://github.com/web3labs/frontier", branch = "polkadot-v0.9.36" }
+fp-rpc = { git = "https://github.com/web3labs/frontier", branch = "polkadot-v0.9.36" }
+fc-rpc-core = { git = "https://github.com/web3labs/frontier", branch = "polkadot-v0.9.36" }
+fc-db = { git = "https://github.com/web3labs/frontier", branch = "polkadot-v0.9.36" }
+fc-mapping-sync = { git = "https://github.com/web3labs/frontier", branch = "polkadot-v0.9.36" }
+fp-evm = { default-features = false, git = "https://github.com/web3labs/frontier", branch = "polkadot-v0.9.36" }
 
-pallet-evm = {  default-features = false, git = "https://github.com/web3labs/frontier", branch = "polkadot-v0.9.36" }
+pallet-evm = { default-features = false, git = "https://github.com/web3labs/frontier", branch = "polkadot-v0.9.36" }
 pallet-ethereum = { default-features = false, git = "https://github.com/web3labs/frontier", branch = "polkadot-v0.9.36" }
-pallet-dynamic-fee = {  default-features = false, git = "https://github.com/web3labs/frontier", branch = "polkadot-v0.9.36" }
-pallet-base-fee = {  default-features = false, git = "https://github.com/web3labs/frontier", branch = "polkadot-v0.9.36" }
+pallet-dynamic-fee = { default-features = false, git = "https://github.com/web3labs/frontier", branch = "polkadot-v0.9.36" }
+pallet-base-fee = { default-features = false, git = "https://github.com/web3labs/frontier", branch = "polkadot-v0.9.36" }
 
-snow-runtime = { path = "../runtime/snow", default-features = false, features = ["std"] }
-arctic-runtime = { path = "../runtime/arctic", default-features = false, features = ["std"] }
-frost-runtime = { path = "../runtime/frost", default-features = false, features = ["std"] }
+snow-runtime = { path = "../runtime/snow", default-features = false, features = [
+  "std",
+] }
+arctic-runtime = { path = "../runtime/arctic", default-features = false, features = [
+  "std",
+] }
+frost-runtime = { path = "../runtime/frost", default-features = false, features = [
+  "std",
+] }
 
 # local pallets
-pallet-simple-inflation = { path = "../pallets/simple-inflation", default-features = false, features = ["std"] }
-pallet-fees-split = { path  = "../pallets/fees-split", default-features = false, features = ["std"] }
+pallet-simple-inflation = { path = "../pallets/simple-inflation", default-features = false, features = [
+  "std",
+] }
+pallet-fees-split = { path = "../pallets/fees-split", default-features = false, features = [
+  "std",
+] }
 
 # try-runtime
 frame-try-runtime = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.36", optional = true }
@@ -143,36 +153,25 @@ sc-service = { git = "https://github.com/paritytech/substrate", branch = "polkad
 build-script-utils = { package = "substrate-build-script-utils", git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.36" }
 
 [features]
-default = [
-    "cli",
-    "aura",
-    "sc-service"
-]
+default = ["cli", "aura", "sc-service"]
 
-cli = [
-    'sc-cli',
-    'polkadot-cli',
-    'try-runtime-cli',
-]
+cli = ['sc-cli', 'polkadot-cli', 'try-runtime-cli']
 
 try-runtime = [
-	"frost-runtime/try-runtime",
-	"arctic-runtime/try-runtime",
-	"snow-runtime/try-runtime",
-	"try-runtime-cli/try-runtime"
+  "frost-runtime/try-runtime",
+  "arctic-runtime/try-runtime",
+  "snow-runtime/try-runtime",
+  "try-runtime-cli/try-runtime",
 ]
 
-aura = [
-    'frost-runtime/aura',
-    'arctic-runtime/aura',
-]
+aura = ['frost-runtime/aura', 'arctic-runtime/aura']
 manual-seal = ['frost-runtime/manual-seal']
 rpc_binary_search_estimate = ["fc-rpc/rpc_binary_search_estimate"]
 
 runtime-benchmarks = [
-    "polkadot-service/runtime-benchmarks",
-	"frost-runtime/runtime-benchmarks",
-	"arctic-runtime/runtime-benchmarks",
-    "snow-runtime/runtime-benchmarks",
+  "polkadot-cli/runtime-benchmarks",
+  "polkadot-service/runtime-benchmarks",
+  "frost-runtime/runtime-benchmarks",
+  "arctic-runtime/runtime-benchmarks",
+  "snow-runtime/runtime-benchmarks",
 ]
-

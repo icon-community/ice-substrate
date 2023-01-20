@@ -558,6 +558,7 @@ pub fn run() -> Result<()> {
 				BenchmarkCmd::Machine(cmd) => {
 					runner.sync_run(|config| cmd.run(&config, SUBSTRATE_REFERENCE_HARDWARE.clone()))
 				}
+				BenchmarkCmd::Extrinsic(_) => Err("Unsupported benchmarking command".into()),
 			}
 		}
 		#[cfg(feature = "try-runtime")]
