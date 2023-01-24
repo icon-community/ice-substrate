@@ -5,8 +5,11 @@ use sp_std::marker::PhantomData;
 use pallet_evm_precompile_modexp::Modexp;
 use pallet_evm_precompile_sha3fips::Sha3FIPS256;
 use pallet_evm_precompile_simple::{ECRecover, ECRecoverPublicKey, Identity, Ripemd160, Sha256};
+use assets_evm::{AddressToAssetId, Erc20AssetsPrecompileSet};
 
 pub struct FrontierPrecompiles<R>(PhantomData<R>);
+
+pub const ASSET_PRECOMPILE_ADDRESS_PREFIX: &[u8] = &[255u8; 4];
 
 impl<R> FrontierPrecompiles<R>
 where
@@ -35,7 +38,8 @@ where
 
 impl<R> PrecompileSet for FrontierPrecompiles<R>
 where
-	R: pallet_evm::Config,
+    Erc20AssetsPrecompileSet<R>: PrecompileSet,
+	R: pallet_evm::Config  + pallet_assets::Config + AddressToAssetId<<R as pallet_assets::Config>::AssetId>,
 {
 	fn execute(&self, handle: &mut impl PrecompileHandle) -> Option<PrecompileResult> {
 		match handle.code_address() {
@@ -48,6 +52,9 @@ where
 			// Non-Frontier specific nor Ethereum precompiles :
 			a if a == hash(1024) => Some(Sha3FIPS256::execute(handle)),
 			a if a == hash(1025) => Some(ECRecoverPublicKey::execute(handle)),
+			a if &a.to_fixed_bytes()[0..4] == ASSET_PRECOMPILE_ADDRESS_PREFIX => {
+				Erc20AssetsPrecompileSet::<R>::new().execute(handle)
+            }
 			_ => None,
 		}
 	}
