@@ -458,7 +458,7 @@ parameter_types! {
 impl pallet_timestamp::Config for Runtime {
 	/// A timestamp: milliseconds since the unix epoch.
 	type Moment = u64;
-	#[cfg(feature = "aura")]
+	#[cfg(all(feature = "aura", not(feature = "manual-seal")))]
 	type OnTimestampSet = Aura;
 	#[cfg(feature = "manual-seal")]
 	type OnTimestampSet = ();
