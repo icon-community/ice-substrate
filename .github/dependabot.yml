@@ -15,3 +15,15 @@ updates:
       - dependency-name: "try-runtime-*"
     schedule:
       interval: "daily"
+
+  - package-ecosystem: "yarn"
+    directory: "/ts-tests"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 0
+
+  - package-ecosystem: "npm"
+    directory: "/ts-tests"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 0
