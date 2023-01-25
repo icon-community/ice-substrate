@@ -60,7 +60,7 @@ where
 	}
 
 	fn is_precompile(&self, address: H160) -> bool {
-		Self::used_addresses().contains(&address)
+		Self::used_addresses().contains(&address) || Erc20AssetsPrecompileSet::<R>::new().is_precompile(address)
 	}
 }
 
