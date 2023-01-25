@@ -1,9 +1,9 @@
 use frame_support::{
 	parameter_types,
-	traits::{ConstU32, ConstU64, GenesisBuild},
+	traits::{AsEnsureOriginWithArg, ConstU32, ConstU64, GenesisBuild, WithdrawReasons},
 	weights::Weight,
 };
-
+use frame_system::EnsureSigned;
 use sp_core::H256;
 use sp_runtime::{
 	testing::Header,
@@ -76,6 +76,8 @@ impl pallet_balances::Config for Test {
 parameter_types! {
 	pub const MinVestedTransfer: u64 = 256 * 2;
 	pub static ExistentialDeposit: u64 = 0;
+	pub UnvestedFundsAllowedWithdrawReasons: WithdrawReasons =
+		WithdrawReasons::except(WithdrawReasons::TRANSFER | WithdrawReasons::RESERVE);
 }
 
 impl pallet_vesting::Config for Test {
@@ -85,6 +87,7 @@ impl pallet_vesting::Config for Test {
 	type MinVestedTransfer = MinVestedTransfer;
 	type WeightInfo = ();
 	const MAX_VESTING_SCHEDULES: u32 = 3;
+	type UnvestedFundsAllowedWithdrawReasons = UnvestedFundsAllowedWithdrawReasons;
 }
 
 /// Balance of an account.
@@ -98,6 +101,8 @@ parameter_types! {
 	pub const ApprovalDeposit: Balance = 500 ;
 	pub const StringLimit: u32 = 50;
 }
+
+type AccountId = u64;
 
 impl pallet_assets::Config for Test {
 	type RuntimeEvent = RuntimeEvent;
@@ -114,6 +119,9 @@ impl pallet_assets::Config for Test {
 	type Freezer = ();
 	type Extra = ();
 	type WeightInfo = ();
+	type RemoveItemsLimit = ConstU32<1000>;
+	type AssetIdParameter = codec::Compact<u32>;
+	type CreateOrigin = AsEnsureOriginWithArg<EnsureSigned<AccountId>>;
 }
 
 pub struct ExtBuilder {

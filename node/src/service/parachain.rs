@@ -3,6 +3,8 @@
 //! Parachain Service and ServiceFactory implementation.
 
 //! Parachain Service and ServiceFactory implementation.
+use crate::primitives::*;
+use crate::shell_upgrade::{BuildOnAccess, Verifier};
 use cumulus_client_cli::CollatorOptions;
 use cumulus_client_consensus_aura::{AuraConsensus, BuildAuraConsensusParams, SlotProportion};
 use cumulus_client_consensus_common::{ParachainBlockImport, ParachainConsensus};
@@ -14,13 +16,13 @@ use cumulus_client_service::{
 use cumulus_primitives_core::ParaId;
 use cumulus_relay_chain_inprocess_interface::build_inprocess_relay_chain;
 use cumulus_relay_chain_interface::{RelayChainError, RelayChainInterface, RelayChainResult};
-use cumulus_relay_chain_rpc_interface::{create_client_and_start_worker, RelayChainRpcInterface};
-use fc_consensus::FrontierBlockImport;
+use cumulus_relay_chain_minimal_node::build_minimal_relay_chain_node;
 use fc_rpc_core::types::{FeeHistoryCache, FilterPool};
 use futures::StreamExt;
 use polkadot_service::CollatorPair;
 use sc_client_api::BlockchainEvents;
 use sc_consensus::import_queue::BasicQueue;
+use sc_consensus::ImportQueue;
 use sc_executor::NativeElseWasmExecutor;
 use sc_network::{NetworkBlock, NetworkService};
 use sc_service::{Configuration, PartialComponents, TFullBackend, TFullClient, TaskManager};
@@ -31,9 +33,6 @@ use sp_keystore::SyncCryptoStorePtr;
 use sp_runtime::traits::BlakeTwo256;
 use std::{collections::BTreeMap, sync::Arc, time::Duration};
 use substrate_prometheus_endpoint::Registry;
-
-use crate::primitives::*;
-use crate::shell_upgrade::{BuildOnAccess, Verifier};
 
 /// Arctic network runtime executor.
 pub mod arctic {
@@ -102,6 +101,11 @@ pub fn new_partial<RuntimeApi, Executor, BIQ>(
 			TFullClient<Block, RuntimeApi, NativeElseWasmExecutor<Executor>>,
 		>,
 		(
+			ParachainBlockImport<
+				Block,
+				Arc<TFullClient<Block, RuntimeApi, NativeElseWasmExecutor<Executor>>>,
+				TFullBackend<Block>,
+			>,
 			Option<Telemetry>,
 			Option<TelemetryWorkerHandle>,
 			Arc<fc_db::Backend<Block>>,
@@ -127,10 +131,10 @@ where
 	Executor: sc_executor::NativeExecutionDispatch + 'static,
 	BIQ: FnOnce(
 		Arc<TFullClient<Block, RuntimeApi, NativeElseWasmExecutor<Executor>>>,
-		FrontierBlockImport<
+		ParachainBlockImport<
 			Block,
 			Arc<TFullClient<Block, RuntimeApi, NativeElseWasmExecutor<Executor>>>,
-			TFullClient<Block, RuntimeApi, NativeElseWasmExecutor<Executor>>,
+			TFullBackend<Block>,
 		>,
 		&Configuration,
 		Option<TelemetryHandle>,
@@ -187,12 +191,11 @@ where
 	);
 
 	let frontier_backend = crate::rpc::open_frontier_backend(client.clone(), config)?;
-	let frontier_block_import =
-		FrontierBlockImport::new(client.clone(), client.clone(), frontier_backend.clone());
+	let frontier_block_import = ParachainBlockImport::new(client.clone(), backend.clone());
 
 	let import_queue = build_import_queue(
 		client.clone(),
-		frontier_block_import,
+		frontier_block_import.clone(),
 		config,
 		telemetry.as_ref().map(|telemetry| telemetry.handle()),
 		&task_manager,
@@ -206,7 +209,12 @@ where
 		task_manager,
 		transaction_pool,
 		select_chain: (),
-		other: (telemetry, telemetry_worker_handle, frontier_backend),
+		other: (
+			frontier_block_import,
+			telemetry,
+			telemetry_worker_handle,
+			frontier_backend,
+		),
 	};
 
 	Ok(params)
@@ -222,21 +230,21 @@ async fn build_relay_chain_interface(
 	Arc<(dyn RelayChainInterface + 'static)>,
 	Option<CollatorPair>,
 )> {
-	match collator_options.relay_chain_rpc_url {
-		Some(relay_chain_url) => {
-			let client = create_client_and_start_worker(relay_chain_url, task_manager).await?;
-			Ok((
-				Arc::new(RelayChainRpcInterface::new(client)) as Arc<_>,
-				None,
-			))
-		}
-		None => build_inprocess_relay_chain(
+	if !collator_options.relay_chain_rpc_urls.is_empty() {
+		build_minimal_relay_chain_node(
+			polkadot_config,
+			task_manager,
+			collator_options.relay_chain_rpc_urls,
+		)
+		.await
+	} else {
+		build_inprocess_relay_chain(
 			polkadot_config,
 			parachain_config,
 			telemetry_worker_handle,
 			task_manager,
 			None,
-		),
+		)
 	}
 }
 
@@ -277,10 +285,10 @@ where
 	Executor: sc_executor::NativeExecutionDispatch + 'static,
 	BIQ: FnOnce(
 		Arc<TFullClient<Block, RuntimeApi, NativeElseWasmExecutor<Executor>>>,
-		FrontierBlockImport<
+		ParachainBlockImport<
 			Block,
 			Arc<TFullClient<Block, RuntimeApi, NativeElseWasmExecutor<Executor>>>,
-			TFullClient<Block, RuntimeApi, NativeElseWasmExecutor<Executor>>,
+			TFullBackend<Block>,
 		>,
 		&Configuration,
 		Option<TelemetryHandle>,
@@ -294,6 +302,11 @@ where
 	>,
 	BIC: FnOnce(
 		Arc<TFullClient<Block, RuntimeApi, NativeElseWasmExecutor<Executor>>>,
+		ParachainBlockImport<
+			Block,
+			Arc<TFullClient<Block, RuntimeApi, NativeElseWasmExecutor<Executor>>>,
+			TFullBackend<Block>,
+		>,
 		Option<&Registry>,
 		Option<TelemetryHandle>,
 		&TaskManager,
@@ -312,7 +325,8 @@ where
 	let parachain_config = prepare_node_config(parachain_config);
 
 	let params = new_partial::<RuntimeApi, Executor, BIQ>(&parachain_config, build_import_queue)?;
-	let (mut telemetry, telemetry_worker_handle, frontier_backend) = params.other;
+	let (parachain_block_import, mut telemetry, telemetry_worker_handle, frontier_backend) =
+		params.other;
 
 	let client = params.client.clone();
 	let backend = params.backend.clone();
@@ -336,14 +350,14 @@ where
 	let is_authority = parachain_config.role.is_authority();
 	let prometheus_registry = parachain_config.prometheus_registry().cloned();
 	let transaction_pool = params.transaction_pool.clone();
-	let import_queue = cumulus_client_service::SharedImportQueue::new(params.import_queue);
+	let import_queue = params.import_queue.service();
 	let (network, system_rpc_tx, tx_handler_controller, start_network) =
 		sc_service::build_network(sc_service::BuildNetworkParams {
 			config: &parachain_config,
 			client: client.clone(),
 			transaction_pool: transaction_pool.clone(),
 			spawn_handle: task_manager.spawn_handle(),
-			import_queue: import_queue.clone(),
+			import_queue: params.import_queue,
 			block_announce_validator_builder: Some(Box::new(|_| {
 				Box::new(block_announce_validator)
 			})),
@@ -455,6 +469,7 @@ where
 	if is_authority {
 		let parachain_consensus = build_consensus(
 			client.clone(),
+			parachain_block_import,
 			prometheus_registry.as_ref(),
 			telemetry.as_ref().map(|t| t.handle()),
 			&task_manager,
@@ -491,7 +506,6 @@ where
 			relay_chain_interface,
 			relay_chain_slot_duration,
 			import_queue,
-			collator_options,
 		};
 
 		start_full_node(params)?;
@@ -505,10 +519,10 @@ where
 /// Build the import queue.
 pub fn build_import_queue<RuntimeApi, Executor>(
 	client: Arc<TFullClient<Block, RuntimeApi, NativeElseWasmExecutor<Executor>>>,
-	block_import: FrontierBlockImport<
+	block_import: ParachainBlockImport<
 		Block,
 		Arc<TFullClient<Block, RuntimeApi, NativeElseWasmExecutor<Executor>>>,
-		TFullClient<Block, RuntimeApi, NativeElseWasmExecutor<Executor>>,
+		TFullBackend<Block>,
 	>,
 	config: &Configuration,
 	telemetry_handle: Option<TelemetryHandle>,
@@ -547,6 +561,7 @@ where
 			sp_consensus_aura::sr25519::AuthorityPair,
 			_,
 			_,
+			_,
 		>(cumulus_client_consensus_aura::BuildVerifierParams {
 			client: client2.clone(),
 			create_inherent_data_providers: move |_, _| async move {
@@ -579,7 +594,7 @@ where
 
 	Ok(BasicQueue::new(
 		verifier,
-		Box::new(ParachainBlockImport::new(block_import)),
+		Box::new(block_import),
 		None,
 		&spawner,
 		registry,
@@ -636,6 +651,7 @@ pub async fn start_arctic_node(
             .map_err(Into::into)
         },
         |client,
+		 block_import,
          prometheus_registry,
          telemetry,
          task_manager,
@@ -696,7 +712,7 @@ pub async fn start_arctic_node(
                             Ok((slot, time, parachain_inherent))
                         }
                     },
-                block_import: client.clone(),
+                block_import,
                 para_client: client,
                 backoff_authoring_blocks: Option::<()>::None,
                 sync_oracle,
@@ -763,6 +779,7 @@ pub async fn start_snow_node(
             .map_err(Into::into)
         },
         |client,
+		 block_import,
          prometheus_registry,
          telemetry,
          task_manager,
@@ -823,7 +840,7 @@ pub async fn start_snow_node(
                             Ok((slot, time, parachain_inherent))
                         }
                     },
-                block_import: client.clone(),
+                block_import,
                 para_client: client,
                 backoff_authoring_blocks: Option::<()>::None,
                 sync_oracle,

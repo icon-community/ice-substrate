@@ -1135,4 +1135,8 @@ impl<T: frame_system::Config> pallet_contracts::weights::WeightInfo for WeightIn
 			// Standard Error: 8_482
 			.saturating_add(Weight::from_ref_time(1_651_254 as u64).saturating_mul(r as u64))
 	}
+    fn seal_reentrance_count(_: u32) -> Weight { todo!() }
+    fn seal_account_reentrance_count(_: u32) -> Weight { todo!() }
+    fn seal_instantiation_nonce(_: u32) -> Weight { todo!() }
+    fn instr_call_per_local(_: u32) -> Weight { todo!() }
 }

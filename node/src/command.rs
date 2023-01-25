@@ -563,6 +563,7 @@ pub fn run() -> Result<()> {
 		}
 		#[cfg(feature = "try-runtime")]
 		Some(Subcommand::TryRuntime(cmd)) => {
+			use sc_executor::{sp_wasm_interface::ExtendedHostFunctions, NativeExecutionDispatch};
 			let runner = cli.create_runner(cmd)?;
 			let chain_spec = &runner.config().chain_spec;
 
@@ -577,7 +578,10 @@ pub fn run() -> Result<()> {
 								sc_cli::Error::Service(sc_service::Error::Prometheus(e))
 							})?;
 					Ok((
-						cmd.run::<snow_runtime::Block, snow::Executor>(config),
+						cmd.run::<snow_runtime::Block, ExtendedHostFunctions<
+							sp_io::SubstrateHostFunctions,
+							<snow::Executor as NativeExecutionDispatch>::ExtendHostFunctions,
+						>>(),
 						task_manager,
 					))
 				})
@@ -590,7 +594,10 @@ pub fn run() -> Result<()> {
 								sc_cli::Error::Service(sc_service::Error::Prometheus(e))
 							})?;
 					Ok((
-						cmd.run::<arctic_runtime::Block, arctic::Executor>(config),
+						cmd.run::<arctic_runtime::Block, ExtendedHostFunctions<
+							sp_io::SubstrateHostFunctions,
+							<arctic::Executor as NativeExecutionDispatch>::ExtendHostFunctions,
+						>>(),
 						task_manager,
 					))
 				})
@@ -602,7 +609,13 @@ pub fn run() -> Result<()> {
 							.map_err(|e| {
 								sc_cli::Error::Service(sc_service::Error::Prometheus(e))
 							})?;
-					Ok((cmd.run::<Block, arctic::Executor>(config), task_manager))
+					Ok((
+						cmd.run::<Block, ExtendedHostFunctions<
+							sp_io::SubstrateHostFunctions,
+							<arctic::Executor as NativeExecutionDispatch>::ExtendHostFunctions,
+						>>(),
+						task_manager,
+					))
 				})
 			}
 		}

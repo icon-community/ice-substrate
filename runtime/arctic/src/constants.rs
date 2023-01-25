@@ -43,7 +43,7 @@ pub mod time {
 /// Fee-related.
 pub mod fee {
 	use crate::{Balance, ExtrinsicBaseWeight};
-	use frame_support::weights::constants::WEIGHT_PER_SECOND;
+	use frame_support::weights::constants::WEIGHT_REF_TIME_PER_SECOND;
 	use frame_support::weights::{
 		WeightToFeeCoefficient, WeightToFeeCoefficients, WeightToFeePolynomial,
 	};
@@ -85,7 +85,7 @@ pub mod fee {
 
 	pub fn icz_per_second() -> u128 {
 		let base_weight = Balance::from(ExtrinsicBaseWeight::get().ref_time());
-		let base_tx_per_second = (WEIGHT_PER_SECOND.ref_time() as u128) / base_weight;
+		let base_tx_per_second = (WEIGHT_REF_TIME_PER_SECOND as u128) / base_weight;
 		base_tx_per_second * base_tx_in_icz()
 	}
 

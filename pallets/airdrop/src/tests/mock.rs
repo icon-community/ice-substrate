@@ -1,7 +1,10 @@
 use crate::{self as pallet_airdrop, types};
 use core::marker::PhantomData;
 
-use frame_support::{parameter_types, traits::ConstU32};
+use frame_support::{
+	parameter_types,
+	traits::{ConstU32, WithdrawReasons},
+};
 use frame_system as system;
 use pallet_balances;
 use sp_core::H256;
@@ -108,6 +111,11 @@ impl pallet_balances::Config for Test {
 	type ReserveIdentifier = [u8; 8];
 }
 
+parameter_types! {
+	pub UnvestedFundsAllowedWithdrawReasons: WithdrawReasons =
+		WithdrawReasons::except(WithdrawReasons::TRANSFER | WithdrawReasons::RESERVE);
+}
+
 impl pallet_vesting::Config for Test {
 	type RuntimeEvent = RuntimeEvent;
 	type Currency = <Test as pallet_airdrop::Config>::Currency;
@@ -115,6 +123,7 @@ impl pallet_vesting::Config for Test {
 	type MinVestedTransfer = VestingMinTransfer;
 	type WeightInfo = ();
 	const MAX_VESTING_SCHEDULES: u32 = 10;
+	type UnvestedFundsAllowedWithdrawReasons = UnvestedFundsAllowedWithdrawReasons;
 }
 
 pub fn new_test_ext() -> sp_io::TestExternalities {
