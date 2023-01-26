@@ -274,6 +274,7 @@ version = "0.1.0"
 dependencies = [
  "assets-evm-utils",
  "derive_more",
+ "evm 0.37.0",
  "fp-evm",
  "frame-support",
  "frame-system",
@@ -287,6 +288,7 @@ dependencies = [
  "scale-info",
  "serde",
  "sha3 0.10.2",
+ "similar-asserts",
  "slices",
  "sp-core",
  "sp-io",

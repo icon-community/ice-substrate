@@ -45,6 +45,8 @@ use sp_std::{
 mod mock;
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod test_utils;
 
 /// Solidity selector of the Transfer log, which is the Keccak of the Log signature.
 pub const SELECTOR_LOG_TRANSFER: [u8; 32] = keccak256!("Transfer(address,address,uint256)");

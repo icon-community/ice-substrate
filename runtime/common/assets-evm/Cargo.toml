@@ -8,6 +8,7 @@ log = "0.4.16"
 num_enum = { version = "0.5.3", default-features = false }
 slices = "0.2.0"
 
+
 assets-evm-utils = { path = "../assets-evm-utils", default-features = false }
 
 # Substrate
@@ -29,6 +30,8 @@ pallet-evm = { git = "https://github.com/web3labs/frontier", branch = "polkadot-
 derive_more = { version = "0.99" }
 serde = { version = "1.0.140" }
 sha3 = "0.10.1"
+evm = { version = "0.37.0" }
+similar-asserts = { version = "1.1.0" }
 
 assets-evm-utils = { path = "../assets-evm-utils"}
 
