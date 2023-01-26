@@ -741,7 +741,7 @@ impl pallet_scheduler::Config for Runtime {
 	type ScheduleOrigin = EnsureRoot<AccountId>;
 	type OriginPrivilegeCmp = EqualPrivilegeOnly;
 	type MaxScheduledPerBlock = MaxScheduledPerBlock;
-	type WeightInfo = SchedulerWeightInfo<Self>;
+	type WeightInfo = (); // SchedulerWeightInfo<Self>;
 	type Preimages = Preimage;
 }
 
