@@ -94,7 +94,7 @@ pub use sp_runtime::BuildStorage;
 pub use sp_runtime::{Perbill, Percent, Permill};
 use static_assertions::const_assert;
 
-use assets_evm::{AddressToAssetId};
+use assets_evm::AddressToAssetId;
 use precompile::ASSET_PRECOMPILE_ADDRESS_PREFIX;
 
 /// We assume that ~10% of the block weight is consumed by `on_initialize` handlers.
@@ -450,23 +450,23 @@ impl<F: FindAuthor<u32>> FindAuthor<H160> for FindAuthorTruncated<F> {
 pub type AssetId = u128;
 
 impl AddressToAssetId<AssetId> for Runtime {
-    fn address_to_asset_id(address: H160) -> Option<AssetId> {
-        let mut data = [0u8; 16];
-        let address_bytes: [u8; 20] = address.into();
-        if ASSET_PRECOMPILE_ADDRESS_PREFIX.eq(&address_bytes[0..4]) {
-            data.copy_from_slice(&address_bytes[4..20]);
-            Some(u128::from_be_bytes(data))
-        } else {
-            None
-        }
-    }
+	fn address_to_asset_id(address: H160) -> Option<AssetId> {
+		let mut data = [0u8; 16];
+		let address_bytes: [u8; 20] = address.into();
+		if ASSET_PRECOMPILE_ADDRESS_PREFIX.eq(&address_bytes[0..4]) {
+			data.copy_from_slice(&address_bytes[4..20]);
+			Some(u128::from_be_bytes(data))
+		} else {
+			None
+		}
+	}
 
-    fn asset_id_to_address(asset_id: AssetId) -> H160 {
-        let mut data = [0u8; 20];
-        data[0..4].copy_from_slice(ASSET_PRECOMPILE_ADDRESS_PREFIX);
-        data[4..20].copy_from_slice(&asset_id.to_be_bytes());
-        H160::from(data)
-    }
+	fn asset_id_to_address(asset_id: AssetId) -> H160 {
+		let mut data = [0u8; 20];
+		data[0..4].copy_from_slice(ASSET_PRECOMPILE_ADDRESS_PREFIX);
+		data[4..20].copy_from_slice(&asset_id.to_be_bytes());
+		H160::from(data)
+	}
 }
 
 pub const GAS_PER_SECOND: u64 = 40_000_000;
@@ -504,9 +504,6 @@ impl pallet_ethereum::Config for Runtime {
 	type StateRoot = pallet_ethereum::IntermediateStateRoot<Self>;
 }
 
-
-
-
 parameter_types! {
 	pub const AssetDeposit: Balance = 100 * currency::DOLLARS;
 	pub const ApprovalDeposit: Balance = 1 * currency::DOLLARS;
@@ -521,7 +518,7 @@ parameter_types! {
 impl pallet_assets::Config for Runtime {
 	type RuntimeEvent = RuntimeEvent;
 	type Balance = Balance;
-	type AssetId = u128;
+	type AssetId = AssetId;
 	type Currency = Balances;
 	type ForceOrigin = EnsureRoot<AccountId>;
 	type AssetDeposit = AssetDeposit;
@@ -534,7 +531,7 @@ impl pallet_assets::Config for Runtime {
 	type Extra = ();
 	type WeightInfo = (); // AssetsWeightInfo<Runtime>;
 	type RemoveItemsLimit = ConstU32<1000>;
-	type AssetIdParameter = codec::Compact<u32>;
+	type AssetIdParameter = codec::Compact<u128>;
 	type CreateOrigin = AsEnsureOriginWithArg<EnsureSigned<AccountId>>;
 	#[cfg(feature = "runtime-benchmarks")]
 	type BenchmarkHelper = ();
