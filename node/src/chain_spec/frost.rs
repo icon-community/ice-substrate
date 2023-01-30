@@ -4,7 +4,7 @@ use frost_runtime::{
 	currency::ICY, opaque::SessionKeys, AccountId, AirdropConfig, AuraConfig, BalancesConfig,
 	CouncilConfig, CouncilMembershipConfig, DemocracyConfig, EVMConfig, EthereumConfig,
 	GenesisConfig, GrandpaConfig, IndicesConfig, SS58Prefix, SessionConfig, Signature, SudoConfig,
-	SystemConfig, TechnicalCommitteeConfig, TechnicalMembershipConfig, TreasuryPalletId,
+	SystemConfig, TechnicalCommitteeConfig, TechnicalMembershipConfig, TreasuryPalletId,AssetsConfig,
 	WASM_BINARY,
 };
 use hex_literal::hex;
@@ -54,6 +54,7 @@ pub fn authority_keys_from_seed(s: &str) -> (AuraId, GrandpaId) {
 const AIRDROP_MERKLE_ROOT: [u8; 32] =
 	hex!("990e01e3959627d2ddd94927e1c605a422b62dc3b8c8b98d713ae6833c3ef122");
 
+
 /// Initialize frost development configuration
 pub fn development_config() -> Result<FrostChainSpec, String> {
 	let wasm_binary = WASM_BINARY.ok_or_else(|| "Development wasm not available".to_string())?;
@@ -68,6 +69,7 @@ pub fn development_config() -> Result<FrostChainSpec, String> {
 
 	let airdrop_creditor_account: AccountId =
 		hex!["10b3ae7ebb7d722c8e8d0d6bf421f6d5dbde8d329f7c905a201539c635d61872"].into();
+	
 
 	let endowed_accounts = vec![
 		TreasuryPalletId::get().into_account_truncating(),
@@ -130,6 +132,7 @@ fn testnet_genesis(
 			authority_keys_from_seed("Bob").1,
 		),
 	];
+	let evm_genesis_account :AccountId= hex!["3f1ee662d59012a0001c2fca594083e4a104811646fa39111568448cb372a607"].into();
 
 	GenesisConfig {
 		system: SystemConfig {
@@ -212,7 +215,20 @@ fn testnet_genesis(
 		dynamic_fee: Default::default(),
 		base_fee: Default::default(),
 		vesting: Default::default(),
-		assets: Default::default(),
+		assets: AssetsConfig{
+			assets: vec![
+			// id, owner, is_sufficient, min_balance
+			(1, evm_genesis_account.clone(), true, 1),
+		],
+		metadata: vec![
+			// id, name, symbol, decimals
+			(1, "Test Token".into(), "TICZ".into(), 10),
+		],
+		accounts: vec![
+			// id, account_id, balance
+			(1, evm_genesis_account.clone(), 100),
+		],
+		},
 		council_membership: CouncilMembershipConfig {
 			members: council_members.try_into().unwrap(),
 			phantom: Default::default(),
