@@ -125,6 +125,7 @@ dependencies = [
 name = "arctic-runtime"
 version = "0.4.58"
 dependencies = [
+ "assets-evm",
  "bstringify",
  "cumulus-pallet-aura-ext",
  "cumulus-pallet-dmp-queue",
@@ -11117,6 +11118,7 @@ dependencies = [
 name = "snow-runtime"
 version = "0.4.58"
 dependencies = [
+ "assets-evm",
  "cumulus-pallet-aura-ext",
  "cumulus-pallet-dmp-queue",
  "cumulus-pallet-parachain-system",
