@@ -19,8 +19,6 @@
 use super::*;
 use hex_literal::hex;
 use sp_core::{H256, U256};
-use sp_runtime::WeakBoundedVec;
-use sp_std::convert::TryInto;
 
 fn u256_repeat_byte(byte: u8) -> U256 {
     let value = H256::repeat_byte(byte);
