@@ -37,9 +37,10 @@ where
 
 impl<R> PrecompileSet for FrontierPrecompiles<R>
 where
-    Erc20AssetsPrecompileSet<R>: PrecompileSet,
-	R: pallet_evm::Config + pallet_assets::Config
-	+ AddressToAssetId<<R as pallet_assets::Config>::AssetId>,
+	Erc20AssetsPrecompileSet<R>: PrecompileSet,
+	R: pallet_evm::Config
+		+ pallet_assets::Config
+		+ AddressToAssetId<<R as pallet_assets::Config>::AssetId>,
 {
 	fn execute(&self, handle: &mut impl PrecompileHandle) -> Option<PrecompileResult> {
 		match handle.code_address() {
@@ -54,7 +55,7 @@ where
 			a if a == hash(1025) => Some(ECRecoverPublicKey::execute(handle)),
 			a if &a.to_fixed_bytes()[0..4] == ASSET_PRECOMPILE_ADDRESS_PREFIX => {
 				Erc20AssetsPrecompileSet::<R>::new().execute(handle)
-			},
+			}
 			_ => None,
 		}
 	}
