@@ -1,0 +1,29 @@
+[settings]
+timeout = 180000
+
+[relaychain]
+default_command = "/path/to/polkadot"
+default_args = [ "-l=parachain=debug,xcm=trace" ]
+chain = "rococo-local"
+
+  [[relaychain.nodes]]
+  name = "alice"
+  validator = true
+
+  [[relaychain.nodes]]
+  name = "bob"
+  validator = true
+
+[[parachains]]
+id = 2000
+cumulus_based = true
+chain = "snow-dev"
+
+ [[parachains.collators]]
+  name = "alith"
+  command = "path/to/ice-node"
+  args = [
+    "--alice",
+    "--force-authoring",
+    "-l=xcm=trace",
+  ]
