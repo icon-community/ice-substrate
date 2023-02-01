@@ -105,6 +105,7 @@ fp-self-contained = { default-features = false, git = "https://github.com/web3la
 pallet-simple-inflation = { path = '../../pallets/simple-inflation', default-features = false, version = '0.0.2' }
 pallet-fees-split = { path = "../../pallets/fees-split", default-features = false, version = '0.0.1' }
 pallet-airdrop = { path = "../../pallets/airdrop", default-features = false }
+assets-evm ={ path="../common/assets-evm", default-features = false}
 
 # ice-runtime-fees-split = { default-features = false, path = "../fees-split", optional=true}
 

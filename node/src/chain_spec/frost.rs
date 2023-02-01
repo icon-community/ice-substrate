@@ -1,11 +1,11 @@
 #![allow(clippy::too_many_arguments)]
 
 use frost_runtime::{
-	currency::ICY, opaque::SessionKeys, AccountId, AirdropConfig, AuraConfig, BalancesConfig,
-	CouncilConfig, CouncilMembershipConfig, DemocracyConfig, EVMConfig, EthereumConfig,
-	GenesisConfig, GrandpaConfig, IndicesConfig, SS58Prefix, SessionConfig, Signature, SudoConfig,
-	SystemConfig, TechnicalCommitteeConfig, TechnicalMembershipConfig, TreasuryPalletId,
-	WASM_BINARY,
+	currency::ICY, opaque::SessionKeys, AccountId, AirdropConfig, AssetsConfig, AuraConfig,
+	BalancesConfig, CouncilConfig, CouncilMembershipConfig, DemocracyConfig, EVMConfig,
+	EthereumConfig, GenesisConfig, GrandpaConfig, IndicesConfig, SS58Prefix, SessionConfig,
+	Signature, SudoConfig, SystemConfig, TechnicalCommitteeConfig, TechnicalMembershipConfig,
+	TreasuryPalletId, WASM_BINARY,
 };
 use hex_literal::hex;
 use sc_chain_spec::Properties;
@@ -130,6 +130,8 @@ fn testnet_genesis(
 			authority_keys_from_seed("Bob").1,
 		),
 	];
+	let evm_genesis_account: AccountId =
+		hex!["3f1ee662d59012a0001c2fca594083e4a104811646fa39111568448cb372a607"].into();
 
 	GenesisConfig {
 		system: SystemConfig {
@@ -212,7 +214,20 @@ fn testnet_genesis(
 		dynamic_fee: Default::default(),
 		base_fee: Default::default(),
 		vesting: Default::default(),
-		assets: Default::default(),
+		assets: AssetsConfig {
+			assets: vec![
+				// id, owner, is_sufficient, min_balance
+				(1, evm_genesis_account.clone(), true, 1),
+			],
+			metadata: vec![
+				// id, name, symbol, decimals
+				(1, "Test Token".into(), "TICZ".into(), 10),
+			],
+			accounts: vec![
+				// id, account_id, balance
+				(1, evm_genesis_account.clone(), 100),
+			],
+		},
 		council_membership: CouncilMembershipConfig {
 			members: council_members.try_into().unwrap(),
 			phantom: Default::default(),

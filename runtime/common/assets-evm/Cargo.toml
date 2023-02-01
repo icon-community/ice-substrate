@@ -1,0 +1,58 @@
+[package]
+name = "assets-evm"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+log = "0.4.16"
+num_enum = { version = "0.5.3", default-features = false }
+slices = "0.2.0"
+
+
+assets-evm-utils = { path = "../assets-evm-utils", default-features = false }
+
+# Substrate
+codec = { package = "parity-scale-codec", version = "3.0.0", default-features = false, features = ["max-encoded-len"] }
+frame-support = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.36", default-features = false }
+frame-system = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.36", default-features = false }
+pallet-assets = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.36", default-features = false }
+pallet-balances = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.36", default-features = false }
+sp-core = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.36", default-features = false }
+sp-io = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.36", default-features = false }
+sp-runtime = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.36", default-features = false }
+sp-std = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.36", default-features = false }
+
+# Frontier
+fp-evm = { git = "https://github.com/web3labs/frontier", branch = "polkadot-v0.9.36", default-features = false }
+pallet-evm = { git = "https://github.com/web3labs/frontier", branch = "polkadot-v0.9.36", default-features = false, features = ["forbid-evm-reentrancy"] }
+
+[dev-dependencies]
+derive_more = { version = "0.99" }
+serde = { version = "1.0.140" }
+sha3 = "0.10.1"
+evm = { version = "0.37.0" }
+similar-asserts = { version = "1.1.0" }
+
+assets-evm-utils = { path = "../assets-evm-utils"}
+
+codec = { package = "parity-scale-codec", version = "3.0.0", features = ["max-encoded-len"] }
+pallet-timestamp = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.36" }
+scale-info = { version = "2.1.0", default-features = false, features = ["derive"] }
+sp-runtime = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.36" }
+
+[features]
+default = ["std"]
+std = [
+	"codec/std",
+	"fp-evm/std",
+	"frame-support/std",
+	"frame-system/std",
+	"pallet-assets/std",
+	"pallet-evm/std",
+	"pallet-balances/std",
+	"assets-evm-utils/std",
+	"sp-core/std",
+	"sp-io/std",
+	"sp-runtime/std",
+	"sp-std/std",
+]
