@@ -321,7 +321,7 @@ impl pallet_contracts::Config for Runtime {
 	/// is not allowed to change the indices of existing pallets, too.
 	type CallFilter = frame_support::traits::Nothing;
 	type WeightPrice = pallet_transaction_payment::Pallet<Self>;
-	type WeightInfo = (); // ContractsWeightInfo<Self>;
+	type WeightInfo = ContractsWeightInfo<Self>;
 	type ChainExtension = ();
 	type Schedule = Schedule;
 	type CallStack = [pallet_contracts::Frame<Self>; 31];
@@ -529,7 +529,7 @@ impl pallet_assets::Config for Runtime {
 	type StringLimit = AssetsStringLimit;
 	type Freezer = ();
 	type Extra = ();
-	type WeightInfo = (); // AssetsWeightInfo<Runtime>;
+	type WeightInfo = AssetsWeightInfo<Runtime>;
 	type RemoveItemsLimit = ConstU32<1000>;
 	type AssetIdParameter = codec::Compact<u128>;
 	type CreateOrigin = AsEnsureOriginWithArg<EnsureSigned<AccountId>>;
@@ -662,7 +662,7 @@ impl pallet_scheduler::Config for Runtime {
 	type ScheduleOrigin = EnsureRoot<AccountId>;
 	type OriginPrivilegeCmp = EqualPrivilegeOnly;
 	type MaxScheduledPerBlock = MaxScheduledPerBlock;
-	type WeightInfo = (); // SchedulerWeightInfo<Self>;
+	type WeightInfo = SchedulerWeightInfo<Self>;
 	type Preimages = Preimage;
 }
 
