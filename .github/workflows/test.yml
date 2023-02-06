@@ -13,7 +13,7 @@ env:
 
 jobs:
   clean-up-actions:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - name: Cancel Previous Runs
         # Only cancel non-master branch runs
@@ -23,7 +23,7 @@ jobs:
           access_token: ${{ github.token }}
 
   e2e-tests:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     env:
       SCCACHE_CACHE_SIZE: "50G"
       CARGO_INCREMENTAL: 0

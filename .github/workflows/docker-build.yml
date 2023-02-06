@@ -8,7 +8,7 @@ name: Docker Build
 jobs:
   docker-build-push:
     name: docker-build-push
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
