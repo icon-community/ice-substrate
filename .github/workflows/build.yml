@@ -12,7 +12,7 @@ env:
 
 jobs:
   build-project:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:   
       - name: Fetch latest code
         uses: actions/checkout@v3

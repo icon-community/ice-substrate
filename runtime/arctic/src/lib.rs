@@ -340,7 +340,7 @@ impl cumulus_pallet_xcmp_queue::Config for Runtime {
 	type ExecuteOverweightOrigin = EnsureRoot<AccountId>;
 	type ControllerOrigin = EnsureRoot<AccountId>;
 	type ControllerOriginConverter = XcmOriginToTransactDispatchOrigin;
-	type WeightInfo = XcmpQueueWeightInfo<Self>;
+	type WeightInfo = ();
 }
 
 impl cumulus_pallet_dmp_queue::Config for Runtime {
@@ -436,7 +436,7 @@ impl pallet_contracts::Config for Runtime {
 	/// is not allowed to change the indices of existing pallets, too.
 	type CallFilter = frame_support::traits::Nothing;
 	type WeightPrice = pallet_transaction_payment::Pallet<Self>;
-	type WeightInfo =  ContractsWeightInfo<Self>;
+	type WeightInfo = ();
 	type ChainExtension = ();
 	type Schedule = Schedule;
 	type CallStack = [pallet_contracts::Frame<Self>; 31];
@@ -463,7 +463,7 @@ impl pallet_timestamp::Config for Runtime {
 	#[cfg(feature = "manual-seal")]
 	type OnTimestampSet = ();
 	type MinimumPeriod = MinimumPeriod;
-	type WeightInfo = TimestampWeightInfo<Self>;
+	type WeightInfo = ();
 }
 
 parameter_types! {
@@ -492,7 +492,7 @@ impl pallet_balances::Config for Runtime {
 	type RuntimeEvent = RuntimeEvent;
 	type ExistentialDeposit = ExistentialDeposit;
 	type AccountStore = System;
-	type WeightInfo = BalancesWeightInfo<Self>;
+	type WeightInfo = ();
 	type MaxLocks = MaxLocks;
 	type MaxReserves = ();
 	type ReserveIdentifier = [u8; 8];
@@ -634,7 +634,7 @@ impl pallet_assets::Config for Runtime {
 	type StringLimit = AssetsStringLimit;
 	type Freezer = ();
 	type Extra = ();
-	type WeightInfo = AssetsWeightInfo<Runtime>;
+	type WeightInfo = ();
 	type RemoveItemsLimit = ConstU32<1000>;
 	type AssetIdParameter = AssetId; // codec::Compact<AssetId>;
 	type CreateOrigin = AsEnsureOriginWithArg<EnsureSigned<AccountId>>;
@@ -653,7 +653,7 @@ impl pallet_vesting::Config for Runtime {
 	type Currency = Balances;
 	type BlockNumberToBalance = ConvertInto;
 	type MinVestedTransfer = MinVestedTransfer;
-	type WeightInfo = VestingWeightInfo<Runtime>;
+	type WeightInfo = ();
 	// `VestingInfo` encode length is 36bytes. 28 schedules gets encoded as 1009 bytes, which is the
 	// highest number of schedules that encodes less than 2^10.
 	const MAX_VESTING_SCHEDULES: u32 = 28;
@@ -676,7 +676,7 @@ impl pallet_collective::Config<CouncilCollective> for Runtime {
 	type MaxProposals = CouncilMaxProposals;
 	type MaxMembers = CouncilMaxMembers;
 	type DefaultVote = pallet_collective::PrimeDefaultVote;
-	type WeightInfo = CollectiveWeightInfo<Runtime>;
+	type WeightInfo = ();
 }
 
 parameter_types! {
@@ -694,7 +694,7 @@ impl pallet_collective::Config<TechnicalCollective> for Runtime {
 	type MaxProposals = TechnicalMaxProposals;
 	type MaxMembers = TechnicalMaxMembers;
 	type DefaultVote = pallet_collective::PrimeDefaultVote;
-	type WeightInfo = CollectiveWeightInfo<Runtime>;
+	type WeightInfo = ();
 }
 
 parameter_types! {
@@ -751,7 +751,7 @@ impl pallet_utility::Config for Runtime {
 	type RuntimeEvent = RuntimeEvent;
 	type RuntimeCall = RuntimeCall;
 	type PalletsOrigin = OriginCaller;
-	type WeightInfo = UtilityWeightInfo<Self>;
+	type WeightInfo = ();
 }
 
 parameter_types! {
@@ -770,7 +770,7 @@ impl pallet_scheduler::Config for Runtime {
 	type ScheduleOrigin = EnsureRoot<AccountId>;
 	type OriginPrivilegeCmp = EqualPrivilegeOnly;
 	type MaxScheduledPerBlock = MaxScheduledPerBlock;
-	type WeightInfo = SchedulerWeightInfo<Self>;
+	type WeightInfo = ();
 	type Preimages = Preimage;
 }
 
@@ -782,7 +782,7 @@ parameter_types! {
 
 impl pallet_preimage::Config for Runtime {
 	type RuntimeEvent = RuntimeEvent;
-	type WeightInfo = PreimageWeightInfo<Runtime>;
+	type WeightInfo = ();
 	type Currency = Balances;
 	type ManagerOrigin = EnsureRoot<AccountId>;
 	type BaseDeposit = PreimageBaseDeposit;
@@ -904,7 +904,7 @@ impl pallet_proxy::Config for Runtime {
 	type ProxyDepositBase = ProxyDepositBase;
 	type ProxyDepositFactor = ProxyDepositFactor;
 	type MaxProxies = MaxProxies;
-	type WeightInfo = ProxyWeightInfo<Self>;
+	type WeightInfo = ();
 	type MaxPending = MaxPending;
 	type CallHasher = BlakeTwo256;
 	type AnnouncementDepositBase = AnnouncementDepositBase;
@@ -926,7 +926,7 @@ impl pallet_multisig::Config for Runtime {
 	type DepositBase = DepositBase;
 	type DepositFactor = DepositFactor;
 	type MaxSignatories = MaxSignatories;
-	type WeightInfo = MultisigWeightInfo<Self>;
+	type WeightInfo = ();
 }
 
 parameter_types! {
@@ -951,7 +951,7 @@ impl pallet_identity::Config for Runtime {
 	type Slashed = Treasury;
 	type ForceOrigin = MoreThanHalfCouncil;
 	type RegistrarOrigin = MoreThanHalfCouncil;
-	type WeightInfo = IdentityWeightInfo<Self>;
+	type WeightInfo = ();
 }
 
 parameter_types! {
@@ -981,7 +981,7 @@ impl pallet_bounties::Config for Runtime {
 	type DataDepositPerByte = DataDepositPerByte;
 	type RuntimeEvent = RuntimeEvent;
 	type MaximumReasonLength = MaximumReasonLength;
-	type WeightInfo = BountiesWeightInfo<Self>;
+	type WeightInfo = ();
 	type ChildBountyManager = ();
 }
 
@@ -993,7 +993,7 @@ impl pallet_tips::Config for Runtime {
 	type TipFindersFee = TipFindersFee;
 	type TipReportDepositBase = TipReportDepositBase;
 	type Tippers = PhragmenElection;
-	type WeightInfo = TipsWeightInfo<Self>;
+	type WeightInfo = ();
 }
 
 parameter_types! {
@@ -1029,7 +1029,7 @@ impl pallet_elections_phragmen::Config for Runtime {
 	type DesiredMembers = DesiredMembers;
 	type DesiredRunnersUp = DesiredRunnersUp;
 	type TermDuration = TermDuration;
-	type WeightInfo = ElectionsPhragmenWeightInfo<Self>;
+	type WeightInfo = ();
 	type MaxCandidates = MaxCandidatesElection;
 	type MaxVoters = MaxVotersElection;
 }
@@ -1044,7 +1044,7 @@ impl pallet_membership::Config<pallet_membership::Instance1> for Runtime {
 	type MembershipInitialized = Council;
 	type MembershipChanged = Council;
 	type MaxMembers = CouncilMaxMembers;
-	type WeightInfo = MembershipWeightInfo<Self>;
+	type WeightInfo = ();
 }
 
 impl pallet_membership::Config<pallet_membership::Instance2> for Runtime {
@@ -1057,7 +1057,7 @@ impl pallet_membership::Config<pallet_membership::Instance2> for Runtime {
 	type MembershipInitialized = TechnicalCommittee;
 	type MembershipChanged = TechnicalCommittee;
 	type MaxMembers = TechnicalMaxMembers;
-	type WeightInfo = MembershipWeightInfo<Self>;
+	type WeightInfo = ();
 }
 
 parameter_types! {
@@ -1117,7 +1117,7 @@ impl pallet_democracy::Config for Runtime {
 	type Scheduler = Scheduler;
 	type PalletsOrigin = OriginCaller;
 	type MaxVotes = MaxVotes;
-	type WeightInfo = DemocracyWeightInfo<Self>;
+	type WeightInfo = ();
 	type MaxProposals = MaxProposals;
 	type Preimages = Preimage;
 	type MaxDeposits = ConstU32<100>;
@@ -1133,7 +1133,7 @@ impl pallet_indices::Config for Runtime {
 	type Currency = Balances;
 	type Deposit = IndexDeposit;
 	type RuntimeEvent = RuntimeEvent;
-	type WeightInfo = IndicesWeightInfo<Self>;
+	type WeightInfo = ();
 }
 
 parameter_types! {
