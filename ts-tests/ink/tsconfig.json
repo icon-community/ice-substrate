@@ -1,0 +1,9 @@
+{
+	"compilerOptions": {
+		"esModuleInterop": true,
+		"resolveJsonModule": true,
+        "moduleResolution": "node",
+		"target": "ES2019",
+		"strict": true
+	}
+}

@@ -1,0 +1,78 @@
+export const BINARY_PATH = "./assets/ice-node";
+
+export const LOCAL_WSS_URL = "ws://localhost:9944";
+export const MAINNET_WSS_URL = "wss://snow-rpc.icenetwork.io";
+// export const MAINNET_WSS_URL = "ws://localhost:9944";
+
+export const KEYRING_TYPE = "sr25519";
+export const CHAIN_PREFIX = 2208;
+
+export const BLOCK_TIME_MS = 12_000;
+
+export const ALICE_URI = "//Alice";
+
+export const CONTRACTS = {
+	simpleCtx: {
+		name: "flipper",
+		metadataPath: "./assets/simpleCtx/target/ink/flipper.contract",
+		wasmPath: "./assets/simpleCtx/target/ink/flipper.wasm",
+		readMethods: {
+			get: "get",
+		},
+		writeMethods: {
+			flip: "flip",
+		},
+	},
+	multiCallCtx: {
+		adder: {
+			name: "adder",
+			metadataPath: "./assets/multiCallCtx/adder/target/ink/adder.contract",
+			wasmPath: "./assets/multiCallCtx/adder/target/ink/adder.wasm",
+			readMethods: {},
+			writeMethods: {
+				inc: "inc",
+				expensiveFunc: "expensiveFunc",
+				receiveFunds: "receiveFunds",
+				tearDown: "tearDown",
+			},
+		},
+		accumulator: {
+			name: "accumulator",
+			metadataPath: "./assets/multiCallCtx/accumulator/target/ink/accumulator.contract",
+			wasmPath: "./assets/multiCallCtx/accumulator/target/ink/accumulator.wasm",
+			readMethods: {
+				get: "get",
+			},
+			writeMethods: {
+				inc: "inc",
+			},
+		},
+	},
+	largeCtx: {
+		invalid: {
+			metadataPath: "./assets/largeCtx/invalid/target/ink/snow_rewards.contract",
+			wasmPath: "./assets/largeCtx/invalid/target/ink/snow_rewards.wasm",
+		},
+		valid: {
+			metadataPath: "./assets/largeCtx/valid/target/ink/snow_rewards.contract",
+			wasmPath: "./assets/largeCtx/valid/target/ink/snow_rewards.wasm",
+		},
+	},
+	migrationTestCtx: {
+		readMethods: {
+			get: "get",
+		},
+		writeMethods: {
+			operate: "operate",
+		},
+		metadataPath: "./assets/migrationTestCtx/target/ink/migration_test.contract",
+		wasmPath: "./assets/migrationTestCtx/target/ink/migration_test.wasm",
+	},
+	stateCheckCtx: {
+		readMethods: {
+			get: "get",
+		},
+		metadataPath: "./assets/stateCheckCtx/target/ink/state_check.contract",
+		wasmPath: "./assets/stateCheckCtx/target/ink/state_check.wasm",
+	},
+};

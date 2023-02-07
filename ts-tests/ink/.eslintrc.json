@@ -1,0 +1,19 @@
+{
+    // parse TypeScript files
+    // https://github.com/typescript-eslint/typescript-eslint/tree/master/packages/parser
+    "parser": "@typescript-eslint/parser",
+    "extends": [
+      "eslint:recommended",
+      "plugin:@typescript-eslint/eslint-recommended",
+      "plugin:@typescript-eslint/recommended",
+      "plugin:prettier/recommended",
+      "prettier"
+    ],
+    "rules": {
+      "no-var": "error",
+      "@typescript-eslint/ban-ts-comment": "off",
+      "@typescript-eslint/no-non-null-asserted-optional-chain": "off",
+      "@typescript-eslint/no-non-null-assertion": "off",
+      "no-async-promise-executor": "off"
+    }
+  }

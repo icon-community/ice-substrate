@@ -1,0 +1,10 @@
+.vscode/
+
+**/node_modules/
+.env.local
+**/.nyc_output/
+**/target/
+
+assets/ice-node
+assets/**/*.wasm
+assets/**/*.contract
