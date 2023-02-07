@@ -90,7 +90,7 @@ jobs:
       - name: Run ts tests
         run: |
           npm install -g yarn
-          cd ts-tests 
+          cd ts-tests/evm
           yarn install
           yarn run build
           yarn run test

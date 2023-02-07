@@ -1,5 +1,5 @@
 {
-	"name": "ts-tests",
+	"name": "evm-ts-tests",
 	"version": "1.0.0",
 	"description": "",
 	"main": "index.js",
