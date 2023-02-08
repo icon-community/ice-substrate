@@ -1,7 +1,7 @@
 import { SnowApi } from "../services";
 import { describe, before } from "mocha";
 
-const INIT_TIMEOUT = 10_000; // milli sec
+const INIT_TIMEOUT = 20_000; // milli sec
 
 export function describeWithContext(title: string, callback: (context: typeof SnowApi) => void, isMainnet?: boolean) {
 	describe(title, () => {

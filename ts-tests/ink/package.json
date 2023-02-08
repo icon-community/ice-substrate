@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "NODE_ENV=local nyc mocha -r dotenv-flow/config -r ts-node/register tests/*.ts",
-    "test:server": "NODE_ENV=production nyc mocha -r dotenv-flow/config -r ts-node/register tests/**/*.ts",
+    "test:server": "NODE_ENV=production nyc mocha -r dotenv-flow/config -r ts-node/register tests/*.ts",
     "deploy-contract": "NODE_ENV=local node -r dotenv-flow/config -r ts-node/register tests/upgradeTests/deploy.ts",
     "test-contract-state": "NODE_ENV=local mocha -r dotenv-flow/config -r ts-node/register tests/upgradeTests/checkState.ts",
     "test-contract-overall": "NODE_ENV=local mocha -r dotenv-flow/config -r ts-node/register tests/upgradeTests/deployAndWrite.ts",

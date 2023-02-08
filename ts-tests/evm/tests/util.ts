@@ -12,7 +12,7 @@ export const DISPLAY_LOG = process.env.ICE_LOG || false;
 export const ICE_LOG = process.env.ICE_LOG || "info";
 export const ICE_BUILD = process.env.ICE_BUILD || "release";
 
-export const BINARY_PATH = `../target/${ICE_BUILD}/${NODE_BINARY_NAME}`;
+export const BINARY_PATH = `../../target/${ICE_BUILD}/${NODE_BINARY_NAME}`;
 export const SPAWNING_TIME = 60000;
 
 export async function customRequest(web3: Web3, method: string, params: any[]): Promise<JsonRpcResponse> {

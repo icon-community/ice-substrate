@@ -87,10 +87,21 @@ jobs:
         with:
           node-version: 16.x
 
-      - name: Run ts tests
+      - name: Run evm ts tests
         run: |
           npm install -g yarn
           cd ts-tests/evm
           yarn install
           yarn run build
           yarn run test
+
+      - name: Run ink ts tests
+        env:
+          END_USER_WALLET_1_URI: ${{ secrets.END_USER_WALLET_1_URI }}
+          END_USER_WALLET_2_URI: ${{ secrets.END_USER_WALLET_2_URI }}
+          END_USER_WALLET_3_URI: ${{ secrets.END_USER_WALLET_3_URI }}
+        run: |
+          mv ./target/release/ice-node ./ts-tests/ink/assets
+          cd ts-tests/ink
+          npm install --force
+          npm run test:server

@@ -1,7 +1,7 @@
 <div align="center">
 
 <h1 align="center">
-    Parity's ink! for writing smart contracts
+    Tests for ink smart contracts on ICE/SNOW Network
 </h1>
 
 [![Author](https://img.shields.io/badge/author-@sharma66mahesh-blue.svg?style=flat-square)](https://github.com/sharma66mahesh)

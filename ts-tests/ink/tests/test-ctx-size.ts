@@ -18,7 +18,7 @@ const DEPLOY_STORAGE_LIMIT = "10000000000000000000";
 
 const UPLOAD_TIMEOUT = 30_000; // todo
 
-describeWithContext("\n\n👉 Upload and perform read, write on a simple contract", (context) => {
+describeWithContext("\n\n👉 Tests for contract size", (context) => {
 	const largeValidContract: ContractInterface = {
 		address: undefined,
 		blockHash: undefined,
