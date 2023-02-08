@@ -16,3 +16,7 @@ export const BLOCK_TIMESTAMP = 6; // 6 seconds per block
 export const BLOCK_HASH_COUNT = 256;
 export const EXISTENTIAL_DEPOSIT = 10_000_000_000_000_000; // The minimum amount required to keep an account open
 export const BLOCK_GAS_LIMIT = 60000000;
+
+export const SNOW_RPC_ENDPOINT = "https://snow-rpc.icenetwork.io:9933";
+export const SNOW_CHAIN_ID = 552;
+export const SNOW_UPGRADE_CTX_ADDRESS = "0xa56D94F9b2412A639626C11855a72024345f2E17";

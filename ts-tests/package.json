@@ -7,7 +7,9 @@
 		"fmt-check": "prettier ./tests --check",
 		"fmt": "prettier ./tests --write",
 		"build": "truffle compile",
-		"test": "mocha -r ts-node/register 'tests/**/test-*.{js,ts}'"
+		"test": "mocha -r ts-node/register 'tests/test-*.{js,ts}'",
+		"deploy-upgrade-ctx": "node -r ts-node/register -r dotenv/config tests/networkUpgradeTests/deploy-upgrade-ctx.ts",
+		"test-ctx-state": "mocha -r ts-node/register tests/networkUpgradeTests/test-ctx-state.ts"
 	},
 	"author": "",
 	"license": "ISC",
@@ -16,6 +18,7 @@
 		"@types/mocha": "^8.0.0",
 		"chai": "^4.3.7",
 		"chai-as-promised": "^7.1.1",
+		"dotenv": "^16.0.3",
 		"ethereum-waffle": "^3.4.4",
 		"ethers": "^5.4.6",
 		"mocha": "^8.0.1",
@@ -28,6 +31,7 @@
 	},
 	"devDependencies": {
 		"@types/chai-as-promised": "^7.1.5",
+		"@types/node": "^18.13.0",
 		"prettier": "^2.6.2"
 	}
 }
