@@ -11,8 +11,7 @@
     "test-contract-overall": "NODE_ENV=local mocha -r dotenv-flow/config -r ts-node/register tests/upgradeTests/deployAndWrite.ts",
     "lint": "eslint ./ --ext .ts --config .eslintrc.json",
     "lint-staged": "npx lint-staged",
-    "lint:fix": "eslint ./ --ext .ts --config .eslintrc.json --fix",
-    "prepare": "husky install"
+    "lint:fix": "eslint ./ --ext .ts --config .eslintrc.json --fix"
   },
   "keywords": [],
   "author": "sharma66mahesh",
@@ -57,8 +56,5 @@
     "eslint-plugin-prettier": "^4.2.1",
     "husky": "^8.0.3",
     "lint-staged": "^13.1.0"
-  },
-  "lint-staged": {
-    "*.ts": "eslint --config .eslintrc.json --fix"
   }
 }

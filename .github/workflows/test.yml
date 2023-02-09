@@ -97,9 +97,9 @@ jobs:
 
       - name: Run ink ts tests
         env:
-          END_USER_WALLET_1_URI: ${{ secrets.END_USER_WALLET_1_URI }}
-          END_USER_WALLET_2_URI: ${{ secrets.END_USER_WALLET_2_URI }}
-          END_USER_WALLET_3_URI: ${{ secrets.END_USER_WALLET_3_URI }}
+          END_USER_WALLET_1_URI: ${{ secrets.TEST_INK_WALLET_SEED_1 }}
+          END_USER_WALLET_2_URI: ${{ secrets.TEST_INK_WALLET_SEED_2 }}
+          END_USER_WALLET_3_URI: ${{ secrets.TEST_INK_WALLET_SEED_3 }}
         run: |
           mv ./target/release/ice-node ./ts-tests/ink/assets
           cd ts-tests/ink

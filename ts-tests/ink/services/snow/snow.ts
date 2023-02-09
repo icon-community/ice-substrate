@@ -12,7 +12,7 @@ import dotenv from "dotenv-flow";
 import { ISubmittableResult } from "@polkadot/types/types";
 dotenv.config();
 
-const BUFFER_TIME = 3; // sec
+const BUFFER_TIME = 12; // sec
 
 class SnowApi {
 	private static binary: undefined | ChildProcessWithoutNullStreams;
@@ -24,7 +24,7 @@ class SnowApi {
 	static initialize = async (isMainnet?: boolean) => {
 		// todo
 		if (!isMainnet) {
-			SnowApi.startNetwork();
+			await SnowApi.startNetwork();
 		}
 		SnowApi.api = await SnowApi.connectSnowApi(isMainnet ? MAINNET_WSS_URL : LOCAL_WSS_URL);
 		SnowApi.keyring = new Keyring({
@@ -86,6 +86,7 @@ class SnowApi {
 			console.error(err);
 			process.exit(-1);
 		});
+		// allow chain to be ready for ws connections
 		await sleep(BUFFER_TIME);
 	};
 
