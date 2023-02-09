@@ -1,32 +1,33 @@
 import { step } from "mocha-steps";
 import chai from "chai";
 import chaiAsPromised from "chai-as-promised";
+import { WeightV2 } from "@polkadot/types/interfaces/runtime";
+import { ContractPromise } from "@polkadot/api-contract";
+import BigNumber from "bignumber.js";
 import { getMetadata, getWasm, SnowApi } from "../services";
 import { describeWithContext } from "./utils";
 import { CONTRACTS } from "../constants";
 import { ContractInterface } from "../interfaces/core";
-import { ContractPromise } from "@polkadot/api-contract";
-import BigNumber from "bignumber.js";
 
 chai.use(chaiAsPromised);
 
 const { expect } = chai;
 
-// const GAS_LIMIT = "3276940880";
 const GAS_LIMIT = "100000000000"; // 10^11
 const MAX_GAS_LIMIT = "1299000000000"; // 10^12
 const DEPLOY_STORAGE_LIMIT = "10000000000000000000"; // 10^19
 
-const UPLOAD_TIMEOUT = 30_000; // todo
-const FUND_TRANSFER_TIMEOUT = 30_000; // todo
-const QUERY_TIMEOUT = 30_000; // todo
+const UPLOAD_TIMEOUT = 30_000;
+const FUND_TRANSFER_TIMEOUT = 30_000;
+const QUERY_TIMEOUT = 30_000;
 
 const END_USER_FUNDS = new BigNumber(1_000 * Math.pow(10, 18)); // 1k ICZ
 
-const ACCUMULATOR_INC_GAS = "37499961344";
 const ACCUMULATOR_CODE_HASH = "0xe0d83c067d9abf593a8089ef1f21fc30fafb02a8dd67a862f8ca47eb158735b9";
-const ADDER_INC_GAS = "44492876186";
-const ADDER_DEPOSIT_GAS = "37499961344";
+
+const ACCUMULATOR_INC_GAS = { refTime: 4006871040n, proofSize: 131072n };
+const ADDER_INC_GAS = { refTime: 5397669461n, proofSize: 153804n };
+const ADDER_DEPOSIT_GAS = { refTime: 4006871040n, proofSize: 131072n };
 
 describeWithContext("\n\n👉 Estimate gas for deploying and calling write methods on contract", (context) => {
 	const accumulatorContract: ContractInterface = {
@@ -67,7 +68,13 @@ describeWithContext("\n\n👉 Estimate gas for deploying and calling write metho
 		} = await context.deployContract(
 			accumulatorContract.metadata!,
 			accumulatorContract.wasm!,
-			{ gasLimit: GAS_LIMIT, storageDepositLimit: DEPLOY_STORAGE_LIMIT },
+			{
+				gasLimit: context.api!.registry.createType("WeightV2", {
+					proofSize: GAS_LIMIT,
+					refTime: GAS_LIMIT,
+				}) as WeightV2,
+				storageDepositLimit: DEPLOY_STORAGE_LIMIT,
+			},
 			[0],
 			context.endUserWallets[0]!,
 		);
@@ -93,7 +100,13 @@ describeWithContext("\n\n👉 Estimate gas for deploying and calling write metho
 		} = await context.deployContract(
 			adderContract.metadata!,
 			adderContract.wasm!,
-			{ gasLimit: GAS_LIMIT, storageDepositLimit: DEPLOY_STORAGE_LIMIT },
+			{
+				gasLimit: context.api!.registry.createType("WeightV2", {
+					proofSize: GAS_LIMIT,
+					refTime: GAS_LIMIT,
+				}) as WeightV2,
+				storageDepositLimit: DEPLOY_STORAGE_LIMIT,
+			},
 			[0, 1, ACCUMULATOR_CODE_HASH],
 			context.endUserWallets[0]!,
 		);
@@ -115,10 +128,17 @@ describeWithContext("\n\n👉 Estimate gas for deploying and calling write metho
 			ctxObj,
 			CONTRACTS.multiCallCtx.accumulator.writeMethods.inc,
 			context.alice!.address,
-			{ gasLimit: GAS_LIMIT, storageDepositLimit: null },
+			{
+				gasLimit: context.api!.registry.createType("WeightV2", {
+					proofSize: GAS_LIMIT,
+					refTime: GAS_LIMIT,
+				}) as WeightV2,
+				storageDepositLimit: null,
+			},
 			[1],
 		);
-		expect(response?.result.gasLimit.toFixed(0)).equal(ACCUMULATOR_INC_GAS);
+		expect(response?.result.gasLimit.proofSize.toBigInt()).eql(ACCUMULATOR_INC_GAS.proofSize);
+		expect(response?.result.gasLimit.refTime.toBigInt()).eql(ACCUMULATOR_INC_GAS.refTime);
 
 		done();
 	});
@@ -133,10 +153,17 @@ describeWithContext("\n\n👉 Estimate gas for deploying and calling write metho
 			ctxObj,
 			CONTRACTS.multiCallCtx.adder.writeMethods.inc,
 			context.endUserWallets[0]!.address,
-			{ gasLimit: GAS_LIMIT, storageDepositLimit: null },
+			{
+				gasLimit: context.api!.registry.createType("WeightV2", {
+					proofSize: GAS_LIMIT,
+					refTime: GAS_LIMIT,
+				}) as WeightV2,
+				storageDepositLimit: null,
+			},
 			[1],
 		);
-		expect(response?.result.gasLimit.toFixed(0)).equal(ADDER_INC_GAS);
+		expect(response?.result.gasLimit.proofSize.toBigInt()).eql(ADDER_INC_GAS.proofSize);
+		expect(response?.result.gasLimit.refTime.toBigInt()).eql(ADDER_INC_GAS.refTime);
 
 		done();
 	});
@@ -151,10 +178,18 @@ describeWithContext("\n\n👉 Estimate gas for deploying and calling write metho
 			ctxObj,
 			CONTRACTS.multiCallCtx.adder.writeMethods.receiveFunds,
 			context.endUserWallets[0]!.address,
-			{ gasLimit: GAS_LIMIT, storageDepositLimit: null, value: Math.pow(10, 18).toString() },
+			{
+				gasLimit: context.api!.registry.createType("WeightV2", {
+					proofSize: GAS_LIMIT,
+					refTime: GAS_LIMIT,
+				}) as WeightV2,
+				storageDepositLimit: null,
+				value: Math.pow(10, 18).toString(),
+			},
 			[],
 		);
-		expect(response?.result.gasLimit.toFixed(0)).equal(ADDER_DEPOSIT_GAS);
+		expect(response?.result.gasLimit.proofSize.toBigInt()).eql(ADDER_DEPOSIT_GAS.proofSize);
+		expect(response?.result.gasLimit.refTime.toBigInt()).eql(ADDER_DEPOSIT_GAS.refTime);
 
 		done();
 	});
@@ -170,7 +205,13 @@ describeWithContext("\n\n👉 Estimate gas for deploying and calling write metho
 				context.alice!,
 				ctxObj,
 				CONTRACTS.multiCallCtx.adder.writeMethods.expensiveFunc,
-				{ gasLimit: MAX_GAS_LIMIT, storageDepositLimit: null },
+				{
+					gasLimit: context.api!.registry.createType("WeightV2", {
+						proofSize: MAX_GAS_LIMIT,
+						refTime: MAX_GAS_LIMIT,
+					}) as WeightV2,
+					storageDepositLimit: null,
+				},
 				[],
 			),
 		)

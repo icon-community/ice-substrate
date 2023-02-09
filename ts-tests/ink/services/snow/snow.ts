@@ -192,7 +192,7 @@ class SnowApi {
 			return {
 				isOk: true,
 				result: {
-					gasLimit: new BigNumber(gasRequired?.toString()), //otto unit
+					gasLimit: gasRequired, //otto unit
 					// @ts-ignore
 					deposit: new BigNumber(deposit?.Charge.split(" ")?.[0]), //ICZ unit
 				},

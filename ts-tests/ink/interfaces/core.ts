@@ -1,7 +1,7 @@
 import { EventRecord } from "@polkadot/types/interfaces/system";
-
+import { WeightV2 } from "@polkadot/types/interfaces/runtime";
 export interface TxOptions {
-	gasLimit: string;
+	gasLimit: WeightV2;
 	storageDepositLimit?: string | null;
 	tip?: string;
 	value?: string;

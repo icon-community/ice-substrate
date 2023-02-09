@@ -6,13 +6,14 @@
 import { step } from "mocha-steps";
 import chai from "chai";
 import chaiAsPromised from "chai-as-promised";
+import { WeightV2 } from "@polkadot/types/interfaces/runtime";
+import { ContractPromise } from "@polkadot/api-contract";
+import { ApiPromise } from "@polkadot/api";
+import { AnyJson } from "@polkadot/types-codec/types";
 import { getMetadata, getWasm } from "../services";
 import { describeWithContext } from "./utils";
 import { CONTRACTS } from "../constants";
 import { ContractInterface, QueryArgs } from "../interfaces/core";
-import { ContractPromise } from "@polkadot/api-contract";
-import { ApiPromise } from "@polkadot/api";
-import { AnyJson } from "@polkadot/types-codec/types";
 
 chai.use(chaiAsPromised);
 
@@ -22,9 +23,9 @@ const DEPLOY_GAS_LIMIT = "1000000000000";
 const DEPLOY_STORAGE_LIMIT = "10000000000000000000";
 const WRITE_GAS_LIMIT = "1000000000000";
 
-const UPLOAD_TIMEOUT = 30_000; // todo
-const QUERY_TIMEOUT = 30_000; // todo
-const WRITE_TIMEOUT = 30_000; // todo
+const UPLOAD_TIMEOUT = 30_000;
+const QUERY_TIMEOUT = 30_000;
+const WRITE_TIMEOUT = 30_000;
 
 export async function getFlipState(
 	api: ApiPromise,
@@ -38,7 +39,13 @@ export async function getFlipState(
 	const queryOptions: QueryArgs = {
 		sender: callerAddress,
 		args: [],
-		txOptions: { gasLimit: DEPLOY_GAS_LIMIT, storageDepositLimit: null },
+		txOptions: {
+			gasLimit: api.registry.createType("WeightV2", {
+				proofSize: WRITE_GAS_LIMIT,
+				refTime: WRITE_GAS_LIMIT,
+			}) as WeightV2,
+			storageDepositLimit: null,
+		},
 	};
 
 	// @ts-ignore
@@ -67,7 +74,13 @@ describeWithContext("\n\n👉 Upload and perform read, write on a simple contrac
 		} = await context.deployContract(
 			simpleContract.metadata!,
 			simpleContract.wasm!,
-			{ gasLimit: DEPLOY_GAS_LIMIT, storageDepositLimit: DEPLOY_STORAGE_LIMIT },
+			{
+				gasLimit: context.api!.registry.createType("WeightV2", {
+					proofSize: DEPLOY_GAS_LIMIT,
+					refTime: DEPLOY_GAS_LIMIT,
+				}) as WeightV2,
+				storageDepositLimit: DEPLOY_STORAGE_LIMIT,
+			},
 			[false],
 			context.alice!,
 		);
@@ -114,7 +127,13 @@ describeWithContext("\n\n👉 Upload and perform read, write on a simple contrac
 			context.alice!,
 			ctxObj,
 			CONTRACTS.simpleCtx.writeMethods.flip,
-			{ gasLimit: WRITE_GAS_LIMIT, storageDepositLimit: DEPLOY_STORAGE_LIMIT },
+			{
+				gasLimit: context.api!.registry.createType("WeightV2", {
+					proofSize: WRITE_GAS_LIMIT,
+					refTime: WRITE_GAS_LIMIT,
+				}) as WeightV2,
+				storageDepositLimit: DEPLOY_STORAGE_LIMIT,
+			},
 			[],
 		);
 

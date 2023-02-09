@@ -2,7 +2,9 @@ export const BINARY_PATH = "./assets/ice-node";
 
 export const LOCAL_WSS_URL = "ws://localhost:9944";
 export const MAINNET_WSS_URL = "wss://snow-rpc.icenetwork.io";
-// export const MAINNET_WSS_URL = "ws://localhost:9944";
+
+export const MAINNET_CTX_ADDRESS = "ni3hcgLz19VPerw8PmdZFiApgeU4WnXwJ1sdDBQDRhp3imXbs";
+export const MAINNET_CHAIN_PREFIX = 2207;
 
 export const KEYRING_TYPE = "sr25519";
 export const CHAIN_PREFIX = 2208;

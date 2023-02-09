@@ -4,11 +4,12 @@
 import { step } from "mocha-steps";
 import chai from "chai";
 import chaiAsPromised from "chai-as-promised";
+import { WeightV2 } from "@polkadot/types/interfaces/runtime";
+import { ContractPromise } from "@polkadot/api-contract";
 import { getMetadata, getWasm } from "../services";
 import { describeWithContext } from "./utils";
 import { CONTRACTS } from "../constants";
 import { ContractInterface } from "../interfaces/core";
-import { ContractPromise } from "@polkadot/api-contract";
 
 chai.use(chaiAsPromised);
 
@@ -17,8 +18,8 @@ const { expect } = chai;
 const GAS_LIMIT = "100000000000"; // 10^11
 const DEPLOY_STORAGE_LIMIT = "10000000000000000000"; // 10^19
 
-const UPLOAD_TIMEOUT = 30_000; // todo
-const TX_TIMEOUT = 30_000; // todo
+const UPLOAD_TIMEOUT = 30_000;
+const TX_TIMEOUT = 30_000;
 
 describeWithContext("\n\n👉 Test events emitted by contracts can be parsed", (context) => {
 	const flipperContract: ContractInterface = {
@@ -41,7 +42,13 @@ describeWithContext("\n\n👉 Test events emitted by contracts can be parsed", (
 		} = await context.deployContract(
 			flipperContract.metadata!,
 			flipperContract.wasm!,
-			{ gasLimit: GAS_LIMIT, storageDepositLimit: DEPLOY_STORAGE_LIMIT },
+			{
+				gasLimit: context.api!.registry.createType("WeightV2", {
+					proofSize: GAS_LIMIT,
+					refTime: GAS_LIMIT,
+				}) as WeightV2,
+				storageDepositLimit: DEPLOY_STORAGE_LIMIT,
+			},
 			[0],
 			context.alice!,
 		);
@@ -51,7 +58,7 @@ describeWithContext("\n\n👉 Test events emitted by contracts can be parsed", (
 		flipperContract.blockNum = ctxBlockNum;
 	});
 
-	step("Verify event emitted by a transaction", async function (done) {
+	step("🌟 Verify event emitted by a transaction", async function (done) {
 		this.timeout(TX_TIMEOUT);
 		console.log("\n\nCalling flip on flipper contract...");
 
@@ -61,7 +68,13 @@ describeWithContext("\n\n👉 Test events emitted by contracts can be parsed", (
 			context.alice!,
 			ctxObj,
 			CONTRACTS.simpleCtx.writeMethods.flip,
-			{ gasLimit: GAS_LIMIT, storageDepositLimit: DEPLOY_STORAGE_LIMIT },
+			{
+				gasLimit: context.api!.registry.createType("WeightV2", {
+					proofSize: GAS_LIMIT,
+					refTime: GAS_LIMIT,
+				}) as WeightV2,
+				storageDepositLimit: DEPLOY_STORAGE_LIMIT,
+			},
 			[],
 		);
 

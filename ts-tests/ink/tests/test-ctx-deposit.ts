@@ -27,26 +27,27 @@ NOTE: Initial deployment of code hash will reserve some balances on the deployer
 
 import { step } from "mocha-steps";
 import chai from "chai";
+import { WeightV2 } from "@polkadot/types/interfaces/runtime";
+import BigNumber from "bignumber.js";
+import chaiAsPromised from "chai-as-promised";
 import { getMetadata, getWasm } from "../services";
 import { describeWithContext } from "./utils";
 import { CONTRACTS } from "../constants";
 import { ContractInterface } from "../interfaces/core";
-import BigNumber from "bignumber.js";
-import chaiAsPromised from "chai-as-promised";
 
 chai.use(chaiAsPromised);
 const { expect } = chai;
 
 const END_USER_FUNDS = new BigNumber(1_000 * Math.pow(10, 18)); // 1k ICZ;
-const DEPLOYER_RESERVE_BAL = "4826350000000000000";
-const CTX_RESERVE_BAL = "2004100000000000000";
+const DEPLOYER_RESERVE_BAL = "4825600000000000000";
+const CTX_RESERVE_BAL = "2006100000000000000";
 
 const DEPLOY_GAS_LIMIT = "600000000000";
 const DEPLOY_STORAGE_LIMIT = "10000000000000000000";
 const MIN_DEPLOY_STORAGE_LIMIT = "2000000000000000000";
 
-const UPLOAD_TIMEOUT = 30_000; // todo
-const FUND_TRANSFER_TIMEOUT = 30_000; // todo
+const UPLOAD_TIMEOUT = 30_000;
+const FUND_TRANSFER_TIMEOUT = 30_000;
 
 describeWithContext("\n\n👉 Test reserved balances on deployer wallet and a simple contract", (context) => {
 	const simpleContract: ContractInterface = {
@@ -71,7 +72,13 @@ describeWithContext("\n\n👉 Test reserved balances on deployer wallet and a si
 			context.deployContract(
 				simpleContract.metadata!,
 				simpleContract.wasm!,
-				{ gasLimit: DEPLOY_GAS_LIMIT, storageDepositLimit: MIN_DEPLOY_STORAGE_LIMIT },
+				{
+					gasLimit: context.api!.registry.createType("WeightV2", {
+						proofSize: DEPLOY_GAS_LIMIT,
+						refTime: DEPLOY_GAS_LIMIT,
+					}) as WeightV2,
+					storageDepositLimit: MIN_DEPLOY_STORAGE_LIMIT,
+				},
 				[false],
 				context.endUserWallets[0]!,
 			),
@@ -90,7 +97,13 @@ describeWithContext("\n\n👉 Test reserved balances on deployer wallet and a si
 		const { address: ctxAddress } = await context.deployContract(
 			simpleContract.metadata!,
 			simpleContract.wasm!,
-			{ gasLimit: DEPLOY_GAS_LIMIT, storageDepositLimit: DEPLOY_STORAGE_LIMIT },
+			{
+				gasLimit: context.api!.registry.createType("WeightV2", {
+					proofSize: DEPLOY_GAS_LIMIT,
+					refTime: DEPLOY_GAS_LIMIT,
+				}) as WeightV2,
+				storageDepositLimit: DEPLOY_STORAGE_LIMIT,
+			},
 			[false],
 			context.endUserWallets[0]!,
 		);
@@ -116,7 +129,13 @@ describeWithContext("\n\n👉 Test reserved balances on deployer wallet and a si
 			const { address: ctxAddress } = await context.deployContract(
 				simpleContract.metadata!,
 				simpleContract.wasm!,
-				{ gasLimit: DEPLOY_GAS_LIMIT, storageDepositLimit: DEPLOY_STORAGE_LIMIT },
+				{
+					gasLimit: context.api!.registry.createType("WeightV2", {
+						proofSize: DEPLOY_GAS_LIMIT,
+						refTime: DEPLOY_GAS_LIMIT,
+					}) as WeightV2,
+					storageDepositLimit: DEPLOY_STORAGE_LIMIT,
+				},
 				[false],
 				context.endUserWallets[1]!,
 			);

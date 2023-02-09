@@ -1,4 +1,6 @@
-import { CONTRACTS } from "../../constants";
+import { WeightV2 } from "@polkadot/types/interfaces/runtime";
+import { encodeAddress } from "@polkadot/util-crypto";
+import { CONTRACTS, MAINNET_CHAIN_PREFIX } from "../../constants";
 import { getMetadata, getWasm, SnowApi } from "../../services";
 
 const DEPLOY_GAS_LIMIT = "1000000000000";
@@ -14,12 +16,18 @@ async function deployMigrationCtx() {
 
 	const wallet = SnowApi.keyring?.addFromUri(WALLET_URI!);
 
-	console.log(`Deploying on mainnet with wallet ${wallet?.address}`);
+	console.log(`Deploying on mainnet with wallet ${encodeAddress(wallet!.address, MAINNET_CHAIN_PREFIX)}`);
 
 	const { address, blockNum } = await SnowApi.deployContract(
 		STATE_CHECK_CTX_METADATA,
 		STATE_CHECK_CTX_WASM,
-		{ gasLimit: DEPLOY_GAS_LIMIT, storageDepositLimit: DEPLOY_STORAGE_LIMIT },
+		{
+			gasLimit: SnowApi.api!.registry.createType("WeightV2", {
+				proofSize: DEPLOY_GAS_LIMIT,
+				refTime: DEPLOY_GAS_LIMIT,
+			}) as WeightV2,
+			storageDepositLimit: DEPLOY_STORAGE_LIMIT,
+		},
 		["SNOW", 100],
 		wallet!,
 	);

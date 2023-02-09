@@ -1,14 +1,15 @@
 import { step } from "mocha-steps";
 import chai from "chai";
 import chaiAsPromised from "chai-as-promised";
-import { getMetadata, getWasm } from "../../services";
-import { describeWithContext } from "../utils";
-import { CONTRACTS } from "../../constants";
-import { ContractInterface, QueryArgs } from "../../interfaces/core";
+import { WeightV2 } from "@polkadot/types/interfaces/runtime";
 import { ContractPromise } from "@polkadot/api-contract";
 import { ApiPromise } from "@polkadot/api";
 import { KeyringPair } from "@polkadot/keyring/types";
 import { AnyJson } from "@polkadot/types-codec/types";
+import { getMetadata, getWasm } from "../../services";
+import { describeWithContext } from "../utils";
+import { CONTRACTS } from "../../constants";
+import { ContractInterface, QueryArgs } from "../../interfaces/core";
 
 chai.use(chaiAsPromised);
 
@@ -17,8 +18,8 @@ const { expect } = chai;
 const GAS_LIMIT = "100000000000"; // 10^11
 const DEPLOY_STORAGE_LIMIT = "40000000000000000000"; // 40 ICZ
 
-const UPLOAD_TIMEOUT = 30_000; // todo
-const WRITE_TIMEOUT = 30_000; // todo
+const UPLOAD_TIMEOUT = 30_000;
+const WRITE_TIMEOUT = 30_000;
 
 const WALLET_URI = process.env["MAINNET_WALLET_URI"];
 
@@ -34,7 +35,13 @@ export async function getCtxState(
 	const queryOptions: QueryArgs = {
 		sender: callerAddress,
 		args: [],
-		txOptions: { gasLimit: GAS_LIMIT, storageDepositLimit: null },
+		txOptions: {
+			gasLimit: api.registry.createType("WeightV2", {
+				proofSize: GAS_LIMIT,
+				refTime: GAS_LIMIT,
+			}) as WeightV2,
+			storageDepositLimit: null,
+		},
 	};
 
 	// @ts-ignore
@@ -57,7 +64,7 @@ describeWithContext(
 
 		let wallet: KeyringPair | undefined;
 
-		step("Successfully upload contract to mainnet", async function (done) {
+		step("🌟 Successfully upload contract to mainnet", async function (done) {
 			wallet = context.keyring!.addFromUri(WALLET_URI!);
 
 			// simply upload and get contract & block num. Ensure that the block was last produced block
@@ -70,7 +77,13 @@ describeWithContext(
 			} = await context.deployContract(
 				migrationCtx.metadata!,
 				migrationCtx.wasm!,
-				{ gasLimit: GAS_LIMIT, storageDepositLimit: DEPLOY_STORAGE_LIMIT },
+				{
+					gasLimit: context.api!.registry.createType("WeightV2", {
+						proofSize: GAS_LIMIT,
+						refTime: GAS_LIMIT,
+					}) as WeightV2,
+					storageDepositLimit: DEPLOY_STORAGE_LIMIT,
+				},
 				["Test Contract 1", 1000],
 				wallet,
 			);
@@ -87,9 +100,9 @@ describeWithContext(
 			done();
 		});
 
-		step("Successfully perform operations on the contract", async function (done) {
+		step("🌟 Successfully perform operations on the contract", async function (done) {
 			// call operate method
-			console.log("\n\nCalling operate method on migration contract...\n");
+			console.log("\n\nCalling operate method on the test contract...\n");
 			this.timeout(WRITE_TIMEOUT);
 
 			const ctxObj = new ContractPromise(context.api!, migrationCtx.metadata!, migrationCtx.address!);
@@ -98,7 +111,13 @@ describeWithContext(
 				wallet!,
 				ctxObj,
 				CONTRACTS.migrationTestCtx.writeMethods.operate,
-				{ gasLimit: GAS_LIMIT, storageDepositLimit: DEPLOY_STORAGE_LIMIT },
+				{
+					gasLimit: context.api!.registry.createType("WeightV2", {
+						proofSize: GAS_LIMIT,
+						refTime: GAS_LIMIT,
+					}) as WeightV2,
+					storageDepositLimit: DEPLOY_STORAGE_LIMIT,
+				},
 				[],
 			);
 

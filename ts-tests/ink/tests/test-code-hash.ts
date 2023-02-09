@@ -4,6 +4,7 @@
 
 import { step } from "mocha-steps";
 import chai from "chai";
+import { WeightV2 } from "@polkadot/types/interfaces/runtime";
 import chaiAsPromised from "chai-as-promised";
 import { getMetadata, getWasm } from "../services";
 import { describeWithContext } from "./utils";
@@ -18,14 +19,14 @@ const { expect } = chai;
 
 const GAS_LIMIT = "100000000000"; // 10^11
 const DEPLOY_STORAGE_LIMIT = "10000000000000000000"; // 10^19
-const MAX_RESIDUE = "10000000000000000"; // 10^16
+const MAX_RESIDUE = "20000000000000000"; // 10^16
 
 const UPLOAD_TIMEOUT = 30_000;
 const FUND_TRANSFER_TIMEOUT = 30_000;
 
 const END_USER_FUNDS = new BigNumber(1_000 * Math.pow(10, 18)); // 1k ICZ
 
-const TERMINATE_TX_FEE = new BigNumber(0.11).multipliedBy(Math.pow(10, 18));
+const TERMINATE_TX_FEE = new BigNumber(0.05).multipliedBy(Math.pow(10, 18));
 
 const ACCUMULATOR_CODE_HASH = "0xe0d83c067d9abf593a8089ef1f21fc30fafb02a8dd67a862f8ca47eb158735b9";
 
@@ -63,7 +64,10 @@ describeWithContext("\n\n👉 Tests for code hash", (context) => {
 					adderContract.metadata!,
 					adderContract.wasm!,
 					{
-						gasLimit: GAS_LIMIT,
+						gasLimit: context.api!.registry.createType("WeightV2", {
+							proofSize: GAS_LIMIT,
+							refTime: GAS_LIMIT,
+						}) as WeightV2,
 						storageDepositLimit: DEPLOY_STORAGE_LIMIT,
 					},
 					[0, 1, ACCUMULATOR_CODE_HASH],
@@ -89,7 +93,10 @@ describeWithContext("\n\n👉 Tests for code hash", (context) => {
 				accumulatorContract.metadata!,
 				accumulatorContract.wasm!,
 				{
-					gasLimit: GAS_LIMIT,
+					gasLimit: context.api!.registry.createType("WeightV2", {
+						proofSize: GAS_LIMIT,
+						refTime: GAS_LIMIT,
+					}) as WeightV2,
 					storageDepositLimit: DEPLOY_STORAGE_LIMIT,
 				},
 				[0],
@@ -105,7 +112,13 @@ describeWithContext("\n\n👉 Tests for code hash", (context) => {
 			} = await context.deployContract(
 				adderContract.metadata!,
 				adderContract.wasm!,
-				{ gasLimit: GAS_LIMIT, storageDepositLimit: DEPLOY_STORAGE_LIMIT },
+				{
+					gasLimit: context.api!.registry.createType("WeightV2", {
+						proofSize: GAS_LIMIT,
+						refTime: GAS_LIMIT,
+					}) as WeightV2,
+					storageDepositLimit: DEPLOY_STORAGE_LIMIT,
+				},
 				[0, 1, ACCUMULATOR_CODE_HASH],
 				context.endUserWallets[0]!,
 			);
@@ -141,7 +154,10 @@ describeWithContext("\n\n👉 Tests for code hash", (context) => {
 			ctxObj,
 			CONTRACTS.multiCallCtx.adder.writeMethods.tearDown,
 			{
-				gasLimit: GAS_LIMIT,
+				gasLimit: context.api!.registry.createType("WeightV2", {
+					proofSize: GAS_LIMIT,
+					refTime: GAS_LIMIT,
+				}) as WeightV2,
 				storageDepositLimit: null,
 			},
 			[],

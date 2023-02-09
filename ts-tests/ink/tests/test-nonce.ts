@@ -5,12 +5,13 @@
 import { step } from "mocha-steps";
 import chai from "chai";
 import chaiAsPromised from "chai-as-promised";
+import { WeightV2 } from "@polkadot/types/interfaces/runtime";
+import { ContractPromise } from "@polkadot/api-contract";
+import BigNumber from "bignumber.js";
 import { getMetadata, getWasm } from "../services";
 import { describeWithContext } from "./utils";
 import { CONTRACTS } from "../constants";
 import { ContractInterface } from "../interfaces/core";
-import { ContractPromise } from "@polkadot/api-contract";
-import BigNumber from "bignumber.js";
 
 chai.use(chaiAsPromised);
 
@@ -20,8 +21,8 @@ const { expect } = chai;
 const GAS_LIMIT = "100000000000"; // 10^11
 const DEPLOY_STORAGE_LIMIT = "10000000000000000000"; // 10^19
 
-const BEFORE_TIMEOUT = 40_000; // todo
-const TX_TIMEOUT = 30_000; // todo
+const BEFORE_TIMEOUT = 40_000;
+const TX_TIMEOUT = 30_000;
 
 const END_USER_FUNDS = new BigNumber(1_000 * Math.pow(10, 18)); // 1k ICZ
 
@@ -29,8 +30,7 @@ const ACCUMULATOR_CODE_HASH = "0xe0d83c067d9abf593a8089ef1f21fc30fafb02a8dd67a86
 
 describeWithContext("\n\n👉 Estimate gas for deploying and calling write methods on contract", (context) => {
 	const accumulatorContract: ContractInterface = {
-		address: "npNq3qYT21sZ1UqXtCKd9taeUZPjcyeoVQWB3BKctyHcjs5mC",
-		// address: undefined,
+		address: undefined,
 		blockHash: undefined,
 		codeHash: undefined,
 		blockNum: undefined,
@@ -39,8 +39,7 @@ describeWithContext("\n\n👉 Estimate gas for deploying and calling write metho
 	};
 
 	const adderContract: ContractInterface = {
-		address: "npPRUF1m1BzBdAZT28gLxCoKYbMh6KuZm49PzuWfXzjXpFd5D",
-		// address: undefined,
+		address: undefined,
 		blockHash: undefined,
 		blockNum: undefined,
 		wasm: getWasm(CONTRACTS.multiCallCtx.adder.wasmPath),
@@ -56,7 +55,13 @@ describeWithContext("\n\n👉 Estimate gas for deploying and calling write metho
 		const { address } = await context.deployContract(
 			accumulatorContract.metadata!,
 			accumulatorContract.wasm!,
-			{ gasLimit: GAS_LIMIT, storageDepositLimit: DEPLOY_STORAGE_LIMIT },
+			{
+				gasLimit: context.api!.registry.createType("WeightV2", {
+					proofSize: GAS_LIMIT,
+					refTime: GAS_LIMIT,
+				}) as WeightV2,
+				storageDepositLimit: DEPLOY_STORAGE_LIMIT,
+			},
 			[0],
 			context.endUserWallets[0]!,
 		);
@@ -71,7 +76,13 @@ describeWithContext("\n\n👉 Estimate gas for deploying and calling write metho
 		} = await context.deployContract(
 			adderContract.metadata!,
 			adderContract.wasm!,
-			{ gasLimit: GAS_LIMIT, storageDepositLimit: DEPLOY_STORAGE_LIMIT },
+			{
+				gasLimit: context.api!.registry.createType("WeightV2", {
+					proofSize: GAS_LIMIT,
+					refTime: GAS_LIMIT,
+				}) as WeightV2,
+				storageDepositLimit: DEPLOY_STORAGE_LIMIT,
+			},
 			[0, 1, ACCUMULATOR_CODE_HASH],
 			context.endUserWallets[0]!,
 		);
@@ -81,7 +92,7 @@ describeWithContext("\n\n👉 Estimate gas for deploying and calling write metho
 		adderContract.blockNum = ctxBlockNum;
 	});
 
-	step("User nonce should update after it makes a write call on a contract", async function (done) {
+	step("🌟 User nonce should update after it makes a write call on a contract", async function (done) {
 		this.timeout(TX_TIMEOUT);
 		console.log("\n\nCalling increment on accumulator contract...\n");
 
@@ -91,7 +102,13 @@ describeWithContext("\n\n👉 Estimate gas for deploying and calling write metho
 			context.endUserWallets[1]!,
 			ctxObj,
 			CONTRACTS.multiCallCtx.accumulator.writeMethods.inc,
-			{ gasLimit: GAS_LIMIT, storageDepositLimit: null },
+			{
+				gasLimit: context.api!.registry.createType("WeightV2", {
+					proofSize: GAS_LIMIT,
+					refTime: GAS_LIMIT,
+				}) as WeightV2,
+				storageDepositLimit: null,
+			},
 			[1],
 		);
 
@@ -101,7 +118,7 @@ describeWithContext("\n\n👉 Estimate gas for deploying and calling write metho
 		done();
 	});
 
-	step("User nonce should update on a multi-call transaction but not the contract nonce", async function (done) {
+	step("🌟 User nonce should update on a multi-call transaction but not the contract nonce", async function (done) {
 		this.timeout(TX_TIMEOUT);
 
 		const ctxObj = new ContractPromise(context.api!, adderContract.metadata!, adderContract.address!);
@@ -111,7 +128,13 @@ describeWithContext("\n\n👉 Estimate gas for deploying and calling write metho
 			context.endUserWallets[1]!,
 			ctxObj,
 			CONTRACTS.multiCallCtx.adder.writeMethods.inc,
-			{ gasLimit: GAS_LIMIT, storageDepositLimit: null },
+			{
+				gasLimit: context.api!.registry.createType("WeightV2", {
+					proofSize: GAS_LIMIT,
+					refTime: GAS_LIMIT,
+				}) as WeightV2,
+				storageDepositLimit: null,
+			},
 			[1],
 		);
 
@@ -123,7 +146,7 @@ describeWithContext("\n\n👉 Estimate gas for deploying and calling write metho
 		done();
 	});
 
-	step("Transaction with same nonce but higher tip should replace original transaction", async function (done) {
+	step("🌟 Transaction with same nonce but higher tip should replace original transaction", async function (done) {
 		this.timeout(TX_TIMEOUT);
 		console.log("\n\nCalling inc method on accumulator contract...");
 
@@ -133,7 +156,13 @@ describeWithContext("\n\n👉 Estimate gas for deploying and calling write metho
 			context.endUserWallets[1]!,
 			ctxObj,
 			CONTRACTS.multiCallCtx.accumulator.writeMethods.inc,
-			{ gasLimit: GAS_LIMIT, storageDepositLimit: null },
+			{
+				gasLimit: context.api!.registry.createType("WeightV2", {
+					proofSize: GAS_LIMIT,
+					refTime: GAS_LIMIT,
+				}) as WeightV2,
+				storageDepositLimit: null,
+			},
 			[1],
 		);
 
@@ -141,7 +170,13 @@ describeWithContext("\n\n👉 Estimate gas for deploying and calling write metho
 			context.endUserWallets[1]!,
 			ctxObj,
 			CONTRACTS.multiCallCtx.accumulator.writeMethods.inc,
-			{ gasLimit: GAS_LIMIT, storageDepositLimit: null },
+			{
+				gasLimit: context.api!.registry.createType("WeightV2", {
+					proofSize: GAS_LIMIT,
+					refTime: GAS_LIMIT,
+				}) as WeightV2,
+				storageDepositLimit: null,
+			},
 			[120],
 			"10000000000",
 		);
@@ -149,7 +184,13 @@ describeWithContext("\n\n👉 Estimate gas for deploying and calling write metho
 		const { output } = await context.queryContract(ctxObj, CONTRACTS.multiCallCtx.accumulator.readMethods.get, {
 			sender: context.endUserWallets[1].address,
 			args: [],
-			txOptions: { gasLimit: GAS_LIMIT, storageDepositLimit: null },
+			txOptions: {
+				gasLimit: context.api!.registry.createType("WeightV2", {
+					proofSize: GAS_LIMIT,
+					refTime: GAS_LIMIT,
+				}) as WeightV2,
+				storageDepositLimit: null,
+			},
 		});
 
 		expect(output?.toHuman()).to.equal("121");
@@ -157,7 +198,7 @@ describeWithContext("\n\n👉 Estimate gas for deploying and calling write metho
 		done();
 	});
 
-	step("Transaction with lower nonce should be given priority", async function (done) {
+	step("🌟 Transaction with lower nonce should be given priority", async function (done) {
 		this.timeout(TX_TIMEOUT);
 		console.log("\n\nCalling inc method on accumulator contract...");
 
@@ -169,7 +210,13 @@ describeWithContext("\n\n👉 Estimate gas for deploying and calling write metho
 			context.endUserWallets[1]!,
 			ctxObj,
 			CONTRACTS.multiCallCtx.accumulator.writeMethods.inc,
-			{ gasLimit: GAS_LIMIT, storageDepositLimit: null },
+			{
+				gasLimit: context.api!.registry.createType("WeightV2", {
+					proofSize: GAS_LIMIT,
+					refTime: GAS_LIMIT,
+				}) as WeightV2,
+				storageDepositLimit: null,
+			},
 			[1],
 			undefined,
 			userNonce + 2,
@@ -179,7 +226,13 @@ describeWithContext("\n\n👉 Estimate gas for deploying and calling write metho
 			context.endUserWallets[1]!,
 			ctxObj,
 			CONTRACTS.multiCallCtx.accumulator.writeMethods.inc,
-			{ gasLimit: GAS_LIMIT, storageDepositLimit: null },
+			{
+				gasLimit: context.api!.registry.createType("WeightV2", {
+					proofSize: GAS_LIMIT,
+					refTime: GAS_LIMIT,
+				}) as WeightV2,
+				storageDepositLimit: null,
+			},
 			[120],
 			undefined,
 			userNonce,
@@ -188,7 +241,13 @@ describeWithContext("\n\n👉 Estimate gas for deploying and calling write metho
 		const { output } = await context.queryContract(ctxObj, CONTRACTS.multiCallCtx.accumulator.readMethods.get, {
 			sender: context.endUserWallets[1].address,
 			args: [],
-			txOptions: { gasLimit: GAS_LIMIT, storageDepositLimit: null },
+			txOptions: {
+				gasLimit: context.api!.registry.createType("WeightV2", {
+					proofSize: GAS_LIMIT,
+					refTime: GAS_LIMIT,
+				}) as WeightV2,
+				storageDepositLimit: null,
+			},
 		});
 
 		expect(output?.toHuman()).to.equal("241");
