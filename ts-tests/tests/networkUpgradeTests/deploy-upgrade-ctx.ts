@@ -1,21 +1,23 @@
 import { Contract, ContractFactory, Signer, Wallet } from "ethers";
 import dotenv from "dotenv";
 
-import { ethersProvider } from "./api";
 import UpgradeCtx from "../../build/contracts/NetworkUpgrade.json";
+import { parseChainFromArgs, getEthersProvider } from "./helpers";
 
 dotenv.config();
-const MAINNET_DEPLOYER_KEY = process.env["MAINNET_DEPLOYER_KEY"];
+const EVM_CTX_DEPLOYER_KEY = process.env["EVM_CTX_DEPLOYER_KEY"];
+const chain = parseChainFromArgs(process.argv);
 
 async function deployContract() {
-	let deployer: Signer = new Wallet(MAINNET_DEPLOYER_KEY, ethersProvider);
+	let deployer: Signer = new Wallet(EVM_CTX_DEPLOYER_KEY, getEthersProvider(chain));
 	let factory = new ContractFactory(UpgradeCtx.abi, UpgradeCtx.bytecode, deployer);
-	const contract: Contract = await factory.deploy(20, "SNOW Network");
 
-	//wait until contract deployed
-	await contract.deployed();
-
+	console.log(`Deploying contract to: ${chain}`);
 	console.log("Deployer wallet: ", await deployer.getAddress());
+
+	const contract: Contract = await factory.deploy(20, "SNOW Network");
+	await contract.deployed(); //wait until deployed
+
 	console.log("Contract address: ", contract.address);
 	console.log("\nSuccessfully deployed contract");
 }

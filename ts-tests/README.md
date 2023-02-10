@@ -38,10 +38,21 @@ ICE_LOG="warn,rpc=trace" npm run test
 ## Run tests for contracts state
 Ensure that the deployed contract state is intact.
 ```bash
-npm run test-ctx-state
+npm run test-ctx-state <chain>
 ```
-`The contract is readily available on SNOW Network.`  
-*<b>Optionally:</b>* If you save your `private key` in `.env` file, you can deploy the contract to mainnet:
+*where `chain` could be one of the following:*  
+- *snow*
+- *arctic*
+- *snow_staging*
+- *local*  
+
+`The contract should be readily available on SNOW/Arctic/Staging Network.`  
+*<b>Optionally:</b>* If you save your `private key` in `.env` file, you can deploy the contract to SNOW/Arctic:
 ```bash
-npm run deploy-upgrade-ctx
+npm run deploy-upgrade-ctx <chain>
 ```
+*where `chain` could be one of the following:*  
+- *snow*
+- *arctic*
+- *snow_staging*
+- *local*
