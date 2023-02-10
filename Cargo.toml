@@ -12,6 +12,7 @@ members = [
     "pallets/fees-split",
     "pallets/simple-inflation",
     "integration-tests",
+    "xcm-integration-tests",
     "contracts/staking_rewards",
 ]
 
