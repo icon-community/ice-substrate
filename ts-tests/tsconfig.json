@@ -1,6 +1,8 @@
 {
 	"compilerOptions": {
 		"esModuleInterop": true,
-		"resolveJsonModule": true
+		"moduleResolution": "node",
+		"resolveJsonModule": true,
+		"target": "ES2020"
 	}
 }

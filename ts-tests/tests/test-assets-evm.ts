@@ -52,7 +52,7 @@ describeWithIce("Ice RPC (AssetsERC20)", (context) => {
 		const tx = await erc20.transfer(receiver, "10");
 		await tx.wait();
 		const balanceOf = await erc20.balanceOf(receiver);
-		expect(balanceOf.toString()).to.equal((Number.parseInt(prevBalance)+10).toString());
+		expect(balanceOf.toString()).to.equal((Number.parseInt(prevBalance) + 10).toString());
 	});
 	// erc20Plus
 
@@ -65,18 +65,18 @@ describeWithIce("Ice RPC (AssetsERC20)", (context) => {
 	it("should burn token", async function () {
 		this.timeout(15000);
 		const prevSupply = await erc20Plus.totalSupply();
-		const tx= await erc20Plus.burn(genesisAccount.getAddress(),"1", {gasLimit: 5000000});
+		const tx = await erc20Plus.burn(genesisAccount.getAddress(), "1", { gasLimit: 5000000 });
 		await tx.wait();
 		const totalSupply = await erc20Plus.totalSupply();
-		expect(totalSupply.toString()).to.equal((Number.parseInt(prevSupply)-1).toString());
+		expect(totalSupply.toString()).to.equal((Number.parseInt(prevSupply) - 1).toString());
 	});
 
 	it("should mint token", async function () {
 		this.timeout(15000);
 		const prevSupply = await erc20Plus.totalSupply();
-		const tx= await erc20Plus.mint(genesisAccount.getAddress(),"1", {gasLimit: 5000000});
+		const tx = await erc20Plus.mint(genesisAccount.getAddress(), "1", { gasLimit: 5000000 });
 		await tx.wait();
 		const totalSupply = await erc20Plus.totalSupply();
-		expect(totalSupply.toString()).to.equal((Number.parseInt(prevSupply)+1).toString());
+		expect(totalSupply.toString()).to.equal((Number.parseInt(prevSupply) + 1).toString());
 	});
 });
