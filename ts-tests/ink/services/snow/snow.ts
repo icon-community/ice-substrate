@@ -38,8 +38,8 @@ class SnowApi {
 	private static getEndUserWallets() {
 		let counter = 0;
 		const wallets: Array<KeyringPair> = [];
-		while (process.env[`END_USER_WALLET_${++counter}_URI`]) {
-			wallets.push(SnowApi.keyring?.addFromUri(process.env[`END_USER_WALLET_${counter}_URI`]!)!);
+		while (process.env[`TEST_INK_WALLET_SEED_${++counter}`]) {
+			wallets.push(SnowApi.keyring?.addFromUri(process.env[`TEST_INK_WALLET_SEED_${counter}`]!)!);
 		}
 		return wallets;
 	}
