@@ -60,8 +60,8 @@ describeWithContext(
 			blockHash: undefined,
 			codeHash: undefined,
 			blockNum: undefined,
-			wasm: getWasm(CONTRACTS.upgradeTestCtx.wasmPath),
-			metadata: getMetadata(CONTRACTS.upgradeTestCtx.metadataPath),
+			wasm: getWasm(CONTRACTS.simpleCtx.wasmPath),
+			metadata: getMetadata(CONTRACTS.simpleCtx.metadataPath),
 		};
 
 		let wallet: KeyringPair | undefined;
@@ -86,7 +86,7 @@ describeWithContext(
 					}) as WeightV2,
 					storageDepositLimit: DEPLOY_STORAGE_LIMIT,
 				},
-				["Test Contract 1", 1000],
+				[false],
 				wallet,
 			);
 
@@ -102,10 +102,10 @@ describeWithContext(
 			done();
 		});
 
-		step("🌟 Successfully perform operations on the contract", async function (done) {
+		step("🌟 Successfully perform write operations on the contract", async function (done) {
 			try {
 				// call operate method
-				console.log("\n\nCalling operate method on the test contract...\n");
+				console.log("\n\nCalling write method on the test contract...\n");
 				this.timeout(WRITE_TIMEOUT);
 
 				const ctxObj = new ContractPromise(context.api!, migrationCtx.metadata!, migrationCtx.address!);
@@ -113,7 +113,7 @@ describeWithContext(
 				await context.writeContract(
 					wallet!,
 					ctxObj,
-					CONTRACTS.upgradeTestCtx.writeMethods.operate,
+					CONTRACTS.simpleCtx.writeMethods.flip,
 					{
 						gasLimit: context.api!.registry.createType("WeightV2", {
 							proofSize: GAS_LIMIT,
@@ -136,9 +136,8 @@ describeWithContext(
 					),
 				)
 					.to.eventually.equal(
-						// keccak hash of "3998"
-						'{"msg":"Test Contract 1","hash":"0xba20efe605ffaf935740b0609b20e76f4a2eebc2a40e893d19665b3d829318a5","value":3998}',
-						"Operate method did not execute expectedly",
+						"true",
+						"Write method did not execute expectedly",
 					)
 					.notify(done);
 			} catch (err) {
