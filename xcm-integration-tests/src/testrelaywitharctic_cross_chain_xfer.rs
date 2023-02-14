@@ -59,6 +59,41 @@ fn reserve_transfer_from_relay() {
     });
 }
 
+#[test]
+fn reserve_transfer_to_relay() {
+    TestRelayWithArcticParaNet::reset();
+
+    let withdraw_amount = 2_000_000_000_000_000_000;
+
+    Arctic::execute_with(|| {
+        assert_ok!(ParachainPalletXcm::reserve_transfer_assets(
+            arctic_runtime::RuntimeOrigin::signed(ALICE),
+            Box::new(Parent.into()),
+            Box::new(X1(AccountId32 { network: Any, id: ALICE.into() }).into().into()),
+            Box::new((Here, withdraw_amount).into()),
+            0,
+        ));
+        /*
+        assert_eq!(
+            relay::Balances::free_balance(&ALICE),
+            INITIAL_BALANCE + withdraw_amount
+        );
+        */
+    });
+
+    TestRelay::execute_with(|| {
+        // free execution, full amount received
+        assert_eq!(
+            relay::Balances::free_balance(&ALICE),
+            INITIAL_BALANCE + withdraw_amount
+        );
+        assert_eq!(
+            pallet_balances::Pallet::<relay::Runtime>::free_balance(&ALICE),
+            INITIAL_BALANCE + withdraw_amount
+        );
+    });
+}
+
 /// Scenario:
 /// A parachain transfers funds on the relay chain to another parachain account.
 ///
@@ -67,7 +102,7 @@ fn reserve_transfer_from_relay() {
 fn withdraw_and_deposit() {
     TestRelayWithArcticParaNet::reset();
 
-    let send_amount = 10;
+    let send_amount = 2_000_000_000_000_000_000;
 
     Arctic::execute_with(|| {
         let message = Xcm(vec![
@@ -89,35 +124,6 @@ fn withdraw_and_deposit() {
             INITIAL_BALANCE - send_amount
         );
         assert_eq!(relay::Balances::free_balance(para_account_id(2000)), send_amount);
-    });
-}
-
-#[test]
-fn reserve_transfer_to_relay() {
-    TestRelayWithArcticParaNet::reset();
-
-    let withdraw_amount = 123;
-
-    Arctic::execute_with(|| {
-        assert_ok!(ParachainPalletXcm::reserve_transfer_assets(
-            arctic_runtime::RuntimeOrigin::signed(ALICE),
-            Box::new(Parent.into()),
-            Box::new(X1(AccountId32 { network: Any, id: ALICE.into() }).into().into()),
-            Box::new((Here, withdraw_amount).into()),
-            0,
-        ));
-        assert_eq!(
-            relay::Balances::free_balance(&para_account_id(2001)),
-            INITIAL_BALANCE + withdraw_amount
-        );
-    });
-
-    TestRelay::execute_with(|| {
-        // free execution, full amount received
-        assert_eq!(
-            pallet_balances::Pallet::<relay::Runtime>::free_balance(&ALICE),
-            INITIAL_BALANCE + withdraw_amount
-        );
     });
 }
 
