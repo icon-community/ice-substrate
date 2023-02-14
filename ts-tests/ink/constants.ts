@@ -1,10 +1,9 @@
 export const BINARY_PATH = "./assets/ice-node";
 
 export const LOCAL_WSS_URL = "ws://localhost:9944";
-export const MAINNET_WSS_URL = "wss://snow-rpc.icenetwork.io";
+export const LOCAL_CHAIN_PREFIX = 2208;
 
 export const KEYRING_TYPE = "sr25519";
-export const CHAIN_PREFIX = 2208;
 
 export const BLOCK_TIME_MS = 12_000;
 
@@ -87,7 +86,7 @@ export const CHAINS = {
 		RPC_ENDPOINT: "wss://arctic-rpc.icenetwork.io:9944",
 		CHAIN_ID: 553,
 		CHAIN_PREFIX: 2208,
-		UPGRADE_CTX_ADDRESS: "",
+		UPGRADE_CTX_ADDRESS: "npNTSNZujEmYuGnUWpVEhVWG4fYkTsAgoGwFskh8LwKfqQjdM",
 	},
 	snow_staging: {
 		RPC_ENDPOINT: "wss://snow-staging-rpc.web3labs.com:9944",

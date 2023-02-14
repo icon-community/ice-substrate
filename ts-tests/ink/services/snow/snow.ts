@@ -1,6 +1,6 @@
 import { ChildProcessWithoutNullStreams, spawn } from "child_process";
 import { sleep } from "./helpers";
-import { BINARY_PATH, KEYRING_TYPE, CHAIN_PREFIX, ALICE_URI, CHAINS } from "../../constants";
+import { BINARY_PATH, KEYRING_TYPE, LOCAL_CHAIN_PREFIX, ALICE_URI, CHAINS, LOCAL_WSS_URL } from "../../constants";
 import { ApiPromise, WsProvider, Keyring } from "@polkadot/api";
 import { CodePromise, ContractPromise } from "@polkadot/api-contract";
 import { KeyringPair } from "@polkadot/keyring/types";
@@ -22,14 +22,14 @@ class SnowApi {
 	static endUserWallets: Array<KeyringPair>;
 
 	static initialize = async (chain?: keyof typeof CHAINS) => {
-		// todo
+		let RPC_ENDPOINT = chain ? CHAINS[chain].RPC_ENDPOINT : LOCAL_WSS_URL;
 		if (!chain) {
 			await SnowApi.startNetwork();
 		}
-		SnowApi.api = await SnowApi.connectSnowApi(CHAINS[chain!].RPC_ENDPOINT);
+		SnowApi.api = await SnowApi.connectSnowApi(RPC_ENDPOINT);
 		SnowApi.keyring = new Keyring({
 			type: KEYRING_TYPE,
-			ss58Format: chain ? CHAINS[chain].CHAIN_PREFIX : CHAIN_PREFIX,
+			ss58Format: chain ? CHAINS[chain].CHAIN_PREFIX : LOCAL_CHAIN_PREFIX,
 		});
 		SnowApi.alice = SnowApi.keyring.addFromUri(ALICE_URI);
 		SnowApi.endUserWallets = SnowApi.getEndUserWallets();
