@@ -10,6 +10,7 @@ import { getMetadata, getWasm } from "../../services";
 import { describeWithContext } from "../utils";
 import { CONTRACTS } from "../../constants";
 import { ContractInterface, QueryArgs } from "../../interfaces/core";
+import { parseChainFromArgs } from "./helpers";
 
 chai.use(chaiAsPromised);
 
@@ -21,7 +22,8 @@ const DEPLOY_STORAGE_LIMIT = "40000000000000000000"; // 40 ICZ
 const UPLOAD_TIMEOUT = 30_000;
 const WRITE_TIMEOUT = 30_000;
 
-const WALLET_URI = process.env["MAINNET_WALLET_URI"];
+const WALLET_URI = process.env["INK_CTX_DEPLOYER_URI"];
+const chain = parseChainFromArgs(process.argv);
 
 export async function getCtxState(
 	api: ApiPromise,
@@ -64,7 +66,7 @@ describeWithContext(
 
 		let wallet: KeyringPair | undefined;
 
-		step("🌟 Successfully upload contract to mainnet", async function (done) {
+		step(`🌟 Successfully upload contract to ${chain} network`, async function (done) {
 			wallet = context.keyring!.addFromUri(WALLET_URI!);
 
 			// simply upload and get contract & block num. Ensure that the block was last produced block
@@ -101,44 +103,48 @@ describeWithContext(
 		});
 
 		step("🌟 Successfully perform operations on the contract", async function (done) {
-			// call operate method
-			console.log("\n\nCalling operate method on the test contract...\n");
-			this.timeout(WRITE_TIMEOUT);
+			try {
+				// call operate method
+				console.log("\n\nCalling operate method on the test contract...\n");
+				this.timeout(WRITE_TIMEOUT);
 
-			const ctxObj = new ContractPromise(context.api!, migrationCtx.metadata!, migrationCtx.address!);
+				const ctxObj = new ContractPromise(context.api!, migrationCtx.metadata!, migrationCtx.address!);
 
-			await context.writeContract(
-				wallet!,
-				ctxObj,
-				CONTRACTS.migrationTestCtx.writeMethods.operate,
-				{
-					gasLimit: context.api!.registry.createType("WeightV2", {
-						proofSize: GAS_LIMIT,
-						refTime: GAS_LIMIT,
-					}) as WeightV2,
-					storageDepositLimit: DEPLOY_STORAGE_LIMIT,
-				},
-				[],
-			);
+				await context.writeContract(
+					wallet!,
+					ctxObj,
+					CONTRACTS.migrationTestCtx.writeMethods.operate,
+					{
+						gasLimit: context.api!.registry.createType("WeightV2", {
+							proofSize: GAS_LIMIT,
+							refTime: GAS_LIMIT,
+						}) as WeightV2,
+						storageDepositLimit: DEPLOY_STORAGE_LIMIT,
+					},
+					[],
+				);
 
-			// ensure the values returned by get method are accurate
-			expect(
-				getCtxState(
-					context.api!,
-					migrationCtx.metadata!,
-					migrationCtx.address!,
-					wallet!.address,
-					// @ts-ignore
-					context.queryContract,
-				),
-			)
-				.to.eventually.equal(
-					// keccak hash of "3998"
-					'{"msg":"Test Contract 1","hash":"0xba20efe605ffaf935740b0609b20e76f4a2eebc2a40e893d19665b3d829318a5","value":3998}',
-					"Operate method did not execute expectedly",
+				// ensure the values returned by get method are accurate
+				expect(
+					getCtxState(
+						context.api!,
+						migrationCtx.metadata!,
+						migrationCtx.address!,
+						wallet!.address,
+						// @ts-ignore
+						context.queryContract,
+					),
 				)
-				.notify(done);
+					.to.eventually.equal(
+						// keccak hash of "3998"
+						'{"msg":"Test Contract 1","hash":"0xba20efe605ffaf935740b0609b20e76f4a2eebc2a40e893d19665b3d829318a5","value":3998}',
+						"Operate method did not execute expectedly",
+					)
+					.notify(done);
+			} catch (err) {
+				done(err);
+			}
 		});
 	},
-	true,
+	chain,
 );

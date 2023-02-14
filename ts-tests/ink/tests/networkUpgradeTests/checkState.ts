@@ -2,16 +2,21 @@ import { ContractPromise } from "@polkadot/api-contract";
 import { step } from "mocha-steps";
 import { expect } from "chai";
 import { WeightV2 } from "@polkadot/types/interfaces/runtime";
+import dotenv from "dotenv-flow";
 import { QueryArgs } from "../../interfaces/core";
-import { CONTRACTS, MAINNET_CTX_ADDRESS } from "../../constants";
+import { CHAINS, CONTRACTS } from "../../constants";
 import { getMetadata } from "../../services";
 import { describeWithContext } from "../utils";
+import { parseChainFromArgs } from "./helpers";
+
+dotenv.config();
 
 const GAS_LIMIT = "10000000000000";
 
 const QUERY_TIMEOUT = 30_000;
 
 const STATE_CHECK_CTX_METADATA = getMetadata(CONTRACTS.stateCheckCtx.metadataPath);
+const chain = parseChainFromArgs(process.argv);
 
 describeWithContext(
 	"\n\n👉 Tests for contracts after network upgrade",
@@ -19,7 +24,11 @@ describeWithContext(
 		step("🌟 Ensure the contract state is intact", async function (done) {
 			this.timeout(QUERY_TIMEOUT);
 
-			const ctxObj = new ContractPromise(context.api!, STATE_CHECK_CTX_METADATA, MAINNET_CTX_ADDRESS!);
+			const ctxObj = new ContractPromise(
+				context.api!,
+				STATE_CHECK_CTX_METADATA,
+				CHAINS[chain].UPGRADE_CTX_ADDRESS,
+			);
 
 			const queryOptions: QueryArgs = {
 				sender: context.alice!.address,
@@ -47,5 +56,5 @@ describeWithContext(
 			done();
 		});
 	},
-	true,
+	chain,
 );

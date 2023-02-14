@@ -3,9 +3,6 @@ export const BINARY_PATH = "./assets/ice-node";
 export const LOCAL_WSS_URL = "ws://localhost:9944";
 export const MAINNET_WSS_URL = "wss://snow-rpc.icenetwork.io";
 
-export const MAINNET_CTX_ADDRESS = "ni3hcgLz19VPerw8PmdZFiApgeU4WnXwJ1sdDBQDRhp3imXbs";
-export const MAINNET_CHAIN_PREFIX = 2207;
-
 export const KEYRING_TYPE = "sr25519";
 export const CHAIN_PREFIX = 2208;
 
@@ -76,5 +73,32 @@ export const CONTRACTS = {
 		},
 		metadataPath: "./assets/stateCheckCtx/state_check.contract",
 		wasmPath: "./assets/stateCheckCtx/state_check.wasm",
+	},
+};
+
+export const CHAINS = {
+	snow: {
+		RPC_ENDPOINT: "wss://snow-rpc.icenetwork.io",
+		CHAIN_ID: 552,
+		CHAIN_PREFIX: 2207,
+		UPGRADE_CTX_ADDRESS: "",
+	},
+	arctic: {
+		RPC_ENDPOINT: "wss://arctic-rpc.icenetwork.io:9944",
+		CHAIN_ID: 553,
+		CHAIN_PREFIX: 2208,
+		UPGRADE_CTX_ADDRESS: "",
+	},
+	snow_staging: {
+		RPC_ENDPOINT: "wss://snow-staging-rpc.web3labs.com:9944",
+		CHAIN_ID: 552,
+		CHAIN_PREFIX: 2207,
+		UPGRADE_CTX_ADDRESS: "",
+	},
+	local: {
+		RPC_ENDPOINT: "ws://localhost:9944",
+		CHAIN_ID: 554,
+		CHAIN_PREFIX: 2208,
+		UPGRADE_CTX_ADDRESS: "", // Update according to local env
 	},
 };

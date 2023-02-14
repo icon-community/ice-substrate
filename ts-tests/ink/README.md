@@ -13,6 +13,10 @@
 - Tested with Node `v16.14.0`
 - Build contracts on `assets` folder.
 - **Optional:** *Update contract metadata and wasm paths on `constants.ts` file.* 
+- Install node dependencies
+  ```sh
+  npm i
+  ```
 - On local machine, create `.env.local` file with reference from `.env.sample` file and run 
   ```sh
   npm run test
@@ -23,16 +27,34 @@
   ```
 - **Optional:** *Update `constants.ts` file for changing RPC endpoints*
 
-## Other Commands
-- Deploy a contract on mainnet to test state after upgrade
-  ```sh
-  npm run deploy-contract
-  ```
+## Run tests for contracts state
 - Ensure the contract state is intact after upgrade
-  ```sh
-  npm run test-contract-state
+  ```bash
+  npm run test-ctx-state <chain>
   ```
-- - Make sure contracts can be deployed, queried and called after upgrade
-  ```sh
-  npm run test-contract-overall
+  *where `chain` could be one of the following:*  
+  - *snow*
+  - *arctic*
+  - *snow_staging*
+  - *local*  
+
+- `The contract should be readily available on SNOW/Arctic/Staging Network.`  
+*<b>Optionally:</b>* If you save your `private key` in `.env` file, you can deploy the contract to SNOW/Arctic:
+  ```bash
+  npm run deploy-upgrade-ctx <chain>
   ```
+  *where `chain` could be one of the following:*  
+  - *snow*
+  - *arctic*
+  - *snow_staging*
+  - *local*
+
+- Make sure contracts can be deployed, queried and called after upgrade
+  ```sh
+  npm run test-ctx-overall <chain>
+  ```
+    *where `chain` could be one of the following:*  
+  - *snow*
+  - *arctic*
+  - *snow_staging*
+  - *local*
