@@ -59,6 +59,14 @@ use sp_version::RuntimeVersion;
 use frame_support::inherent::Vec;
 use sp_std::boxed::Box;
 
+use pallet_rmrk_core::{CollectionInfoOf, InstanceInfoOf, PropertyInfoOf, ResourceInfoOf};
+use pallet_rmrk_equip::{BaseInfoOf, BoundedThemeOf, PartTypeOf};
+use rmrk_traits::{
+	primitives::*,
+	primitives::{CollectionId, NftId, ResourceId},
+	NftChild,
+};
+
 pub mod constants;
 pub mod impls;
 pub use constants::{currency, time::*};
@@ -1084,6 +1092,81 @@ impl pallet_base_fee::Config for Runtime {
 
 impl pallet_randomness_collective_flip::Config for Runtime {}
 
+// Remark Pallets
+
+parameter_types! {
+	pub const ResourceSymbolLimit: u32 = 10;
+	pub const PartsLimit: u32 = 25;
+	pub const MaxPriorities: u32 = 25;
+	pub const CollectionSymbolLimit: u32 = 100;
+	pub const MaxResourcesOnMint: u32 = 100;
+	pub const PropertiesLimit: u32 = 25;
+	pub const NestingBudget: u32 = 20;
+}
+
+impl pallet_rmrk_core::Config for Runtime {
+	type RuntimeEvent = RuntimeEvent;
+	type ProtocolOrigin = EnsureRoot<AccountId>;
+	type ResourceSymbolLimit = ResourceSymbolLimit;
+	type PartsLimit = PartsLimit;
+	type MaxPriorities = MaxPriorities;
+	type NestingBudget = NestingBudget;
+	type CollectionSymbolLimit = CollectionSymbolLimit;
+	type MaxResourcesOnMint = MaxResourcesOnMint;
+	type WeightInfo = pallet_rmrk_core::weights::SubstrateWeight<Runtime>;
+	type TransferHooks = ();
+}
+use crate::currency::CENTS;
+use crate::currency::DOLLARS;
+parameter_types! {
+	pub const CollectionDeposit: Balance = 10 * CENTS;
+	pub const ItemDeposit: Balance = DOLLARS;
+	pub const KeyLimit: u32 = 32;
+	pub const ValueLimit: u32 = 256;
+	pub const UniquesMetadataDepositBase: Balance = 10 * CENTS;
+	pub const AttributeDepositBase: Balance = 10 * CENTS;
+	pub const RmrkDepositPerByte: Balance = CENTS;
+	pub const UniquesStringLimit: u32 = 128;
+	pub const MaxPropertiesPerTheme: u32 = 100;
+	pub const MaxCollectionsEquippablePerPart: u32 = 100;
+}
+
+impl pallet_rmrk_equip::Config for Runtime {
+	type RuntimeEvent = RuntimeEvent;
+	type MaxPropertiesPerTheme = MaxPropertiesPerTheme;
+	type MaxCollectionsEquippablePerPart = MaxCollectionsEquippablePerPart;
+}
+
+parameter_types! {
+	pub const MinimumOfferAmount: Balance = DOLLARS / 10_000;
+}
+
+impl pallet_rmrk_market::Config for Runtime {
+	type RuntimeEvent = RuntimeEvent;
+	type ProtocolOrigin = EnsureRoot<AccountId>;
+	type Currency = Balances;
+	type MinimumOfferAmount = MinimumOfferAmount;
+}
+
+impl pallet_uniques::Config for Runtime {
+	type RuntimeEvent = RuntimeEvent;
+	type CollectionId = u32;
+	type ItemId = u32;
+	type Currency = Balances;
+	type ForceOrigin = frame_system::EnsureRoot<AccountId>;
+	type CreateOrigin = AsEnsureOriginWithArg<EnsureSigned<AccountId>>;
+	type Locker = pallet_rmrk_core::Pallet<Runtime>;
+	type CollectionDeposit = CollectionDeposit;
+	type ItemDeposit = ItemDeposit;
+	type MetadataDepositBase = UniquesMetadataDepositBase;
+	type AttributeDepositBase = AttributeDepositBase;
+	type DepositPerByte = RmrkDepositPerByte;
+	type StringLimit = UniquesStringLimit;
+	type KeyLimit = KeyLimit;
+	type ValueLimit = ValueLimit;
+	type WeightInfo = ();
+}
+
 // Create the runtime by composing the FRAME pallets that were previously configured.
 construct_runtime!(
 	pub enum Runtime where
@@ -1140,6 +1223,12 @@ construct_runtime!(
 		PhragmenElection: pallet_elections_phragmen::{Pallet, Call, Storage, Event<T>, Config<T>} = 63,
 		CouncilMembership: pallet_membership::<Instance1>::{Pallet, Call, Storage, Event<T>, Config<T>} = 64,
 		TechnicalMembership: pallet_membership::<Instance2>::{Pallet, Call, Storage, Event<T>, Config<T>} = 65,
+
+		// Remark Stuff
+		RmrkEquip: pallet_rmrk_equip::{Pallet, Call, Event<T>, Storage}=66,
+		RmrkCore: pallet_rmrk_core::{Pallet, Call, Event<T>, Storage}=67,
+		RmrkMarket: pallet_rmrk_market::{Pallet, Call, Storage, Event<T>}=68,
+		Uniques: pallet_uniques::{Pallet, Call, Storage, Event<T>}=69,
 	}
 );
 

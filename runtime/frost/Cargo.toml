@@ -97,6 +97,14 @@ pallet-fees-split = { path = "../../pallets/fees-split", default-features = fals
 pallet-airdrop = { path = "../../pallets/airdrop", default-features = false }
 assets-evm ={ path="../common/assets-evm", default-features = false}
 
+# RMRK dependencies
+pallet-uniques = {  git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.36", default-features = false }
+pallet-rmrk-core = { git = "https://github.com/Phala-Network/rmrk-substrate", branch = "polkadot-v0.9.36", default-features = false }
+pallet-rmrk-equip = { git = "https://github.com/Phala-Network/rmrk-substrate", branch = "polkadot-v0.9.36", default-features = false }
+pallet-rmrk-market = { git = "https://github.com/Phala-Network/rmrk-substrate", branch = "polkadot-v0.9.36", default-features = false }
+rmrk-traits = { git = "https://github.com/Phala-Network/rmrk-substrate", branch = "polkadot-v0.9.36", default-features = false }
+pallet-rmrk-rpc-runtime-api = { git = "https://github.com/Phala-Network/rmrk-substrate", branch = "polkadot-v0.9.36", default-features = false }
+
 # ice-runtime-common = { default-features = false, path = "../common", optional = true }
 
 # try-runtime
