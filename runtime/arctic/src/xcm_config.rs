@@ -21,7 +21,7 @@ use xcm_builder::{
 	FixedWeightBounds, FungiblesAdapter, IsConcrete, LocationInverter, ParentAsSuperuser,
 	ParentIsPreset, RelayChainAsNative, SiblingParachainAsNative, SiblingParachainConvertsVia,
 	SignedAccountId32AsNative, SignedToAccountId32, SovereignSignedViaLocation, TakeRevenue,
-	TakeWeightCredit,
+	TakeWeightCredit, NativeAsset,
 };
 use xcm_executor::{
 	traits::{FilterAssetLocation, JustTry},
@@ -79,6 +79,14 @@ pub type LocalAssetTransactor = MultiCurrencyAdapter<
 	CurrencyId,
 	RelativeCurrencyIdConvert,
 	(),
+>;
+
+pub type DefaultLocalAssetTransactor = CurrencyAdapter<
+    Balances,
+    IsConcrete<RelayLocation>,
+    LocationToAccountId,
+    AccountId,
+    ()
 >;
 
 /// Means for transacting assets besides the native currency on this chain.
@@ -211,9 +219,9 @@ impl xcm_executor::Config for XcmConfig {
 	type RuntimeCall = RuntimeCall;
 	type XcmSender = XcmRouter;
 	// How to withdraw and deposit an asset.
-	type AssetTransactor = LocalAssetTransactor; // AssetTransactors;
+	type AssetTransactor = DefaultLocalAssetTransactor; //LocalAssetTransactor;  // AssetTransactors;
 	type OriginConverter = XcmOriginToTransactDispatchOrigin;
-	type IsReserve = ReserveAssetFilter; // ReserveAssetFilter; //NativeAsset;
+	type IsReserve = ReserveAssetFilter; //NativeAsset;
 	type IsTeleporter = (); // Teleporting is disabled.
 	type LocationInverter = LocationInverter<Ancestry>;
 	type Barrier = XcmBarrier;

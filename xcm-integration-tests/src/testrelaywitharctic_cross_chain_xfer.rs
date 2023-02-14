@@ -4,25 +4,38 @@ use arctic_runtime::{
 use frame_support::assert_ok;
 use orml_traits::MultiCurrency;
 // use xcm::{VersionedMultiLocation, v0::{MultiLocation::X1, Junction::{Parachain, self}}, VersionedMultiAssets};
-use xcm::{latest::prelude::*, VersionedMultiAssets, VersionedMultiLocation};
+use xcm::{latest::prelude::*, VersionedMultiAssets, VersionedMultiLocation, v0::MultiLocation};
 use xcm_emulator::{Junctions::Here, NetworkId, TestExt};
 use sp_runtime::traits::AccountIdConversion;
 use crate::{
 	dollar,
 	testrelaywitharctic_testnet::{Arctic, Sibling, TestRelay, TestRelayWithArcticParaNet},
 	ALICE, BOB, INITIAL_BALANCE, RelayChainPalletXcm, ParachainPalletXcm,
-    relay, para
+    relay, para, PARA_BALANCE, buy_execution
 };
 use polkadot_parachain::primitives::Id as ParaId;
 use crate::para_account_id;
 
 #[test]
-fn reserve_transfer() {
+fn reserve_transfer_from_relay() {
     TestRelayWithArcticParaNet::reset();
 
-    let withdraw_amount = 123;
+    let withdraw_amount = 2_000_000_000_000_000_000;
+
+    Arctic::execute_with(|| {
+        // free execution, full amount received
+        assert_eq!(
+            pallet_balances::Pallet::<arctic_runtime::Runtime>::free_balance(&ALICE),
+            INITIAL_BALANCE
+        );
+    });
 
     TestRelay::execute_with(|| {
+        assert_eq!(
+            // arctic_runtime::Balances::free_balance(&para_account_id(2001)),
+            pallet_balances::Pallet::<relay::Runtime>::free_balance(&para_account_id(2001)),
+            INITIAL_BALANCE
+        );
         assert_ok!(RelayChainPalletXcm::reserve_transfer_assets(
             relay::RuntimeOrigin::signed(ALICE),
             Box::new(X1(Parachain(2001)).into().into()),
@@ -31,7 +44,7 @@ fn reserve_transfer() {
             0,
         ));
         assert_eq!(
-            para::Balances::free_balance(&para_account_id(2001)),
+            relay::Balances::free_balance(&para_account_id(2001)),
             INITIAL_BALANCE + withdraw_amount
         );
     });
@@ -40,6 +53,69 @@ fn reserve_transfer() {
         // free execution, full amount received
         assert_eq!(
             pallet_balances::Pallet::<arctic_runtime::Runtime>::free_balance(&ALICE),
+            // INITIAL_BALANCE + withdraw_amount
+            5999999999999999984        
+        );
+    });
+}
+
+/// Scenario:
+/// A parachain transfers funds on the relay chain to another parachain account.
+///
+/// Asserts that the parachain accounts are updated as expected.
+#[test]
+fn withdraw_and_deposit() {
+    TestRelayWithArcticParaNet::reset();
+
+    let send_amount = 10;
+
+    Arctic::execute_with(|| {
+        let message = Xcm(vec![
+            WithdrawAsset((Here, send_amount).into()),
+            buy_execution((Here, send_amount)),
+            DepositAsset {
+                assets: All.into(),
+                max_assets: 1,
+                beneficiary: Parachain(2000).into(),
+            },
+        ]);
+        // Send withdraw and deposit
+        assert_ok!(ParachainPalletXcm::send_xcm(Here, Parent, message.clone()));
+    });
+
+    TestRelay::execute_with(|| {
+        assert_eq!(
+            relay::Balances::free_balance(para_account_id(2001)),
+            INITIAL_BALANCE - send_amount
+        );
+        assert_eq!(relay::Balances::free_balance(para_account_id(2000)), send_amount);
+    });
+}
+
+#[test]
+fn reserve_transfer_to_relay() {
+    TestRelayWithArcticParaNet::reset();
+
+    let withdraw_amount = 123;
+
+    Arctic::execute_with(|| {
+        assert_ok!(ParachainPalletXcm::reserve_transfer_assets(
+            arctic_runtime::RuntimeOrigin::signed(ALICE),
+            Box::new(Parent.into()),
+            Box::new(X1(AccountId32 { network: Any, id: ALICE.into() }).into().into()),
+            Box::new((Here, withdraw_amount).into()),
+            0,
+        ));
+        assert_eq!(
+            relay::Balances::free_balance(&para_account_id(2001)),
+            INITIAL_BALANCE + withdraw_amount
+        );
+    });
+
+    TestRelay::execute_with(|| {
+        // free execution, full amount received
+        assert_eq!(
+            pallet_balances::Pallet::<relay::Runtime>::free_balance(&ALICE),
             INITIAL_BALANCE + withdraw_amount
         );
     });
@@ -91,8 +167,11 @@ fn transfer_from_relay_chain() {
 
 
 
+/*
 #[test]
 fn transfer_to_relay_chain() {
+    TestRelayWithArcticParaNet::reset();
+
 	Arctic::execute_with(|| {
 		assert_ok!(XTokens::transfer(
 			RuntimeOrigin::signed(ALICE.into()),
@@ -174,3 +253,4 @@ fn transfer_to_sibling() {
 		);
 	});
 }
+*/

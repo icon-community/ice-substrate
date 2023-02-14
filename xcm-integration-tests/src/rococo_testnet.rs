@@ -9,32 +9,21 @@ use polkadot_runtime_parachains::configuration::HostConfiguration;
 use sp_runtime::traits::AccountIdConversion;
 use xcm_emulator::{decl_test_network, decl_test_parachain, decl_test_relay_chain};
 use frame_support::pallet_prelude::Weight;
-use crate::{dollar, get_all_module_accounts, ALICE, BOB, INITIAL_BALANCE, relay, para};
+use crate::{dollar, get_all_module_accounts, ALICE, ALICE_RELAY, BOB, INITIAL_BALANCE, relay, para};
 
 decl_test_relay_chain! {
 	pub struct Rococo {
 		Runtime = rococo_runtime::Runtime,
 		XcmConfig = rococo_runtime::xcm_config::XcmConfig,
-		// new_ext = rococo_ext(),
-		new_ext = relay_ext2(),
-	}
-}
-
-decl_test_parachain! {
-	pub struct ParaA {
-		Runtime = para::Runtime,
-        // RuntimeOrigin = RuntimeOrigin,
-		XcmpMessageHandler = para::MsgQueue,
-		DmpMessageHandler = para::MsgQueue,
-		new_ext = para_ext2(2001),
+		new_ext = rococo_ext(),
+		// new_ext = relay_ext2(),
 	}
 }
 
 decl_test_parachain! {
 	pub struct Arctic {
 		Runtime = arctic_runtime::Runtime,
-        // RuntimeOrigin = RuntimeOrigin,
-		XcmpMessageHandler = arctic_runtime ::XcmpQueue,
+		XcmpMessageHandler = arctic_runtime::XcmpQueue,
 		DmpMessageHandler = arctic_runtime::DmpQueue,
 		new_ext = para_ext2(2001),
 	}
@@ -42,11 +31,11 @@ decl_test_parachain! {
 
 decl_test_parachain! {
 	pub struct Sibling {
-		Runtime = Runtime,
+		Runtime = arctic_runtime::Runtime,
         // RuntimeOrigin = RuntimeOrigin,
-		XcmpMessageHandler = arctic_runtime ::XcmpQueue,
+		XcmpMessageHandler = arctic_runtime::XcmpQueue,
 		DmpMessageHandler = arctic_runtime::DmpQueue,
-		new_ext = para_ext(2000),
+		new_ext = para_ext2(2000),
 	}
 }
 
@@ -108,13 +97,11 @@ pub fn rococo_ext() -> sp_io::TestExternalities {
 	pallet_balances::GenesisConfig::<Runtime> {
 		balances: vec![
 			(
-				AccountId::from(ALICE),
-				// 2002 * dollar(CurrencyId::Token(TokenSymbol::KSM)),
+				AccountId::from(ALICE_RELAY),
                 INITIAL_BALANCE
 			),
 			(
 				ParaId::from(2001).into_account_truncating(),
-				// 2 * dollar(CurrencyId::Token(TokenSymbol::KSM)),
                 INITIAL_BALANCE
 			),
 		],
@@ -142,8 +129,7 @@ pub fn rococo_ext() -> sp_io::TestExternalities {
 }
 
 pub fn relay_ext2() -> sp_io::TestExternalities {
-	// use rococo_runtime::{Runtime, System};
-    use relay::{Runtime, System};
+    use rococo_runtime::{Runtime, System};
 
 	let mut t = frame_system::GenesisConfig::default().build_storage::<Runtime>().unwrap();
 
@@ -179,8 +165,7 @@ pub fn para_ext(parachain_id: u32) -> sp_io::TestExternalities {
 }
 
 pub fn para_ext2(para_id: u32) -> sp_io::TestExternalities {
-    use crate::para::{MsgQueue, Runtime, System};
-
+    use arctic_runtime::{Runtime, System};
     let mut t = frame_system::GenesisConfig::default().build_storage::<Runtime>().unwrap();
 
 	pallet_balances::GenesisConfig::<Runtime> { balances: vec![(ALICE, INITIAL_BALANCE)] }
@@ -190,7 +175,6 @@ pub fn para_ext2(para_id: u32) -> sp_io::TestExternalities {
 	let mut ext = sp_io::TestExternalities::new(t);
 	ext.execute_with(|| {
 		System::set_block_number(1);
-		MsgQueue::set_para_id(para_id.into());
 	});
 	ext
 }

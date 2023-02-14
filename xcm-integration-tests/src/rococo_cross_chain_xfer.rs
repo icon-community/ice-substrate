@@ -10,40 +10,33 @@ use sp_runtime::traits::AccountIdConversion;
 use crate::{
 	dollar,
 	rococo_testnet::{Arctic, Rococo, Sibling, RococoNet},
-	ALICE, BOB, INITIAL_BALANCE, RelayChainPalletXcm, ParachainPalletXcm,
-    relay, para
+	ALICE, ALICE_RELAY, BOB, INITIAL_BALANCE, RococoPalletXcm, ParachainPalletXcm,
+    relay, para, buy_execution, para_account_id, PARA_BALANCE
 };
 use polkadot_parachain::primitives::Id as ParaId;
 
 #[test]
-fn transfer_from_relay_chain() {
+fn reserve_transfer_from_relay() {
     RococoNet::reset();
-    let withdraw_amt = 123;
+    let withdraw_amount = 2_000_000_000_000_000_000;
 
 	Rococo::execute_with(|| {
 
 		assert_ok!(// rococo_runtime::XcmPallet::reserve_transfer_assets(
-            RelayChainPalletXcm::reserve_transfer_assets(
-			// rococo_runtime::RuntimeOrigin::signed(ALICE.into()),
-			relay::RuntimeOrigin::signed(ALICE.into()),
-			// Box::new(VersionedMultiLocation::V1(X1(Parachain(2001)).into())),
-            Box::new(Parachain(2001).into().into()),
-			Box::new(VersionedMultiLocation::V1(
-				X1(Junction::AccountId32 {
-					id: ALICE.into(),
-					network: NetworkId::Any
-				})
-				.into()
-			)),
-			Box::new(VersionedMultiAssets::V1(
-				// (Here, dollar(RelayCurrencyId::get())).into()
-                (Here, withdraw_amt).into()
-			)),
+            RococoPalletXcm::reserve_transfer_assets(
+			rococo_runtime::RuntimeOrigin::signed(ALICE_RELAY.into()),
+            Box::new(X1(Parachain(2001)).into().into()),
+            Box::new(X1(AccountId32 { network: Any, id: ALICE.into() }).into().into()),
+            Box::new((Here, withdraw_amount).into()),
 			0,
 		));
         assert_eq!(
-            Balances::free_balance(&ParaId::from(2001).into_account_truncating()),
-            INITIAL_BALANCE + withdraw_amt
+            rococo_runtime::Balances::free_balance(&ALICE_RELAY),
+            INITIAL_BALANCE - withdraw_amount
+        );
+        assert_eq!(
+            arctic_runtime::Balances::free_balance(&para_account_id(2001)),
+            INITIAL_BALANCE + withdraw_amount
         );
 	});
 
@@ -53,12 +46,44 @@ fn transfer_from_relay_chain() {
 			// Tokens::free_balance(RelayCurrencyId::get(), &AccountId::from(BOB)),
         // Balances::free_balance(&AccountId::from(ALICE)),
         // pallet_balances::Pallet::<arctic_runtime::Runtime>::free_balance(&ALICE),
-        pallet_balances::Pallet::<para::Runtime>::free_balance(&ALICE),
-        INITIAL_BALANCE + withdraw_amt
+            pallet_balances::Pallet::<arctic_runtime::Runtime>::free_balance(&ALICE),
+            INITIAL_BALANCE + withdraw_amount
 		);
 	});
 }
 
+/// Scenario:
+/// A parachain transfers funds on the relay chain to another parachain account.
+///
+/// Asserts that the parachain accounts are updated as expected.
+#[test]
+fn withdraw_and_deposit() {
+    RococoNet::reset();
+
+    let send_amount = 10;
+
+    Arctic::execute_with(|| {
+        let message = Xcm(vec![
+            WithdrawAsset((Here, send_amount).into()),
+            buy_execution((Here, send_amount)),
+            DepositAsset {
+                assets: All.into(),
+                max_assets: 1,
+                beneficiary: Parachain(2000).into(),
+            },
+        ]);
+        // Send withdraw and deposit
+        assert_ok!(ParachainPalletXcm::send_xcm(Here, Parent, message.clone()));
+    });
+
+    Rococo::execute_with(|| {
+        assert_eq!(
+            rococo_runtime::Balances::free_balance(para_account_id(2001)),
+            INITIAL_BALANCE - send_amount
+        );
+        assert_eq!(rococo_runtime::Balances::free_balance(para_account_id(2000)), send_amount);
+    });
+}
 
 
 #[test]
