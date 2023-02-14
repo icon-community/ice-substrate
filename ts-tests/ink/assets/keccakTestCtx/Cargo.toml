@@ -1,5 +1,5 @@
 [package]
-name = "test-contract-2"
+name = "keccak-test-contract"
 version = "0.1.0"
 authors = ["[your_name] <[your_email]>"]
 edition = "2021"
@@ -16,7 +16,7 @@ scale-info = { version = "2", default-features = false, features = ["derive"], o
 hex= {version = "*"}
 
 [lib]
-name = "migration_test"
+name = "keccak_test"
 path = "lib.rs"
 crate-type = [
 	# Used for normal contract Wasm blobs.

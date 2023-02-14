@@ -3,10 +3,9 @@
 use ink_lang as ink;
 
 #[ink::contract]
-mod migration_test {
+mod keccak_test {
 
     use ink_env::hash;
-    use ink_prelude::string::String;
     use ink_prelude::string::ToString;
 
     #[ink(storage)]
@@ -21,8 +20,7 @@ mod migration_test {
         scale::Decode,
         Clone
     )]
-    pub struct MigrationTest {
-        msg: String,
+    pub struct KeccakTest {
         hash: [u8;32],
         value: i32
     }
@@ -30,11 +28,10 @@ mod migration_test {
     #[ink(event)]
 	pub struct Operating {}
 
-    impl MigrationTest {
+    impl KeccakTest {
         #[ink(constructor)]
-        pub fn new(init_msg: String, init_value: i32) -> Self {
-            MigrationTest { 
-                msg: init_msg, 
+        pub fn new(init_value: i32) -> Self {
+            KeccakTest { 
                 value: init_value , 
                 hash:  <hash::Keccak256 as hash::HashOutput>::Type::default(),
             }
@@ -56,7 +53,7 @@ mod migration_test {
         }
 
         #[ink(message)]
-        pub fn get(&self) -> MigrationTest {
+        pub fn get(&self) -> KeccakTest {
             self.clone()
         }
     }

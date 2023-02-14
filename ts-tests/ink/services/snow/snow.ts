@@ -22,7 +22,7 @@ class SnowApi {
 	static endUserWallets: Array<KeyringPair>;
 
 	static initialize = async (chain?: keyof typeof CHAINS) => {
-		let RPC_ENDPOINT = chain ? CHAINS[chain].RPC_ENDPOINT : LOCAL_WSS_URL;
+		const RPC_ENDPOINT = chain ? CHAINS[chain].RPC_ENDPOINT : LOCAL_WSS_URL;
 		if (!chain) {
 			await SnowApi.startNetwork();
 		}

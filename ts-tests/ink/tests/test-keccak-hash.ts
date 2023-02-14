@@ -4,13 +4,11 @@ import chaiAsPromised from "chai-as-promised";
 import { WeightV2 } from "@polkadot/types/interfaces/runtime";
 import { ContractPromise } from "@polkadot/api-contract";
 import { ApiPromise } from "@polkadot/api";
-import { KeyringPair } from "@polkadot/keyring/types";
 import { AnyJson } from "@polkadot/types-codec/types";
-import { getMetadata, getWasm } from "../../services";
-import { describeWithContext } from "../utils";
-import { CONTRACTS } from "../../constants";
-import { ContractInterface, QueryArgs } from "../../interfaces/core";
-import { parseChainFromArgs } from "./helpers";
+import { getMetadata, getWasm } from "../services";
+import { describeWithContext } from "./utils";
+import { CONTRACTS } from "../constants";
+import { ContractInterface, QueryArgs } from "../interfaces/core";
 
 chai.use(chaiAsPromised);
 
@@ -21,9 +19,6 @@ const DEPLOY_STORAGE_LIMIT = "40000000000000000000"; // 40 ICZ
 
 const UPLOAD_TIMEOUT = 30_000;
 const WRITE_TIMEOUT = 30_000;
-
-const WALLET_URI = process.env["INK_CTX_DEPLOYER_URI"];
-const chain = parseChainFromArgs(process.argv);
 
 export async function getCtxState(
 	api: ApiPromise,
@@ -53,21 +48,18 @@ export async function getCtxState(
 }
 
 describeWithContext(
-	"\n\n👉 Tests for contracts after network upgrade",
+	"\n\n👉 Tests for keccak hash on contract",
 	(context) => {
-		const migrationCtx: ContractInterface = {
+		const hashCtx: ContractInterface = {
 			address: undefined,
 			blockHash: undefined,
 			codeHash: undefined,
 			blockNum: undefined,
-			wasm: getWasm(CONTRACTS.upgradeTestCtx.wasmPath),
-			metadata: getMetadata(CONTRACTS.upgradeTestCtx.metadataPath),
+			wasm: getWasm(CONTRACTS.keccakTestCtx.wasmPath),
+			metadata: getMetadata(CONTRACTS.keccakTestCtx.metadataPath),
 		};
 
-		let wallet: KeyringPair | undefined;
-
-		step(`🌟 Successfully upload contract to ${chain} network`, async function (done) {
-			wallet = context.keyring!.addFromUri(WALLET_URI!);
+		step(`🌟 Successfully upload contract`, async function (done) {
 
 			// simply upload and get contract & block num. Ensure that the block was last produced block
 			console.log("\n\nUploading a test contract...\n");
@@ -77,8 +69,8 @@ describeWithContext(
 				blockHash: ctxBlockHash,
 				blockNum: ctxBlockNum,
 			} = await context.deployContract(
-				migrationCtx.metadata!,
-				migrationCtx.wasm!,
+				hashCtx.metadata!,
+				hashCtx.wasm!,
 				{
 					gasLimit: context.api!.registry.createType("WeightV2", {
 						proofSize: GAS_LIMIT,
@@ -86,8 +78,8 @@ describeWithContext(
 					}) as WeightV2,
 					storageDepositLimit: DEPLOY_STORAGE_LIMIT,
 				},
-				["Test Contract 1", 1000],
-				wallet,
+				[1000],
+				context.alice!,
 			);
 
 			const { blockNumber: lastBlockNum } = await context.getLastBlock();
@@ -95,25 +87,25 @@ describeWithContext(
 			expect(ctxAddress).to.have.lengthOf(49);
 			expect(ctxBlockNum).to.equal(lastBlockNum);
 
-			migrationCtx.address = ctxAddress;
-			migrationCtx.blockHash = ctxBlockHash;
-			migrationCtx.blockNum = ctxBlockNum;
+			hashCtx.address = ctxAddress;
+			hashCtx.blockHash = ctxBlockHash;
+			hashCtx.blockNum = ctxBlockNum;
 
 			done();
 		});
 
-		step("🌟 Successfully perform operations on the contract", async function (done) {
+		step("🌟 Successfully carry out hash operation on the contract", async function (done) {
 			try {
 				// call operate method
 				console.log("\n\nCalling operate method on the test contract...\n");
 				this.timeout(WRITE_TIMEOUT);
 
-				const ctxObj = new ContractPromise(context.api!, migrationCtx.metadata!, migrationCtx.address!);
+				const ctxObj = new ContractPromise(context.api!, hashCtx.metadata!, hashCtx.address!);
 
 				await context.writeContract(
-					wallet!,
+					context.alice!,
 					ctxObj,
-					CONTRACTS.upgradeTestCtx.writeMethods.operate,
+					CONTRACTS.keccakTestCtx.writeMethods.operate,
 					{
 						gasLimit: context.api!.registry.createType("WeightV2", {
 							proofSize: GAS_LIMIT,
@@ -128,23 +120,22 @@ describeWithContext(
 				expect(
 					getCtxState(
 						context.api!,
-						migrationCtx.metadata!,
-						migrationCtx.address!,
-						wallet!.address,
+						hashCtx.metadata!,
+						hashCtx.address!,
+						context.endUserWallets[0]!.address,
 						// @ts-ignore
 						context.queryContract,
 					),
 				)
 					.to.eventually.equal(
 						// keccak hash of "3998"
-						'{"msg":"Test Contract 1","hash":"0xba20efe605ffaf935740b0609b20e76f4a2eebc2a40e893d19665b3d829318a5","value":3998}',
-						"Operate method did not execute expectedly",
+						'{"hash":"0xba20efe605ffaf935740b0609b20e76f4a2eebc2a40e893d19665b3d829318a5","value":3998}',
+						"Hashing method did not execute expectedly",
 					)
 					.notify(done);
 			} catch (err) {
 				done(err);
 			}
 		});
-	},
-	chain,
+	}
 );

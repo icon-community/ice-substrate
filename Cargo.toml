@@ -14,4 +14,3 @@ members = [
     "integration-tests",
     "contracts/staking_rewards",
 ]
-
