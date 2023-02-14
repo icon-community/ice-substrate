@@ -56,16 +56,6 @@ export const CONTRACTS = {
 			wasmPath: "./assets/largeCtx/valid/snow_rewards.wasm",
 		},
 	},
-	upgradeTestCtx: {
-		readMethods: {
-			get: "get",
-		},
-		writeMethods: {
-			operate: "operate",
-		},
-		metadataPath: "./assets/upgradeTestCtx/upgrade_test.contract",
-		wasmPath: "./assets/upgradeTestCtx/upgrade_test.wasm",
-	},
 	keccakTestCtx: {
 		readMethods: {
 			get: "get",
@@ -76,12 +66,12 @@ export const CONTRACTS = {
 		metadataPath: "./assets/keccakTestCtx/keccak_test.contract",
 		wasmPath: "./assets/keccakTestCtx/keccak_test.wasm",
 	},
-	stateCheckCtx: {
+	stateTestCtx: {
 		readMethods: {
 			get: "get",
 		},
-		metadataPath: "./assets/stateCheckCtx/state_check.contract",
-		wasmPath: "./assets/stateCheckCtx/state_check.wasm",
+		metadataPath: "./assets/stateTestCtx/state_test.contract",
+		wasmPath: "./assets/stateTestCtx/state_test.wasm",
 	},
 };
 

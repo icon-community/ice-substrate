@@ -15,7 +15,7 @@ const GAS_LIMIT = "10000000000000";
 
 const QUERY_TIMEOUT = 30_000;
 
-const STATE_CHECK_CTX_METADATA = getMetadata(CONTRACTS.stateCheckCtx.metadataPath);
+const STATE_TEST_CTX_METADATA = getMetadata(CONTRACTS.stateTestCtx.metadataPath);
 const chain = parseChainFromArgs(process.argv);
 
 describeWithContext(
@@ -27,7 +27,7 @@ describeWithContext(
 
 				const ctxObj = new ContractPromise(
 					context.api!,
-					STATE_CHECK_CTX_METADATA,
+					STATE_TEST_CTX_METADATA,
 					CHAINS[chain].UPGRADE_CTX_ADDRESS,
 				);
 
@@ -46,12 +46,12 @@ describeWithContext(
 				// @ts-ignore
 				const { output } = await context.queryContract(
 					ctxObj,
-					CONTRACTS.stateCheckCtx.readMethods.get,
+					CONTRACTS.stateTestCtx.readMethods.get,
 					queryOptions,
 				);
 
 				expect(output?.toString(), "Invalid contract state").to.equal(
-					'{"msg":"SNOW","hash":"0x6464646464646464646464646464646464646464646464646464646464646464","value":100,"structure":{"val":100,"name":"SNOW"}}',
+					'{"msg":"ICE/SNOW Network","u8Arr":"0x010203","value":"0x7fffffffffffffffffffffffffffffff","isTrue":true,"myAccount":"npRm3oLNUahbPgUnwjPYw9oLWdEigk6aHzwtvj4nibfAJMYVo","myBalance":123123123123,"myHash":"0xe0d83c067d9abf593a8089ef1f21fc30fafb02a8dd67a862f8ca47eb158735b9","myVec":[-65535,-65534,-65533,-65532,-65531,-65530,-65529,-65528,-65527,-65526,-65525],"myStruct":{"id":1,"status":"Invalid","strArr":["Str1","Str2"]}}',
 				);
 
 				done();

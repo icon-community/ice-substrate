@@ -1,5 +1,5 @@
 [package]
-name = "test-contract"
+name = "state-test-contract"
 version = "0.1.0"
 authors = ["[your_name] <[your_email]>"]
 edition = "2021"
@@ -13,10 +13,10 @@ ink_lang = { version = "3.3", default-features = false }
 ink_prelude = { version = "3.3.0", default-features = false }
 scale = { package = "parity-scale-codec", version = "3", default-features = false, features = ["derive"] }
 scale-info = { version = "2", default-features = false, features = ["derive"], optional = true }
-hex={version="*"}
+hex= {version = "*"}
 
 [lib]
-name = "state_check"
+name = "state_test"
 path = "lib.rs"
 crate-type = [
 	# Used for normal contract Wasm blobs.
