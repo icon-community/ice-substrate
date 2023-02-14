@@ -85,94 +85,102 @@ describeWithContext("\n\n👉 Tests for code hash", (context) => {
 	step(
 		"🌟 Instantiating adder contract after accumulator code hash is available on-chain should succeed",
 		async function (done) {
-			this.timeout(UPLOAD_TIMEOUT);
+			try {
+				this.timeout(UPLOAD_TIMEOUT);
 
-			// deploy accumulator contract
-			console.log("\n\nInstantiating accumulator contract...\n");
-			await context.deployContract(
-				accumulatorContract.metadata!,
-				accumulatorContract.wasm!,
-				{
-					gasLimit: context.api!.registry.createType("WeightV2", {
-						proofSize: GAS_LIMIT,
-						refTime: GAS_LIMIT,
-					}) as WeightV2,
-					storageDepositLimit: DEPLOY_STORAGE_LIMIT,
-				},
-				[0],
-				context.alice!,
-			);
+				// deploy accumulator contract
+				console.log("\n\nInstantiating accumulator contract...\n");
+				await context.deployContract(
+					accumulatorContract.metadata!,
+					accumulatorContract.wasm!,
+					{
+						gasLimit: context.api!.registry.createType("WeightV2", {
+							proofSize: GAS_LIMIT,
+							refTime: GAS_LIMIT,
+						}) as WeightV2,
+						storageDepositLimit: DEPLOY_STORAGE_LIMIT,
+					},
+					[0],
+					context.alice!,
+				);
 
-			// deploy adder contract
-			console.log("\n\nInstantiating adder contract...\n");
-			const {
-				address: ctxAddress,
-				blockHash: ctxBlockHash,
-				blockNum: ctxBlockNum,
-			} = await context.deployContract(
-				adderContract.metadata!,
-				adderContract.wasm!,
-				{
-					gasLimit: context.api!.registry.createType("WeightV2", {
-						proofSize: GAS_LIMIT,
-						refTime: GAS_LIMIT,
-					}) as WeightV2,
-					storageDepositLimit: DEPLOY_STORAGE_LIMIT,
-				},
-				[0, 1, ACCUMULATOR_CODE_HASH],
-				context.endUserWallets[0]!,
-			);
+				// deploy adder contract
+				console.log("\n\nInstantiating adder contract...\n");
+				const {
+					address: ctxAddress,
+					blockHash: ctxBlockHash,
+					blockNum: ctxBlockNum,
+				} = await context.deployContract(
+					adderContract.metadata!,
+					adderContract.wasm!,
+					{
+						gasLimit: context.api!.registry.createType("WeightV2", {
+							proofSize: GAS_LIMIT,
+							refTime: GAS_LIMIT,
+						}) as WeightV2,
+						storageDepositLimit: DEPLOY_STORAGE_LIMIT,
+					},
+					[0, 1, ACCUMULATOR_CODE_HASH],
+					context.endUserWallets[0]!,
+				);
 
-			const { blockNumber: lastBlockNum } = await context.getLastBlock();
+				const { blockNumber: lastBlockNum } = await context.getLastBlock();
 
-			expect(ctxAddress).to.have.lengthOf(49);
-			expect(ctxBlockNum).to.equal(lastBlockNum);
+				expect(ctxAddress).to.have.lengthOf(49);
+				expect(ctxBlockNum).to.equal(lastBlockNum);
 
-			adderContract.address = ctxAddress;
-			adderContract.blockHash = ctxBlockHash;
-			adderContract.blockNum = ctxBlockNum;
+				adderContract.address = ctxAddress;
+				adderContract.blockHash = ctxBlockHash;
+				adderContract.blockNum = ctxBlockNum;
 
-			done();
+				done();
+			} catch (err) {
+				done(err);
+			}
 		},
 	);
 
 	step("🌟 Whoever removes the contract code hash should be refunded the contract deposit", async function (done) {
-		this.timeout(UPLOAD_TIMEOUT);
+		try {
+			this.timeout(UPLOAD_TIMEOUT);
 
-		// get initial balance of deployer
-		const initialBal = await context.getBalance(context.endUserWallets[1].address);
+			// get initial balance of deployer
+			const initialBal = await context.getBalance(context.endUserWallets[1].address);
 
-		// get balance of the contract
-		const ctxBal = await context.getBalance(adderContract.address!, true);
+			// get balance of the contract
+			const ctxBal = await context.getBalance(adderContract.address!, true);
 
-		const ctxObj = new ContractPromise(context.api!, adderContract.metadata!, adderContract.address!);
+			const ctxObj = new ContractPromise(context.api!, adderContract.metadata!, adderContract.address!);
 
-		// terminate adder contract
-		console.log("\n\nTerminating adder contract...\n");
-		await context.writeContract(
-			context.endUserWallets[1]!,
-			ctxObj,
-			CONTRACTS.multiCallCtx.adder.writeMethods.tearDown,
-			{
-				gasLimit: context.api!.registry.createType("WeightV2", {
-					proofSize: GAS_LIMIT,
-					refTime: GAS_LIMIT,
-				}) as WeightV2,
-				storageDepositLimit: null,
-			},
-			[],
-		);
+			// terminate adder contract
+			console.log("\n\nTerminating adder contract...\n");
+			await context.writeContract(
+				context.endUserWallets[1]!,
+				ctxObj,
+				CONTRACTS.multiCallCtx.adder.writeMethods.tearDown,
+				{
+					gasLimit: context.api!.registry.createType("WeightV2", {
+						proofSize: GAS_LIMIT,
+						refTime: GAS_LIMIT,
+					}) as WeightV2,
+					storageDepositLimit: null,
+				},
+				[],
+			);
 
-		const finalBal = await context.getBalance(context.endUserWallets[1].address);
+			const finalBal = await context.getBalance(context.endUserWallets[1].address);
 
-		// ensure deployer balance is refunded with ctx deposit
-		expect(
-			finalBal.minus(initialBal).plus(TERMINATE_TX_FEE).minus(ctxBal).toNumber(),
-			"Contract funds not properly refunded",
-		)
-			.to.be.greaterThanOrEqual(0)
-			.and.to.be.lessThanOrEqual(parseInt(MAX_RESIDUE));
+			// ensure deployer balance is refunded with ctx deposit
+			expect(
+				finalBal.minus(initialBal).plus(TERMINATE_TX_FEE).minus(ctxBal).toNumber(),
+				"Contract funds not properly refunded",
+			)
+				.to.be.greaterThanOrEqual(0)
+				.and.to.be.lessThanOrEqual(parseInt(MAX_RESIDUE));
 
-		done();
+			done();
+		} catch (err) {
+			done(err);
+		}
 	});
 });

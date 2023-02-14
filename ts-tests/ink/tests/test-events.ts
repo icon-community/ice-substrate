@@ -59,31 +59,35 @@ describeWithContext("\n\n👉 Test events emitted by contracts can be parsed", (
 	});
 
 	step("🌟 Verify event emitted by a transaction", async function (done) {
-		this.timeout(TX_TIMEOUT);
-		console.log("\n\nCalling flip on flipper contract...");
+		try {
+			this.timeout(TX_TIMEOUT);
+			console.log("\n\nCalling flip on flipper contract...");
 
-		const ctxObj = new ContractPromise(context.api!, flipperContract.metadata!, flipperContract.address!);
+			const ctxObj = new ContractPromise(context.api!, flipperContract.metadata!, flipperContract.address!);
 
-		const { events } = await context.writeContract(
-			context.alice!,
-			ctxObj,
-			CONTRACTS.simpleCtx.writeMethods.flip,
-			{
-				gasLimit: context.api!.registry.createType("WeightV2", {
-					proofSize: GAS_LIMIT,
-					refTime: GAS_LIMIT,
-				}) as WeightV2,
-				storageDepositLimit: DEPLOY_STORAGE_LIMIT,
-			},
-			[],
-		);
+			const { events } = await context.writeContract(
+				context.alice!,
+				ctxObj,
+				CONTRACTS.simpleCtx.writeMethods.flip,
+				{
+					gasLimit: context.api!.registry.createType("WeightV2", {
+						proofSize: GAS_LIMIT,
+						refTime: GAS_LIMIT,
+					}) as WeightV2,
+					storageDepositLimit: DEPLOY_STORAGE_LIMIT,
+				},
+				[],
+			);
 
-		console.log("\n\nTracking emitted event...");
+			console.log("\n\nTracking emitted event...");
 
-		const emittedEvent = events?.find(({ event }) => event.method === "ContractEmitted");
+			const emittedEvent = events?.find(({ event }) => event.method === "ContractEmitted");
 
-		expect(emittedEvent?.event.data[1].toHex()).to.equal("0x0001");
+			expect(emittedEvent?.event.data[1].toHex()).to.equal("0x0001");
 
-		done();
+			done();
+		} catch (err) {
+			done(err);
+		}
 	});
 });

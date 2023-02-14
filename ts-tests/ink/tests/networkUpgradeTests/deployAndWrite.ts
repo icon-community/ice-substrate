@@ -67,39 +67,43 @@ describeWithContext(
 		let wallet: KeyringPair | undefined;
 
 		step(`🌟 Successfully upload contract to ${chain} network`, async function (done) {
-			wallet = context.keyring!.addFromUri(WALLET_URI!);
+			try {
+				wallet = context.keyring!.addFromUri(WALLET_URI!);
 
-			// simply upload and get contract & block num. Ensure that the block was last produced block
-			console.log("\n\nUploading a test contract...\n");
-			this.timeout(UPLOAD_TIMEOUT);
-			const {
-				address: ctxAddress,
-				blockHash: ctxBlockHash,
-				blockNum: ctxBlockNum,
-			} = await context.deployContract(
-				migrationCtx.metadata!,
-				migrationCtx.wasm!,
-				{
-					gasLimit: context.api!.registry.createType("WeightV2", {
-						proofSize: GAS_LIMIT,
-						refTime: GAS_LIMIT,
-					}) as WeightV2,
-					storageDepositLimit: DEPLOY_STORAGE_LIMIT,
-				},
-				[false],
-				wallet,
-			);
+				// simply upload and get contract & block num. Ensure that the block was last produced block
+				console.log("\n\nUploading a test contract...\n");
+				this.timeout(UPLOAD_TIMEOUT);
+				const {
+					address: ctxAddress,
+					blockHash: ctxBlockHash,
+					blockNum: ctxBlockNum,
+				} = await context.deployContract(
+					migrationCtx.metadata!,
+					migrationCtx.wasm!,
+					{
+						gasLimit: context.api!.registry.createType("WeightV2", {
+							proofSize: GAS_LIMIT,
+							refTime: GAS_LIMIT,
+						}) as WeightV2,
+						storageDepositLimit: DEPLOY_STORAGE_LIMIT,
+					},
+					[false],
+					wallet,
+				);
 
-			const { blockNumber: lastBlockNum } = await context.getLastBlock();
+				const { blockNumber: lastBlockNum } = await context.getLastBlock();
 
-			expect(ctxAddress).to.have.lengthOf(49);
-			expect(ctxBlockNum).to.equal(lastBlockNum);
+				expect(ctxAddress).to.have.lengthOf(49);
+				expect(ctxBlockNum).to.equal(lastBlockNum);
 
-			migrationCtx.address = ctxAddress;
-			migrationCtx.blockHash = ctxBlockHash;
-			migrationCtx.blockNum = ctxBlockNum;
+				migrationCtx.address = ctxAddress;
+				migrationCtx.blockHash = ctxBlockHash;
+				migrationCtx.blockNum = ctxBlockNum;
 
-			done();
+				done();
+			} catch (err) {
+				done(err);
+			}
 		});
 
 		step("🌟 Successfully perform write operations on the contract", async function (done) {
@@ -135,10 +139,7 @@ describeWithContext(
 						context.queryContract,
 					),
 				)
-					.to.eventually.equal(
-						"true",
-						"Write method did not execute expectedly",
-					)
+					.to.eventually.equal("true", "Write method did not execute expectedly")
 					.notify(done);
 			} catch (err) {
 				done(err);

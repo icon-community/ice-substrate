@@ -64,57 +64,65 @@ describeWithContext("\n\n👉 Upload and perform read, write on a simple contrac
 	};
 
 	step("🌟 Uploading a simple contract should give contract address and blockHash", async function (done) {
-		console.log("\n\nUploading a simple contract...\n");
-		this.timeout(UPLOAD_TIMEOUT);
+		try {
+			console.log("\n\nUploading a simple contract...\n");
+			this.timeout(UPLOAD_TIMEOUT);
 
-		const {
-			address: ctxAddress,
-			blockHash: ctxBlockHash,
-			blockNum: ctxBlockNum,
-		} = await context.deployContract(
-			simpleContract.metadata!,
-			simpleContract.wasm!,
-			{
-				gasLimit: context.api!.registry.createType("WeightV2", {
-					proofSize: DEPLOY_GAS_LIMIT,
-					refTime: DEPLOY_GAS_LIMIT,
-				}) as WeightV2,
-				storageDepositLimit: DEPLOY_STORAGE_LIMIT,
-			},
-			[false],
-			context.alice!,
-		);
+			const {
+				address: ctxAddress,
+				blockHash: ctxBlockHash,
+				blockNum: ctxBlockNum,
+			} = await context.deployContract(
+				simpleContract.metadata!,
+				simpleContract.wasm!,
+				{
+					gasLimit: context.api!.registry.createType("WeightV2", {
+						proofSize: DEPLOY_GAS_LIMIT,
+						refTime: DEPLOY_GAS_LIMIT,
+					}) as WeightV2,
+					storageDepositLimit: DEPLOY_STORAGE_LIMIT,
+				},
+				[false],
+				context.alice!,
+			);
 
-		const { blockNumber: lastBlockNum } = await context.getLastBlock();
+			const { blockNumber: lastBlockNum } = await context.getLastBlock();
 
-		expect(ctxAddress).to.have.lengthOf(49);
-		expect(ctxBlockNum).to.equal(lastBlockNum);
+			expect(ctxAddress).to.have.lengthOf(49);
+			expect(ctxBlockNum).to.equal(lastBlockNum);
 
-		simpleContract.address = ctxAddress;
-		simpleContract.blockHash = ctxBlockHash;
-		simpleContract.blockNum = ctxBlockNum;
+			simpleContract.address = ctxAddress;
+			simpleContract.blockHash = ctxBlockHash;
+			simpleContract.blockNum = ctxBlockNum;
 
-		done();
+			done();
+		} catch (err) {
+			done(err);
+		}
 	});
 
 	step("🌟 Querying read method on simple contract should yield valid result", async function (done) {
-		console.log("\n\nQuerying method on the deployed simple contract...\n");
-		this.timeout(QUERY_TIMEOUT);
+		try {
+			console.log("\n\nQuerying method on the deployed simple contract...\n");
+			this.timeout(QUERY_TIMEOUT);
 
-		const flipState = await getFlipState(
-			context.api!,
-			simpleContract.metadata!,
-			simpleContract.address!,
-			context.endUserWallets[0]?.address,
-			// @ts-ignore
-			context.queryContract,
-		);
+			const flipState = await getFlipState(
+				context.api!,
+				simpleContract.metadata!,
+				simpleContract.address!,
+				context.endUserWallets[0]?.address,
+				// @ts-ignore
+				context.queryContract,
+			);
 
-		expect(flipState).to.equal(
-			false,
-			`Invalid value received from ${CONTRACTS.simpleCtx.name}: ${simpleContract.address}`,
-		);
-		done();
+			expect(flipState).to.equal(
+				false,
+				`Invalid value received from ${CONTRACTS.simpleCtx.name}: ${simpleContract.address}`,
+			);
+			done();
+		} catch (err) {
+			done(err);
+		}
 	});
 
 	step("🌟 Calling a write-contract method should update the simple contract's state", async function (done) {

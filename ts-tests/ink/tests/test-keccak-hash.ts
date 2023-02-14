@@ -47,20 +47,18 @@ export async function getCtxState(
 	return output?.toString();
 }
 
-describeWithContext(
-	"\n\n👉 Tests for keccak hash on contract",
-	(context) => {
-		const hashCtx: ContractInterface = {
-			address: undefined,
-			blockHash: undefined,
-			codeHash: undefined,
-			blockNum: undefined,
-			wasm: getWasm(CONTRACTS.keccakTestCtx.wasmPath),
-			metadata: getMetadata(CONTRACTS.keccakTestCtx.metadataPath),
-		};
+describeWithContext("\n\n👉 Tests for keccak hash on contract", (context) => {
+	const hashCtx: ContractInterface = {
+		address: undefined,
+		blockHash: undefined,
+		codeHash: undefined,
+		blockNum: undefined,
+		wasm: getWasm(CONTRACTS.keccakTestCtx.wasmPath),
+		metadata: getMetadata(CONTRACTS.keccakTestCtx.metadataPath),
+	};
 
-		step(`🌟 Successfully upload contract`, async function (done) {
-
+	step(`🌟 Successfully upload contract`, async function (done) {
+		try {
 			// simply upload and get contract & block num. Ensure that the block was last produced block
 			console.log("\n\nUploading a test contract...\n");
 			this.timeout(UPLOAD_TIMEOUT);
@@ -92,50 +90,52 @@ describeWithContext(
 			hashCtx.blockNum = ctxBlockNum;
 
 			done();
-		});
+		} catch (err) {
+			done(err);
+		}
+	});
 
-		step("🌟 Successfully carry out hash operation on the contract", async function (done) {
-			try {
-				// call operate method
-				console.log("\n\nCalling operate method on the test contract...\n");
-				this.timeout(WRITE_TIMEOUT);
+	step("🌟 Successfully carry out hash operation on the contract", async function (done) {
+		try {
+			// call operate method
+			console.log("\n\nCalling operate method on the test contract...\n");
+			this.timeout(WRITE_TIMEOUT);
 
-				const ctxObj = new ContractPromise(context.api!, hashCtx.metadata!, hashCtx.address!);
+			const ctxObj = new ContractPromise(context.api!, hashCtx.metadata!, hashCtx.address!);
 
-				await context.writeContract(
-					context.alice!,
-					ctxObj,
-					CONTRACTS.keccakTestCtx.writeMethods.operate,
-					{
-						gasLimit: context.api!.registry.createType("WeightV2", {
-							proofSize: GAS_LIMIT,
-							refTime: GAS_LIMIT,
-						}) as WeightV2,
-						storageDepositLimit: DEPLOY_STORAGE_LIMIT,
-					},
-					[],
-				);
+			await context.writeContract(
+				context.alice!,
+				ctxObj,
+				CONTRACTS.keccakTestCtx.writeMethods.operate,
+				{
+					gasLimit: context.api!.registry.createType("WeightV2", {
+						proofSize: GAS_LIMIT,
+						refTime: GAS_LIMIT,
+					}) as WeightV2,
+					storageDepositLimit: DEPLOY_STORAGE_LIMIT,
+				},
+				[],
+			);
 
-				// ensure the values returned by get method are accurate
-				expect(
-					getCtxState(
-						context.api!,
-						hashCtx.metadata!,
-						hashCtx.address!,
-						context.endUserWallets[0]!.address,
-						// @ts-ignore
-						context.queryContract,
-					),
+			// ensure the values returned by get method are accurate
+			expect(
+				getCtxState(
+					context.api!,
+					hashCtx.metadata!,
+					hashCtx.address!,
+					context.endUserWallets[0]!.address,
+					// @ts-ignore
+					context.queryContract,
+				),
+			)
+				.to.eventually.equal(
+					// keccak hash of "3998"
+					'{"hash":"0xba20efe605ffaf935740b0609b20e76f4a2eebc2a40e893d19665b3d829318a5","value":3998}',
+					"Hashing method did not execute expectedly",
 				)
-					.to.eventually.equal(
-						// keccak hash of "3998"
-						'{"hash":"0xba20efe605ffaf935740b0609b20e76f4a2eebc2a40e893d19665b3d829318a5","value":3998}',
-						"Hashing method did not execute expectedly",
-					)
-					.notify(done);
-			} catch (err) {
-				done(err);
-			}
-		});
-	}
-);
+				.notify(done);
+		} catch (err) {
+			done(err);
+		}
+	});
+});

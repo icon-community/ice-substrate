@@ -93,165 +93,193 @@ describeWithContext("\n\n👉 Estimate gas for deploying and calling write metho
 	});
 
 	step("🌟 User nonce should update after it makes a write call on a contract", async function (done) {
-		this.timeout(TX_TIMEOUT);
-		console.log("\n\nCalling increment on accumulator contract...\n");
+		try {
+			this.timeout(TX_TIMEOUT);
+			console.log("\n\nCalling increment on accumulator contract...\n");
 
-		const ctxObj = new ContractPromise(context.api!, accumulatorContract.metadata!, accumulatorContract.address!);
+			const ctxObj = new ContractPromise(
+				context.api!,
+				accumulatorContract.metadata!,
+				accumulatorContract.address!,
+			);
 
-		await context.writeContract(
-			context.endUserWallets[1]!,
-			ctxObj,
-			CONTRACTS.multiCallCtx.accumulator.writeMethods.inc,
-			{
-				gasLimit: context.api!.registry.createType("WeightV2", {
-					proofSize: GAS_LIMIT,
-					refTime: GAS_LIMIT,
-				}) as WeightV2,
-				storageDepositLimit: null,
-			},
-			[1],
-		);
+			await context.writeContract(
+				context.endUserWallets[1]!,
+				ctxObj,
+				CONTRACTS.multiCallCtx.accumulator.writeMethods.inc,
+				{
+					gasLimit: context.api!.registry.createType("WeightV2", {
+						proofSize: GAS_LIMIT,
+						refTime: GAS_LIMIT,
+					}) as WeightV2,
+					storageDepositLimit: null,
+				},
+				[1],
+			);
 
-		const userNonce = await context.getNonce(context.endUserWallets[1].address);
+			const userNonce = await context.getNonce(context.endUserWallets[1].address);
 
-		expect(userNonce).to.equal(1, "User nonce didn't increase");
-		done();
+			expect(userNonce).to.equal(1, "User nonce didn't increase");
+			done();
+		} catch (err) {
+			done(err);
+		}
 	});
 
 	step("🌟 User nonce should update on a multi-call transaction but not the contract nonce", async function (done) {
-		this.timeout(TX_TIMEOUT);
+		try {
+			this.timeout(TX_TIMEOUT);
 
-		const ctxObj = new ContractPromise(context.api!, adderContract.metadata!, adderContract.address!);
+			const ctxObj = new ContractPromise(context.api!, adderContract.metadata!, adderContract.address!);
 
-		console.log("\n\nCalling inc method on adder contract...");
-		await context.writeContract(
-			context.endUserWallets[1]!,
-			ctxObj,
-			CONTRACTS.multiCallCtx.adder.writeMethods.inc,
-			{
-				gasLimit: context.api!.registry.createType("WeightV2", {
-					proofSize: GAS_LIMIT,
-					refTime: GAS_LIMIT,
-				}) as WeightV2,
-				storageDepositLimit: null,
-			},
-			[1],
-		);
+			console.log("\n\nCalling inc method on adder contract...");
+			await context.writeContract(
+				context.endUserWallets[1]!,
+				ctxObj,
+				CONTRACTS.multiCallCtx.adder.writeMethods.inc,
+				{
+					gasLimit: context.api!.registry.createType("WeightV2", {
+						proofSize: GAS_LIMIT,
+						refTime: GAS_LIMIT,
+					}) as WeightV2,
+					storageDepositLimit: null,
+				},
+				[1],
+			);
 
-		const adderNonce = await context.getNonce(adderContract.address!);
-		const finalUserNonce = await context.getNonce(context.endUserWallets[1].address);
+			const adderNonce = await context.getNonce(adderContract.address!);
+			const finalUserNonce = await context.getNonce(context.endUserWallets[1].address);
 
-		expect(adderNonce).to.equal(0, "Adder contract nonce should not increase");
-		expect(finalUserNonce).to.equal(2, "User nonce should increase");
-		done();
+			expect(adderNonce).to.equal(0, "Adder contract nonce should not increase");
+			expect(finalUserNonce).to.equal(2, "User nonce should increase");
+			done();
+		} catch (err) {
+			done(err);
+		}
 	});
 
 	step("🌟 Transaction with same nonce but higher tip should replace original transaction", async function (done) {
-		this.timeout(TX_TIMEOUT);
-		console.log("\n\nCalling inc method on accumulator contract...");
+		try {
+			this.timeout(TX_TIMEOUT);
+			console.log("\n\nCalling inc method on accumulator contract...");
 
-		const ctxObj = new ContractPromise(context.api!, accumulatorContract.metadata!, accumulatorContract.address!);
+			const ctxObj = new ContractPromise(
+				context.api!,
+				accumulatorContract.metadata!,
+				accumulatorContract.address!,
+			);
 
-		context.writeContract(
-			context.endUserWallets[1]!,
-			ctxObj,
-			CONTRACTS.multiCallCtx.accumulator.writeMethods.inc,
-			{
-				gasLimit: context.api!.registry.createType("WeightV2", {
-					proofSize: GAS_LIMIT,
-					refTime: GAS_LIMIT,
-				}) as WeightV2,
-				storageDepositLimit: null,
-			},
-			[1],
-		);
+			context.writeContract(
+				context.endUserWallets[1]!,
+				ctxObj,
+				CONTRACTS.multiCallCtx.accumulator.writeMethods.inc,
+				{
+					gasLimit: context.api!.registry.createType("WeightV2", {
+						proofSize: GAS_LIMIT,
+						refTime: GAS_LIMIT,
+					}) as WeightV2,
+					storageDepositLimit: null,
+				},
+				[1],
+			);
 
-		await context.writeContract(
-			context.endUserWallets[1]!,
-			ctxObj,
-			CONTRACTS.multiCallCtx.accumulator.writeMethods.inc,
-			{
-				gasLimit: context.api!.registry.createType("WeightV2", {
-					proofSize: GAS_LIMIT,
-					refTime: GAS_LIMIT,
-				}) as WeightV2,
-				storageDepositLimit: null,
-			},
-			[120],
-			"10000000000",
-		);
+			await context.writeContract(
+				context.endUserWallets[1]!,
+				ctxObj,
+				CONTRACTS.multiCallCtx.accumulator.writeMethods.inc,
+				{
+					gasLimit: context.api!.registry.createType("WeightV2", {
+						proofSize: GAS_LIMIT,
+						refTime: GAS_LIMIT,
+					}) as WeightV2,
+					storageDepositLimit: null,
+				},
+				[120],
+				"10000000000",
+			);
 
-		const { output } = await context.queryContract(ctxObj, CONTRACTS.multiCallCtx.accumulator.readMethods.get, {
-			sender: context.endUserWallets[1].address,
-			args: [],
-			txOptions: {
-				gasLimit: context.api!.registry.createType("WeightV2", {
-					proofSize: GAS_LIMIT,
-					refTime: GAS_LIMIT,
-				}) as WeightV2,
-				storageDepositLimit: null,
-			},
-		});
+			const { output } = await context.queryContract(ctxObj, CONTRACTS.multiCallCtx.accumulator.readMethods.get, {
+				sender: context.endUserWallets[1].address,
+				args: [],
+				txOptions: {
+					gasLimit: context.api!.registry.createType("WeightV2", {
+						proofSize: GAS_LIMIT,
+						refTime: GAS_LIMIT,
+					}) as WeightV2,
+					storageDepositLimit: null,
+				},
+			});
 
-		expect(output?.toHuman()).to.equal("121");
+			expect(output?.toHuman()).to.equal("121");
 
-		done();
+			done();
+		} catch (err) {
+			done(err);
+		}
 	});
 
 	step("🌟 Transaction with lower nonce should be given priority", async function (done) {
-		this.timeout(TX_TIMEOUT);
-		console.log("\n\nCalling inc method on accumulator contract...");
+		try {
+			this.timeout(TX_TIMEOUT);
+			console.log("\n\nCalling inc method on accumulator contract...");
 
-		const ctxObj = new ContractPromise(context.api!, accumulatorContract.metadata!, accumulatorContract.address!);
+			const ctxObj = new ContractPromise(
+				context.api!,
+				accumulatorContract.metadata!,
+				accumulatorContract.address!,
+			);
 
-		const userNonce = await context.getNonce(context.endUserWallets[1].address);
+			const userNonce = await context.getNonce(context.endUserWallets[1].address);
 
-		context.writeContract(
-			context.endUserWallets[1]!,
-			ctxObj,
-			CONTRACTS.multiCallCtx.accumulator.writeMethods.inc,
-			{
-				gasLimit: context.api!.registry.createType("WeightV2", {
-					proofSize: GAS_LIMIT,
-					refTime: GAS_LIMIT,
-				}) as WeightV2,
-				storageDepositLimit: null,
-			},
-			[1],
-			undefined,
-			userNonce + 2,
-		);
+			context.writeContract(
+				context.endUserWallets[1]!,
+				ctxObj,
+				CONTRACTS.multiCallCtx.accumulator.writeMethods.inc,
+				{
+					gasLimit: context.api!.registry.createType("WeightV2", {
+						proofSize: GAS_LIMIT,
+						refTime: GAS_LIMIT,
+					}) as WeightV2,
+					storageDepositLimit: null,
+				},
+				[1],
+				undefined,
+				userNonce + 2,
+			);
 
-		await context.writeContract(
-			context.endUserWallets[1]!,
-			ctxObj,
-			CONTRACTS.multiCallCtx.accumulator.writeMethods.inc,
-			{
-				gasLimit: context.api!.registry.createType("WeightV2", {
-					proofSize: GAS_LIMIT,
-					refTime: GAS_LIMIT,
-				}) as WeightV2,
-				storageDepositLimit: null,
-			},
-			[120],
-			undefined,
-			userNonce,
-		);
+			await context.writeContract(
+				context.endUserWallets[1]!,
+				ctxObj,
+				CONTRACTS.multiCallCtx.accumulator.writeMethods.inc,
+				{
+					gasLimit: context.api!.registry.createType("WeightV2", {
+						proofSize: GAS_LIMIT,
+						refTime: GAS_LIMIT,
+					}) as WeightV2,
+					storageDepositLimit: null,
+				},
+				[120],
+				undefined,
+				userNonce,
+			);
 
-		const { output } = await context.queryContract(ctxObj, CONTRACTS.multiCallCtx.accumulator.readMethods.get, {
-			sender: context.endUserWallets[1].address,
-			args: [],
-			txOptions: {
-				gasLimit: context.api!.registry.createType("WeightV2", {
-					proofSize: GAS_LIMIT,
-					refTime: GAS_LIMIT,
-				}) as WeightV2,
-				storageDepositLimit: null,
-			},
-		});
+			const { output } = await context.queryContract(ctxObj, CONTRACTS.multiCallCtx.accumulator.readMethods.get, {
+				sender: context.endUserWallets[1].address,
+				args: [],
+				txOptions: {
+					gasLimit: context.api!.registry.createType("WeightV2", {
+						proofSize: GAS_LIMIT,
+						refTime: GAS_LIMIT,
+					}) as WeightV2,
+					storageDepositLimit: null,
+				},
+			});
 
-		expect(output?.toHuman()).to.equal("241");
+			expect(output?.toHuman()).to.equal("241");
 
-		done();
+			done();
+		} catch (err) {
+			done(err);
+		}
 	});
 });

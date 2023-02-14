@@ -57,24 +57,28 @@ describeWithContext("\n\n👉 Tests for contract size", (context) => {
 	});
 
 	step("🌟 Contract size just below 128KB should be deployed", async function (done) {
-		console.log("\n\nUploading a large valid contract...\n");
-		this.timeout(UPLOAD_TIMEOUT);
+		try {
+			console.log("\n\nUploading a large valid contract...\n");
+			this.timeout(UPLOAD_TIMEOUT);
 
-		const { address } = await context.deployContract(
-			largeValidContract.metadata!,
-			largeValidContract.wasm!,
-			{
-				gasLimit: context.api!.registry.createType("WeightV2", {
-					proofSize: MAX_GAS_LIMIT,
-					refTime: MAX_GAS_LIMIT,
-				}) as WeightV2,
-				storageDepositLimit: DEPLOY_STORAGE_LIMIT,
-			},
-			[1],
-			context.alice!,
-		);
+			const { address } = await context.deployContract(
+				largeValidContract.metadata!,
+				largeValidContract.wasm!,
+				{
+					gasLimit: context.api!.registry.createType("WeightV2", {
+						proofSize: MAX_GAS_LIMIT,
+						refTime: MAX_GAS_LIMIT,
+					}) as WeightV2,
+					storageDepositLimit: DEPLOY_STORAGE_LIMIT,
+				},
+				[1],
+				context.alice!,
+			);
 
-		expect(address).to.have.lengthOf(49);
-		done();
+			expect(address).to.have.lengthOf(49);
+			done();
+		} catch (err) {
+			done(err);
+		}
 	});
 });

@@ -102,7 +102,7 @@ export const CHAINS = {
 		RPC_ENDPOINT: "wss://snow-staging-rpc.web3labs.com:9944",
 		CHAIN_ID: 552,
 		CHAIN_PREFIX: 2207,
-		UPGRADE_CTX_ADDRESS: "",
+		UPGRADE_CTX_ADDRESS: "ni36i7jridfQQHPkqukECj1teTs4USyRDrq67pKanNYtM3aXw",
 	},
 	local: {
 		RPC_ENDPOINT: "ws://localhost:9944",

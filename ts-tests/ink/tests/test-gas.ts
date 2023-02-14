@@ -54,144 +54,168 @@ describeWithContext("\n\n👉 Estimate gas for deploying and calling write metho
 	});
 
 	step("🌟 Estimated gas for deploying accumulator contract should be accurate", async function (done) {
-		console.log("\n\nUploading accumulator contract...\n");
-		this.timeout(UPLOAD_TIMEOUT);
+		try {
+			console.log("\n\nUploading accumulator contract...\n");
+			this.timeout(UPLOAD_TIMEOUT);
 
-		// todo: estimate the gas required for deployment and then deploy with that gas limit
-		// Params: origin, balance, gasLimit, storageDeposit, ctxWasm, data, salt
-		// const res = context.api?.call.contractsApi.instantiate(context.alice!.address, "0", BigInt(Math.pow(10,18)), null, adderContract.wasm!, [0], [0]);
+			// todo: estimate the gas required for deployment and then deploy with that gas limit
+			// Params: origin, balance, gasLimit, storageDeposit, ctxWasm, data, salt
+			// const res = context.api?.call.contractsApi.instantiate(context.alice!.address, "0", BigInt(Math.pow(10,18)), null, adderContract.wasm!, [0], [0]);
 
-		const {
-			address: ctxAddress,
-			blockHash: ctxBlockHash,
-			blockNum: ctxBlockNum,
-		} = await context.deployContract(
-			accumulatorContract.metadata!,
-			accumulatorContract.wasm!,
-			{
-				gasLimit: context.api!.registry.createType("WeightV2", {
-					proofSize: GAS_LIMIT,
-					refTime: GAS_LIMIT,
-				}) as WeightV2,
-				storageDepositLimit: DEPLOY_STORAGE_LIMIT,
-			},
-			[0],
-			context.endUserWallets[0]!,
-		);
+			const {
+				address: ctxAddress,
+				blockHash: ctxBlockHash,
+				blockNum: ctxBlockNum,
+			} = await context.deployContract(
+				accumulatorContract.metadata!,
+				accumulatorContract.wasm!,
+				{
+					gasLimit: context.api!.registry.createType("WeightV2", {
+						proofSize: GAS_LIMIT,
+						refTime: GAS_LIMIT,
+					}) as WeightV2,
+					storageDepositLimit: DEPLOY_STORAGE_LIMIT,
+				},
+				[0],
+				context.endUserWallets[0]!,
+			);
 
-		accumulatorContract.address = ctxAddress;
-		accumulatorContract.blockHash = ctxBlockHash;
-		accumulatorContract.blockNum = ctxBlockNum;
-		accumulatorContract.codeHash = await SnowApi.getCodeHash(ctxAddress!);
+			accumulatorContract.address = ctxAddress;
+			accumulatorContract.blockHash = ctxBlockHash;
+			accumulatorContract.blockNum = ctxBlockNum;
+			accumulatorContract.codeHash = await SnowApi.getCodeHash(ctxAddress!);
 
-		done();
+			done();
+		} catch (err) {
+			done(err);
+		}
 	});
 
 	step("🌟 Estimated gas for deploying adder contract should accurate", async function (done) {
-		console.log("\n\nUploading adder contract...\n");
-		this.timeout(UPLOAD_TIMEOUT);
+		try {
+			console.log("\n\nUploading adder contract...\n");
+			this.timeout(UPLOAD_TIMEOUT);
 
-		// todo: estimate the gas required for deployment and then deploy with that gas limit
+			// todo: estimate the gas required for deployment and then deploy with that gas limit
 
-		const {
-			address: ctxAddress,
-			blockHash: ctxBlockHash,
-			blockNum: ctxBlockNum,
-		} = await context.deployContract(
-			adderContract.metadata!,
-			adderContract.wasm!,
-			{
-				gasLimit: context.api!.registry.createType("WeightV2", {
-					proofSize: GAS_LIMIT,
-					refTime: GAS_LIMIT,
-				}) as WeightV2,
-				storageDepositLimit: DEPLOY_STORAGE_LIMIT,
-			},
-			[0, 1, ACCUMULATOR_CODE_HASH],
-			context.endUserWallets[0]!,
-		);
+			const {
+				address: ctxAddress,
+				blockHash: ctxBlockHash,
+				blockNum: ctxBlockNum,
+			} = await context.deployContract(
+				adderContract.metadata!,
+				adderContract.wasm!,
+				{
+					gasLimit: context.api!.registry.createType("WeightV2", {
+						proofSize: GAS_LIMIT,
+						refTime: GAS_LIMIT,
+					}) as WeightV2,
+					storageDepositLimit: DEPLOY_STORAGE_LIMIT,
+				},
+				[0, 1, ACCUMULATOR_CODE_HASH],
+				context.endUserWallets[0]!,
+			);
 
-		adderContract.address = ctxAddress;
-		adderContract.blockHash = ctxBlockHash;
-		adderContract.blockNum = ctxBlockNum;
+			adderContract.address = ctxAddress;
+			adderContract.blockHash = ctxBlockHash;
+			adderContract.blockNum = ctxBlockNum;
 
-		done();
+			done();
+		} catch (err) {
+			done(err);
+		}
 	});
 
 	step("🌟 Estimate gas limit for simple transaction", async function (done) {
-		console.log("\n\nEstimating inc method call on accumulator contract...\n");
-		this.timeout(QUERY_TIMEOUT);
+		try {
+			console.log("\n\nEstimating inc method call on accumulator contract...\n");
+			this.timeout(QUERY_TIMEOUT);
 
-		const ctxObj = new ContractPromise(context.api!, accumulatorContract.metadata!, accumulatorContract.address!);
+			const ctxObj = new ContractPromise(
+				context.api!,
+				accumulatorContract.metadata!,
+				accumulatorContract.address!,
+			);
 
-		const response = await context.dryRunTransaction(
-			ctxObj,
-			CONTRACTS.multiCallCtx.accumulator.writeMethods.inc,
-			context.alice!.address,
-			{
-				gasLimit: context.api!.registry.createType("WeightV2", {
-					proofSize: GAS_LIMIT,
-					refTime: GAS_LIMIT,
-				}) as WeightV2,
-				storageDepositLimit: null,
-			},
-			[1],
-		);
-		expect(response?.result.gasLimit.proofSize.toBigInt()).eql(ACCUMULATOR_INC_GAS.proofSize);
-		expect(response?.result.gasLimit.refTime.toBigInt()).eql(ACCUMULATOR_INC_GAS.refTime);
+			const response = await context.dryRunTransaction(
+				ctxObj,
+				CONTRACTS.multiCallCtx.accumulator.writeMethods.inc,
+				context.alice!.address,
+				{
+					gasLimit: context.api!.registry.createType("WeightV2", {
+						proofSize: GAS_LIMIT,
+						refTime: GAS_LIMIT,
+					}) as WeightV2,
+					storageDepositLimit: null,
+				},
+				[1],
+			);
+			expect(response?.result.gasLimit.proofSize.toBigInt()).eql(ACCUMULATOR_INC_GAS.proofSize);
+			expect(response?.result.gasLimit.refTime.toBigInt()).eql(ACCUMULATOR_INC_GAS.refTime);
 
-		done();
+			done();
+		} catch (err) {
+			done(err);
+		}
 	});
 
 	step("🌟 Estimate gas limit for multicall transaction", async function (done) {
-		console.log("\n\nEstimating inc method on adder contract...\n");
-		this.timeout(QUERY_TIMEOUT);
+		try {
+			console.log("\n\nEstimating inc method on adder contract...\n");
+			this.timeout(QUERY_TIMEOUT);
 
-		const ctxObj = new ContractPromise(context.api!, adderContract.metadata!, adderContract.address!);
+			const ctxObj = new ContractPromise(context.api!, adderContract.metadata!, adderContract.address!);
 
-		const response = await context.dryRunTransaction(
-			ctxObj,
-			CONTRACTS.multiCallCtx.adder.writeMethods.inc,
-			context.endUserWallets[0]!.address,
-			{
-				gasLimit: context.api!.registry.createType("WeightV2", {
-					proofSize: GAS_LIMIT,
-					refTime: GAS_LIMIT,
-				}) as WeightV2,
-				storageDepositLimit: null,
-			},
-			[1],
-		);
-		expect(response?.result.gasLimit.proofSize.toBigInt()).eql(ADDER_INC_GAS.proofSize);
-		expect(response?.result.gasLimit.refTime.toBigInt()).eql(ADDER_INC_GAS.refTime);
+			const response = await context.dryRunTransaction(
+				ctxObj,
+				CONTRACTS.multiCallCtx.adder.writeMethods.inc,
+				context.endUserWallets[0]!.address,
+				{
+					gasLimit: context.api!.registry.createType("WeightV2", {
+						proofSize: GAS_LIMIT,
+						refTime: GAS_LIMIT,
+					}) as WeightV2,
+					storageDepositLimit: null,
+				},
+				[1],
+			);
+			expect(response?.result.gasLimit.proofSize.toBigInt()).eql(ADDER_INC_GAS.proofSize);
+			expect(response?.result.gasLimit.refTime.toBigInt()).eql(ADDER_INC_GAS.refTime);
 
-		done();
+			done();
+		} catch (err) {
+			done(err);
+		}
 	});
 
 	step("🌟 Estimate gas limit for payable transaction", async function (done) {
-		console.log("\n\nEstimating receiveFunds method on adder contract...\n");
-		this.timeout(QUERY_TIMEOUT);
+		try {
+			console.log("\n\nEstimating receiveFunds method on adder contract...\n");
+			this.timeout(QUERY_TIMEOUT);
 
-		const ctxObj = new ContractPromise(context.api!, adderContract.metadata!, adderContract.address!);
+			const ctxObj = new ContractPromise(context.api!, adderContract.metadata!, adderContract.address!);
 
-		const response = await context.dryRunTransaction(
-			ctxObj,
-			CONTRACTS.multiCallCtx.adder.writeMethods.receiveFunds,
-			context.endUserWallets[0]!.address,
-			{
-				gasLimit: context.api!.registry.createType("WeightV2", {
-					proofSize: GAS_LIMIT,
-					refTime: GAS_LIMIT,
-				}) as WeightV2,
-				storageDepositLimit: null,
-				value: Math.pow(10, 18).toString(),
-			},
-			[],
-		);
-		expect(response?.result.gasLimit.proofSize.toBigInt()).eql(ADDER_DEPOSIT_GAS.proofSize);
-		expect(response?.result.gasLimit.refTime.toBigInt()).eql(ADDER_DEPOSIT_GAS.refTime);
+			const response = await context.dryRunTransaction(
+				ctxObj,
+				CONTRACTS.multiCallCtx.adder.writeMethods.receiveFunds,
+				context.endUserWallets[0]!.address,
+				{
+					gasLimit: context.api!.registry.createType("WeightV2", {
+						proofSize: GAS_LIMIT,
+						refTime: GAS_LIMIT,
+					}) as WeightV2,
+					storageDepositLimit: null,
+					value: Math.pow(10, 18).toString(),
+				},
+				[],
+			);
+			expect(response?.result.gasLimit.proofSize.toBigInt()).eql(ADDER_DEPOSIT_GAS.proofSize);
+			expect(response?.result.gasLimit.refTime.toBigInt()).eql(ADDER_DEPOSIT_GAS.refTime);
 
-		done();
+			done();
+		} catch (err) {
+			done(err);
+		}
 	});
 
 	step("🌟 Tx exceeding block gas limit should fail", async function (done) {

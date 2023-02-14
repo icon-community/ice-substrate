@@ -91,38 +91,7 @@ describeWithContext("\n\n👉 Test reserved balances on deployer wallet and a si
 	});
 
 	step("🌟 Uploading a contract the first time should reserve balance on the deployer", async function (done) {
-		console.log("\n\nUploading a simple contract...\n");
-		this.timeout(UPLOAD_TIMEOUT);
-
-		const { address: ctxAddress } = await context.deployContract(
-			simpleContract.metadata!,
-			simpleContract.wasm!,
-			{
-				gasLimit: context.api!.registry.createType("WeightV2", {
-					proofSize: DEPLOY_GAS_LIMIT,
-					refTime: DEPLOY_GAS_LIMIT,
-				}) as WeightV2,
-				storageDepositLimit: DEPLOY_STORAGE_LIMIT,
-			},
-			[false],
-			context.endUserWallets[0]!,
-		);
-
-		const deployerReserveBal = await context.getBalance(context.endUserWallets[0].address, true);
-		const ctxReserveBal = await context.getBalance(ctxAddress!, true);
-
-		expect(deployerReserveBal.toFixed(0)).to.equal(
-			DEPLOYER_RESERVE_BAL,
-			"Balance should be reserved on the deployer",
-		);
-		expect(ctxReserveBal.toFixed(0)).to.equal(CTX_RESERVE_BAL, "Balance should be reserved on the contract");
-
-		done();
-	});
-
-	step(
-		"🌟 Deploying an already available code hash should not reserve balance on the deployer",
-		async function (done) {
+		try {
 			console.log("\n\nUploading a simple contract...\n");
 			this.timeout(UPLOAD_TIMEOUT);
 
@@ -137,16 +106,58 @@ describeWithContext("\n\n👉 Test reserved balances on deployer wallet and a si
 					storageDepositLimit: DEPLOY_STORAGE_LIMIT,
 				},
 				[false],
-				context.endUserWallets[1]!,
+				context.endUserWallets[0]!,
 			);
 
-			const deployerReserveBal = await context.getBalance(context.endUserWallets[1].address, true);
+			const deployerReserveBal = await context.getBalance(context.endUserWallets[0].address, true);
 			const ctxReserveBal = await context.getBalance(ctxAddress!, true);
 
-			expect(deployerReserveBal.toFixed(0)).to.equal("0", "Balance should not be reserved on the deployer");
+			expect(deployerReserveBal.toFixed(0)).to.equal(
+				DEPLOYER_RESERVE_BAL,
+				"Balance should be reserved on the deployer",
+			);
 			expect(ctxReserveBal.toFixed(0)).to.equal(CTX_RESERVE_BAL, "Balance should be reserved on the contract");
 
 			done();
+		} catch (err) {
+			done(err);
+		}
+	});
+
+	step(
+		"🌟 Deploying an already available code hash should not reserve balance on the deployer",
+		async function (done) {
+			try {
+				console.log("\n\nUploading a simple contract...\n");
+				this.timeout(UPLOAD_TIMEOUT);
+
+				const { address: ctxAddress } = await context.deployContract(
+					simpleContract.metadata!,
+					simpleContract.wasm!,
+					{
+						gasLimit: context.api!.registry.createType("WeightV2", {
+							proofSize: DEPLOY_GAS_LIMIT,
+							refTime: DEPLOY_GAS_LIMIT,
+						}) as WeightV2,
+						storageDepositLimit: DEPLOY_STORAGE_LIMIT,
+					},
+					[false],
+					context.endUserWallets[1]!,
+				);
+
+				const deployerReserveBal = await context.getBalance(context.endUserWallets[1].address, true);
+				const ctxReserveBal = await context.getBalance(ctxAddress!, true);
+
+				expect(deployerReserveBal.toFixed(0)).to.equal("0", "Balance should not be reserved on the deployer");
+				expect(ctxReserveBal.toFixed(0)).to.equal(
+					CTX_RESERVE_BAL,
+					"Balance should be reserved on the contract",
+				);
+
+				done();
+			} catch (err) {
+				done(err);
+			}
 		},
 	);
 });
