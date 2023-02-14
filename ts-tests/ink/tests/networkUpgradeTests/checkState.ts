@@ -50,8 +50,9 @@ describeWithContext(
 					queryOptions,
 				);
 
+				// todo: https://github.com/polkadot-js/api/issues/5483
 				expect(output?.toString(), "Invalid contract state").to.equal(
-					'{"msg":"ICE/SNOW Network","u8Arr":"0x010203","value":"0x7fffffffffffffffffffffffffffffff","isTrue":true,"myAccount":"npRm3oLNUahbPgUnwjPYw9oLWdEigk6aHzwtvj4nibfAJMYVo","myBalance":123123123123,"myHash":"0xe0d83c067d9abf593a8089ef1f21fc30fafb02a8dd67a862f8ca47eb158735b9","myVec":[-65535,-65534,-65533,-65532,-65531,-65530,-65529,-65528,-65527,-65526,-65525],"myStruct":{"id":1,"status":"Invalid","strArr":["Str1","Str2"]}}',
+					'{"msg":"ICE/SNOW Network","u8Arr":"0x010203","value":"0x7fffffffffffffffffffffffffffffff","isTrue":true,"myAccount":"npRm3oLNUahbPgUnwjPYw9oLWdEigk6aHzwtvj4nibfAJMYVo","myBalance":123123123123,"myHash":"0xe0d83c067d9abf593a8089ef1f21fc30fafb02a8dd67a862f8ca47eb158735b9","myVec":[1,2,3,4,5,6,7,8,9,10,11],"myStruct":{"id":1,"status":"Invalid","strArr":["Str1","Str2"]},"myIntStruct":{"myU8":255,"myU16":65535,"myU32":4294967295,"myU64":"0xffffffffffffffff","myU128":"0xffffffffffffffffffffffffffffffff","myI8":127,"myI16":32767,"myI32":2147483647,"myI64":"0x7fffffffffffffff","myI128":"0x7fffffffffffffffffffffffffffffff"}}',
 				);
 
 				done();
