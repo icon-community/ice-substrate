@@ -423,6 +423,7 @@ where
 		let client = client.clone();
 		let network = network.clone();
 		let transaction_pool = transaction_pool.clone();
+		let name =parachain_config.impl_name.clone();
 
 		Box::new(move |deny_unsafe, subscription| {
 			let deps = crate::rpc::FullDeps {
@@ -439,8 +440,12 @@ where
 				block_data_cache: block_data_cache.clone(),
 				overrides: overrides.clone(),
 			};
-
-			crate::rpc::create_full(deps, subscription).map_err(Into::into)
+			let rpc = if name.starts_with("snow") {
+				crate::rpc::snow::create_full(deps, subscription).map_err(Into::into)
+			} else {
+				crate::rpc::arctic::create_full(deps, subscription).map_err(Into::into)
+			};
+			rpc
 		})
 	};
 

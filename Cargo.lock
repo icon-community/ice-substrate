@@ -3943,6 +3943,10 @@ dependencies = [
  "pallet-ethereum",
  "pallet-evm",
  "pallet-fees-split",
+ "pallet-rmrk-core",
+ "pallet-rmrk-equip",
+ "pallet-rmrk-rpc",
+ "pallet-rmrk-rpc-runtime-api",
  "pallet-simple-inflation",
  "pallet-transaction-payment-rpc",
  "parity-scale-codec",
@@ -3950,6 +3954,7 @@ dependencies = [
  "polkadot-parachain",
  "polkadot-primitives",
  "polkadot-service",
+ "rmrk-traits",
  "sc-basic-authorship",
  "sc-chain-spec",
  "sc-cli",
@@ -6932,8 +6937,9 @@ dependencies = [
 [[package]]
 name = "pallet-rmrk-core"
 version = "0.0.1"
-source = "git+https://github.com/Phala-Network/rmrk-substrate?branch=polkadot-v0.9.36#b1badc2422193b239b42a328e72c03c7eb6a097d"
+source = "git+https://github.com/web3labs/rmrk-substrate?branch=polkadot-v0.9.36#4f9f37a59aa41ff7964c2077a9f09e18141a24ca"
 dependencies = [
+ "frame-benchmarking",
  "frame-support",
  "frame-system",
  "pallet-balances",
@@ -6949,8 +6955,9 @@ dependencies = [
 [[package]]
 name = "pallet-rmrk-equip"
 version = "0.0.1"
-source = "git+https://github.com/Phala-Network/rmrk-substrate?branch=polkadot-v0.9.36#b1badc2422193b239b42a328e72c03c7eb6a097d"
+source = "git+https://github.com/web3labs/rmrk-substrate?branch=polkadot-v0.9.36#4f9f37a59aa41ff7964c2077a9f09e18141a24ca"
 dependencies = [
+ "frame-benchmarking",
  "frame-support",
  "frame-system",
  "pallet-balances",
@@ -6967,8 +6974,9 @@ dependencies = [
 [[package]]
 name = "pallet-rmrk-market"
 version = "0.0.1"
-source = "git+https://github.com/Phala-Network/rmrk-substrate?branch=polkadot-v0.9.36#b1badc2422193b239b42a328e72c03c7eb6a097d"
+source = "git+https://github.com/web3labs/rmrk-substrate?branch=polkadot-v0.9.36#4f9f37a59aa41ff7964c2077a9f09e18141a24ca"
 dependencies = [
+ "frame-benchmarking",
  "frame-support",
  "frame-system",
  "pallet-balances",
@@ -6983,9 +6991,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "pallet-rmrk-rpc"
+version = "0.0.1"
+source = "git+https://github.com/web3labs/rmrk-substrate?branch=polkadot-v0.9.36#4f9f37a59aa41ff7964c2077a9f09e18141a24ca"
+dependencies = [
+ "jsonrpsee",
+ "pallet-rmrk-rpc-runtime-api",
+ "parity-scale-codec",
+ "rmrk-traits",
+ "sc-client-api",
+ "sc-rpc",
+ "scale-info",
+ "sp-api",
+ "sp-blockchain",
+ "sp-runtime",
+]
+
+[[package]]
 name = "pallet-rmrk-rpc-runtime-api"
 version = "0.0.1"
-source = "git+https://github.com/Phala-Network/rmrk-substrate?branch=polkadot-v0.9.36#b1badc2422193b239b42a328e72c03c7eb6a097d"
+source = "git+https://github.com/web3labs/rmrk-substrate?branch=polkadot-v0.9.36#4f9f37a59aa41ff7964c2077a9f09e18141a24ca"
 dependencies = [
  "parity-scale-codec",
  "rmrk-traits",
@@ -7259,6 +7284,7 @@ name = "pallet-uniques"
 version = "4.0.0-dev"
 source = "git+https://github.com/paritytech/substrate?branch=polkadot-v0.9.36#cb4f2491b00af7d7817f3a54209c26b20faa1f51"
 dependencies = [
+ "frame-benchmarking",
  "frame-support",
  "frame-system",
  "log",
@@ -9376,8 +9402,9 @@ dependencies = [
 [[package]]
 name = "rmrk-traits"
 version = "0.0.1"
-source = "git+https://github.com/Phala-Network/rmrk-substrate?branch=polkadot-v0.9.36#b1badc2422193b239b42a328e72c03c7eb6a097d"
+source = "git+https://github.com/web3labs/rmrk-substrate?branch=polkadot-v0.9.36#4f9f37a59aa41ff7964c2077a9f09e18141a24ca"
 dependencies = [
+ "frame-benchmarking",
  "frame-support",
  "frame-system",
  "pallet-balances",

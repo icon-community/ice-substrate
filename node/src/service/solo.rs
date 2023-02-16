@@ -302,7 +302,7 @@ pub fn start_frost_node(config: Configuration) -> Result<TaskManager, ServiceErr
 				overrides: overrides.clone(),
 			};
 
-			let io = crate::rpc::create_full(deps, subscription)
+			let io = crate::rpc::frost::create_full(deps, subscription)
 				.map_err::<ServiceError, _>(Into::into)?;
 
 			Ok(io)
