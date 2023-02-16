@@ -34,7 +34,7 @@ export const CHAINS = {
         UPGRADE_CTX_ADDRESS: "0x5c1c61cb2d66bb77ae2df436cb5e3f92db065a3c",
     },
     local: {
-        RPC_ENDPOINT: "https://localhost:9933",
+        RPC_ENDPOINT: "http://localhost:9933",
         CHAIN_ID: 554,
         UPGRADE_CTX_ADDRESS: "", // Update according to local env
     },
