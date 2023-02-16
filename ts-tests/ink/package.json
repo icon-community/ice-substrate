@@ -49,6 +49,7 @@
     "@types/chai-as-promised": "^7.1.5",
     "@types/dotenv-flow": "^3.2.0",
     "@types/mocha": "^10.0.1",
+    "@types/yargs": "^17.0.22",
     "@typescript-eslint/eslint-plugin": "^5.48.1",
     "@typescript-eslint/parser": "^5.48.1",
     "eslint": "^8.31.0",
