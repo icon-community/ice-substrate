@@ -1,6 +1,11 @@
 name: Network Upgrade Tests
 on:
-  workflow_dispatch
+  workflow_dispatch:
+    inputs:
+      chain:
+        description: Chain (snow/arctic/snow_staging)
+        required: true
+        default: snow
 
 jobs:
   contract-state:
@@ -20,13 +25,13 @@ jobs:
           npm install -g yarn
           yarn install
           yarn run build
-          yarn run test-ctx-state
+          yarn run test-ctx-state ${{ github.event.inputs.chain }}
         working-directory:
           ts-tests/evm
 
       - name: Ink test
         run: |
           npm i --force
-          npm run test-ctx-state
+          npm run test-ctx-state ${{ github.event.inputs.chain }}
         working-directory:
           ts-tests/ink
