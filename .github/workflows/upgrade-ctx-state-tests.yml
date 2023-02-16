@@ -1,0 +1,32 @@
+name: Network Upgrade Tests
+on:
+  workflow_dispatch
+
+jobs:
+  contract-state:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout the repo
+        uses: actions/checkout@v3
+      
+      - name: Use node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: 16.x
+      
+      - name: EVM test
+        run: |
+          npm install -g yarn
+          yarn install
+          yarn run build
+          yarn run test-ctx-state
+        working-directory:
+          ts-tests/evm
+
+      - name: Ink test
+        run: |
+          npm i --force
+          npm run test-ctx-state
+        working-directory:
+          ts-tests/ink
