@@ -19,7 +19,7 @@ const { expect } = chai;
 const GAS_LIMIT = "100000000000"; // 10^11
 const DEPLOY_STORAGE_LIMIT = "40000000000000000000"; // 40 ICZ
 
-const UPLOAD_TIMEOUT = 30_000;
+const UPLOAD_TIMEOUT = 50_000;
 const WRITE_TIMEOUT = 30_000;
 
 const WALLET_URI = process.env["INK_CTX_DEPLOYER_URI"];

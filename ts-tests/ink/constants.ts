@@ -86,13 +86,13 @@ export const CHAINS = {
 		RPC_ENDPOINT: "wss://arctic-rpc.icenetwork.io:9944",
 		CHAIN_ID: 553,
 		CHAIN_PREFIX: 2208,
-		UPGRADE_CTX_ADDRESS: "npNTSNZujEmYuGnUWpVEhVWG4fYkTsAgoGwFskh8LwKfqQjdM",
+		UPGRADE_CTX_ADDRESS: "npNUJVfr8T7PxKGoQG6DeDCVHUyUTdYkGKwaiHgABo8TVnCZs",
 	},
 	snow_staging: {
 		RPC_ENDPOINT: "wss://snow-staging-rpc.web3labs.com:9944",
 		CHAIN_ID: 552,
 		CHAIN_PREFIX: 2207,
-		UPGRADE_CTX_ADDRESS: "ni36i7jridfQQHPkqukECj1teTs4USyRDrq67pKanNYtM3aXw",
+		UPGRADE_CTX_ADDRESS: "ni429HgCgHJPdAaougukUc5a2kxxFrVpbMNNojf3YGL4u5WUc",
 	},
 	local: {
 		RPC_ENDPOINT: "ws://localhost:9944",

@@ -10,6 +10,7 @@ dotenv.config();
 
 const chainName = parseChainFromArgs(process.argv);
 const EVM_CTX_DEPLOYER_KEY = process.env["EVM_CTX_DEPLOYER_KEY"];
+const TX_TIMEOUT = 50_000;
 let ctxAddress: string | null = null;
 
 describe("Tests for deploying and calling write method on a contract", () => {
@@ -18,7 +19,7 @@ describe("Tests for deploying and calling write method on a contract", () => {
 
 	step("Deploy SetterGetter contract successfully", async function (done) {
 		try {
-			this.timeout(20_000);
+			this.timeout(TX_TIMEOUT);
 
 			const factory = new ContractFactory(SetterGetterCtx.abi, SetterGetterCtx.bytecode, deployer);
 
@@ -37,7 +38,7 @@ describe("Tests for deploying and calling write method on a contract", () => {
 
 	step("Ensure the write method can be called in the contract", async function (done) {
 		try {
-			this.timeout(20_000);
+			this.timeout(TX_TIMEOUT);
 
 			const contract: Contract = new Contract(ctxAddress, SetterGetterCtx.abi, deployer);
 

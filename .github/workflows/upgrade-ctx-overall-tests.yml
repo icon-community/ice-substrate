@@ -9,7 +9,7 @@ on:
     
 
 jobs:
-  contract-state:
+  contract-overall:
     runs-on: ubuntu-latest
     
     steps:
