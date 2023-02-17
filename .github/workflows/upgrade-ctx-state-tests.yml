@@ -32,6 +32,6 @@ jobs:
       - name: Ink test
         run: |
           npm i --force
-          npm run test-ctx-state ${{ github.event.inputs.chain }}
+          npm run test-ctx-state ${{ github.event.inputs.chain }} # TODO:: https://github.com/paritytech/ink/issues/1657
         working-directory:
           ts-tests/ink
