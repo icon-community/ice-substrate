@@ -69,7 +69,7 @@ use rmrk_traits::{
 	NftChild,
 };
 use sp_runtime::DispatchError;
-use sp_std::{collections::btree_set::BTreeSet};
+use sp_std::collections::btree_set::BTreeSet;
 
 pub mod constants;
 pub mod impls;
@@ -221,22 +221,22 @@ impl Contains<RuntimeCall> for BaseFilter {
 		// Disable direct calls to pallet_uniques
 		!matches!(
 			call,
-			RuntimeCall::Uniques(pallet_uniques::Call::approve_transfer { .. }) |
-				RuntimeCall::Uniques(pallet_uniques::Call::burn { .. }) |
-				RuntimeCall::Uniques(pallet_uniques::Call::cancel_approval { .. }) |
-				RuntimeCall::Uniques(pallet_uniques::Call::clear_collection_metadata { .. }) |
-				RuntimeCall::Uniques(pallet_uniques::Call::clear_metadata { .. }) |
-				RuntimeCall::Uniques(pallet_uniques::Call::create { .. }) |
-				RuntimeCall::Uniques(pallet_uniques::Call::destroy { .. }) |
-				RuntimeCall::Uniques(pallet_uniques::Call::force_item_status { .. }) |
-				RuntimeCall::Uniques(pallet_uniques::Call::force_create { .. }) |
-				RuntimeCall::Uniques(pallet_uniques::Call::freeze_collection { .. }) |
-				RuntimeCall::Uniques(pallet_uniques::Call::mint { .. }) |
-				RuntimeCall::Uniques(pallet_uniques::Call::redeposit { .. }) |
-				RuntimeCall::Uniques(pallet_uniques::Call::set_collection_metadata { .. }) |
-				RuntimeCall::Uniques(pallet_uniques::Call::thaw_collection { .. }) |
-				RuntimeCall::Uniques(pallet_uniques::Call::transfer { .. }) |
-				RuntimeCall::Uniques(pallet_uniques::Call::transfer_ownership { .. })
+			RuntimeCall::Uniques(pallet_uniques::Call::approve_transfer { .. })
+				| RuntimeCall::Uniques(pallet_uniques::Call::burn { .. })
+				| RuntimeCall::Uniques(pallet_uniques::Call::cancel_approval { .. })
+				| RuntimeCall::Uniques(pallet_uniques::Call::clear_collection_metadata { .. })
+				| RuntimeCall::Uniques(pallet_uniques::Call::clear_metadata { .. })
+				| RuntimeCall::Uniques(pallet_uniques::Call::create { .. })
+				| RuntimeCall::Uniques(pallet_uniques::Call::destroy { .. })
+				| RuntimeCall::Uniques(pallet_uniques::Call::force_item_status { .. })
+				| RuntimeCall::Uniques(pallet_uniques::Call::force_create { .. })
+				| RuntimeCall::Uniques(pallet_uniques::Call::freeze_collection { .. })
+				| RuntimeCall::Uniques(pallet_uniques::Call::mint { .. })
+				| RuntimeCall::Uniques(pallet_uniques::Call::redeposit { .. })
+				| RuntimeCall::Uniques(pallet_uniques::Call::set_collection_metadata { .. })
+				| RuntimeCall::Uniques(pallet_uniques::Call::thaw_collection { .. })
+				| RuntimeCall::Uniques(pallet_uniques::Call::transfer { .. })
+				| RuntimeCall::Uniques(pallet_uniques::Call::transfer_ownership { .. })
 		)
 	}
 }
