@@ -423,7 +423,7 @@ where
 		let client = client.clone();
 		let network = network.clone();
 		let transaction_pool = transaction_pool.clone();
-		let name =parachain_config.impl_name.clone();
+		let name = parachain_config.impl_name.clone();
 
 		Box::new(move |deny_unsafe, subscription| {
 			let deps = crate::rpc::FullDeps {

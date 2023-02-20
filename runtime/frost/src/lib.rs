@@ -57,6 +57,7 @@ use weights::{
 };
 
 use frame_support::inherent::Vec;
+use frame_support::traits::Contains;
 use sp_std::boxed::Box;
 
 use frame_support::BoundedVec;
@@ -68,7 +69,7 @@ use rmrk_traits::{
 	NftChild,
 };
 use sp_runtime::DispatchError;
-use sp_std::{collections::btree_set::BTreeSet, prelude::*};
+use sp_std::{collections::btree_set::BTreeSet};
 
 pub mod constants;
 pub mod impls;
@@ -214,11 +215,37 @@ parameter_types! {
 	pub const SS58Prefix: u16 = 2208;
 }
 
+pub struct BaseFilter;
+impl Contains<RuntimeCall> for BaseFilter {
+	fn contains(call: &RuntimeCall) -> bool {
+		// Disable direct calls to pallet_uniques
+		!matches!(
+			call,
+			RuntimeCall::Uniques(pallet_uniques::Call::approve_transfer { .. }) |
+				RuntimeCall::Uniques(pallet_uniques::Call::burn { .. }) |
+				RuntimeCall::Uniques(pallet_uniques::Call::cancel_approval { .. }) |
+				RuntimeCall::Uniques(pallet_uniques::Call::clear_collection_metadata { .. }) |
+				RuntimeCall::Uniques(pallet_uniques::Call::clear_metadata { .. }) |
+				RuntimeCall::Uniques(pallet_uniques::Call::create { .. }) |
+				RuntimeCall::Uniques(pallet_uniques::Call::destroy { .. }) |
+				RuntimeCall::Uniques(pallet_uniques::Call::force_item_status { .. }) |
+				RuntimeCall::Uniques(pallet_uniques::Call::force_create { .. }) |
+				RuntimeCall::Uniques(pallet_uniques::Call::freeze_collection { .. }) |
+				RuntimeCall::Uniques(pallet_uniques::Call::mint { .. }) |
+				RuntimeCall::Uniques(pallet_uniques::Call::redeposit { .. }) |
+				RuntimeCall::Uniques(pallet_uniques::Call::set_collection_metadata { .. }) |
+				RuntimeCall::Uniques(pallet_uniques::Call::thaw_collection { .. }) |
+				RuntimeCall::Uniques(pallet_uniques::Call::transfer { .. }) |
+				RuntimeCall::Uniques(pallet_uniques::Call::transfer_ownership { .. })
+		)
+	}
+}
+
 // Configure FRAME pallets to include in runtime.
 
 impl frame_system::Config for Runtime {
 	/// The basic call filter to use in dispatchable.
-	type BaseCallFilter = frame_support::traits::Everything;
+	type BaseCallFilter = BaseFilter; // frame_support::traits::Everything;
 	/// Block & extrinsics weights: base values and limits.
 	type BlockWeights = RuntimeBlockWeights;
 	/// The maximum length of a block (in bytes).

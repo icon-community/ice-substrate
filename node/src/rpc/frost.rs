@@ -3,19 +3,23 @@
 use super::FullDeps;
 use crate::primitives::*;
 use fc_rpc::{
-	Eth, EthApiServer, EthBlockDataCacheTask, EthFilter, EthFilterApiServer, EthPubSub,
-	EthPubSubApiServer, Net, NetApiServer, OverrideHandle, RuntimeApiStorageOverride,
-	SchemaV1Override, SchemaV2Override, SchemaV3Override, StorageOverride, Web3, Web3ApiServer,
+	Eth, EthApiServer, EthFilter, EthFilterApiServer, EthPubSub, EthPubSubApiServer, Net,
+	NetApiServer, Web3, Web3ApiServer,
 };
-use fc_rpc_core::types::{FeeHistoryCache, FilterPool};
-use fp_storage::EthereumStorageSchema;
+use frost_runtime::{
+	CollectionSymbolLimit, KeyLimit, MaxCollectionsEquippablePerPart, MaxPropertiesPerTheme,
+	PartsLimit, UniquesStringLimit, ValueLimit,
+};
 use jsonrpsee::RpcModule;
 use pallet_rmrk_rpc::{Rmrk, RmrkApiServer};
 use pallet_transaction_payment_rpc::{TransactionPayment, TransactionPaymentApiServer};
+use rmrk_traits::{
+	primitives::{CollectionId, NftId, PartId},
+	BaseInfo, CollectionInfo, NftInfo, PartType, PropertyInfo, ResourceInfo, Theme, ThemeProperty,
+};
 use sc_client_api::{AuxStore, Backend, BlockchainEvents, StateBackend, StorageProvider};
-use sc_network::NetworkService;
 pub use sc_rpc::{DenyUnsafe, SubscriptionTaskExecutor};
-use sc_transaction_pool::{ChainApi, Pool};
+use sc_transaction_pool::ChainApi;
 use sc_transaction_pool_api::TransactionPool;
 use sp_api::ProvideRuntimeApi;
 use sp_block_builder::BlockBuilder;
@@ -23,10 +27,8 @@ use sp_blockchain::{
 	Backend as BlockchainBackend, Error as BlockChainError, HeaderBackend, HeaderMetadata,
 };
 use sp_runtime::traits::BlakeTwo256;
-use std::collections::BTreeMap;
-use std::sync::Arc;
+use sp_runtime::{BoundedVec, Permill};
 use substrate_frame_rpc_system::{System, SystemApiServer};
-
 /// Instantiate all RPC extensions.
 pub fn create_full<C, P, BE, A>(
 	deps: FullDeps<C, P, A>,
@@ -47,6 +49,27 @@ where
 		+ fp_rpc::ConvertTransactionRuntimeApi<Block>
 		+ fp_rpc::EthereumRuntimeRPCApi<Block>
 		+ BlockBuilder<Block>,
+	C::Api: pallet_rmrk_rpc_runtime_api::RmrkApi<
+		Block,
+		AccountId,
+		CollectionInfo<
+			BoundedVec<u8, UniquesStringLimit>,
+			BoundedVec<u8, CollectionSymbolLimit>,
+			AccountId,
+		>,
+		NftInfo<AccountId, Permill, BoundedVec<u8, UniquesStringLimit>, CollectionId, NftId>,
+		ResourceInfo<BoundedVec<u8, UniquesStringLimit>, BoundedVec<PartId, PartsLimit>>,
+		PropertyInfo<BoundedVec<u8, KeyLimit>, BoundedVec<u8, ValueLimit>>,
+		BaseInfo<AccountId, BoundedVec<u8, UniquesStringLimit>>,
+		PartType<
+			BoundedVec<u8, UniquesStringLimit>,
+			BoundedVec<CollectionId, MaxCollectionsEquippablePerPart>,
+		>,
+		Theme<
+			BoundedVec<u8, UniquesStringLimit>,
+			BoundedVec<ThemeProperty<BoundedVec<u8, UniquesStringLimit>>, MaxPropertiesPerTheme>,
+		>,
+	>,
 	P: TransactionPool<Block = Block> + Sync + Send + 'static,
 	BE: Backend<Block> + 'static,
 	BE::State: StateBackend<BlakeTwo256>,
@@ -110,10 +133,16 @@ where
 	io.merge(Web3::new(client.clone()).into_rpc())?;
 
 	io.merge(
-		EthPubSub::new(pool, client, network, subscription_task_executor, overrides).into_rpc(),
+		EthPubSub::new(
+			pool,
+			client.clone(),
+			network,
+			subscription_task_executor,
+			overrides,
+		)
+		.into_rpc(),
 	)?;
-	// need to import types from runtime which is not ideal.
-	// io.merge(Rmrk::new(client.clone()).into_rpc())?;
+	io.merge(Rmrk::new(client.clone()).into_rpc())?;
 
 	Ok(io)
 }
