@@ -1,16 +1,18 @@
 use super::{
-	AccountId, Assets, Balance, Balances, Currencies, CurrencyId, ParachainInfo, ParachainSystem,
+	AccountId, Assets, Balance, Balances, /*Currencies ,*/ CurrencyId, ParachainInfo, ParachainSystem,
 	PolkadotXcm, RelativeCurrencyIdConvert, Runtime, RuntimeCall, RuntimeEvent, RuntimeOrigin,
-	Tokens, Treasury, UnknownTokens, XcmpQueue,
+	Tokens, Treasury, UnknownTokens, XcmpQueue, UnitWeightCost, MaxInstructions
 };
-use crate::constants::fee::ksm_per_second;
+use crate::constants::fee::{ksm_per_second, icz_per_second};
 use crate::TokenSymbol::*;
+use crate::AssetRegistry;
 use codec::Encode;
 use frame_support::{
 	match_types, parameter_types,
-	traits::{Everything, Nothing, PalletInfoAccess},
+	traits::{Everything, Get, Nothing, PalletInfoAccess},
 };
-use orml_traits::{BasicCurrency, MultiCurrency};
+use orml_traits::{location::AbsoluteReserveProvider, BasicCurrency, MultiCurrency, FixedConversionRateProvider};
+use orml_asset_registry::{AssetRegistryTrader, FixedRateAssetRegistryTrader};
 use pallet_xcm::XcmPassthrough;
 use polkadot_parachain::primitives::Sibling;
 use xcm::latest::prelude::*;
@@ -27,13 +29,13 @@ use xcm_executor::{
 	traits::{FilterAssetLocation, JustTry},
 	XcmExecutor,
 };
-
 use crate::{AdaptedBasicCurrency, NativeCurrencyId};
-use orml_xcm_support::{IsNativeConcrete, MultiCurrencyAdapter};
+use orml_xcm_support::{DepositToAlternative, IsNativeConcrete, MultiCurrencyAdapter, MultiNativeAsset};
 use sp_runtime::traits::Convert;
 
 parameter_types! {
 	pub const RelayLocation: MultiLocation = MultiLocation::parent();
+    // TODO abhi: what should RelayNetwork be - Any or Kusama?
 	pub const RelayNetwork: NetworkId = NetworkId::Any;
 	pub RelayChainOrigin: RuntimeOrigin = cumulus_pallet_xcm::Origin::Relay.into();
 	pub Ancestry: MultiLocation = Parachain(ParachainInfo::parachain_id().into()).into();
@@ -42,6 +44,7 @@ parameter_types! {
 	pub AssetsPalletLocation: MultiLocation =
 		PalletInstance(<Assets as PalletInfoAccess>::index() as u8).into();
 	pub CheckingAccount: AccountId = PolkadotXcm::check_account();
+    pub TreasuryAccount: AccountId = Treasury::account_id();
 }
 
 /// Type for specifying how a `MultiLocation` can be converted into an `AccountId`. This is used
@@ -70,6 +73,7 @@ pub type CurrencyTransactor = CurrencyAdapter<
 	(),
 >;
 
+/*
 pub type LocalAssetTransactor = MultiCurrencyAdapter<
 	Currencies,
 	UnknownTokens,
@@ -80,13 +84,17 @@ pub type LocalAssetTransactor = MultiCurrencyAdapter<
 	RelativeCurrencyIdConvert,
 	(),
 >;
+*/
 
-pub type DefaultLocalAssetTransactor = CurrencyAdapter<
-    Balances,
-    IsConcrete<RelayLocation>,
-    LocationToAccountId,
+pub type DefaultLocalAssetTransactor = MultiCurrencyAdapter<
+    Tokens,
+    UnknownTokens,
+    IsNativeConcrete<CurrencyId, RelativeCurrencyIdConvert>,
     AccountId,
-    ()
+    LocationToAccountId,
+    CurrencyId,
+    RelativeCurrencyIdConvert,
+    DepositToAlternative<TreasuryAccount, Tokens, CurrencyId, AccountId, Balance>,
 >;
 
 /// Means for transacting assets besides the native currency on this chain.
@@ -140,15 +148,20 @@ pub type XcmOriginToTransactDispatchOrigin = (
 );
 
 parameter_types! {
-	pub UnitWeightCost: u64 = 200_000_000;
-	pub const MaxInstructions: u32 = 100;
 	pub KsmPerSecond: (AssetId, u128) = (MultiLocation::parent().into(), ksm_per_second());
-	pub IczPerSecond: (AssetId, u128) = (
+	pub CanonicalizedIczPerSecond: (AssetId, u128) = (
 		MultiLocation::new(
 			0,
 			X1(GeneralKey(ICZ.encode().try_into().unwrap())),
 		).into(),
-		0
+		icz_per_second()
+	);
+	pub NonCanonicalizedIczPerSecond: (AssetId, u128) = (
+		MultiLocation::new(
+			1,
+			X2(Parachain(ParachainInfo::get().into()), GeneralKey(ICZ.encode().try_into().unwrap())),
+		).into(),
+		icz_per_second()
 	);
 }
 
@@ -198,20 +211,32 @@ impl TakeRevenue for ToTreasury {
 			}
 
 			if let Some(currency_id) = RelativeCurrencyIdConvert::convert(location) {
-				let treasury = &Treasury::account_id();
+                /*
 				if currency_id == NativeCurrencyId::get() {
-					let _ = AdaptedBasicCurrency::deposit(treasury, amount);
+					let _ = AdaptedBasicCurrency::deposit(&TreasuryAccount::get(), amount);
 				} else {
-					let _ = Tokens::deposit(currency_id, treasury, amount);
+					let _ = Tokens::deposit(currency_id, &TreasuryAccount::get(), amount);
 				}
+                */
+                let _ = Tokens::deposit(currency_id, &TreasuryAccount::get(), amount);
 			}
 		}
 	}
 }
 
+pub struct MyFixedConversionRateProvider;
+impl FixedConversionRateProvider for MyFixedConversionRateProvider {
+    fn get_fee_per_second(location: &MultiLocation) -> Option<u128> {
+        let metadata = AssetRegistry::fetch_metadata_by_location(location)?;
+        Some(metadata.additional.fee_per_second)
+    }
+}
+
 pub type Trader = (
 	FixedRateOfFungible<KsmPerSecond, ToTreasury>,
-	FixedRateOfFungible<IczPerSecond, ToTreasury>,
+	FixedRateOfFungible<CanonicalizedIczPerSecond, ToTreasury>,
+	FixedRateOfFungible<NonCanonicalizedIczPerSecond, ToTreasury>,
+    AssetRegistryTrader<FixedRateAssetRegistryTrader<MyFixedConversionRateProvider>, ToTreasury>,
 );
 
 pub struct XcmConfig;
@@ -221,8 +246,8 @@ impl xcm_executor::Config for XcmConfig {
 	// How to withdraw and deposit an asset.
 	type AssetTransactor = DefaultLocalAssetTransactor; //LocalAssetTransactor;  // AssetTransactors;
 	type OriginConverter = XcmOriginToTransactDispatchOrigin;
-	type IsReserve = ReserveAssetFilter; //NativeAsset;
-	type IsTeleporter = (); // Teleporting is disabled.
+	type IsReserve = MultiNativeAsset<AbsoluteReserveProvider>; // ReserveAssetFilter; //NativeAsset;
+	type IsTeleporter = NativeAsset; // (); // Teleporting is disabled.
 	type LocationInverter = LocationInverter<Ancestry>;
 	type Barrier = XcmBarrier;
 	type Weigher = FixedWeightBounds<UnitWeightCost, RuntimeCall, MaxInstructions>;
@@ -247,6 +272,8 @@ pub type XcmRouter = (
 
 impl pallet_xcm::Config for Runtime {
 	type RuntimeEvent = RuntimeEvent;
+	type RuntimeCall = RuntimeCall;
+	type RuntimeOrigin = RuntimeOrigin;
 	type SendXcmOrigin = EnsureXcmOrigin<RuntimeOrigin, LocalOriginToLocation>;
 	type XcmRouter = XcmRouter;
 	type ExecuteXcmOrigin = EnsureXcmOrigin<RuntimeOrigin, LocalOriginToLocation>;
@@ -254,12 +281,11 @@ impl pallet_xcm::Config for Runtime {
 	// ^ Disable dispatchable execute on the XCM pallet.
 	// Needs to be `Everything` for local testing.
 	type XcmExecutor = XcmExecutor<XcmConfig>;
+    // TODO abhi: should XcmTeleportFilter be Nothing or Everything?
 	type XcmTeleportFilter = Nothing;
 	type XcmReserveTransferFilter = Everything;
 	type Weigher = FixedWeightBounds<UnitWeightCost, RuntimeCall, MaxInstructions>;
 	type LocationInverter = LocationInverter<Ancestry>;
-	type RuntimeOrigin = RuntimeOrigin;
-	type RuntimeCall = RuntimeCall;
 
 	const VERSION_DISCOVERY_QUEUE_SIZE: u32 = 100;
 	// ^ Override for AdvertisedXcmVersion default

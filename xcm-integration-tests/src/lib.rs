@@ -4,16 +4,18 @@ use arctic_runtime::{AccountId, Balance, CurrencyId, TokenInfo, TreasuryPalletId
 use sp_runtime::traits::AccountIdConversion;
 use polkadot_parachain::primitives::Id as ParaId;
 
+mod setup;
 mod relay;
 mod para;
 mod rococo_cross_chain_xfer;
 mod rococo_testnet;
+mod kusama_testnet;
+mod kusama_cross_chain_xfer;
 mod testrelaywithtestpara_cross_chain_xfer;
 mod testrelaywithtestpara_testnet;
 mod testrelaywitharctic_testnet;
 mod testrelaywitharctic_cross_chain_xfer;
 use xcm::latest::prelude::*;
-
 // pub const ALICE: [u8; 32] = [0u8; 32];
 pub const ALICE: sp_runtime::AccountId32 = sp_runtime::AccountId32::new([0u8; 32]);
 pub const ALICE_RELAY: sp_runtime::AccountId32 = sp_runtime::AccountId32::new([1u8; 32]);
