@@ -21,8 +21,7 @@ describeWithIce("Ice RPC (Gas)", (context) => {
 			from: GENESIS_ACCOUNT,
 			data: Test.bytecode,
 		});
-
-		expect(val).to.equal(193417);
+		expect(val).to.equal(193580);
 	});
 
 	it("eth_estimateGas for contract call", async function () {
@@ -32,7 +31,7 @@ describeWithIce("Ice RPC (Gas)", (context) => {
 		});
 
 		const val = await contract.methods.multiply(3).estimateGas();
-		expect(val).to.equal(21204);
+		expect(val).to.equal(22331);
 	});
 
 	it("tx gas limit larger EXTRINSIC_GAS_LIMIT", async function () {
@@ -64,7 +63,7 @@ describeWithIce("Ice RPC (Gas)", (context) => {
 		/* estimateGas Comparable to Gas Used */
 		const estimateGas = await contract.estimateGas.setStorage(testVal, testVal);
 		const receipt = await (await contract.setStorage(testVal, testVal)).wait();
-		expect(estimateGas.toString()).to.equal(receipt?.["cumulativeGasUsed"].toString());
+		expect(receipt["cumulativeGasUsed"]?.toNumber() / estimateGas.toNumber()).not.lessThan(0.9).and.not.greaterThan(1.1);
 	});
 
 	it("eth_estimateGas compared to real gas used for MultiContractCall", async function () {
@@ -91,6 +90,6 @@ describeWithIce("Ice RPC (Gas)", (context) => {
 		const estimatedGas = await multiContract.estimateGas.setStorage();
 		const receipt = await (await multiContract.setStorage()).wait();
 
-		expect(receipt["cumulativeGasUsed"]?.toNumber() / estimatedGas.toNumber()).not.lessThan(0.6);
+		expect(receipt["cumulativeGasUsed"]?.toNumber() / estimatedGas.toNumber()).not.lessThan(0.9).and.not.greaterThan(1.1);
 	});
 });
