@@ -85,7 +85,6 @@ jobs:
           TEST_INK_WALLET_SEED_1: ${{ secrets.TEST_INK_WALLET_SEED_1 }}
           TEST_INK_WALLET_SEED_2: ${{ secrets.TEST_INK_WALLET_SEED_2 }}
         run: |
-          mv ./target/release/ice-node ./ts-tests/ink/assets
           cd ts-tests/ink
           npm install --force
           npm run test:server
