@@ -1,9 +1,16 @@
 use super::{
 	AccountId, Assets, Balance, Balances, /*Currencies ,*/ CurrencyId, ParachainInfo, ParachainSystem,
 	PolkadotXcm, RelativeCurrencyIdConvert, Runtime, RuntimeCall, RuntimeEvent, RuntimeOrigin,
+<<<<<<< Updated upstream
 	Tokens, Treasury, UnknownTokens, XcmpQueue, UnitWeightCost, MaxInstructions
 };
 use crate::constants::fee::{ksm_per_second, icz_per_second};
+=======
+	Tokens, Treasury, UnknownTokens, XcmpQueue, AssetRegistryTrappist
+};
+use xcm_primitives::AsAssetMultiLocation;
+use crate::constants::fee::{ksm_per_second, WeightToFee};
+>>>>>>> Stashed changes
 use crate::TokenSymbol::*;
 use crate::AssetRegistry;
 use codec::Encode;
@@ -11,8 +18,13 @@ use frame_support::{
 	match_types, parameter_types,
 	traits::{Everything, Get, Nothing, PalletInfoAccess},
 };
+<<<<<<< Updated upstream
 use orml_traits::{location::AbsoluteReserveProvider, BasicCurrency, MultiCurrency, FixedConversionRateProvider};
 use orml_asset_registry::{AssetRegistryTrader, FixedRateAssetRegistryTrader};
+=======
+use xcm_builder::UsingComponents;
+use orml_traits::{BasicCurrency, MultiCurrency};
+>>>>>>> Stashed changes
 use pallet_xcm::XcmPassthrough;
 use polkadot_parachain::primitives::Sibling;
 use xcm::latest::prelude::*;
@@ -29,6 +41,10 @@ use xcm_executor::{
 	traits::{FilterAssetLocation, JustTry},
 	XcmExecutor,
 };
+<<<<<<< Updated upstream
+=======
+use parachains_common::{impls::DealWithFees, AssetId as PCAssetId};
+>>>>>>> Stashed changes
 use crate::{AdaptedBasicCurrency, NativeCurrencyId};
 use orml_xcm_support::{DepositToAlternative, IsNativeConcrete, MultiCurrencyAdapter, MultiNativeAsset};
 use sp_runtime::traits::Convert;
@@ -44,7 +60,11 @@ parameter_types! {
 	pub AssetsPalletLocation: MultiLocation =
 		PalletInstance(<Assets as PalletInfoAccess>::index() as u8).into();
 	pub CheckingAccount: AccountId = PolkadotXcm::check_account();
+<<<<<<< Updated upstream
     pub TreasuryAccount: AccountId = Treasury::account_id();
+=======
+    pub SelfReserve: MultiLocation = MultiLocation { parents:0, interior: Here };
+>>>>>>> Stashed changes
 }
 
 /// Type for specifying how a `MultiLocation` can be converted into an `AccountId`. This is used
@@ -86,6 +106,7 @@ pub type LocalAssetTransactor = MultiCurrencyAdapter<
 >;
 */
 
+<<<<<<< Updated upstream
 pub type DefaultLocalAssetTransactor = MultiCurrencyAdapter<
     Tokens,
     UnknownTokens,
@@ -95,10 +116,38 @@ pub type DefaultLocalAssetTransactor = MultiCurrencyAdapter<
     CurrencyId,
     RelativeCurrencyIdConvert,
     DepositToAlternative<TreasuryAccount, Tokens, CurrencyId, AccountId, Balance>,
+=======
+/// Means for transacting the native currency on this chain.
+pub type DefaultLocalAssetTransactor = CurrencyAdapter<
+    // Use this currency:
+    Balances,
+	// Use this currency when it is a fungible asset matching the given location or name:
+    IsConcrete<SelfReserve>,
+	// Convert an XCM MultiLocation into a local account id:
+    LocationToAccountId,
+	// Our chain's account ID type (we can't get away without mentioning it explicitly):
+    AccountId,
+	// We don't track any teleports of `Balances`.
+    ()
+>>>>>>> Stashed changes
+>;
+
+pub type ReservedFungiblesTransactor = FungiblesAdapter<
+	Assets,
+	ConvertedConcreteAssetId<
+		u128,
+		Balance,
+		AsAssetMultiLocation<u128, AssetRegistryTrappist>,
+		JustTry,
+	>,
+	LocationToAccountId,
+	AccountId,
+	Nothing,
+	CheckingAccount,
 >;
 
 /// Means for transacting assets besides the native currency on this chain.
-pub type FungiblesTransactor = FungiblesAdapter<
+pub type LocalFungiblesTransactor = FungiblesAdapter<
 	// Use this fungibles implementation:
 	Assets,
 	// Use this currency when it is a fungible asset matching the given location or name:
@@ -115,13 +164,14 @@ pub type FungiblesTransactor = FungiblesAdapter<
 	// Our chain's account ID type (we can't get away without mentioning it explicitly):
 	AccountId,
 	// We don't track any teleports of `Assets`.
-	Everything,
+	Nothing,
 	// We don't track any teleports of `Assets`.
 	CheckingAccount,
 >;
 
 /// Means for transacting assets on this chain.
-pub type AssetTransactors = (CurrencyTransactor, FungiblesTransactor);
+// pub type AssetTransactors = (CurrencyTransactor, FungiblesTransactor);
+pub type AssetTransactors = (DefaultLocalAssetTransactor, ReservedFungiblesTransactor, LocalFungiblesTransactor);
 
 /// This is the type we use to convert an (incoming) XCM origin into a local `Origin` instance,
 /// ready for dispatching a transaction with Xcm's `Transact`. There is an `OriginKind` which can
@@ -234,9 +284,14 @@ impl FixedConversionRateProvider for MyFixedConversionRateProvider {
 
 pub type Trader = (
 	FixedRateOfFungible<KsmPerSecond, ToTreasury>,
+<<<<<<< Updated upstream
 	FixedRateOfFungible<CanonicalizedIczPerSecond, ToTreasury>,
 	FixedRateOfFungible<NonCanonicalizedIczPerSecond, ToTreasury>,
     AssetRegistryTrader<FixedRateAssetRegistryTrader<MyFixedConversionRateProvider>, ToTreasury>,
+=======
+	FixedRateOfFungible<IczPerSecond, ToTreasury>,
+    UsingComponents<WeightToFee, SelfReserve, AccountId, Balances, DealWithFees<Runtime>>,
+>>>>>>> Stashed changes
 );
 
 pub struct XcmConfig;
@@ -244,7 +299,8 @@ impl xcm_executor::Config for XcmConfig {
 	type RuntimeCall = RuntimeCall;
 	type XcmSender = XcmRouter;
 	// How to withdraw and deposit an asset.
-	type AssetTransactor = DefaultLocalAssetTransactor; //LocalAssetTransactor;  // AssetTransactors;
+	// type AssetTransactor = DefaultLocalAssetTransactor; //LocalAssetTransactor;  // AssetTransactors;
+	type AssetTransactor = AssetTransactors;
 	type OriginConverter = XcmOriginToTransactDispatchOrigin;
 	type IsReserve = MultiNativeAsset<AbsoluteReserveProvider>; // ReserveAssetFilter; //NativeAsset;
 	type IsTeleporter = NativeAsset; // (); // Teleporting is disabled.

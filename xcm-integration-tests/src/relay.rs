@@ -172,3 +172,7 @@ construct_runtime!(
 		XcmPallet: pallet_xcm::{Pallet, Call, Storage, Event<T>, Origin},
 	}
 );
+
+pub(crate) fn check_account() -> AccountId {
+	XcmPallet::check_account()
+}

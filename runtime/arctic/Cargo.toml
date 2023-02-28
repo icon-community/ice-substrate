@@ -128,6 +128,7 @@ cumulus-primitives-timestamp = { git = "https://github.com/paritytech/cumulus", 
 cumulus-primitives-utility = { git = "https://github.com/paritytech/cumulus", branch = "polkadot-v0.9.36", default-features = false }
 pallet-collator-selection = { git = "https://github.com/paritytech/cumulus", branch = "polkadot-v0.9.36", default-features = false }
 parachain-info = { git = "https://github.com/paritytech/cumulus", branch = "polkadot-v0.9.36", default-features = false }
+parachains-common = { git = "https://github.com/paritytech/cumulus", branch = "polkadot-v0.9.36", default-features = false }
 
 # Polkadot Dependencies
 pallet-xcm = { git = "https://github.com/paritytech/polkadot", default-features = false, branch = "release-v0.9.36" }
@@ -136,6 +137,19 @@ polkadot-runtime-common = { git = "https://github.com/paritytech/polkadot", defa
 xcm = { git = "https://github.com/paritytech/polkadot", default-features = false, branch = "release-v0.9.36" }
 xcm-builder = { git = "https://github.com/paritytech/polkadot", default-features = false, branch = "release-v0.9.36" }
 xcm-executor = { git = "https://github.com/paritytech/polkadot", default-features = false, branch = "release-v0.9.36" }
+
+[dependencies.pallet-asset-registry-trappist]
+version = "0.0.1"
+default-features = false
+git = "https://github.com/paritytech/trappist.git"
+branch = "master"
+package = "pallet-asset-registry"
+
+[dependencies.xcm-primitives]
+version = "0.0.1"
+default-features = false
+git = "https://github.com/paritytech/trappist.git"
+branch = "master"
 
 [dev-dependencies]
 separator = "0.4.1"
@@ -202,6 +216,8 @@ std = [
   "pallet-membership/std",
   "pallet-democracy/std",
   "pallet-indices/std",
+
+  "pallet-asset-registry-trappist/std",
 
   "sp-api/std",
   "sp-block-builder/std",

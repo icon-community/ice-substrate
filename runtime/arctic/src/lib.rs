@@ -642,6 +642,13 @@ impl pallet_assets::Config for Runtime {
 	type BenchmarkHelper = ();
 }
 
+impl pallet_asset_registry_trappist::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type ReserveAssetModifierOrigin = frame_system::EnsureRoot<Self::AccountId>;
+    type Assets = Assets;
+    type WeightInfo = ();
+}
+
 parameter_types! {
 	pub const MinVestedTransfer: Balance = currency::DOLLARS/2;
 	pub UnvestedFundsAllowedWithdrawReasons: WithdrawReasons =
@@ -1424,7 +1431,7 @@ impl EnsureOriginWithArg<RuntimeOrigin, Option<u32>> for AssetAuthority {
 
 	#[cfg(feature = "runtime-benchmarks")]
 	fn successful_origin(_asset_id: &Option<u32>) -> RuntimeOrigin {
-		unimplemented!()
+        EnsureRoot::successful_origin()
 	}
 }
 
@@ -1571,7 +1578,14 @@ construct_runtime!(
 		// Asset registry
 		AssetRegistry: orml_asset_registry::{Pallet, Call, Storage, Event<T>} = 90,
 		UnknownTokens: orml_unknown_tokens::{Pallet, Storage, Event} = 91,
+<<<<<<< Updated upstream
 		// Currencies: orml_currencies::{Pallet, Call, Storage} = 92,
+=======
+		Currencies: orml_currencies::{Pallet, Call, Storage} = 92,
+
+        // Asset Registry Trappist
+        AssetRegistryTrappist: pallet_asset_registry_trappist::{Pallet, Call, Storage, Event<T>} = 100
+>>>>>>> Stashed changes
 	}
 );
 

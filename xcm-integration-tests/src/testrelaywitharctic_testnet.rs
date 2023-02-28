@@ -5,7 +5,7 @@ use polkadot_runtime_parachains::configuration::HostConfiguration;
 use sp_runtime::traits::AccountIdConversion;
 use xcm_emulator::{decl_test_network, decl_test_parachain, decl_test_relay_chain};
 use frame_support::pallet_prelude::Weight;
-use crate::{dollar, get_all_module_accounts, ALICE, BOB, INITIAL_BALANCE, relay, para};
+use crate::{dollar, get_all_module_accounts, ALICE, ALICE_RELAY, BOB, INITIAL_BALANCE, relay, para};
 
 decl_test_relay_chain! {
 	pub struct TestRelay {
@@ -49,7 +49,7 @@ pub fn relay_ext() -> sp_io::TestExternalities {
 	let mut t = frame_system::GenesisConfig::default().build_storage::<Runtime>().unwrap();
 
 	pallet_balances::GenesisConfig::<Runtime> {
-		balances: vec![(ALICE, INITIAL_BALANCE), (ParaId::from(2001).into_account_truncating(), INITIAL_BALANCE)],
+		balances: vec![(ALICE_RELAY, INITIAL_BALANCE), (ParaId::from(2001).into_account_truncating(), INITIAL_BALANCE)],
 	}
 	.assimilate_storage(&mut t)
 	.unwrap();

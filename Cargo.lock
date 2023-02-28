@@ -152,6 +152,7 @@ dependencies = [
  "orml-xcm-support",
  "orml-xtokens",
  "pallet-airdrop",
+ "pallet-asset-registry",
  "pallet-assets",
  "pallet-aura",
  "pallet-authorship",
@@ -193,6 +194,7 @@ dependencies = [
  "pallet-vesting",
  "pallet-xcm",
  "parachain-info",
+ "parachains-common",
  "parity-scale-codec",
  "polkadot-parachain",
  "polkadot-runtime-common",
@@ -219,6 +221,7 @@ dependencies = [
  "xcm",
  "xcm-builder",
  "xcm-executor",
+ "xcm-primitives",
 ]
 
 [[package]]
@@ -6103,6 +6106,40 @@ dependencies = [
 ]
 
 [[package]]
+name = "pallet-asset-registry"
+version = "0.0.1"
+source = "git+https://github.com/paritytech/trappist.git?branch=master#2abbcfaf575bdaf6fe1a1ddeb581890daec3eac0"
+dependencies = [
+ "frame-benchmarking",
+ "frame-support",
+ "frame-system",
+ "pallet-assets",
+ "pallet-balances",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-runtime",
+ "sp-std",
+ "xcm",
+ "xcm-primitives",
+]
+
+[[package]]
+name = "pallet-asset-tx-payment"
+version = "4.0.0-dev"
+source = "git+https://github.com/paritytech/substrate?branch=polkadot-v0.9.36#cb4f2491b00af7d7817f3a54209c26b20faa1f51"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "pallet-transaction-payment",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
 name = "pallet-assets"
 version = "4.0.0-dev"
 source = "git+https://github.com/paritytech/substrate?branch=polkadot-v0.9.36#cb4f2491b00af7d7817f3a54209c26b20faa1f51"
@@ -7311,6 +7348,32 @@ dependencies = [
  "frame-system",
  "parity-scale-codec",
  "scale-info",
+]
+
+[[package]]
+name = "parachains-common"
+version = "1.0.0"
+source = "git+https://github.com/paritytech/cumulus?branch=polkadot-v0.9.36#afe528af891f464b318293f183f6d3eefbc979b0"
+dependencies = [
+ "cumulus-primitives-utility",
+ "frame-support",
+ "frame-system",
+ "pallet-asset-tx-payment",
+ "pallet-assets",
+ "pallet-authorship",
+ "pallet-balances",
+ "pallet-collator-selection",
+ "parity-scale-codec",
+ "polkadot-primitives",
+ "scale-info",
+ "sp-consensus-aura",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+ "substrate-wasm-builder",
+ "xcm",
+ "xcm-executor",
 ]
 
 [[package]]
@@ -13910,9 +13973,14 @@ dependencies = [
  "orml-asset-registry",
  "orml-tokens",
  "orml-traits",
+ "pallet-assets",
  "pallet-balances",
  "pallet-membership",
+<<<<<<< Updated upstream
  "pallet-transaction-payment",
+=======
+ "pallet-sudo",
+>>>>>>> Stashed changes
  "pallet-uniques",
  "pallet-xcm",
  "parachain-info",
@@ -13920,6 +13988,7 @@ dependencies = [
  "polkadot-core-primitives",
  "polkadot-parachain",
  "polkadot-primitives",
+ "polkadot-runtime-common",
  "polkadot-runtime-parachains",
  "rococo-runtime",
  "rococo-runtime-constants",
@@ -13934,6 +14003,17 @@ dependencies = [
  "xcm-builder",
  "xcm-executor",
  "xcm-simulator",
+]
+
+[[package]]
+name = "xcm-primitives"
+version = "0.0.1"
+source = "git+https://github.com/paritytech/trappist.git?branch=master#2abbcfaf575bdaf6fe1a1ddeb581890daec3eac0"
+dependencies = [
+ "frame-support",
+ "sp-std",
+ "xcm",
+ "xcm-executor",
 ]
 
 [[package]]

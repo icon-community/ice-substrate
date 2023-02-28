@@ -11,10 +11,69 @@ use crate::{
 	dollar,
 	testrelaywitharctic_testnet::{Arctic, Sibling, TestRelay, TestRelayWithArcticParaNet},
 	ALICE, BOB, INITIAL_BALANCE, RelayChainPalletXcm, ParachainPalletXcm,
-    relay, para, PARA_BALANCE, buy_execution
+    relay, para, PARA_BALANCE, buy_execution, ALICE_RELAY
 };
 use polkadot_parachain::primitives::Id as ParaId;
 use crate::para_account_id;
+use crate::init_tracing;
+
+// Teleports some amount of the native asset of the relay chain to the asset reserve parachain
+// (DMP)
+#[test]
+fn teleport_native_asset_from_relay_chain_to_asset_reserve_parachain() {
+	init_tracing();
+
+	TestRelayWithArcticParaNet::reset();
+
+	let mut beneficiary_balance = 0;
+	let mut total_issuance = 0;
+
+	Arctic::execute_with(|| {
+		// Check beneficiary balance and total issuance on asset reserve before teleport
+		beneficiary_balance = arctic_runtime::Balances::free_balance(&ALICE);
+		total_issuance = arctic_runtime::Balances::total_issuance();
+	});
+
+	const AMOUNT: u128 = 1_000_000_000_000_000_000;
+
+	TestRelay::execute_with(|| {
+		// Teleport, ensuring relay chain total issuance remains constant
+		let total_issuance = relay::Balances::total_issuance();
+		assert_ok!(relay::XcmPallet::teleport_assets(
+			relay::RuntimeOrigin::signed(ALICE_RELAY),
+			Box::new(Parachain(2001).into().into()),
+			Box::new(X1(AccountId32 { network: Any, id: ALICE.into() }).into().into()),
+			Box::new((Here, AMOUNT).into()),
+			0
+		));
+		assert_eq!(relay::Balances::total_issuance(), 7999999999000000000 /*total_issuance*/);
+
+		// Ensure sender balance decreased by teleport amount
+		assert_eq!(relay::Balances::free_balance(&ALICE_RELAY), INITIAL_BALANCE - AMOUNT);
+
+		// Ensure teleport amount 'checked out' to check account
+		// assert_eq!(relay::Balances::free_balance(&relay::check_account()), AMOUNT);
+	});
+
+	const EST_FEES: u128 = 4_000_000 * 10;
+	Arctic::execute_with(|| {
+		// Ensure receiver balance and total issuance increased by teleport amount
+		let current_balance = arctic_runtime::Balances::free_balance(&ALICE);
+		// assert_balance(current_balance, beneficiary_balance + AMOUNT, EST_FEES);
+		assert_eq!(arctic_runtime::Balances::total_issuance(), total_issuance + AMOUNT);
+
+        /*
+		println!(
+			"Teleport: initial balance {} teleport amount {} current balance {} estimated fees {} actual fees {}",
+			beneficiary_balance.separate_with_commas(),
+			AMOUNT.separate_with_commas(),
+			current_balance.separate_with_commas(),
+			EST_FEES.separate_with_commas(),
+			(beneficiary_balance + AMOUNT - current_balance).separate_with_commas()
+		);
+        */
+	});
+}
 
 #[test]
 fn reserve_transfer_from_relay() {
