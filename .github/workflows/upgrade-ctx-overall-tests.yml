@@ -1,0 +1,42 @@
+name: Network Upgrade Tests - Overall contracts
+on:
+  workflow_dispatch:
+    inputs:
+      chain:
+        description: Chain (snow/arctic/snow_staging)
+        required: true
+        default: snow
+    
+
+jobs:
+  contract-overall:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout the repo
+        uses: actions/checkout@v3
+      
+      - name: Use node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: 16.x
+      
+      - name: EVM test
+        run: |
+          npm install -g yarn
+          yarn install
+          yarn run build
+          yarn run test-ctx-overall ${{ github.event.inputs.chain }}
+        env:
+          EVM_CTX_DEPLOYER_KEY: ${{ secrets.EVM_CTX_DEPLOYER_KEY }}
+        working-directory:
+          ts-tests/evm
+
+      - name: Ink test
+        run: |
+          npm i --force
+          npm run test-ctx-overall ${{ github.event.inputs.chain }}
+        env:
+          INK_CTX_DEPLOYER_URI: ${{ secrets.INK_CTX_DEPLOYER_URI }}
+        working-directory:
+          ts-tests/ink

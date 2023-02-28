@@ -1,0 +1,37 @@
+name: Network Upgrade Tests
+on:
+  workflow_dispatch:
+    inputs:
+      chain:
+        description: Chain (snow/arctic/snow_staging)
+        required: true
+        default: snow
+
+jobs:
+  contract-state:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout the repo
+        uses: actions/checkout@v3
+      
+      - name: Use node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: 16.x
+      
+      - name: EVM test
+        run: |
+          npm install -g yarn
+          yarn install
+          yarn run build
+          yarn run test-ctx-state ${{ github.event.inputs.chain }}
+        working-directory:
+          ts-tests/evm
+
+      - name: Ink test
+        run: |
+          npm i --force
+          npm run test-ctx-state ${{ github.event.inputs.chain }} # TODO:: https://github.com/paritytech/ink/issues/1657
+        working-directory:
+          ts-tests/ink
