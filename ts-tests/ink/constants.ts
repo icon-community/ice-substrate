@@ -1,4 +1,4 @@
-export const BINARY_PATH = "./assets/ice-node";
+export const BINARY_PATH = `../../target/release/ice-node`;
 
 export const LOCAL_WSS_URL = "ws://localhost:9944";
 export const LOCAL_CHAIN_PREFIX = 2208;
