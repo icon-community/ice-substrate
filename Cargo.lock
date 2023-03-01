@@ -123,7 +123,7 @@ dependencies = [
 
 [[package]]
 name = "arctic-runtime"
-version = "0.4.58"
+version = "0.4.59"
 dependencies = [
  "assets-evm",
  "bstringify",
@@ -3294,7 +3294,7 @@ dependencies = [
 
 [[package]]
 name = "frost-runtime"
-version = "0.4.58"
+version = "0.4.59"
 dependencies = [
  "assets-evm",
  "fp-rpc",
@@ -3896,7 +3896,7 @@ dependencies = [
 
 [[package]]
 name = "ice-node"
-version = "0.4.58"
+version = "0.4.59"
 dependencies = [
  "arctic-runtime",
  "async-trait",
@@ -11116,7 +11116,7 @@ dependencies = [
 
 [[package]]
 name = "snow-runtime"
-version = "0.4.58"
+version = "0.4.59"
 dependencies = [
  "assets-evm",
  "cumulus-pallet-aura-ext",
