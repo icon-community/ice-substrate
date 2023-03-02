@@ -126,6 +126,14 @@ pallet-ethereum = { default-features = false, git = "https://github.com/web3labs
 pallet-dynamic-fee = { default-features = false, git = "https://github.com/web3labs/frontier", branch = "polkadot-v0.9.36" }
 pallet-base-fee = { default-features = false, git = "https://github.com/web3labs/frontier", branch = "polkadot-v0.9.36" }
 
+#rmrk
+pallet-rmrk-core = { git = "https://github.com/web3labs/rmrk-substrate", branch = "polkadot-v0.9.36"}
+pallet-rmrk-equip = { git = "https://github.com/web3labs/rmrk-substrate", branch = "polkadot-v0.9.36" }
+rmrk-traits = { git = "https://github.com/web3labs/rmrk-substrate", branch = "polkadot-v0.9.36" }
+pallet-rmrk-rpc = { git = "https://github.com/web3labs/rmrk-substrate", branch = "polkadot-v0.9.36" }
+pallet-rmrk-rpc-runtime-api = { git = "https://github.com/web3labs/rmrk-substrate", branch = "polkadot-v0.9.36"}
+
+
 snow-runtime = { path = "../runtime/snow", default-features = false, features = [
   "std",
 ] }
